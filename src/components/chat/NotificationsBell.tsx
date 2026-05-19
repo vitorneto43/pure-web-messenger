@@ -87,6 +87,29 @@ export function NotificationsBell() {
     };
   }, [user?.id]);
 
+  // Fetch profiles for any new_user_id referenced in notifications
+  useEffect(() => {
+    const ids = new Set<string>();
+    for (const n of items) {
+      const d = (n.data ?? {}) as Record<string, unknown>;
+      const nid = typeof d.new_user_id === "string" ? d.new_user_id : null;
+      if (nid && !profiles[nid]) ids.add(nid);
+    }
+    if (ids.size === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, username, avatar_url")
+        .in("id", Array.from(ids));
+      if (!data) return;
+      setProfiles((prev) => {
+        const next = { ...prev };
+        for (const p of data as ProfileMini[]) next[p.id] = p;
+        return next;
+      });
+    })();
+  }, [items, profiles]);
+
   const unread = items.filter((n) => !n.read_at).length;
 
   async function markAllRead() {
