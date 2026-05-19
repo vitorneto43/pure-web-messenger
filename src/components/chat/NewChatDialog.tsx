@@ -36,7 +36,6 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
     const { data } = await supabase
       .from("profiles")
       .select("id, username, display_name, avatar_url")
-      .neq("id", user!.id)
       .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
       .limit(15);
     setResults(data ?? []);
@@ -45,6 +44,10 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function startChat(otherUserId: string) {
     if (!user) return;
+    if (otherUserId === user.id) {
+      toast.error("Você não pode iniciar uma conversa consigo mesmo.");
+      return;
+    }
     setCreating(true);
     try {
       // Find existing 1:1
