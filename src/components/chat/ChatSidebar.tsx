@@ -25,6 +25,7 @@ import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
 import { formatTime } from "@/lib/format-time";
+import { setAppBadge } from "@/lib/app-badge";
 import {
   requestBrowserNotificationPermission,
   playNotification,
