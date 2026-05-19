@@ -41,7 +41,7 @@ export async function subscribeToPush(
     if (existing) return existing;
     return await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
     });
   } catch (e) {
     console.error("Push subscribe failed", e);
