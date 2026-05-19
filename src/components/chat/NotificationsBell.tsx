@@ -52,6 +52,7 @@ export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [profiles, setProfiles] = useState<Record<string, ProfileMini>>({});
 
   async function load() {
     if (!user) return;
