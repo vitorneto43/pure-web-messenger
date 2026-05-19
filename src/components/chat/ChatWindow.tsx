@@ -74,6 +74,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingPing = useRef<number>(0);
 
+  // Audio recording
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordCancelledRef = useRef(false);
+
   // Load conversation + members + messages
   useEffect(() => {
     if (!user) return;
