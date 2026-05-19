@@ -19,6 +19,14 @@ interface Props {
   onCreated: (conversationId: string) => void;
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  const hidden = "*".repeat(Math.max(3, local.length - visible.length));
+  return `${visible}${hidden}@${domain}`;
+}
+
 export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
@@ -35,8 +43,8 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
     setSearching(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+      .select("id, username, display_name, avatar_url, email")
+      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%,email.ilike.%${q}%`)
       .limit(15);
     setResults(data ?? []);
     setSearching(false);
@@ -124,9 +132,14 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
                 <AvatarImage src={r.avatar_url ?? undefined} />
                 <AvatarFallback>{r.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
-              <div className="text-left">
-                <div className="text-sm font-medium">{r.display_name}</div>
-                <div className="text-xs text-muted-foreground">@{r.username}</div>
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-sm font-medium truncate">{r.display_name}</div>
+                <div className="text-xs text-muted-foreground truncate">@{r.username}</div>
+                {r.email && (
+                  <div className="text-[11px] font-mono text-muted-foreground/80 truncate">
+                    {maskEmail(r.email)}
+                  </div>
+                )}
               </div>
             </button>
           ))}
