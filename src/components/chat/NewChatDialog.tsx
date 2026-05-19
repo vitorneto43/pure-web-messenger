@@ -44,6 +44,10 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function startChat(otherUserId: string) {
     if (!user) return;
+    if (otherUserId === user.id) {
+      toast.error("Você não pode iniciar uma conversa consigo mesmo.");
+      return;
+    }
     setCreating(true);
     try {
       // Find existing 1:1
