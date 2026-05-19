@@ -87,6 +87,7 @@ function AuthPage() {
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
+              ...(inviteUsername ? { invite: inviteUsername } : {}),
             },
           },
         });
