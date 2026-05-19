@@ -19,6 +19,19 @@ interface Props {
   onCreated: (conversationId: string) => void;
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  const hidden = "*".repeat(Math.max(3, local.length - visible.length));
+  return `${visible}${hidden}@${domain}`;
+}
+
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreated: (conversationId: string) => void;
+}
+
 export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
