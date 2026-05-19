@@ -438,6 +438,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             activeRef.current.isCaller &&
             row.status === "accepted"
           ) {
+            stopRingback();
             setActive({ ...activeRef.current, status: "accepted" });
           }
           // Caller side: callee declined / ended
