@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
+import { NotificationsBell } from "./NotificationsBell";
 import { formatTime } from "@/lib/format-time";
 import {
   requestBrowserNotificationPermission,
