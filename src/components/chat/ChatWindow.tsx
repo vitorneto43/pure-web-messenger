@@ -561,102 +561,147 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
       {/* Composer */}
       <div className="p-3 sm:p-4 border-t border-border bg-card/60 backdrop-blur">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage(text);
-          }}
-          className="flex items-end gap-2"
-        >
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button type="button" size="icon" variant="ghost" className="rounded-full shrink-0">
-                <Smile className="size-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" side="top" className="w-72 p-2">
-              <div className="grid grid-cols-8 gap-1">
-                {EMOJIS.map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => setText((t) => t + e)}
-                    className="text-xl p-1 hover:bg-accent/30 rounded"
-                  >
-                    {e}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="rounded-full shrink-0"
-            onClick={() => imgRef.current?.click()}
-            disabled={uploading}
-          >
-            <ImageIcon className="size-5" />
-          </Button>
-          <input
-            ref={imgRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadAndSend(f);
-              e.target.value = "";
-            }}
-          />
-
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="rounded-full shrink-0"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-          >
-            <Paperclip className="size-5" />
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadAndSend(f);
-              e.target.value = "";
-            }}
-          />
-
-          <Input
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              handleTyping();
-            }}
-            placeholder="Escreva uma mensagem..."
-            className="flex-1 rounded-full bg-background/80 h-11"
-            maxLength={4000}
-          />
-
-          <Button
-            type="submit"
-            size="icon"
-            className="rounded-full size-11 shrink-0"
-            disabled={sending || uploading || (!text.trim())}
-          >
-            {sending || uploading ? (
-              <Loader2 className="size-5 animate-spin" />
-            ) : (
+        {recording ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0 text-destructive hover:text-destructive"
+              onClick={() => stopRecording(true)}
+              title="Cancelar"
+            >
+              <Trash2 className="size-5" />
+            </Button>
+            <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-destructive/10 border border-destructive/30">
+              <span className="size-2.5 rounded-full bg-destructive animate-pulse" />
+              <span className="text-sm font-medium text-destructive">Gravando</span>
+              <span className="ml-auto text-sm tabular-nums text-destructive">
+                {String(Math.floor(recordSeconds / 60)).padStart(2, "0")}:
+                {String(recordSeconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+            <Button
+              type="button"
+              size="icon"
+              className="rounded-full size-11 shrink-0"
+              onClick={() => stopRecording(false)}
+              title="Enviar áudio"
+            >
               <Send className="size-5" />
+            </Button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendMessage(text);
+            }}
+            className="flex items-end gap-2"
+          >
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" size="icon" variant="ghost" className="rounded-full shrink-0">
+                  <Smile className="size-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-72 p-2">
+                <div className="grid grid-cols-8 gap-1">
+                  {EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setText((t) => t + e)}
+                      className="text-xl p-1 hover:bg-accent/30 rounded"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0"
+              onClick={() => imgRef.current?.click()}
+              disabled={uploading}
+            >
+              <ImageIcon className="size-5" />
+            </Button>
+            <input
+              ref={imgRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+            >
+              <Paperclip className="size-5" />
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+
+            <Input
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                handleTyping();
+              }}
+              placeholder="Escreva uma mensagem..."
+              className="flex-1 rounded-full bg-background/80 h-11"
+              maxLength={4000}
+            />
+
+            {text.trim() ? (
+              <Button
+                type="submit"
+                size="icon"
+                className="rounded-full size-11 shrink-0"
+                disabled={sending || uploading}
+              >
+                {sending || uploading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Send className="size-5" />
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="icon"
+                className="rounded-full size-11 shrink-0"
+                onClick={startRecording}
+                disabled={sending || uploading}
+                title="Gravar áudio"
+              >
+                <Mic className="size-5" />
+              </Button>
             )}
-          </Button>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );
