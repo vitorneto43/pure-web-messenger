@@ -60,6 +60,7 @@ interface Profile {
 export function ChatWindow({ conversationId }: { conversationId: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { startCall } = useCall();
   const [conv, setConv] = useState<any>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
