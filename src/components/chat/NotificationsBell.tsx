@@ -177,32 +177,68 @@ export function NotificationsBell() {
               Nenhuma notificação ainda.
             </p>
           ) : (
-            items.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => handleClick(n)}
-                className={`w-full text-left px-3 py-2.5 border-b border-border/60 last:border-b-0 hover:bg-sidebar-hover transition-colors ${
-                  !n.read_at ? "bg-primary/5" : ""
-                }`}
-              >
-                <div className="flex items-start gap-2">
-                  {!n.read_at && (
-                    <span className="mt-1.5 size-2 rounded-full bg-primary shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{n.title}</div>
-                    {n.body && (
-                      <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                        {n.body}
-                      </div>
+            items.map((n) => {
+              const d = (n.data ?? {}) as Record<string, unknown>;
+              const nid = typeof d.new_user_id === "string" ? d.new_user_id : null;
+              const profile = nid ? profiles[nid] : null;
+              const emailRaw = typeof d.email === "string" ? d.email : null;
+              const displayName =
+                profile?.display_name ??
+                (typeof d.display_name === "string" ? d.display_name : null);
+              const masked = emailRaw ? maskEmail(emailRaw) : null;
+              // Strip "(email)" pattern from body since we render it separately
+              const cleanBody = n.body
+                ? n.body.replace(/\s*\([^)]*@[^)]*\)\s*/, " ")
+                : null;
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className={`w-full text-left px-3 py-2.5 border-b border-border/60 last:border-b-0 hover:bg-sidebar-hover transition-colors ${
+                    !n.read_at ? "bg-primary/5" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    {!n.read_at && (
+                      <span className="mt-1.5 size-2 rounded-full bg-primary shrink-0" />
                     )}
-                    <div className="text-[10px] text-muted-foreground mt-1">
-                      {formatFullTime(n.created_at)}
+                    {profile || displayName ? (
+                      <Avatar className="size-9 shrink-0">
+                        {profile?.avatar_url && (
+                          <AvatarImage src={profile.avatar_url} alt={displayName ?? ""} />
+                        )}
+                        <AvatarFallback className="text-[11px]">
+                          {initials(displayName ?? "?")}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : null}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">
+                        {displayName ?? n.title}
+                      </div>
+                      {displayName && (
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {n.title}
+                        </div>
+                      )}
+                      {cleanBody && cleanBody.trim() && (
+                        <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                          {cleanBody.trim()}
+                        </div>
+                      )}
+                      {masked && (
+                        <div className="text-[11px] font-mono text-foreground/70 mt-0.5 truncate">
+                          {masked}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        {formatFullTime(n.created_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))
+                </button>
+              );
+            })
           )}
         </div>
       </PopoverContent>
