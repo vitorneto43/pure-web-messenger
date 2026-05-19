@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { startRingtone, stopRingtone } from "@/lib/ringtone";
+import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
@@ -81,6 +81,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const cleanup = useCallback(() => {
     stopRingtone();
+    stopRingback();
     if (pcRef.current) {
       pcRef.current.onicecandidate = null;
       pcRef.current.ontrack = null;
@@ -301,6 +302,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
         await createPeerConnection(kind, true);
         setupSignaling(data.id, true, kind);
+        startRingback();
 
         // Auto-cancel if not answered in 45s
         setTimeout(() => {
@@ -436,6 +438,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             activeRef.current.isCaller &&
             row.status === "accepted"
           ) {
+            stopRingback();
             setActive({ ...activeRef.current, status: "accepted" });
           }
           // Caller side: callee declined / ended
