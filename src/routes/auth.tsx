@@ -11,6 +11,12 @@ import { Label } from "@/components/ui/label";
 
 type Mode = "login" | "signup" | "forgot";
 
+const normalizeUsername = (value: string) =>
+  value
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_");
+
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
@@ -55,9 +61,13 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const parsed = signupSchema.safeParse(form);
+        const parsed = signupSchema.safeParse({
+          ...form,
+          username: normalizeUsername(form.username),
+        });
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0].message);
+          const issue = parsed.error.issues[0];
+          toast.error(`${issue.path[0] === "username" ? "Nome de usuário" : "Cadastro"}: ${issue.message}`);
           return;
         }
         const { error } = await supabase.auth.signUp({
@@ -136,9 +146,11 @@ function AuthPage() {
                   <Input
                     id="username"
                     value={form.username}
-                    onChange={(e) => update("username", e.target.value)}
+                    onChange={(e) => update("username", normalizeUsername(e.target.value))}
                     placeholder="joao_silva"
                     autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
                   />
                 </div>
                 <div className="space-y-1.5">
