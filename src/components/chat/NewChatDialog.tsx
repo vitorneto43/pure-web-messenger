@@ -124,9 +124,14 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
                 <AvatarImage src={r.avatar_url ?? undefined} />
                 <AvatarFallback>{r.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
-              <div className="text-left">
-                <div className="text-sm font-medium">{r.display_name}</div>
-                <div className="text-xs text-muted-foreground">@{r.username}</div>
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-sm font-medium truncate">{r.display_name}</div>
+                <div className="text-xs text-muted-foreground truncate">@{r.username}</div>
+                {r.email && (
+                  <div className="text-[11px] font-mono text-muted-foreground/80 truncate">
+                    {maskEmail(r.email)}
+                  </div>
+                )}
               </div>
             </button>
           ))}
