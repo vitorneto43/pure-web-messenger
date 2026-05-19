@@ -81,6 +81,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const cleanup = useCallback(() => {
     stopRingtone();
+    stopRingback();
     if (pcRef.current) {
       pcRef.current.onicecandidate = null;
       pcRef.current.ontrack = null;
