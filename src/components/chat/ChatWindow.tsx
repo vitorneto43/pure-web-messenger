@@ -427,6 +427,50 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           <div className="font-semibold text-sm truncate">{headerTitle}</div>
           <div className="text-[11px] text-muted-foreground truncate">{headerSub}</div>
         </div>
+        {!conv?.is_group && otherUser && (
+          <>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              title="Chamada de voz"
+              onClick={() =>
+                startCall({
+                  conversationId,
+                  calleeId: otherUser.id,
+                  kind: "audio",
+                  peerProfile: {
+                    id: otherUser.id,
+                    display_name: otherUser.display_name,
+                    avatar_url: otherUser.avatar_url,
+                  },
+                })
+              }
+            >
+              <Phone className="size-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              title="Chamada de vídeo"
+              onClick={() =>
+                startCall({
+                  conversationId,
+                  calleeId: otherUser.id,
+                  kind: "video",
+                  peerProfile: {
+                    id: otherUser.id,
+                    display_name: otherUser.display_name,
+                    avatar_url: otherUser.avatar_url,
+                  },
+                })
+              }
+            >
+              <Video className="size-4" />
+            </Button>
+          </>
+        )}
         <Button
           size="icon"
           variant="ghost"
