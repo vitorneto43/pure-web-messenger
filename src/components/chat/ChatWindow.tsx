@@ -319,6 +319,70 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     }
   }
 
+  async function startRecording() {
+    if (recording) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Gravação de áudio não suportada neste navegador");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      recordCancelledRef.current = false;
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (recordTimerRef.current) {
+          clearInterval(recordTimerRef.current);
+          recordTimerRef.current = null;
+        }
+        setRecording(false);
+        setRecordSeconds(0);
+        if (recordCancelledRef.current || chunksRef.current.length === 0) return;
+        const type = rec.mimeType || "audio/webm";
+        const ext = type.includes("mp4") ? "m4a" : "webm";
+        const blob = new Blob(chunksRef.current, { type });
+        const file = new File([blob], `audio-${Date.now()}.${ext}`, { type });
+        await uploadAndSend(file);
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((s) => {
+          if (s >= 120) {
+            // auto-stop at 2 min
+            stopRecording(false);
+            return s;
+          }
+          return s + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error("Permita o acesso ao microfone para gravar");
+    }
+  }
+
+  function stopRecording(cancel: boolean) {
+    const rec = recorderRef.current;
+    if (!rec) return;
+    recordCancelledRef.current = cancel;
+    if (rec.state !== "inactive") rec.stop();
+  }
+
+
+
   const filteredMessages = useMemo(() => {
     if (!searchTerm.trim()) return messages;
     const q = searchTerm.toLowerCase();
