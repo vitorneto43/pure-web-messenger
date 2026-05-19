@@ -6,10 +6,12 @@ import {
   CheckCheck,
   Image as ImageIcon,
   Loader2,
+  Mic,
   Paperclip,
   Search,
   Send,
   Smile,
+  Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -71,6 +73,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingPing = useRef<number>(0);
+
+  // Audio recording
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordCancelledRef = useRef(false);
 
   // Load conversation + members + messages
   useEffect(() => {
@@ -309,6 +319,70 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     }
   }
 
+  async function startRecording() {
+    if (recording) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Gravação de áudio não suportada neste navegador");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      recordCancelledRef.current = false;
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (recordTimerRef.current) {
+          clearInterval(recordTimerRef.current);
+          recordTimerRef.current = null;
+        }
+        setRecording(false);
+        setRecordSeconds(0);
+        if (recordCancelledRef.current || chunksRef.current.length === 0) return;
+        const type = rec.mimeType || "audio/webm";
+        const ext = type.includes("mp4") ? "m4a" : "webm";
+        const blob = new Blob(chunksRef.current, { type });
+        const file = new File([blob], `audio-${Date.now()}.${ext}`, { type });
+        await uploadAndSend(file);
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((s) => {
+          if (s >= 120) {
+            // auto-stop at 2 min
+            stopRecording(false);
+            return s;
+          }
+          return s + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error("Permita o acesso ao microfone para gravar");
+    }
+  }
+
+  function stopRecording(cancel: boolean) {
+    const rec = recorderRef.current;
+    if (!rec) return;
+    recordCancelledRef.current = cancel;
+    if (rec.state !== "inactive") rec.stop();
+  }
+
+
+
   const filteredMessages = useMemo(() => {
     if (!searchTerm.trim()) return messages;
     const q = searchTerm.toLowerCase();
@@ -431,17 +505,27 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     />
                   </a>
                 )}
-                {m.attachment_url && !m.attachment_type?.startsWith("image/") && (
-                  <a
-                    href={m.attachment_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-sm underline mb-1"
-                  >
-                    <Paperclip className="size-4" />
-                    {m.attachment_name ?? "Arquivo"}
-                  </a>
+                {m.attachment_url && m.attachment_type?.startsWith("audio/") && (
+                  <audio
+                    controls
+                    preload="metadata"
+                    src={m.attachment_url}
+                    className="mb-1 max-w-full"
+                  />
                 )}
+                {m.attachment_url &&
+                  !m.attachment_type?.startsWith("image/") &&
+                  !m.attachment_type?.startsWith("audio/") && (
+                    <a
+                      href={m.attachment_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-sm underline mb-1"
+                    >
+                      <Paperclip className="size-4" />
+                      {m.attachment_name ?? "Arquivo"}
+                    </a>
+                  )}
                 {m.content && (
                   <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
                 )}
@@ -477,102 +561,147 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
       {/* Composer */}
       <div className="p-3 sm:p-4 border-t border-border bg-card/60 backdrop-blur">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage(text);
-          }}
-          className="flex items-end gap-2"
-        >
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button type="button" size="icon" variant="ghost" className="rounded-full shrink-0">
-                <Smile className="size-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" side="top" className="w-72 p-2">
-              <div className="grid grid-cols-8 gap-1">
-                {EMOJIS.map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => setText((t) => t + e)}
-                    className="text-xl p-1 hover:bg-accent/30 rounded"
-                  >
-                    {e}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="rounded-full shrink-0"
-            onClick={() => imgRef.current?.click()}
-            disabled={uploading}
-          >
-            <ImageIcon className="size-5" />
-          </Button>
-          <input
-            ref={imgRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadAndSend(f);
-              e.target.value = "";
-            }}
-          />
-
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="rounded-full shrink-0"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-          >
-            <Paperclip className="size-5" />
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadAndSend(f);
-              e.target.value = "";
-            }}
-          />
-
-          <Input
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              handleTyping();
-            }}
-            placeholder="Escreva uma mensagem..."
-            className="flex-1 rounded-full bg-background/80 h-11"
-            maxLength={4000}
-          />
-
-          <Button
-            type="submit"
-            size="icon"
-            className="rounded-full size-11 shrink-0"
-            disabled={sending || uploading || (!text.trim())}
-          >
-            {sending || uploading ? (
-              <Loader2 className="size-5 animate-spin" />
-            ) : (
+        {recording ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0 text-destructive hover:text-destructive"
+              onClick={() => stopRecording(true)}
+              title="Cancelar"
+            >
+              <Trash2 className="size-5" />
+            </Button>
+            <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-destructive/10 border border-destructive/30">
+              <span className="size-2.5 rounded-full bg-destructive animate-pulse" />
+              <span className="text-sm font-medium text-destructive">Gravando</span>
+              <span className="ml-auto text-sm tabular-nums text-destructive">
+                {String(Math.floor(recordSeconds / 60)).padStart(2, "0")}:
+                {String(recordSeconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+            <Button
+              type="button"
+              size="icon"
+              className="rounded-full size-11 shrink-0"
+              onClick={() => stopRecording(false)}
+              title="Enviar áudio"
+            >
               <Send className="size-5" />
+            </Button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendMessage(text);
+            }}
+            className="flex items-end gap-2"
+          >
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" size="icon" variant="ghost" className="rounded-full shrink-0">
+                  <Smile className="size-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-72 p-2">
+                <div className="grid grid-cols-8 gap-1">
+                  {EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setText((t) => t + e)}
+                      className="text-xl p-1 hover:bg-accent/30 rounded"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0"
+              onClick={() => imgRef.current?.click()}
+              disabled={uploading}
+            >
+              <ImageIcon className="size-5" />
+            </Button>
+            <input
+              ref={imgRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+            >
+              <Paperclip className="size-5" />
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+
+            <Input
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                handleTyping();
+              }}
+              placeholder="Escreva uma mensagem..."
+              className="flex-1 rounded-full bg-background/80 h-11"
+              maxLength={4000}
+            />
+
+            {text.trim() ? (
+              <Button
+                type="submit"
+                size="icon"
+                className="rounded-full size-11 shrink-0"
+                disabled={sending || uploading}
+              >
+                {sending || uploading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Send className="size-5" />
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="icon"
+                className="rounded-full size-11 shrink-0"
+                onClick={startRecording}
+                disabled={sending || uploading}
+                title="Gravar áudio"
+              >
+                <Mic className="size-5" />
+              </Button>
             )}
-          </Button>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );
