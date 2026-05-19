@@ -2,6 +2,9 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { CallProvider } from "@/hooks/use-call";
+import { CallScreen } from "@/components/call/CallScreen";
+import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -21,5 +24,11 @@ function AuthGuard() {
       </div>
     );
   }
-  return <Outlet />;
+  return (
+    <CallProvider>
+      <Outlet />
+      <CallScreen />
+      <IncomingCallDialog />
+    </CallProvider>
+  );
 }

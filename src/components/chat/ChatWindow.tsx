@@ -8,12 +8,15 @@ import {
   Loader2,
   Mic,
   Paperclip,
+  Phone,
   Search,
   Send,
   Smile,
   Trash2,
+  Video,
   X,
 } from "lucide-react";
+import { useCall } from "@/hooks/use-call";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
