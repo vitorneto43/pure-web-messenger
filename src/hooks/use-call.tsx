@@ -302,6 +302,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
         await createPeerConnection(kind, true);
         setupSignaling(data.id, true, kind);
+        startRingback();
 
         // Auto-cancel if not answered in 45s
         setTimeout(() => {
