@@ -8,12 +8,15 @@ import {
   Loader2,
   Mic,
   Paperclip,
+  Phone,
   Search,
   Send,
   Smile,
   Trash2,
+  Video,
   X,
 } from "lucide-react";
+import { useCall } from "@/hooks/use-call";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -57,6 +60,7 @@ interface Profile {
 export function ChatWindow({ conversationId }: { conversationId: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { startCall } = useCall();
   const [conv, setConv] = useState<any>(null);
   const [members, setMembers] = useState<Profile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -423,6 +427,50 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           <div className="font-semibold text-sm truncate">{headerTitle}</div>
           <div className="text-[11px] text-muted-foreground truncate">{headerSub}</div>
         </div>
+        {!conv?.is_group && otherUser && (
+          <>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              title="Chamada de voz"
+              onClick={() =>
+                startCall({
+                  conversationId,
+                  calleeId: otherUser.id,
+                  kind: "audio",
+                  peerProfile: {
+                    id: otherUser.id,
+                    display_name: otherUser.display_name,
+                    avatar_url: otherUser.avatar_url,
+                  },
+                })
+              }
+            >
+              <Phone className="size-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              title="Chamada de vídeo"
+              onClick={() =>
+                startCall({
+                  conversationId,
+                  calleeId: otherUser.id,
+                  kind: "video",
+                  peerProfile: {
+                    id: otherUser.id,
+                    display_name: otherUser.display_name,
+                    avatar_url: otherUser.avatar_url,
+                  },
+                })
+              }
+            >
+              <Video className="size-4" />
+            </Button>
+          </>
+        )}
         <Button
           size="icon"
           variant="ghost"
