@@ -27,11 +27,6 @@ function maskEmail(email: string): string {
   return `${visible}${hidden}@${domain}`;
 }
 
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onCreated: (conversationId: string) => void;
-}
-
 export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
