@@ -120,6 +120,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -127,6 +160,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          invited_by: string | null
           last_seen: string
           updated_at: string
           username: string
@@ -137,6 +171,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          invited_by?: string | null
           last_seen?: string
           updated_at?: string
           username: string
@@ -147,6 +182,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          invited_by?: string | null
           last_seen?: string
           updated_at?: string
           username?: string

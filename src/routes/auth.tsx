@@ -39,12 +39,23 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [form, setForm] = useState({
     username: "",
     displayName: "",
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const inv = params.get("invite");
+    if (inv) {
+      setInviteUsername(inv);
+      setMode("signup");
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && session) navigate({ to: "/chat" });
@@ -76,6 +87,7 @@ function AuthPage() {
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
+              ...(inviteUsername ? { invite: inviteUsername } : {}),
             },
           },
         });
@@ -135,6 +147,13 @@ function AuthPage() {
             {mode === "signup" && "Sem celular, sem SMS. Só seu email."}
             {mode === "forgot" && "Enviaremos um link para redefinir sua senha."}
           </p>
+
+          {mode === "signup" && inviteUsername && (
+            <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+              Você foi convidado por <b>@{inviteUsername}</b> — crie sua conta para começar a conversar.
+            </div>
+          )}
+
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
