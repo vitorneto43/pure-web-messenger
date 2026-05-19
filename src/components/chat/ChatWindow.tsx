@@ -6,10 +6,12 @@ import {
   CheckCheck,
   Image as ImageIcon,
   Loader2,
+  Mic,
   Paperclip,
   Search,
   Send,
   Smile,
+  Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
