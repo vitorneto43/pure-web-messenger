@@ -543,12 +543,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   }`}
                 >
                   {formatFullTime(m.created_at)}
-                  {isMine &&
-                    (seen ? (
-                      <CheckCheck className="size-3.5" />
-                    ) : (
-                      <Check className="size-3.5" />
-                    ))}
+                  {isMine && (
+                    <CheckCheck
+                      className={`size-3.5 transition-colors ${
+                        seen ? "text-sky-400" : "text-bubble-out-foreground/60"
+                      }`}
+                    />
+                  )}
                 </div>
               </div>
             </div>
