@@ -174,6 +174,16 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         { event: "INSERT", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
         () => loadConversations()
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as { title: string; body: string | null };
+          playNotification();
+          toast.success(n.title, { description: n.body ?? undefined, duration: 6000 });
+          showBrowserNotification(n.title, n.body ?? "");
+        }
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
