@@ -27,9 +27,15 @@ function AuthGuard() {
   }
   return (
     <CallProvider>
+      <PushBootstrap />
       <Outlet />
       <CallScreen />
       <IncomingCallDialog />
     </CallProvider>
   );
+}
+
+function PushBootstrap() {
+  usePushSetup();
+  return null;
 }
