@@ -469,10 +469,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
             setActive(null);
           }
           // Callee side incoming was cancelled by caller
-          if (incoming && incoming.id === row.id && row.status !== "ringing") {
-            stopRingtone();
-            setIncoming(null);
-          }
+          setIncoming((curr) => {
+            if (curr && curr.id === row.id && row.status !== "ringing") {
+              stopRingtone();
+              return null;
+            }
+            return curr;
+          });
         }
       )
       .subscribe();
@@ -480,7 +483,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, incoming?.id]);
+  }, [user?.id]);
 
   return (
     <CallContext.Provider
