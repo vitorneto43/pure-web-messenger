@@ -25,6 +25,7 @@ import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
 import { formatTime } from "@/lib/format-time";
+import { setAppBadge } from "@/lib/app-badge";
 import {
   requestBrowserNotificationPermission,
   playNotification,
@@ -144,6 +145,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
     setConversations(items);
     setLoading(false);
+
+    // Update Chrome / installed PWA icon badge with total unread count
+    const totalUnread = items.reduce((sum, it) => sum + (it.unread ?? 0), 0);
+    setAppBadge(totalUnread);
   }
 
   useEffect(() => {

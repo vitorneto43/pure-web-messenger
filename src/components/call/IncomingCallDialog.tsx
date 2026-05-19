@@ -44,7 +44,7 @@ export function IncomingCallDialog() {
             <Button
               size="icon"
               onClick={acceptIncoming}
-              className="size-16 rounded-full bg-green-600 hover:bg-green-700 animate-pulse"
+              className="size-16 rounded-full bg-green-600 hover:bg-green-700"
             >
               {isVideo ? <Video className="size-7" /> : <Phone className="size-7" />}
             </Button>
