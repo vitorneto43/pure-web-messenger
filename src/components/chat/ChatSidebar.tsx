@@ -241,24 +241,27 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             </div>
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon" variant="ghost" className="rounded-full">
-              <Settings className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link to="/profile">Meu perfil</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
-              <UsersRound className="size-4 mr-2" /> Novo grupo
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={logout} className="text-destructive">
-              <LogOut className="size-4 mr-2" /> Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-1">
+          <NotificationsBell />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="rounded-full">
+                <Settings className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/profile">Meu perfil</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
+                <UsersRound className="size-4 mr-2" /> Novo grupo
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={logout} className="text-destructive">
+                <LogOut className="size-4 mr-2" /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="px-3 pt-3 pb-2 space-y-2">
