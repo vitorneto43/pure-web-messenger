@@ -129,6 +129,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
 
+      // mark related notifications as read
+      await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .is("read_at", null)
+        .filter("data->>conversation_id", "eq", conversationId);
+
       setLoading(false);
     })();
 
