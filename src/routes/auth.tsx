@@ -148,6 +148,13 @@ function AuthPage() {
             {mode === "forgot" && "Enviaremos um link para redefinir sua senha."}
           </p>
 
+          {mode === "signup" && inviteUsername && (
+            <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+              Você foi convidado por <b>@{inviteUsername}</b> — crie sua conta para começar a conversar.
+            </div>
+          )}
+
+
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
               <>
