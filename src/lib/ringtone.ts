@@ -13,19 +13,29 @@ function ensureCtx() {
 function beep() {
   if (!ctx) return;
   const t = ctx.currentTime;
-  [0, 0.25].forEach((offset) => {
-    const o = ctx!.createOscillator();
+  // Two pairs of trills (classic mobile ringtone feel)
+  [0, 0.4].forEach((offset) => {
+    const o1 = ctx!.createOscillator();
+    const o2 = ctx!.createOscillator();
     const g = ctx!.createGain();
-    o.type = "sine";
-    o.frequency.setValueAtTime(720, t + offset);
+    o1.type = "sine";
+    o2.type = "sine";
+    o1.frequency.setValueAtTime(880, t + offset);
+    o2.frequency.setValueAtTime(1320, t + offset);
     g.gain.setValueAtTime(0.0001, t + offset);
-    g.gain.exponentialRampToValueAtTime(0.22, t + offset + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + offset + 0.2);
-    o.connect(g).connect(ctx!.destination);
-    o.start(t + offset);
-    o.stop(t + offset + 0.22);
+    g.gain.exponentialRampToValueAtTime(0.5, t + offset + 0.02);
+    g.gain.setValueAtTime(0.5, t + offset + 0.28);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + offset + 0.35);
+    o1.connect(g);
+    o2.connect(g);
+    g.connect(ctx!.destination);
+    o1.start(t + offset);
+    o2.start(t + offset);
+    o1.stop(t + offset + 0.36);
+    o2.stop(t + offset + 0.36);
   });
 }
+
 
 // Classic telephone ringback: two tones (440Hz + 480Hz) for ~2s, then ~4s silence.
 function ringbackTone() {
