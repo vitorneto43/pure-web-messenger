@@ -35,8 +35,8 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
     setSearching(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+      .select("id, username, display_name, avatar_url, email")
+      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%,email.ilike.%${q}%`)
       .limit(15);
     setResults(data ?? []);
     setSearching(false);
