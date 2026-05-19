@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { CallProvider } from "@/hooks/use-call";
 import { CallScreen } from "@/components/call/CallScreen";
 import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
+import { usePushSetup } from "@/hooks/use-push";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -26,9 +27,15 @@ function AuthGuard() {
   }
   return (
     <CallProvider>
+      <PushBootstrap />
       <Outlet />
       <CallScreen />
       <IncomingCallDialog />
     </CallProvider>
   );
+}
+
+function PushBootstrap() {
+  usePushSetup();
+  return null;
 }

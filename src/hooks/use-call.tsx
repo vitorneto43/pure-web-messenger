@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
+import { sendCallPush } from "@/lib/push.functions";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
@@ -303,6 +304,22 @@ export function CallProvider({ children }: { children: ReactNode }) {
         await createPeerConnection(kind, true);
         setupSignaling(data.id, true, kind);
         startRingback();
+
+        // Fire-and-forget push notification to the callee
+        const callerName =
+          (user.user_metadata?.display_name as string | undefined) ||
+          (user.user_metadata?.full_name as string | undefined) ||
+          user.email ||
+          "Alguém";
+        void sendCallPush({
+          data: {
+            callId: data.id,
+            calleeId,
+            conversationId,
+            kind,
+            callerName,
+          },
+        }).catch((e) => console.error("sendCallPush failed", e));
 
         // Auto-cancel if not answered in 45s
         setTimeout(() => {
