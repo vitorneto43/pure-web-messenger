@@ -11,11 +11,7 @@ import { Label } from "@/components/ui/label";
 
 type Mode = "login" | "signup" | "forgot";
 
-const normalizeUsername = (value: string) =>
-  value
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/_+/g, "_");
+const normalizeUsername = (value: string) => value.trim().replace(/\s+/g, "_").replace(/_+/g, "_");
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -67,7 +63,9 @@ function AuthPage() {
         });
         if (!parsed.success) {
           const issue = parsed.error.issues[0];
-          toast.error(`${issue.path[0] === "username" ? "Nome de usuário" : "Cadastro"}: ${issue.message}`);
+          toast.error(
+            `${issue.path[0] === "username" ? "Nome de usuário" : "Cadastro"}: ${issue.message}`,
+          );
           return;
         }
         const { error } = await supabase.auth.signUp({
@@ -109,8 +107,8 @@ function AuthPage() {
         toast.success("Enviamos um link de recuperação para seu email.");
         setMode("login");
       }
-    } catch (err: any) {
-      toast.error(err.message ?? "Erro inesperado");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro inesperado");
     } finally {
       setBusy(false);
     }
