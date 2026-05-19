@@ -1,41 +1,46 @@
-# Ligações de voz e vídeo no Wavechat
+## O que será entregue
 
-Vou implementar **chamadas 1:1 de voz e vídeo** dentro do chat existente, usando **WebRTC** no navegador e **Supabase Realtime** como canal de sinalização (sem precisar de servidor próprio).
+Quando alguém te ligar (voz ou vídeo), você recebe uma **notificação do navegador com som**, mesmo se o site estiver fechado. Tocar na notificação abre o app já na tela de chamada. Os botões "Atender" e "Recusar" aparecem direto na notificação.
 
-## O que o usuário verá
+## Como o usuário ativa
 
-- Dois novos botões no topo da janela de conversa 1:1: **📞 Ligar** e **🎥 Vídeo**.
-- Ao clicar, abre uma tela de chamada em tela cheia mostrando:
-  - Vídeo local (pequeno, canto) e vídeo remoto (grande) — para chamadas de vídeo.
-  - Avatar grande + nome — para chamadas só de voz.
-  - Botões: mutar microfone, ligar/desligar câmera, encerrar.
-- O outro usuário recebe uma **tela de chamada recebida** com toque, mostrando avatar e nome, com botões **Aceitar** / **Recusar**.
-- Se recusar / não atender / cair: notificação de "Chamada perdida" na conversa.
-- Funciona apenas em conversas 1:1 nesta primeira versão (grupos ficam para depois).
+1. Na primeira vez que abrir o app depois desta atualização, aparece um pedido: **"Receber notificações de chamada?"**
+2. Ao aceitar, o dispositivo fica registrado e passa a receber chamadas mesmo com a aba fechada.
+3. No iPhone: precisa **adicionar o site à tela inicial** (Compartilhar → Adicionar à Tela de Início). Sem isso, a Apple não permite push. No Android e desktop funciona direto.
 
-## Como funciona por baixo (resumo técnico)
+## Limites importantes (do navegador, não dá pra contornar)
 
-- **WebRTC peer-to-peer** entre os dois navegadores (áudio/vídeo vai direto, não passa pelo servidor).
-- **Sinalização** (offer/answer/ICE candidates) viaja por um Supabase Realtime channel exclusivo da chamada (`call:{callId}`).
-- **STUN público do Google** (`stun:stun.l.google.com:19302`) para atravessar NAT. Sem TURN — em redes muito restritivas (algumas corporativas/celular) a chamada pode falhar; nesse caso mostro mensagem clara. Adicionar TURN depois é só trocar config.
-- Nova tabela `calls` (id, conversation_id, caller_id, callee_id, kind 'audio'|'video', status 'ringing'|'accepted'|'declined'|'missed'|'ended', timestamps) só para histórico e detectar chamada recebida via Realtime.
-- Listener global de chamadas recebidas montado no layout `_authenticated` para tocar em qualquer página.
+- O som é o som padrão de notificação do sistema (curto, ~1-2s). Navegadores não permitem tocar um ringtone longo contínuo com o site fechado.
+- No celular o navegador precisa estar instalado (não precisa estar aberto, mas precisa existir no aparelho).
+- Push só funciona no site **publicado** (`pure-web-messenger.lovable.app`), não no preview do editor.
+
+## Passos da implementação
+
+1. **Tabela `push_subscriptions`** (user_id, endpoint, p256dh, auth, user_agent) com RLS — cada usuário só vê/edita as próprias.
+2. **Service worker** (`public/sw.js`) que escuta evento `push` e mostra notificação com ações Atender/Recusar; ao clicar abre a URL da chamada.
+3. **Manifest** (`public/manifest.json`) básico para permitir instalação como PWA (necessário no iOS).
+4. **Registro do SW + permissão**: hook que pede permissão de notificação após login, registra o SW, cria a `PushSubscription` com a chave VAPID pública e salva no banco.
+5. **Chaves VAPID**: geradas uma vez; a pública vai no código (publishable), a privada e o "subject" (email) ficam como secrets do servidor.
+6. **Server function `sendCallPush`**: chamada pelo `startCall` logo após inserir na tabela `calls`. Busca as subscriptions do `callee_id`, envia o push usando a biblioteca `web-push`. Remove subscriptions inválidas (410/404).
+
+## Detalhes técnicos
+
+- Manifest mínimo (`display: "standalone"`, ícone existente, sem cache estratégico — sem `vite-plugin-pwa`).
+- `public/sw.js` puro, sem caching de assets, só handlers `push` e `notificationclick`. Isso evita os problemas conhecidos de service worker no preview do Lovable.
+- Registro do SW guardado por `if (!isIframe && !isPreviewHost)` para não rodar no editor.
+- `web-push` é puro JS e roda no Worker do TanStack Start sem nativos.
+- Secrets necessários: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto). Vou gerar as chaves e pedir confirmação antes de salvar.
+- Payload do push: `{ callId, callerName, kind, conversationId }` — usado pelo SW pra montar a notificação e pelo clique pra abrir `/chat/{conversationId}` já com a chamada ativa.
 
 ## Arquivos a criar/alterar
 
-- `supabase/migrations/...sql` — tabela `calls` + RLS + realtime.
-- `src/hooks/use-call.tsx` — provider/contexto com toda lógica WebRTC (peer connection, signaling, estados).
-- `src/components/call/CallScreen.tsx` — UI da chamada ativa (vídeos, controles).
-- `src/components/call/IncomingCallDialog.tsx` — modal de chamada recebida com toque.
-- `src/components/chat/ChatWindow.tsx` — adicionar botões 📞 e 🎥 no header.
-- `src/routes/_authenticated.tsx` — montar `CallProvider` + `IncomingCallDialog` globais.
-- `src/lib/notification-sound.ts` — adicionar som de toque (reuso da estrutura existente).
+- `supabase/migrations/...` — tabela `push_subscriptions` + RLS.
+- `public/sw.js` — service worker minimalista de push.
+- `public/manifest.json` — manifest para instalação.
+- `src/hooks/use-push.tsx` — registra SW, pede permissão, salva subscription.
+- `src/lib/push.functions.ts` — `sendCallPush` (server fn com `web-push`).
+- `src/routes/__root.tsx` — link do manifest na `<head>`.
+- `src/routes/_authenticated.tsx` — montar `usePush()` global.
+- `src/hooks/use-call.tsx` — chamar `sendCallPush` após inserir o `calls`.
 
-## Limitações desta versão
-
-- Apenas 1:1 (não grupo).
-- Sem TURN server → pode falhar em redes muito fechadas.
-- Sem gravação de chamada.
-- Sem compartilhamento de tela (fácil adicionar depois).
-
-Posso começar?
+Posso prosseguir?
