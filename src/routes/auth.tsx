@@ -39,12 +39,23 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [form, setForm] = useState({
     username: "",
     displayName: "",
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const inv = params.get("invite");
+    if (inv) {
+      setInviteUsername(inv);
+      setMode("signup");
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && session) navigate({ to: "/chat" });
