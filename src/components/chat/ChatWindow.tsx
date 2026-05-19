@@ -441,17 +441,27 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     />
                   </a>
                 )}
-                {m.attachment_url && !m.attachment_type?.startsWith("image/") && (
-                  <a
-                    href={m.attachment_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-sm underline mb-1"
-                  >
-                    <Paperclip className="size-4" />
-                    {m.attachment_name ?? "Arquivo"}
-                  </a>
+                {m.attachment_url && m.attachment_type?.startsWith("audio/") && (
+                  <audio
+                    controls
+                    preload="metadata"
+                    src={m.attachment_url}
+                    className="mb-1 max-w-full"
+                  />
                 )}
+                {m.attachment_url &&
+                  !m.attachment_type?.startsWith("image/") &&
+                  !m.attachment_type?.startsWith("audio/") && (
+                    <a
+                      href={m.attachment_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 text-sm underline mb-1"
+                    >
+                      <Paperclip className="size-4" />
+                      {m.attachment_name ?? "Arquivo"}
+                    </a>
+                  )}
                 {m.content && (
                   <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
                 )}
