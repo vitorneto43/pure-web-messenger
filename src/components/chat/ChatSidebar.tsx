@@ -277,6 +277,15 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           >
             <UsersRound className="size-4 mr-1.5" /> Grupo
           </Button>
+          <Button
+            onClick={inviteFriend}
+            size="sm"
+            variant="secondary"
+            className="rounded-full"
+            title="Copiar link de convite"
+          >
+            <UserPlus className="size-4 mr-1.5" /> Convidar
+          </Button>
         </div>
       </div>
 
