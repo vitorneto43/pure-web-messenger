@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { startRingtone, stopRingtone } from "@/lib/ringtone";
+import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
