@@ -11,7 +11,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { InstallPrompt } from "@/components/InstallPrompt";
+
 
 import appCss from "../styles.css?url";
 
@@ -131,7 +131,7 @@ function RootComponent() {
       <AuthProvider>
         <AuthInvalidator />
         <Outlet />
-        <InstallPrompt />
+        
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
