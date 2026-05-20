@@ -6,6 +6,7 @@ import { CallProvider } from "@/hooks/use-call";
 import { CallScreen } from "@/components/call/CallScreen";
 import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
 import { usePushSetup } from "@/hooks/use-push";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
