@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { registerServiceWorker } from "@/lib/push-client";
 
@@ -8,7 +8,7 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "wavechat_install_dismissed_v5";
+const COLLAPSE_KEY = "wavechat_install_collapsed_v1";
 
 function isStandalone() {
   if (typeof window === "undefined") return true;
@@ -24,40 +24,34 @@ function inIframe() {
   }
 }
 
-type Platform = "android" | "ios-safari" | "ios-other" | "mobile-other";
+type Platform = "android" | "ios-safari" | "ios-other" | "mobile-other" | "desktop";
 
-function isMobileScreen() {
-  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  return window.innerWidth < 768 || /Android|iPad|iPhone|iPod/i.test(navigator.userAgent);
-}
-
-function detectPlatform(): Platform | null {
-  if (typeof navigator === "undefined") return null;
+function detectPlatform(): Platform {
+  if (typeof navigator === "undefined") return "desktop";
   const ua = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
   const isAndroid = /Android/.test(ua);
   const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
   if (isIOS) return isSafari ? "ios-safari" : "ios-other";
   if (isAndroid) return "android";
-  return isMobileScreen() ? "mobile-other" : null;
+  if (window.innerWidth < 768) return "mobile-other";
+  return "desktop";
 }
 
 export function InstallPrompt() {
   const [mounted, setMounted] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
-  const [platform, setPlatform] = useState<Platform>("mobile-other");
-  const [dismissed, setDismissed] = useState(false);
+  const [platform, setPlatform] = useState<Platform>("desktop");
+  const [collapsed, setCollapsed] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (inIframe()) return;
     if (isStandalone()) return;
-    const detectedPlatform = detectPlatform();
-    if (!detectedPlatform) return;
     setMounted(true);
-    setPlatform(detectedPlatform);
-    if (localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
+    setPlatform(detectPlatform());
+    if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
 
     void registerServiceWorker();
 
@@ -69,11 +63,17 @@ export function InstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", onBIP);
   }, []);
 
-  if (!mounted || dismissed) return null;
+  if (!mounted) return null;
 
-  const dismiss = () => {
-    localStorage.setItem(DISMISS_KEY, "1");
-    setDismissed(true);
+  const collapse = () => {
+    localStorage.setItem(COLLAPSE_KEY, "1");
+    setCollapsed(true);
+    setShowHelp(false);
+  };
+
+  const expand = () => {
+    localStorage.removeItem(COLLAPSE_KEY);
+    setCollapsed(false);
   };
 
   const install = async () => {
@@ -81,7 +81,6 @@ export function InstallPrompt() {
       await deferred.prompt();
       await deferred.userChoice;
       setDeferred(null);
-      dismiss();
     } else {
       setShowHelp(true);
     }
@@ -94,11 +93,26 @@ export function InstallPrompt() {
       case "ios-other":
         return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
       case "android":
-        return 'Toque em "Baixar aplicativo". Se o celular pedir, confirme "Instalar" ou "Adicionar à Tela de Início" no navegador.';
+        return 'Toque em "Instalar no celular". Se nada acontecer, abra o menu do navegador (⋮) e escolha "Instalar app" ou "Adicionar à Tela de Início".';
+      case "mobile-other":
+        return 'Abra o menu do navegador e escolha "Instalar app" ou "Adicionar à Tela de Início".';
       default:
-        return 'Toque em "Baixar aplicativo". Se o navegador não abrir a instalação automática, use "Adicionar à Tela de Início".';
+        return 'No computador, clique no ícone de instalação na barra de endereço, ou abra o site pelo celular para instalar como app.';
     }
   })();
+
+  if (collapsed) {
+    return (
+      <button
+        onClick={expand}
+        aria-label="Instalar no celular"
+        className="fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-border bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90"
+      >
+        <Download className="size-4" />
+        Instalar no celular
+      </button>
+    );
+  }
 
   return (
     <div className="fixed bottom-4 left-1/2 z-[100] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
@@ -110,24 +124,28 @@ export function InstallPrompt() {
           loading="lazy"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Baixar Wavechat no celular</p>
+          <p className="text-sm font-semibold">Instalar no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Instale direto na tela inicial com esse ícone, igual app de celular."}
+            {showHelp ? helpText : "Instale o Wavechat direto na tela inicial, igual app de celular."}
           </p>
-          <div className="mt-2 flex gap-2">
-            {!showHelp && (
-              <Button size="sm" onClick={install}>
-                Baixar aplicativo
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" onClick={install}>
+              <Download className="size-4" />
+              Instalar no celular
+            </Button>
+            {showHelp && (
+              <Button size="sm" variant="ghost" onClick={() => setShowHelp(false)}>
+                Voltar
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={dismiss}>
-              {showHelp ? "Fechar" : "Agora não"}
+            <Button size="sm" variant="ghost" onClick={collapse}>
+              Minimizar
             </Button>
           </div>
         </div>
         <button
-          aria-label="Fechar"
-          onClick={dismiss}
+          aria-label="Minimizar"
+          onClick={collapse}
           className="rounded-md p-1 text-muted-foreground hover:bg-muted"
         >
           <X className="size-4" />
