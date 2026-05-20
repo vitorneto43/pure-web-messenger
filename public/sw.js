@@ -47,8 +47,8 @@ self.addEventListener("push", (event) => {
   const options = isMessage
     ? {
         body,
-        icon: "/icon.svg",
-        badge: "/icon.svg",
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
         tag: conversationId ? `msg-${conversationId}` : "wavechat-msg",
         renotify: true,
         silent: false,
@@ -57,8 +57,8 @@ self.addEventListener("push", (event) => {
       }
     : {
         body,
-        icon: "/icon.svg",
-        badge: "/icon.svg",
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
         tag: callId ? `call-${callId}` : "wavechat-call",
         renotify: true,
         requireInteraction: true,
