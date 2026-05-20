@@ -8,7 +8,7 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "wavechat_install_dismissed_v3";
+const DISMISS_KEY = "wavechat_install_dismissed_v4";
 
 function isStandalone() {
   if (typeof window === "undefined") return true;
@@ -24,24 +24,28 @@ function inIframe() {
   }
 }
 
-type Platform = "android-chrome" | "ios-safari" | "ios-other" | "desktop-chrome" | "desktop-other";
+type Platform = "android" | "ios-safari" | "ios-other" | "mobile-other";
 
-function detectPlatform(): Platform {
-  if (typeof navigator === "undefined") return "desktop-other";
+function isMobileScreen() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  return window.innerWidth < 768 || /Android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+}
+
+function detectPlatform(): Platform | null {
+  if (typeof navigator === "undefined") return null;
   const ua = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
   const isAndroid = /Android/.test(ua);
   const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
-  const isChromium = /Chrome|Chromium|Edg|OPR/.test(ua);
   if (isIOS) return isSafari ? "ios-safari" : "ios-other";
-  if (isAndroid) return "android-chrome";
-  return isChromium ? "desktop-chrome" : "desktop-other";
+  if (isAndroid) return "android";
+  return isMobileScreen() ? "mobile-other" : null;
 }
 
 export function InstallPrompt() {
   const [mounted, setMounted] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
-  const [platform, setPlatform] = useState<Platform>("desktop-other");
+  const [platform, setPlatform] = useState<Platform>("mobile-other");
   const [dismissed, setDismissed] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -49,8 +53,10 @@ export function InstallPrompt() {
     if (typeof window === "undefined") return;
     if (inIframe()) return;
     if (isStandalone()) return;
+    const detectedPlatform = detectPlatform();
+    if (!detectedPlatform) return;
     setMounted(true);
-    setPlatform(detectPlatform());
+    setPlatform(detectedPlatform);
     if (localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
 
     void registerServiceWorker();
