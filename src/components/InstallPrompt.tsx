@@ -110,9 +110,9 @@ export function InstallPrompt() {
       case "ios-other":
         return 'No iPhone, abra este site no Safari. Outros navegadores podem salvar só um atalho/offline e não criar o app correto.';
       case "android":
-        return 'Se apareceu "Baixar", "Download" ou "Página offline", essa não é a instalação do app. Use o menu (⋮) e escolha exatamente "Instalar app"; se essa opção não aparecer, esse navegador só permite atalho/offline.';
+        return 'Android: abra o menu (⋮) do Chrome e toque em "Instalar app" ou "Adicionar à tela inicial". Se NENHUMA dessas opções aparecer (Android/Chrome antigo): 1) atualize o Chrome pela Play Store; 2) ou instale o navegador "Kiwi Browser" ou "Edge" da Play Store, abra este site nele e use o menu → "Adicionar à tela inicial" — vai criar o ícone do Wavechat na sua tela. Se mesmo assim não aparecer, segure um espaço vazio da tela inicial → Widgets/Atalhos → Atalho do Chrome → escolha este site.';
       case "mobile-other":
-        return 'Abra o menu do navegador e procure "Instalar app". Não use "Baixar", "Download" ou "Salvar offline", pois isso não cria aplicativo com ícone.';
+        return 'Abra o menu do navegador e procure "Instalar app" ou "Adicionar à tela inicial". Se não tiver essa opção, instale o Chrome ou Kiwi Browser pela loja de apps e abra este site por lá. Não use "Baixar"/"Salvar offline".';
       default:
         return 'No computador, clique no ícone de instalação na barra de endereço, ou abra o site pelo celular para instalar como app.';
     }
