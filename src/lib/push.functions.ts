@@ -113,3 +113,76 @@ export const sendCallPush = createServerFn({ method: "POST" })
 
     return { sent };
   });
+
+export const sendMessagePush = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        conversationId: z.string().uuid(),
+        preview: z.string().max(200),
+      })
+      .parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    configureWebPush();
+
+    // Resolve sender display name + conversation info
+    const [{ data: sender }, { data: conv }, { data: members }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("display_name, username").eq("id", userId).single(),
+      supabaseAdmin.from("conversations").select("id, name, is_group").eq("id", data.conversationId).single(),
+      supabaseAdmin
+        .from("conversation_members")
+        .select("user_id")
+        .eq("conversation_id", data.conversationId),
+    ]);
+
+    const recipientIds = (members ?? [])
+      .map((m) => m.user_id)
+      .filter((id) => id !== userId);
+    if (recipientIds.length === 0) return { sent: 0 };
+
+    const { data: subs, error } = await supabaseAdmin
+      .from("push_subscriptions")
+      .select("id, endpoint, p256dh, auth, user_id")
+      .in("user_id", recipientIds);
+    if (error) throw new Error(error.message);
+    if (!subs || subs.length === 0) return { sent: 0 };
+
+    const senderName = sender?.display_name || sender?.username || "Nova mensagem";
+    const title = conv?.is_group ? `${conv.name ?? "Grupo"} • ${senderName}` : senderName;
+    const body = data.preview?.trim() ? data.preview : "Enviou uma mensagem";
+
+    const payload = JSON.stringify({
+      type: "message",
+      title,
+      body,
+      conversationId: data.conversationId,
+    });
+
+    let sent = 0;
+    const toRemove: string[] = [];
+    await Promise.all(
+      subs.map(async (s) => {
+        try {
+          await webpush.sendNotification(
+            { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+            payload,
+            { TTL: 60, urgency: "normal" }
+          );
+          sent++;
+        } catch (e: any) {
+          const status = e?.statusCode;
+          if (status === 404 || status === 410) toRemove.push(s.id);
+          else console.error("push send failed", status, e?.body || e?.message);
+        }
+      })
+    );
+
+    if (toRemove.length) {
+      await supabaseAdmin.from("push_subscriptions").delete().in("id", toRemove);
+    }
+
+    return { sent };
+  });
