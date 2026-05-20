@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -149,6 +150,10 @@ function ProfilePage() {
             {saving && <Loader2 className="size-4 animate-spin mr-2" />} Salvar
           </Button>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <NotificationSettings />
       </div>
     </div>
   );
