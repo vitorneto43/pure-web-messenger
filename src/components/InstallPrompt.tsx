@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { registerServiceWorker } from "@/lib/push-client";
 
@@ -8,7 +8,7 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "wavechat_install_dismissed_v4";
+const DISMISS_KEY = "wavechat_install_dismissed_v5";
 
 function isStandalone() {
   if (typeof window === "undefined") return true;
@@ -94,27 +94,30 @@ export function InstallPrompt() {
       case "ios-other":
         return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
       case "android":
-        return 'Abra o menu ⋮ do Chrome e toque em "Instalar app" ou "Adicionar à Tela de Início".';
+        return 'Toque em "Baixar aplicativo". Se o celular pedir, confirme "Instalar" ou "Adicionar à Tela de Início" no navegador.';
       default:
-        return 'Android: menu ⋮ → "Instalar app". iPhone: Safari → Compartilhar → "Adicionar à Tela de Início".';
+        return 'Toque em "Baixar aplicativo". Se o navegador não abrir a instalação automática, use "Adicionar à Tela de Início".';
     }
   })();
 
   return (
     <div className="fixed bottom-4 left-1/2 z-[100] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
       <div className="flex items-start gap-3">
-        <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          {showHelp ? <Smartphone className="size-5" /> : <Download className="size-5" />}
-        </div>
+        <img
+          src="/icon-192.png"
+          alt="Ícone do Wavechat"
+          className="size-11 shrink-0 rounded-xl shadow-sm"
+          loading="lazy"
+        />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Instalar Wavechat no celular</p>
+          <p className="text-sm font-semibold">Baixar Wavechat no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Baixe no celular com ícone na tela inicial, igual app de verdade."}
+            {showHelp ? helpText : "Instale direto na tela inicial com esse ícone, igual app de celular."}
           </p>
           <div className="mt-2 flex gap-2">
             {!showHelp && (
               <Button size="sm" onClick={install}>
-                Instalar no celular
+                Baixar aplicativo
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={dismiss}>
