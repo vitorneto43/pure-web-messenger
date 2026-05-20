@@ -44,6 +44,7 @@ export function InstallPrompt() {
   const [platform, setPlatform] = useState<Platform>("desktop");
   const [collapsed, setCollapsed] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -53,14 +54,24 @@ export function InstallPrompt() {
     setPlatform(detectPlatform());
     if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
 
-    void registerServiceWorker();
+    void registerServiceWorker().then(() => setPlatform(detectPlatform()));
 
     const onBIP = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BIPEvent);
+      setShowHelp(false);
+    };
+    const onInstalled = () => {
+      setDeferred(null);
+      setShowHelp(false);
+      setMounted(false);
     };
     window.addEventListener("beforeinstallprompt", onBIP);
-    return () => window.removeEventListener("beforeinstallprompt", onBIP);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   if (!mounted) return null;
@@ -78,9 +89,15 @@ export function InstallPrompt() {
 
   const install = async () => {
     if (deferred) {
-      await deferred.prompt();
-      await deferred.userChoice;
-      setDeferred(null);
+      setInstalling(true);
+      try {
+        await deferred.prompt();
+        const choice = await deferred.userChoice;
+        setDeferred(null);
+        setShowHelp(choice.outcome !== "accepted");
+      } finally {
+        setInstalling(false);
+      }
     } else {
       setShowHelp(true);
     }
@@ -93,7 +110,7 @@ export function InstallPrompt() {
       case "ios-other":
         return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
       case "android":
-        return 'Toque em "Instalar no celular". Se nada acontecer, abra o menu do navegador (⋮) e escolha "Instalar app" ou "Adicionar à Tela de Início".';
+        return 'Se a janela de instalação não abriu, o navegador ainda não liberou o instalador. Toque no menu (⋮) e escolha "Instalar app" ou "Adicionar à Tela de Início".';
       case "mobile-other":
         return 'Abra o menu do navegador e escolha "Instalar app" ou "Adicionar à Tela de Início".';
       default:
@@ -126,12 +143,12 @@ export function InstallPrompt() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Instalar no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Instale o Wavechat direto na tela inicial, igual app de celular."}
+            {showHelp ? helpText : deferred ? "Toque para abrir o instalador do celular com o ícone do Wavechat." : "Instale o Wavechat direto na tela inicial, igual app de celular."}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Button size="sm" onClick={install}>
+            <Button size="sm" onClick={install} disabled={installing}>
               <Download className="size-4" />
-              Instalar no celular
+              {installing ? "Abrindo..." : "Instalar no celular"}
             </Button>
             {showHelp && (
               <Button size="sm" variant="ghost" onClick={() => setShowHelp(false)}>

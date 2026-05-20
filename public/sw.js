@@ -7,6 +7,13 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(self.clients.claim());
 });
 
+// Keep the PWA installable on Android browsers that still expect a fetch
+// handler, without caching pages or serving stale content.
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  event.respondWith(fetch(event.request));
+});
+
 async function bumpBadge() {
   try {
     if (!self.navigator || !self.navigator.setAppBadge) return;

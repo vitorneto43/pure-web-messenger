@@ -26,7 +26,8 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return null;
   if (isPreviewOrIframe()) return null;
   try {
-    const reg = await navigator.serviceWorker.register("/sw.js");
+    const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    await navigator.serviceWorker.ready;
     return reg;
   } catch (e) {
     console.error("SW registration failed", e);
