@@ -287,6 +287,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         .delete()
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
+      // Fire-and-forget push notification to other members
+      void sendMessagePush({
+        data: {
+          conversationId,
+          preview: content.trim() || (attachment?.type?.startsWith("image") ? "📷 Foto" : "📎 Anexo"),
+        },
+      }).catch(() => {});
     } catch (e: any) {
       toast.error(e.message);
     } finally {
