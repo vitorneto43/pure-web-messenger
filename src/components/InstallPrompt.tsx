@@ -106,13 +106,13 @@ export function InstallPrompt() {
   const helpText = (() => {
     switch (platform) {
       case "ios-safari":
-        return 'Toque no botão Compartilhar (quadrado com seta) e depois em "Adicionar à Tela de Início".';
+        return 'No iPhone, a Apple só cria o app pela opção Compartilhar → "Adicionar à Tela de Início". Ele aparece na tela inicial, não na lista de apps.';
       case "ios-other":
-        return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
+        return 'No iPhone, abra este site no Safari. Outros navegadores podem salvar só um atalho/offline e não criar o app correto.';
       case "android":
-        return 'Se a janela de instalação não abriu, o navegador ainda não liberou o instalador. Toque no menu (⋮) e escolha "Instalar app" ou "Adicionar à Tela de Início".';
+        return 'Se apareceu "Baixar", "Download" ou "Página offline", essa não é a instalação do app. Use o menu (⋮) e escolha exatamente "Instalar app"; se essa opção não aparecer, esse navegador só permite atalho/offline.';
       case "mobile-other":
-        return 'Abra o menu do navegador e escolha "Instalar app" ou "Adicionar à Tela de Início".';
+        return 'Abra o menu do navegador e procure "Instalar app". Não use "Baixar", "Download" ou "Salvar offline", pois isso não cria aplicativo com ícone.';
       default:
         return 'No computador, clique no ícone de instalação na barra de endereço, ou abra o site pelo celular para instalar como app.';
     }
@@ -143,7 +143,11 @@ export function InstallPrompt() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Instalar no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : deferred ? "Toque para abrir o instalador do celular com o ícone do Wavechat." : "Instale o Wavechat direto na tela inicial, igual app de celular."}
+            {showHelp
+              ? helpText
+              : deferred
+                ? "Toque para abrir o instalador real do celular com o ícone do Wavechat."
+                : "Não toque em Baixar/Download offline. Toque aqui para ver a opção certa de instalar o app."}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" onClick={install} disabled={installing}>
