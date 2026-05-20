@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Download, X } from "lucide-react";
+import { Download, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { registerServiceWorker } from "@/lib/push-client";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "wavechat_install_dismissed_v2";
+const DISMISS_KEY = "wavechat_install_dismissed_v3";
 
 function isStandalone() {
   if (typeof window === "undefined") return true;
@@ -51,6 +52,8 @@ export function InstallPrompt() {
     setMounted(true);
     setPlatform(detectPlatform());
     if (localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
+
+    void registerServiceWorker();
 
     const onBIP = (e: Event) => {
       e.preventDefault();
@@ -96,18 +99,18 @@ export function InstallPrompt() {
   return (
     <div className="fixed bottom-4 left-1/2 z-[100] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
       <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-          <Download className="size-5" />
+        <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          {showHelp ? <Smartphone className="size-5" /> : <Download className="size-5" />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Instalar Wavechat</p>
+          <p className="text-sm font-semibold">Baixar app Wavechat</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Acesse mais rápido e receba notificações como num app nativo."}
+            {showHelp ? helpText : "Instale no celular com ícone na tela inicial, igual aplicativo."}
           </p>
           <div className="mt-2 flex gap-2">
             {!showHelp && (
               <Button size="sm" onClick={install}>
-                Instalar
+                Baixar app
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={dismiss}>
