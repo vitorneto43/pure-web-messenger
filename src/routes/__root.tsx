@@ -131,7 +131,7 @@ function RootComponent() {
       <AuthProvider>
         <AuthInvalidator />
         <Outlet />
-        <InstallPrompt />
+        
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
