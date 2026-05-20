@@ -24,6 +24,7 @@ export function isPreviewOrIframe(): boolean {
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return null;
+  if (isPreviewOrIframe()) return null;
   try {
     const reg = await navigator.serviceWorker.register("/sw.js");
     return reg;
