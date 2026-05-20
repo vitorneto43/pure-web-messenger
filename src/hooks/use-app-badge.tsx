@@ -4,32 +4,25 @@ import { useAuth } from "@/hooks/use-auth";
 import { setAppBadge } from "@/lib/app-badge";
 
 // Globally maintain the installed-app icon badge count.
-// Counts: unread messages (messages newer than my conversation_reads) + unread notifications.
+// Counts unread messages (newer than my conversation_members.last_read_at) + unread notifications.
 export function useAppBadgeSync() {
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
-
     let cancelled = false;
 
     async function recompute() {
       if (!user) return;
       try {
-        // My conversation read marks
-        const { data: reads } = await supabase
-          .from("conversation_reads")
-          .select("conversation_id, last_read_at")
-          .eq("user_id", user.id);
-        const readMap = new Map<string, string>();
-        for (const r of reads ?? []) readMap.set(r.conversation_id, r.last_read_at);
-
-        // My memberships
         const { data: members } = await supabase
           .from("conversation_members")
-          .select("conversation_id")
+          .select("conversation_id, last_read_at")
           .eq("user_id", user.id);
         const convIds = (members ?? []).map((m) => m.conversation_id);
+        const readMap = new Map(
+          (members ?? []).map((m) => [m.conversation_id, m.last_read_at]),
+        );
 
         let unreadMsgs = 0;
         if (convIds.length) {
@@ -42,11 +35,10 @@ export function useAppBadgeSync() {
             .limit(500);
           for (const m of msgs ?? []) {
             const last = readMap.get(m.conversation_id);
-            if (!last || new Date(m.created_at) > new Date(last)) unreadMsgs += 1;
+            if (!last || new Date(m.created_at) > new Date(last as string)) unreadMsgs += 1;
           }
         }
 
-        // Unread notifications
         const { count: notifUnread } = await supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
@@ -72,7 +64,7 @@ export function useAppBadgeSync() {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "conversation_reads", filter: `user_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
         () => recompute(),
       )
       .subscribe();
