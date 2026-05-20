@@ -8,7 +8,7 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "wavechat_install_dismissed_v3";
+const DISMISS_KEY = "wavechat_install_dismissed_v4";
 
 function isStandalone() {
   if (typeof window === "undefined") return true;
@@ -24,24 +24,28 @@ function inIframe() {
   }
 }
 
-type Platform = "android-chrome" | "ios-safari" | "ios-other" | "desktop-chrome" | "desktop-other";
+type Platform = "android" | "ios-safari" | "ios-other" | "mobile-other";
 
-function detectPlatform(): Platform {
-  if (typeof navigator === "undefined") return "desktop-other";
+function isMobileScreen() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  return window.innerWidth < 768 || /Android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+}
+
+function detectPlatform(): Platform | null {
+  if (typeof navigator === "undefined") return null;
   const ua = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
   const isAndroid = /Android/.test(ua);
   const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
-  const isChromium = /Chrome|Chromium|Edg|OPR/.test(ua);
   if (isIOS) return isSafari ? "ios-safari" : "ios-other";
-  if (isAndroid) return "android-chrome";
-  return isChromium ? "desktop-chrome" : "desktop-other";
+  if (isAndroid) return "android";
+  return isMobileScreen() ? "mobile-other" : null;
 }
 
 export function InstallPrompt() {
   const [mounted, setMounted] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
-  const [platform, setPlatform] = useState<Platform>("desktop-other");
+  const [platform, setPlatform] = useState<Platform>("mobile-other");
   const [dismissed, setDismissed] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -49,8 +53,10 @@ export function InstallPrompt() {
     if (typeof window === "undefined") return;
     if (inIframe()) return;
     if (isStandalone()) return;
+    const detectedPlatform = detectPlatform();
+    if (!detectedPlatform) return;
     setMounted(true);
-    setPlatform(detectPlatform());
+    setPlatform(detectedPlatform);
     if (localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
 
     void registerServiceWorker();
@@ -87,12 +93,10 @@ export function InstallPrompt() {
         return 'Toque no botão Compartilhar (quadrado com seta) e depois em "Adicionar à Tela de Início".';
       case "ios-other":
         return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
-      case "android-chrome":
+      case "android":
         return 'Abra o menu ⋮ do Chrome e toque em "Instalar app" ou "Adicionar à Tela de Início".';
-      case "desktop-chrome":
-        return 'Clique no ícone de instalar na barra de endereço, ou no menu ⋮ → "Instalar Wavechat".';
       default:
-        return "Abra este site no Chrome, Edge ou Safari para instalar como aplicativo.";
+        return 'Android: menu ⋮ → "Instalar app". iPhone: Safari → Compartilhar → "Adicionar à Tela de Início".';
     }
   })();
 
@@ -103,14 +107,14 @@ export function InstallPrompt() {
           {showHelp ? <Smartphone className="size-5" /> : <Download className="size-5" />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Baixar app Wavechat</p>
+          <p className="text-sm font-semibold">Instalar Wavechat no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Instale no celular com ícone na tela inicial, igual aplicativo."}
+            {showHelp ? helpText : "Baixe no celular com ícone na tela inicial, igual app de verdade."}
           </p>
           <div className="mt-2 flex gap-2">
             {!showHelp && (
               <Button size="sm" onClick={install}>
-                Baixar app
+                Instalar no celular
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={dismiss}>
