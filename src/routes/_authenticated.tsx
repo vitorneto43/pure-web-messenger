@@ -32,6 +32,7 @@ function AuthGuard() {
       <Outlet />
       <CallScreen />
       <IncomingCallDialog />
+      <InstallPrompt />
     </CallProvider>
   );
 }
