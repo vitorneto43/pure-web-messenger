@@ -6,6 +6,7 @@ import { CallProvider } from "@/hooks/use-call";
 import { CallScreen } from "@/components/call/CallScreen";
 import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
 import { usePushSetup } from "@/hooks/use-push";
+import { useAppBadgeSync } from "@/hooks/use-app-badge";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -37,5 +38,6 @@ function AuthGuard() {
 
 function PushBootstrap() {
   usePushSetup();
+  useAppBadgeSync();
   return null;
 }
