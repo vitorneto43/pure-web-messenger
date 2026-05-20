@@ -38,5 +38,6 @@ function AuthGuard() {
 
 function PushBootstrap() {
   usePushSetup();
+  useAppBadgeSync();
   return null;
 }
