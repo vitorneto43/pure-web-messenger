@@ -51,7 +51,8 @@ self.addEventListener("push", (event) => {
         badge: "/icon.svg",
         tag: conversationId ? `msg-${conversationId}` : "wavechat-msg",
         renotify: true,
-        vibrate: [120, 60, 120],
+        silent: false,
+        vibrate: [200, 100, 200, 100, 200],
         data: { conversationId, url: conversationId ? `/chat/${conversationId}` : "/" },
       }
     : {
