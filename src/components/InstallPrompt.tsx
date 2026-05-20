@@ -93,12 +93,10 @@ export function InstallPrompt() {
         return 'Toque no botão Compartilhar (quadrado com seta) e depois em "Adicionar à Tela de Início".';
       case "ios-other":
         return 'Abra este site no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".';
-      case "android-chrome":
+      case "android":
         return 'Abra o menu ⋮ do Chrome e toque em "Instalar app" ou "Adicionar à Tela de Início".';
-      case "desktop-chrome":
-        return 'Clique no ícone de instalar na barra de endereço, ou no menu ⋮ → "Instalar Wavechat".';
       default:
-        return "Abra este site no Chrome, Edge ou Safari para instalar como aplicativo.";
+        return 'Android: menu ⋮ → "Instalar app". iPhone: Safari → Compartilhar → "Adicionar à Tela de Início".';
     }
   })();
 
@@ -109,14 +107,14 @@ export function InstallPrompt() {
           {showHelp ? <Smartphone className="size-5" /> : <Download className="size-5" />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Baixar app Wavechat</p>
+          <p className="text-sm font-semibold">Instalar Wavechat no celular</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {showHelp ? helpText : "Instale no celular com ícone na tela inicial, igual aplicativo."}
+            {showHelp ? helpText : "Baixe no celular com ícone na tela inicial, igual app de verdade."}
           </p>
           <div className="mt-2 flex gap-2">
             {!showHelp && (
               <Button size="sm" onClick={install}>
-                Baixar app
+                Instalar no celular
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={dismiss}>
