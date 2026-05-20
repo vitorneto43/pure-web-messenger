@@ -85,9 +85,23 @@ self.addEventListener("push", (event) => {
   );
 });
 
+async function setBadge(count) {
+  try {
+    const cache = await caches.open("wavechat-badge");
+    await cache.put("count", new Response(String(count)));
+    if (self.navigator && self.navigator.setAppBadge) {
+      if (count > 0) await self.navigator.setAppBadge(count);
+      else if (self.navigator.clearAppBadge) await self.navigator.clearAppBadge();
+    }
+  } catch {}
+}
+
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "clear-badge") {
+  const data = event.data || {};
+  if (data.type === "clear-badge") {
     event.waitUntil(clearBadge());
+  } else if (data.type === "set-badge") {
+    event.waitUntil(setBadge(Number(data.count) || 0));
   }
 });
 
