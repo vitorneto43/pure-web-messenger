@@ -40,22 +40,42 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
 
     const pack = PACKAGES[data.package as BoostPackage];
 
-    // create a pending boost row that the webhook will activate
-    const { data: boost, error: boostErr } = await supabase
+    // Dedupe: reuse a recent pending boost (same status+package, last 10 min)
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: existing } = await supabase
       .from("status_boosts")
-      .insert({
-        status_id: data.statusId,
-        user_id: userId,
-        package: data.package,
-        views_total: pack.views,
-        views_remaining: pack.views,
-        amount_cents: pack.amount_cents,
-        currency: "brl",
-        status: "pending",
-      })
       .select("id")
-      .single();
-    if (boostErr || !boost) throw new Error("Falha ao registrar impulso");
+      .eq("status_id", data.statusId)
+      .eq("user_id", userId)
+      .eq("status", "pending")
+      .eq("package", data.package)
+      .gte("created_at", tenMinAgo)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let boostId: string;
+    if (existing) {
+      boostId = existing.id;
+    } else {
+      const { data: boost, error: boostErr } = await supabase
+        .from("status_boosts")
+        .insert({
+          status_id: data.statusId,
+          user_id: userId,
+          package: data.package,
+          views_total: pack.views,
+          views_remaining: pack.views,
+          amount_cents: pack.amount_cents,
+          currency: "brl",
+          status: "pending",
+          environment: data.environment,
+        })
+        .select("id")
+        .single();
+      if (boostErr || !boost) throw new Error("Falha ao registrar impulso");
+      boostId = boost.id;
+    }
 
     const stripe = createStripeClient(data.environment as StripeEnv);
     const prices = await stripe.prices.list({ lookup_keys: [data.package] });
@@ -105,17 +125,16 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       payment_intent_data: { description: product.name },
       metadata: {
         userId,
-        boostId: boost.id,
+        boostId,
         statusId: data.statusId,
         package: data.package,
       },
     });
 
-    // store session id on the boost so the webhook can match it
     await supabase
       .from("status_boosts")
       .update({ checkout_session_id: session.id })
-      .eq("id", boost.id);
+      .eq("id", boostId);
 
-    return { clientSecret: session.client_secret, boostId: boost.id };
+    return { clientSecret: session.client_secret, boostId };
   });
