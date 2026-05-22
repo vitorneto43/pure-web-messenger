@@ -18,8 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { encodePixMessage } from "@/lib/pix";
 import { toast } from "sonner";
 
