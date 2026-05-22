@@ -80,7 +80,7 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
         <DialogHeader>
           <DialogTitle>Enviar Pix</DialogTitle>
           <DialogDescription>
-            Compartilhe uma chave Pix com QR e código copia-e-cola.
+            Informe a chave de destino e o valor. A pessoa pode pagar copiando o código ou lendo o QR.
           </DialogDescription>
         </DialogHeader>
 
