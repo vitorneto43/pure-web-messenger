@@ -8,7 +8,7 @@ function configureWebPush() {
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!,
     process.env.VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
+    process.env.VAPID_PRIVATE_KEY!,
   );
 }
 
@@ -22,23 +22,21 @@ export const saveSubscription = createServerFn({ method: "POST" })
         auth: z.string().min(1).max(500),
         user_agent: z.string().max(500).nullable().optional(),
       })
-      .parse(input)
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     // Upsert by endpoint; ensure the row belongs to this user
-    const { error } = await supabase
-      .from("push_subscriptions")
-      .upsert(
-        {
-          user_id: userId,
-          endpoint: data.endpoint,
-          p256dh: data.p256dh,
-          auth: data.auth,
-          user_agent: data.user_agent ?? null,
-        },
-        { onConflict: "endpoint" }
-      );
+    const { error } = await supabase.from("push_subscriptions").upsert(
+      {
+        user_id: userId,
+        endpoint: data.endpoint,
+        p256dh: data.p256dh,
+        auth: data.auth,
+        user_agent: data.user_agent ?? null,
+      },
+      { onConflict: "endpoint" },
+    );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -63,7 +61,7 @@ export const sendCallPush = createServerFn({ method: "POST" })
         kind: z.enum(["audio", "video"]),
         callerName: z.string().min(1).max(120),
       })
-      .parse(input)
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -98,7 +96,7 @@ export const sendCallPush = createServerFn({ method: "POST" })
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
-            { TTL: 45, urgency: "high" }
+            { TTL: 45, urgency: "high" },
           );
           sent++;
         } catch (e: any) {
@@ -106,7 +104,7 @@ export const sendCallPush = createServerFn({ method: "POST" })
           if (status === 404 || status === 410) toRemove.push(s.id);
           else console.error("push send failed", status, e?.body || e?.message);
         }
-      })
+      }),
     );
 
     if (toRemove.length) {
@@ -124,7 +122,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
         conversationId: z.string().uuid(),
         preview: z.string().max(200),
       })
-      .parse(input)
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
@@ -133,16 +131,18 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     // Resolve sender display name + conversation info
     const [{ data: sender }, { data: conv }, { data: members }] = await Promise.all([
       supabaseAdmin.from("profiles").select("display_name, username").eq("id", userId).single(),
-      supabaseAdmin.from("conversations").select("id, name, is_group").eq("id", data.conversationId).single(),
+      supabaseAdmin
+        .from("conversations")
+        .select("id, name, is_group")
+        .eq("id", data.conversationId)
+        .single(),
       supabaseAdmin
         .from("conversation_members")
         .select("user_id")
         .eq("conversation_id", data.conversationId),
     ]);
 
-    const recipientIds = (members ?? [])
-      .map((m) => m.user_id)
-      .filter((id) => id !== userId);
+    const recipientIds = (members ?? []).map((m) => m.user_id).filter((id) => id !== userId);
     if (recipientIds.length === 0) return { sent: 0 };
 
     const { data: subs, error } = await supabaseAdmin
@@ -191,7 +191,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
         } catch {
           badgeByUser.set(rid, 0);
         }
-      })
+      }),
     );
 
     let sent = 0;
@@ -210,7 +210,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
-            { TTL: 60, urgency: "normal" }
+            { TTL: 60, urgency: "normal" },
           );
           sent++;
         } catch (e: any) {
@@ -218,7 +218,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
           if (status === 404 || status === 410) toRemove.push(s.id);
           else console.error("push send failed", status, e?.body || e?.message);
         }
-      })
+      }),
     );
 
     if (toRemove.length) {
