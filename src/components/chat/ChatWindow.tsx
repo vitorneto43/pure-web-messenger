@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  Download,
   Image as ImageIcon,
   Loader2,
   Mic,
@@ -17,6 +18,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { downloadFile } from "@/lib/download";
 import { useCall } from "@/hooks/use-call";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
