@@ -440,6 +440,7 @@ export type Database = {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
+      register_status_view: { Args: { _status_id: string }; Returns: Json }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
