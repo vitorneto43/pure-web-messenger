@@ -62,12 +62,14 @@ self.addEventListener("push", (event) => {
         body,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
-        tag: conversationId ? `msg-${conversationId}` : "wavechat-msg",
+        // Unique tag per message so Android launcher counts each one on the app icon
+        tag: `msg-${conversationId || "x"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         renotify: true,
         silent: false,
         vibrate: [200, 100, 200, 100, 200],
         data: { conversationId, url: conversationId ? `/chat/${conversationId}` : "/" },
       }
+
     : {
         body,
         icon: "/icon-192.png",
