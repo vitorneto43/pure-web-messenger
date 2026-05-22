@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { Copy, QrCode, ExternalLink, Loader2, Landmark } from "lucide-react";
+import { Copy, QrCode, ExternalLink, Loader2, Landmark, Phone, Video, PhoneMissed, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
 import { PIX_REGEX, decodePixMessage, buildPixPayload, type PixMessage } from "@/lib/pix";
 import { fetchLinkPreview, type LinkPreview } from "@/lib/link-preview.functions";
@@ -11,6 +11,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 const URL_REGEX = /\b(https?:\/\/[^\s<>"']+)/gi;
+const CALL_REGEX = /^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):(\d+)\]\]$/;
+
+function formatDuration(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m >= 60) {
+    const h = Math.floor(m / 60);
+    return `${h}:${String(m % 60).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 interface Segment {
   type: "text" | "url" | "pix";
@@ -60,8 +71,60 @@ function parse(content: string): Segment[] {
 }
 
 export function MessageContent({ content, isMine }: { content: string; isMine: boolean }) {
-  const segments = useMemo(() => parse(content), [content]);
+  const callMatch = content.trim().match(CALL_REGEX);
+  const segments = useMemo(() => (callMatch ? [] : parse(content)), [content, callMatch]);
   const firstUrl = segments.find((s) => s.type === "url")?.value;
+
+  if (callMatch) {
+    const [, kind, outcome, durStr] = callMatch;
+    const duration = parseInt(durStr, 10) || 0;
+    const isVideo = kind === "video";
+    const kindLabel = isVideo ? "Chamada de vídeo" : "Chamada de voz";
+    let label = kindLabel;
+    let Icon: typeof Phone = isVideo ? Video : Phone;
+    let danger = false;
+    if (outcome === "missed") {
+      label = isVideo ? "Chamada de vídeo perdida" : "Chamada de voz perdida";
+      Icon = PhoneMissed;
+      danger = true;
+    } else if (outcome === "declined") {
+      label = "Chamada recusada";
+      Icon = PhoneOff;
+      danger = true;
+    } else if (outcome === "cancelled") {
+      label = "Chamada cancelada";
+      Icon = PhoneOff;
+    } else if (outcome === "completed") {
+      label = kindLabel;
+    }
+    return (
+      <div className="flex items-center gap-2 text-sm">
+        <Icon
+          className={`size-4 shrink-0 ${
+            danger
+              ? "text-destructive"
+              : isMine
+                ? "text-bubble-out-foreground/80"
+                : "text-muted-foreground"
+          }`}
+        />
+        <div className="flex flex-col leading-tight">
+          <span className={danger ? "font-medium text-destructive" : "font-medium"}>{label}</span>
+          {outcome === "completed" && duration > 0 && (
+            <span
+              className={`text-[11px] ${
+                isMine ? "text-bubble-out-foreground/70" : "text-muted-foreground"
+              }`}
+            >
+              {formatDuration(duration)}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="space-y-2">

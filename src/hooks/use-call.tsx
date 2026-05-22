@@ -75,6 +75,29 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const activeRef = useRef<CallInfo | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const remoteSetRef = useRef(false);
+  const startedAtRef = useRef<number | null>(null);
+  const callMsgInsertedRef = useRef<Set<string>>(new Set());
+
+  async function insertCallMessage(
+    callId: string,
+    conversationId: string,
+    senderId: string,
+    kind: Kind,
+    outcome: "missed" | "cancelled" | "declined" | "completed",
+    durationSec: number,
+  ) {
+    if (callMsgInsertedRef.current.has(callId)) return;
+    callMsgInsertedRef.current.add(callId);
+    try {
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: senderId,
+        content: `[[CALL:${kind}:${outcome}:${Math.max(0, Math.floor(durationSec))}]]`,
+      });
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     activeRef.current = active;
@@ -253,6 +276,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const endCallInternal = useCallback(
     async (status: Status) => {
       const current = activeRef.current;
+      const startedAt = startedAtRef.current;
+      startedAtRef.current = null;
       cleanup();
       setActive(null);
       if (current) {
@@ -261,6 +286,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
           .update({ status, ended_at: new Date().toISOString() })
           .eq("id", current.id)
           .in("status", ["ringing", "accepted"]);
+
+        if (current.isCaller) {
+          const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
+          const outcome: "missed" | "cancelled" | "completed" =
+            status === "missed"
+              ? "missed"
+              : startedAt
+                ? "completed"
+                : "cancelled";
+          void insertCallMessage(
+            current.id,
+            current.conversationId,
+            current.callerId,
+            current.kind,
+            outcome,
+            duration,
+          );
+        }
       }
     },
     [cleanup]
@@ -457,6 +500,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             row.status === "accepted"
           ) {
             stopRingback();
+            startedAtRef.current = Date.now();
             setActive({ ...activeRef.current, status: "accepted" });
           }
           // Caller side: callee declined / ended
@@ -466,6 +510,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
             ["declined", "ended", "cancelled", "missed"].includes(row.status)
           ) {
             if (row.status === "declined") toast.info("Chamada recusada");
+            const current = activeRef.current;
+            const startedAt = startedAtRef.current;
+            startedAtRef.current = null;
+            if (current.isCaller) {
+              const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
+              const outcome =
+                row.status === "declined"
+                  ? "declined"
+                  : row.status === "missed"
+                    ? "missed"
+                    : startedAt
+                      ? "completed"
+                      : "cancelled";
+              void insertCallMessage(
+                current.id,
+                current.conversationId,
+                current.callerId,
+                current.kind,
+                outcome as "missed" | "cancelled" | "declined" | "completed",
+                duration,
+              );
+            }
             cleanup();
             setActive(null);
           }

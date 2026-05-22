@@ -369,9 +369,19 @@ function ConversationRow({
     conv.other_user &&
     Date.now() - new Date(conv.other_user.last_seen).getTime() < 2 * 60_000;
 
+  const rawContent = conv.last_message?.content ?? "";
+  const callMatch = rawContent.match(/^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):\d+\]\]$/);
+  let previewBody = rawContent;
+  if (callMatch) {
+    const [, kind, outcome] = callMatch;
+    const kindLabel = kind === "video" ? "Chamada de vídeo" : "Chamada de voz";
+    if (outcome === "missed") previewBody = `📞 ${kindLabel} perdida`;
+    else if (outcome === "declined") previewBody = `📞 Chamada recusada`;
+    else if (outcome === "cancelled") previewBody = `📞 Chamada cancelada`;
+    else previewBody = `📞 ${kindLabel}`;
+  }
   const preview = conv.last_message?.content
-    ? (conv.last_message.sender_id === currentUserId ? "Você: " : "") +
-      conv.last_message.content
+    ? (conv.last_message.sender_id === currentUserId ? "Você: " : "") + previewBody
     : "Nenhuma mensagem ainda";
 
   return (
