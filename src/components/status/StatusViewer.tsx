@@ -70,7 +70,7 @@ export function StatusViewer({ statuses, startIndex, onClose }: Props) {
     startedRef.current = Date.now();
     setProgress(0);
     const id = setInterval(() => {
-      if (paused) {
+      if (paused || boostOpen) {
         startedRef.current = Date.now() - progress * DURATION_MS;
         return;
       }
@@ -84,7 +84,7 @@ export function StatusViewer({ statuses, startIndex, onClose }: Props) {
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, paused]);
+  }, [index, paused, boostOpen]);
 
   function next() {
     if (index >= statuses.length - 1) onClose();
