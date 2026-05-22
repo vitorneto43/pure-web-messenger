@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { BANKS } from "@/lib/banks";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -36,6 +37,7 @@ function ProfilePage() {
     avatar_url: "" as string | null,
     pix_key: "",
     pix_key_type: "CPF/CNPJ",
+    preferred_bank: "" as string,
   });
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +45,7 @@ function ProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type")
+      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type, preferred_bank")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -55,6 +57,7 @@ function ProfilePage() {
             avatar_url: data.avatar_url,
             pix_key: data.pix_key ?? "",
             pix_key_type: data.pix_key_type ?? "CPF/CNPJ",
+            preferred_bank: (data as any).preferred_bank ?? "",
           });
         setLoading(false);
       });
@@ -71,6 +74,7 @@ function ProfilePage() {
           bio: profile.bio.trim() || null,
           pix_key: profile.pix_key.trim() || null,
           pix_key_type: profile.pix_key.trim() ? profile.pix_key_type : null,
+          preferred_bank: profile.preferred_bank || null,
         })
         .eq("id", user.id);
       if (error) throw error;
