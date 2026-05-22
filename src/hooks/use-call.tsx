@@ -12,6 +12,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
 import { sendCallPush } from "@/lib/push.functions";
+import {
+  isNativeApp,
+  showNativeIncomingCall,
+  endNativeCall,
+  initNativeCallListeners,
+  registerNativePush,
+} from "@/integrations/native-call";
+import { saveNativeToken, sendNativeCallPush } from "@/lib/native-push.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
@@ -77,6 +86,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const remoteSetRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
   const callMsgInsertedRef = useRef<Set<string>>(new Set());
+  const nativeCleanupRef = useRef<(() => void) | null>(null);
+  const nativeTokenSavedRef = useRef(false);
+  const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
 
   async function insertCallMessage(
     callId: string,
@@ -102,6 +114,61 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  // Initialize native call listeners and push registration when in native app
+  useEffect(() => {
+    if (!isNativeApp() || !user) return;
+
+    // Register FCM token
+    if (!nativeTokenSavedRef.current) {
+      registerNativePush(async (token, platform) => {
+        await saveNativeToken({ data: { token, platform } });
+        nativeTokenSavedRef.current = true;
+      }).catch(console.error);
+    }
+
+    // Setup native call listeners
+    initNativeCallListeners({
+      onAccept: (callId, extra) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'accept', callId, extra },
+          }),
+        );
+      },
+      onDecline: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'decline', callId },
+          }),
+        );
+      },
+      onEnd: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'end', callId },
+          }),
+        );
+      },
+      onTimeout: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'timeout', callId },
+          }),
+        );
+      },
+    }).then((cleanupFn) => {
+      nativeCleanupRef.current = cleanupFn;
+    }).catch(console.error);
+
+    return () => {
+      if (nativeCleanupRef.current) {
+        nativeCleanupRef.current();
+        nativeCleanupRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const cleanup = useCallback(() => {
     stopRingtone();
@@ -364,6 +431,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
           },
         }).catch((e) => console.error("sendCallPush failed", e));
 
+        // Also send native FCM push for the Capacitor app (if callee has native token)
+        void sendNativeCallPushFn({
+          data: {
+            callId: data.id,
+            calleeId,
+            conversationId,
+            kind,
+            callerName,
+          },
+        }).catch((e) => console.error("sendNativeCallPush failed", e));
+
         // Auto-cancel if not answered in 45s
         setTimeout(() => {
           const cur = activeRef.current;
@@ -464,7 +542,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             .select("id, display_name, avatar_url")
             .eq("id", row.caller_id)
             .single();
-          setIncoming({
+          const incomingInfo: CallInfo = {
             id: row.id,
             conversationId: row.conversation_id,
             callerId: row.caller_id,
@@ -479,7 +557,23 @@ export function CallProvider({ children }: { children: ReactNode }) {
                   avatar_url: prof.avatar_url,
                 }
               : undefined,
-          });
+          };
+          setIncoming(incomingInfo);
+
+          // Show native incoming call UI when in Capacitor app
+          if (isNativeApp()) {
+            void showNativeIncomingCall({
+              callId: row.id,
+              callerName: prof?.display_name || "Alguém",
+              hasVideo: row.kind === "video",
+              extra: {
+                conversationId: row.conversation_id,
+                kind: row.kind,
+                callerId: row.caller_id,
+              },
+            });
+          }
+
           startRingtone();
         }
       )
@@ -551,6 +645,29 @@ export function CallProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // Listen for native call actions (from Capacitor plugin or push)
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        action: string;
+        callId: string;
+        extra?: Record<string, string>;
+      };
+      if (detail.action === 'accept') {
+        if (incoming) void acceptIncoming();
+      } else if (detail.action === 'decline') {
+        if (incoming) void declineIncoming();
+      } else if (detail.action === 'end') {
+        void endCall();
+      } else if (detail.action === 'timeout') {
+        if (incoming) void declineIncoming();
+      }
+    };
+    window.addEventListener('wavechat-call-action', handler);
+    return () => window.removeEventListener('wavechat-call-action', handler);
+  }, [incoming, acceptIncoming, declineIncoming, endCall]);
 
   return (
     <CallContext.Provider
