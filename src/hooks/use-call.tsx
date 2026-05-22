@@ -115,6 +115,61 @@ export function CallProvider({ children }: { children: ReactNode }) {
     activeRef.current = active;
   }, [active]);
 
+  // Initialize native call listeners and push registration when in native app
+  useEffect(() => {
+    if (!isNativeApp() || !user) return;
+
+    // Register FCM token
+    if (!nativeTokenSavedRef.current) {
+      registerNativePush(async (token, platform) => {
+        await saveNativeToken({ data: { token, platform } });
+        nativeTokenSavedRef.current = true;
+      }).catch(console.error);
+    }
+
+    // Setup native call listeners
+    initNativeCallListeners({
+      onAccept: (callId, extra) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'accept', callId, extra },
+          }),
+        );
+      },
+      onDecline: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'decline', callId },
+          }),
+        );
+      },
+      onEnd: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'end', callId },
+          }),
+        );
+      },
+      onTimeout: (callId) => {
+        window.dispatchEvent(
+          new CustomEvent('wavechat-call-action', {
+            detail: { action: 'timeout', callId },
+          }),
+        );
+      },
+    }).then((cleanupFn) => {
+      nativeCleanupRef.current = cleanupFn;
+    }).catch(console.error);
+
+    return () => {
+      if (nativeCleanupRef.current) {
+        nativeCleanupRef.current();
+        nativeCleanupRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const cleanup = useCallback(() => {
     stopRingtone();
     stopRingback();
