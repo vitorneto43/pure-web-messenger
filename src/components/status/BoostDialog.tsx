@@ -1,0 +1,141 @@
+import { useState } from "react";
+import { Loader2, Check, Rocket } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { createBoostCheckout } from "@/lib/payments.functions";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+
+type PackKey = "boost_100" | "boost_500" | "boost_2000";
+
+const PACKAGES: { key: PackKey; views: number; price: string; popular?: boolean }[] = [
+  { key: "boost_100", views: 100, price: "R$ 5,00" },
+  { key: "boost_500", views: 500, price: "R$ 15,00", popular: true },
+  { key: "boost_2000", views: 2000, price: "R$ 50,00" },
+];
+
+interface Props {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  statusId: string;
+}
+
+export function BoostDialog({ open, onOpenChange, statusId }: Props) {
+  const [loading, setLoading] = useState<PackKey | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const startCheckout = useServerFn(createBoostCheckout);
+
+  async function pick(key: PackKey) {
+    setLoading(key);
+    try {
+      const result = await startCheckout({
+        data: {
+          statusId,
+          package: key,
+          returnUrl: `${window.location.origin}/?boost=success&session_id={CHECKOUT_SESSION_ID}`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if (!result.clientSecret) throw new Error("Sem clientSecret");
+      setClientSecret(result.clientSecret);
+    } catch (e: any) {
+      toast.error("Falha ao iniciar pagamento", { description: e.message });
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  function close(v: boolean) {
+    if (!v) {
+      setClientSecret(null);
+      setLoading(null);
+    }
+    onOpenChange(v);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="max-w-md p-0 overflow-hidden">
+        <PaymentTestModeBanner />
+        <div className="p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="size-5 text-pink-500" /> Impulsionar status
+            </DialogTitle>
+            <DialogDescription>
+              Faça seu status aparecer para pessoas além dos seus contatos. Pagamento único.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!clientSecret ? (
+            <div className="space-y-2.5 mt-4">
+              {PACKAGES.map((p) => (
+                <button
+                  key={p.key}
+                  disabled={!!loading}
+                  onClick={() => pick(p.key)}
+                  className={`w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-accent/30 ${
+                    p.popular ? "border-primary/60 bg-primary/5" : "border-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold flex items-center gap-2">
+                        {p.views.toLocaleString("pt-BR")} visualizações
+                        {p.popular && (
+                          <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                            Popular
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        R$ {(p.views ? (parseInt(p.price.replace(/\D/g, "")) / 100 / p.views).toFixed(3).replace(".", ",") : "0")} por visualização
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{p.price}</div>
+                      {loading === p.key ? (
+                        <Loader2 className="size-4 animate-spin ml-auto mt-1" />
+                      ) : (
+                        <Check className="size-4 text-muted-foreground ml-auto mt-1 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+              <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+                O impulso fica ativo enquanto o status existir (até expirar em 24h). Quando atinge o limite de visualizações, é encerrado automaticamente.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 -mx-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setClientSecret(null)}
+                className="mb-2"
+              >
+                ← Voltar
+              </Button>
+              <EmbeddedCheckoutProvider
+                stripe={getStripe()}
+                options={{ fetchClientSecret: async () => clientSecret }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
