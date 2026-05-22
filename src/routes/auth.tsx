@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicFooter } from "@/components/public/PublicLayout";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -127,7 +128,8 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="size-10 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow-lg">
@@ -263,6 +265,8 @@ function AuthPage() {
           </Link>
         </p>
       </div>
+      </div>
+      <PublicFooter />
     </div>
   );
 }
