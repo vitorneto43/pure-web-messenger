@@ -542,7 +542,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             .select("id, display_name, avatar_url")
             .eq("id", row.caller_id)
             .single();
-          setIncoming({
+          const incomingInfo: CallInfo = {
             id: row.id,
             conversationId: row.conversation_id,
             callerId: row.caller_id,
@@ -557,7 +557,23 @@ export function CallProvider({ children }: { children: ReactNode }) {
                   avatar_url: prof.avatar_url,
                 }
               : undefined,
-          });
+          };
+          setIncoming(incomingInfo);
+
+          // Show native incoming call UI when in Capacitor app
+          if (isNativeApp()) {
+            void showNativeIncomingCall({
+              callId: row.id,
+              callerName: prof?.display_name || "Alguém",
+              hasVideo: row.kind === "video",
+              extra: {
+                conversationId: row.conversation_id,
+                kind: row.kind,
+                callerId: row.caller_id,
+              },
+            });
+          }
+
           startRingtone();
         }
       )
