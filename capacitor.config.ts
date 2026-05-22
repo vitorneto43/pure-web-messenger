@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.wavechat.app',
   appName: 'WaveChat',
-  webDir: 'dist/public',
+  webDir: 'dist/client',
   server: {
     androidScheme: 'https',
     cleartext: false,
