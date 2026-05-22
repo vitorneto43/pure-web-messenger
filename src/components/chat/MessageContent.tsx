@@ -254,10 +254,10 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
     if (!user) return;
     let cancelled = false;
     supabase
-      .from("profiles")
+      .from("profiles_private")
       .select("preferred_bank")
-      .eq("id", user.id)
-      .single()
+      .eq("user_id", user.id)
+      .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) setPreferredBankId((data as any)?.preferred_bank ?? null);
       });
