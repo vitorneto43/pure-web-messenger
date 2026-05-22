@@ -500,6 +500,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             row.status === "accepted"
           ) {
             stopRingback();
+            startedAtRef.current = Date.now();
             setActive({ ...activeRef.current, status: "accepted" });
           }
           // Caller side: callee declined / ended
@@ -509,6 +510,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
             ["declined", "ended", "cancelled", "missed"].includes(row.status)
           ) {
             if (row.status === "declined") toast.info("Chamada recusada");
+            const current = activeRef.current;
+            const startedAt = startedAtRef.current;
+            startedAtRef.current = null;
+            if (current.isCaller) {
+              const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
+              const outcome =
+                row.status === "declined"
+                  ? "declined"
+                  : row.status === "missed"
+                    ? "missed"
+                    : startedAt
+                      ? "completed"
+                      : "cancelled";
+              void insertCallMessage(
+                current.id,
+                current.conversationId,
+                current.callerId,
+                current.kind,
+                outcome as "missed" | "cancelled" | "declined" | "completed",
+                duration,
+              );
+            }
             cleanup();
             setActive(null);
           }
