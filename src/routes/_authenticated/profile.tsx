@@ -19,6 +19,20 @@ import {
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { BANKS } from "@/lib/banks";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteMyAccount } from "@/lib/account.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -41,6 +55,22 @@ function ProfilePage() {
     preferred_bank: "" as string,
   });
   const fileRef = useRef<HTMLInputElement>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const deleteAccount = useServerFn(deleteMyAccount);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      await supabase.auth.signOut();
+      toast.success("Conta excluída");
+      window.location.href = "/auth";
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao excluir conta");
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -249,6 +279,51 @@ function ProfilePage() {
 
       <div className="mt-6">
         <BoostHistory />
+      </div>
+
+      <div className="mt-6 glass border border-destructive/40 rounded-2xl p-6">
+        <h2 className="text-lg font-semibold text-destructive">Excluir conta</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Esta ação remove permanentemente seu perfil, mensagens, status e
+          assinaturas. Não é possível desfazer.
+        </p>
+        <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="mt-4">
+              <Trash2 className="size-4 mr-2" /> Excluir minha conta
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Sua conta e todos os seus dados serão apagados imediatamente
+                e de forma permanente. Para confirmar, digite{" "}
+                <span className="font-semibold">EXCLUIR</span> abaixo.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="EXCLUIR"
+              autoFocus
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={confirmText !== "EXCLUIR" || deleting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete();
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting && <Loader2 className="size-4 animate-spin mr-2" />}
+                Excluir definitivamente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
