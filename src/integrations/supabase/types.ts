@@ -210,6 +210,8 @@ export type Database = {
           id: string
           invited_by: string | null
           last_seen: string
+          pix_key: string | null
+          pix_key_type: string | null
           updated_at: string
           username: string
         }
@@ -222,6 +224,8 @@ export type Database = {
           id: string
           invited_by?: string | null
           last_seen?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
           updated_at?: string
           username: string
         }
@@ -234,6 +238,8 @@ export type Database = {
           id?: string
           invited_by?: string | null
           last_seen?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
           updated_at?: string
           username?: string
         }
