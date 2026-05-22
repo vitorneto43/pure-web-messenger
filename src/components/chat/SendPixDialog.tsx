@@ -87,7 +87,12 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
         <div className="space-y-3">
           <div>
             <Label>Nome do recebedor</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={25} />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Quem vai receber"
+              maxLength={25}
+            />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-1">
@@ -106,8 +111,13 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>Chave Pix</Label>
-              <Input value={key} onChange={(e) => setKey(e.target.value)} maxLength={120} />
+              <Label>Chave Pix de destino</Label>
+              <Input
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="Cole a chave de quem recebe"
+                maxLength={120}
+              />
             </div>
           </div>
           <div>
