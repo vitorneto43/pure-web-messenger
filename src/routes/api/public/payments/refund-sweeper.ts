@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { createStripeClient } from "@/lib/stripe.server";
+import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
 
-// Refunds the unused portion of active boosts whose status has expired
-// with views_remaining > 0. Designed to be called by pg_cron every 15 min.
-//
-// Auth: header `x-cron-secret` must match CRON_SECRET env var.
+// Refunds unused portion of active boosts whose status expired with views left.
+// Also cleans up stale pending boosts (>1h old). Auth via x-cron-secret header.
 export const Route = createFileRoute("/api/public/payments/refund-sweeper")({
   server: {
     handlers: {
@@ -22,11 +20,19 @@ export const Route = createFileRoute("/api/public/payments/refund-sweeper")({
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
 
-        // Find active boosts on expired statuses with leftover views
+        // 1. Cleanup stale pending boosts (>1h old, never paid)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const { count: cleaned } = await sb
+          .from("status_boosts")
+          .delete({ count: "exact" })
+          .eq("status", "pending")
+          .lt("created_at", oneHourAgo);
+
+        // 2. Find active boosts on expired statuses with leftover views
         const { data: stale, error } = await sb
           .from("status_boosts")
           .select(
-            "id, user_id, transaction_id, amount_cents, views_total, views_remaining, statuses!inner(expires_at)",
+            "id, user_id, transaction_id, amount_cents, views_total, views_remaining, environment, statuses!inner(expires_at)",
           )
           .eq("status", "active")
           .gt("views_remaining", 0)
@@ -34,24 +40,29 @@ export const Route = createFileRoute("/api/public/payments/refund-sweeper")({
           .limit(50);
 
         if (error) {
-          console.error("[refund-sweeper] query error", error);
           return new Response(JSON.stringify({ error: error.message }), { status: 500 });
         }
         if (!stale?.length) {
-          return Response.json({ refunded: 0 });
+          return Response.json({ refunded: 0, cleaned: cleaned ?? 0 });
         }
 
-        const stripe = createStripeClient("sandbox");
+        // Cache stripe clients per env to avoid recreating
+        const clients = new Map<StripeEnv, ReturnType<typeof createStripeClient>>();
+        const getStripe = (env: StripeEnv) => {
+          let c = clients.get(env);
+          if (!c) {
+            c = createStripeClient(env);
+            clients.set(env, c);
+          }
+          return c;
+        };
+
         let refundedCount = 0;
         const errors: string[] = [];
 
         for (const b of stale) {
-          // Proportional refund: amount * (remaining / total)
-          const refundCents = Math.floor(
-            (b.amount_cents * b.views_remaining) / b.views_total,
-          );
+          const refundCents = Math.floor((b.amount_cents * b.views_remaining) / b.views_total);
           if (refundCents <= 0 || !b.transaction_id) {
-            // Nothing to refund — just mark completed
             await sb
               .from("status_boosts")
               .update({ status: "completed" })
@@ -59,8 +70,9 @@ export const Route = createFileRoute("/api/public/payments/refund-sweeper")({
               .eq("status", "active");
             continue;
           }
+          const env = (b.environment === "live" ? "live" : "sandbox") as StripeEnv;
           try {
-            await stripe.refunds.create({
+            await getStripe(env).refunds.create({
               payment_intent: b.transaction_id,
               amount: refundCents,
               reason: "requested_by_customer",
@@ -76,14 +88,21 @@ export const Route = createFileRoute("/api/public/payments/refund-sweeper")({
               })
               .eq("id", b.id)
               .eq("status", "active");
+            await sb.from("notifications").insert({
+              user_id: b.user_id,
+              type: "boost",
+              title: "Reembolso automático",
+              body: `Seu status expirou com views sobrando. Reembolsamos R$ ${(refundCents / 100).toFixed(2).replace(".", ",")}.`,
+              data: { boostId: b.id, amount_cents: refundCents, reason: "status_expired" } as any,
+            });
             refundedCount++;
           } catch (e: any) {
-            console.error("[refund-sweeper] refund failed", b.id, e.message);
+            console.error("[refund-sweeper] failed", b.id, e.message);
             errors.push(`${b.id}: ${e.message}`);
           }
         }
 
-        return Response.json({ refunded: refundedCount, errors });
+        return Response.json({ refunded: refundedCount, cleaned: cleaned ?? 0, errors });
       },
     },
   },

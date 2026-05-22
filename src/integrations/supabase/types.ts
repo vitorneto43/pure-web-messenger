@@ -288,6 +288,7 @@ export type Database = {
           checkout_session_id: string | null
           created_at: string
           currency: string
+          environment: string
           id: string
           package: string
           refund_reason: string | null
@@ -307,6 +308,7 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string
           currency?: string
+          environment?: string
           id?: string
           package: string
           refund_reason?: string | null
@@ -326,6 +328,7 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string
           currency?: string
+          environment?: string
           id?: string
           package?: string
           refund_reason?: string | null
