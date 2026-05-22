@@ -4,9 +4,12 @@ const config: CapacitorConfig = {
   appId: 'com.wavechat.app',
   appName: 'WaveChat',
   webDir: 'dist/client',
+  // Hosted mode: app loads from production URL so TanStack Start SSR works.
+  // Native APIs (push, call UI) still work via Capacitor bridge.
   server: {
-    androidScheme: 'https',
+    url: 'https://webconnectchat.com',
     cleartext: false,
+    androidScheme: 'https',
   },
   plugins: {
     PushNotifications: {
@@ -23,7 +26,6 @@ const config: CapacitorConfig = {
       keystorePath: undefined,
       keystoreAlias: undefined,
     },
-    // Allow http cleartext for local dev; production uses https
     allowMixedContent: false,
   },
 };
