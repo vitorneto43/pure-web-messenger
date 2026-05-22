@@ -453,6 +453,15 @@ export type Database = {
         Returns: boolean
       }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
+      search_users: {
+        Args: { q: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          username: string
+        }[]
+      }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
