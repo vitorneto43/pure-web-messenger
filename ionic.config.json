@@ -1,0 +1,7 @@
+{
+  "name": "WaveChat",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}
