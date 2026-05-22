@@ -12,6 +12,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
 import { sendCallPush } from "@/lib/push.functions";
+import {
+  isNativeApp,
+  showNativeIncomingCall,
+  endNativeCall,
+  initNativeCallListeners,
+  registerNativePush,
+} from "@/integrations/native-call";
+import { saveNativeToken, sendNativeCallPush } from "@/lib/native-push.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
