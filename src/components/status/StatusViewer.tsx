@@ -160,10 +160,15 @@ export function StatusViewer({ statuses, startIndex, onClose }: Props) {
         {current.kind === "video" && current.media_url && (
           <video
             src={current.media_url}
-            autoPlay
+            autoPlay={!boostOpen}
             playsInline
             controls={false}
             onEnded={next}
+            ref={(el) => {
+              if (!el) return;
+              if (boostOpen) el.pause();
+              else el.play().catch(() => {});
+            }}
             className="max-h-full max-w-full"
           />
         )}
