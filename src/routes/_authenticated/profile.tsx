@@ -55,6 +55,22 @@ function ProfilePage() {
     preferred_bank: "" as string,
   });
   const fileRef = useRef<HTMLInputElement>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const deleteAccount = useServerFn(deleteMyAccount);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      await supabase.auth.signOut();
+      toast.success("Conta excluída");
+      window.location.href = "/auth";
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao excluir conta");
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
