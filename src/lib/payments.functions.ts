@@ -78,8 +78,22 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
     }
 
     const stripe = createStripeClient(data.environment as StripeEnv);
-    const prices = await stripe.prices.list({ lookup_keys: [data.package] });
-    if (!prices.data.length) throw new Error("Preço não encontrado");
+    let prices;
+    try {
+      prices = await stripe.prices.list({ lookup_keys: [data.package] });
+    } catch (e: any) {
+      console.error("[boost] prices.list failed", e);
+      throw new Error(
+        `Falha ao buscar preço (${data.environment}). ${e?.message ?? ""}`.trim()
+      );
+    }
+    if (!prices?.data?.length) {
+      throw new Error(
+        data.environment === "live"
+          ? "Preço ainda não disponível em produção. Republique o projeto para sincronizar os produtos."
+          : "Preço não encontrado"
+      );
+    }
     const stripePrice = prices.data[0];
 
     // resolve / create customer with userId metadata
