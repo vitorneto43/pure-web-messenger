@@ -86,6 +86,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const remoteSetRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
   const callMsgInsertedRef = useRef<Set<string>>(new Set());
+  const nativeCleanupRef = useRef<(() => void) | null>(null);
+  const nativeTokenSavedRef = useRef(false);
+  const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
 
   async function insertCallMessage(
     callId: string,
