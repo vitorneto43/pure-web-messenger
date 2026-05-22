@@ -120,8 +120,6 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       ui_mode: "embedded_page",
       return_url: data.returnUrl,
       customer: customerId,
-      customer_update: { address: "auto", name: "auto" },
-      automatic_tax: { enabled: true },
       payment_intent_data: { description: product.name },
       metadata: {
         userId,
