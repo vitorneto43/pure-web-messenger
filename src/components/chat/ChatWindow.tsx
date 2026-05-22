@@ -296,7 +296,9 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
       void sendMessagePush({
         data: {
           conversationId,
-          preview: content.trim() || (attachment?.type?.startsWith("image") ? "📷 Foto" : "📎 Anexo"),
+          preview: content.trim().startsWith("[[PIX:")
+            ? "💸 Pix"
+            : content.trim() || (attachment?.type?.startsWith("image") ? "📷 Foto" : "📎 Anexo"),
         },
       }).catch(() => {});
     } catch (e: any) {
