@@ -9,6 +9,7 @@ import {
   Mic,
   Paperclip,
   Phone,
+  QrCode,
   Search,
   Send,
   Smile,
@@ -31,6 +32,8 @@ import {
 import { formatFullTime } from "@/lib/format-time";
 import { playNotification } from "@/lib/notification-sound";
 import { sendMessagePush } from "@/lib/push.functions";
+import { MessageContent } from "./MessageContent";
+import { SendPixDialog } from "./SendPixDialog";
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
