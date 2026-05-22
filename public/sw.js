@@ -62,12 +62,14 @@ self.addEventListener("push", (event) => {
         body,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
-        tag: conversationId ? `msg-${conversationId}` : "wavechat-msg",
+        // Unique tag per message so Android launcher counts each one on the app icon
+        tag: `msg-${conversationId || "x"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         renotify: true,
         silent: false,
         vibrate: [200, 100, 200, 100, 200],
         data: { conversationId, url: conversationId ? `/chat/${conversationId}` : "/" },
       }
+
     : {
         body,
         icon: "/icon-192.png",
@@ -143,7 +145,19 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     (async () => {
-      if (!isCall) await clearBadge();
+      if (!isCall) {
+        await clearBadge();
+        // Close all message notifications for this conversation so the launcher count drops
+        try {
+          const notes = await self.registration.getNotifications();
+          for (const n of notes) {
+            const d = n.data || {};
+            if (!d.callId && (!data.conversationId || d.conversationId === data.conversationId)) {
+              n.close();
+            }
+          }
+        } catch {}
+      }
       const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of allClients) {
         if ("focus" in client) {
@@ -162,4 +176,5 @@ self.addEventListener("notificationclick", (event) => {
       }
     })()
   );
+
 });
