@@ -290,6 +290,9 @@ export type Database = {
           currency: string
           id: string
           package: string
+          refund_reason: string | null
+          refunded_amount_cents: number | null
+          refunded_at: string | null
           status: string
           status_id: string
           transaction_id: string | null
@@ -306,6 +309,9 @@ export type Database = {
           currency?: string
           id?: string
           package: string
+          refund_reason?: string | null
+          refunded_amount_cents?: number | null
+          refunded_at?: string | null
           status?: string
           status_id: string
           transaction_id?: string | null
@@ -322,6 +328,9 @@ export type Database = {
           currency?: string
           id?: string
           package?: string
+          refund_reason?: string | null
+          refunded_amount_cents?: number | null
+          refunded_at?: string | null
           status?: string
           status_id?: string
           transaction_id?: string | null

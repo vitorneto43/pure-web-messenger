@@ -50,10 +50,8 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.type) {
     case "checkout.session.completed":
-    case "transaction.completed":
       await activateBoost(event.data.object, env);
       break;
-    case "transaction.payment_failed":
     case "checkout.session.async_payment_failed":
     case "checkout.session.expired":
       await failBoost(event.data.object);
