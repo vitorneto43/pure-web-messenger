@@ -206,6 +206,34 @@ function ProfilePage() {
             </div>
           </div>
         </div>
+        <div className="mt-8 pt-6 border-t border-border">
+          <h2 className="text-lg font-semibold">Banco preferido</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ao enviar um Pix no chat, oferecemos um atalho para abrir esse app.
+            O app abre na tela inicial — você cola o código Pix lá dentro e finaliza
+            por lá (os bancos não permitem preencher chave e valor de fora).
+          </p>
+          <div className="mt-3">
+            <Label>Meu banco</Label>
+            <Select
+              value={profile.preferred_bank || "none"}
+              onValueChange={(v) => setProfile((p) => ({ ...p, preferred_bank: v === "none" ? "" : v }))}
+            >
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Nenhum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {BANKS.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
 
         <div className="mt-6 flex justify-end">
           <Button onClick={save} disabled={saving}>

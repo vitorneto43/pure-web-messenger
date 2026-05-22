@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { Copy, QrCode, ExternalLink, Loader2 } from "lucide-react";
+import { Copy, QrCode, ExternalLink, Loader2, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import { PIX_REGEX, decodePixMessage, buildPixPayload, type PixMessage } from "@/lib/pix";
 import { fetchLinkPreview, type LinkPreview } from "@/lib/link-preview.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
+import { getBank, openBankApp } from "@/lib/banks";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const URL_REGEX = /\b(https?:\/\/[^\s<>"']+)/gi;
 
@@ -162,6 +165,8 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
 function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
+  const { user } = useAuth();
+  const [preferredBankId, setPreferredBankId] = useState<string | null>(null);
 
   const payload = useMemo(
     () =>
@@ -181,12 +186,46 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
       .catch(() => setQrUrl(null));
   }, [showQr, payload]);
 
+  // Carrega o "meu banco" do usuário logado (o pagador) — não o do remetente.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("preferred_bank")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled) setPreferredBankId((data as any)?.preferred_bank ?? null);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const bank = getBank(preferredBankId);
+
   async function copy() {
     try {
       await navigator.clipboard.writeText(payload);
       toast.success("Código Pix copiado");
     } catch {
       toast.error("Não foi possível copiar");
+    }
+  }
+
+  async function copyAndOpenBank() {
+    if (!bank) return;
+    try {
+      await navigator.clipboard.writeText(payload);
+    } catch {}
+    const result = openBankApp(bank);
+    if (result === "app") {
+      toast.success(`Código copiado. Abrindo ${bank.name}…`, {
+        description: "Cole o código na tela Pix Copia e Cola do app.",
+      });
+    } else if (result === "web") {
+      toast.success(`Código copiado. Abra o app do ${bank.name} e cole em Pix Copia e Cola.`);
+    } else {
+      toast.info("Código copiado. Abra o app do seu banco e cole em Pix Copia e Cola.");
     }
   }
 
@@ -217,7 +256,7 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
       {pix.description && (
         <div className="text-xs opacity-80 mt-1">{pix.description}</div>
       )}
-      <div className="flex gap-2 mt-3">
+      <div className="flex flex-wrap gap-2 mt-3">
         <Button size="sm" variant="secondary" className="h-8" onClick={copy}>
           <Copy className="size-3.5 mr-1.5" /> Copiar código
         </Button>
@@ -230,7 +269,18 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
           <QrCode className="size-3.5 mr-1.5" />
           {showQr ? "Ocultar QR" : "Ver QR"}
         </Button>
+        {bank && (
+          <Button size="sm" className="h-8" onClick={copyAndOpenBank}>
+            <Landmark className="size-3.5 mr-1.5" />
+            Abrir {bank.name}
+          </Button>
+        )}
       </div>
+      {!bank && (
+        <p className="text-[10px] opacity-60 mt-2">
+          Defina seu banco no perfil para abrir o app com 1 toque.
+        </p>
+      )}
       {showQr && (
         <div className="mt-3 grid place-items-center bg-white p-3 rounded-lg">
           {qrUrl ? (
