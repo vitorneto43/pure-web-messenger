@@ -86,7 +86,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       await self.registration.showNotification(title, options);
-      if (isMessage) await bumpBadge();
+      if (isMessage) await bumpBadge(typeof data.badge === "number" ? data.badge : undefined);
     })()
   );
 });
