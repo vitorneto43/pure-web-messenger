@@ -24,14 +24,16 @@ export const saveNativeToken = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { error } = await supabaseAdmin.from("native_push_tokens").upsert(
-      {
-        user_id: userId,
-        token: data.token,
-        platform: data.platform,
-      },
-      { onConflict: "token" },
-    );
+    const { error } = await (supabaseAdmin as any)
+      .from("native_push_tokens")
+      .upsert(
+        {
+          user_id: userId,
+          token: data.token,
+          platform: data.platform,
+        },
+        { onConflict: "token" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -40,7 +42,10 @@ export const removeNativeToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ token: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin.from("native_push_tokens").delete().eq("token", data.token);
+    const { error } = await (supabaseAdmin as any)
+      .from("native_push_tokens")
+      .delete()
+      .eq("token", data.token);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -61,12 +66,12 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const serverKey = getFcmServerKey();
 
-    const { data: tokens, error } = await supabaseAdmin
+    const { data: tokens, error } = await (supabaseAdmin as any)
       .from("native_push_tokens")
       .select("token")
       .eq("user_id", data.calleeId);
     if (error) throw new Error(error.message);
-    if (!tokens || tokens.length === 0) return { sent: 1 };
+    if (!tokens || tokens.length === 0) return { sent: 0 };
 
     const payload = {
       data: {
@@ -91,7 +96,7 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
     let sent = 0;
     const toRemove: string[] = [];
     await Promise.all(
-      tokens.map(async (t) => {
+      tokens.map(async (t: { token: string }) => {
         try {
           const res = await fetch(FCM_LEGACY_URL, {
             method: "POST",
@@ -104,7 +109,10 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
           const body = await res.json().catch(() => ({}));
           if (res.ok && body.success) {
             sent++;
-          } else if (body.results?.[0]?.error === "NotRegistered" || body.results?.[0]?.error === "InvalidRegistration") {
+          } else if (
+            body.results?.[0]?.error === "NotRegistered" ||
+            body.results?.[0]?.error === "InvalidRegistration"
+          ) {
             toRemove.push(t.token);
           } else {
             console.error("FCM send failed", res.status, body);
@@ -116,7 +124,10 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
     );
 
     if (toRemove.length) {
-      await supabaseAdmin.from("native_push_tokens").delete().in("token", toRemove);
+      await (supabaseAdmin as any)
+        .from("native_push_tokens")
+        .delete()
+        .in("token", toRemove);
     }
 
     return { sent };
