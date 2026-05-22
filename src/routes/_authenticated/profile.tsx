@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { BANKS } from "@/lib/banks";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -36,6 +37,7 @@ function ProfilePage() {
     avatar_url: "" as string | null,
     pix_key: "",
     pix_key_type: "CPF/CNPJ",
+    preferred_bank: "" as string,
   });
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +45,7 @@ function ProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type")
+      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type, preferred_bank")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -55,6 +57,7 @@ function ProfilePage() {
             avatar_url: data.avatar_url,
             pix_key: data.pix_key ?? "",
             pix_key_type: data.pix_key_type ?? "CPF/CNPJ",
+            preferred_bank: (data as any).preferred_bank ?? "",
           });
         setLoading(false);
       });
@@ -71,6 +74,7 @@ function ProfilePage() {
           bio: profile.bio.trim() || null,
           pix_key: profile.pix_key.trim() || null,
           pix_key_type: profile.pix_key.trim() ? profile.pix_key_type : null,
+          preferred_bank: profile.preferred_bank || null,
         })
         .eq("id", user.id);
       if (error) throw error;
@@ -202,6 +206,34 @@ function ProfilePage() {
             </div>
           </div>
         </div>
+        <div className="mt-8 pt-6 border-t border-border">
+          <h2 className="text-lg font-semibold">Banco preferido</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ao enviar um Pix no chat, oferecemos um atalho para abrir esse app.
+            O app abre na tela inicial — você cola o código Pix lá dentro e finaliza
+            por lá (os bancos não permitem preencher chave e valor de fora).
+          </p>
+          <div className="mt-3">
+            <Label>Meu banco</Label>
+            <Select
+              value={profile.preferred_bank || "none"}
+              onValueChange={(v) => setProfile((p) => ({ ...p, preferred_bank: v === "none" ? "" : v }))}
+            >
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Nenhum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {BANKS.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
 
         <div className="mt-6 flex justify-end">
           <Button onClick={save} disabled={saving}>
