@@ -74,24 +74,30 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type, preferred_bank")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data)
-          setProfile({
-            username: data.username,
-            display_name: data.display_name,
-            bio: data.bio ?? "",
-            avatar_url: data.avatar_url,
-            pix_key: data.pix_key ?? "",
-            pix_key_type: data.pix_key_type ?? "CPF/CNPJ",
-            preferred_bank: (data as any).preferred_bank ?? "",
-          });
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, display_name, bio, avatar_url")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("profiles_private")
+        .select("pix_key, pix_key_type, preferred_bank")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]).then(([{ data }, { data: priv }]) => {
+      if (data)
+        setProfile({
+          username: data.username,
+          display_name: data.display_name,
+          bio: data.bio ?? "",
+          avatar_url: data.avatar_url,
+          pix_key: priv?.pix_key ?? "",
+          pix_key_type: priv?.pix_key_type ?? "CPF/CNPJ",
+          preferred_bank: priv?.preferred_bank ?? "",
+        });
+      setLoading(false);
+    });
   }, [user?.id]);
 
   async function save() {
@@ -103,12 +109,20 @@ function ProfilePage() {
         .update({
           display_name: profile.display_name.trim(),
           bio: profile.bio.trim() || null,
-          pix_key: profile.pix_key.trim() || null,
-          pix_key_type: profile.pix_key.trim() ? profile.pix_key_type : null,
-          preferred_bank: profile.preferred_bank || null,
         })
         .eq("id", user.id);
       if (error) throw error;
+
+      const { error: privErr } = await supabase
+        .from("profiles_private")
+        .upsert({
+          user_id: user.id,
+          pix_key: profile.pix_key.trim() || null,
+          pix_key_type: profile.pix_key.trim() ? profile.pix_key_type : null,
+          preferred_bank: profile.preferred_bank || null,
+        });
+      if (privErr) throw privErr;
+
       toast.success("Perfil atualizado");
     } catch (e: any) {
       toast.error(e.message);

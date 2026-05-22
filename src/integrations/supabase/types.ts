@@ -233,13 +233,9 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string
-          email: string | null
           id: string
           invited_by: string | null
           last_seen: string
-          pix_key: string | null
-          pix_key_type: string | null
-          preferred_bank: string | null
           updated_at: string
           username: string
         }
@@ -248,13 +244,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name: string
-          email?: string | null
           id: string
           invited_by?: string | null
           last_seen?: string
-          pix_key?: string | null
-          pix_key_type?: string | null
-          preferred_bank?: string | null
           updated_at?: string
           username: string
         }
@@ -263,17 +255,51 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
-          email?: string | null
           id?: string
           invited_by?: string | null
           last_seen?: string
-          pix_key?: string | null
-          pix_key_type?: string | null
-          preferred_bank?: string | null
           updated_at?: string
           username?: string
         }
         Relationships: []
+      }
+      profiles_private: {
+        Row: {
+          created_at: string
+          email: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          preferred_bank: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          preferred_bank?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          preferred_bank?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_private_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
