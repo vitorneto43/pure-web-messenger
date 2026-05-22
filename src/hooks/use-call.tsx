@@ -75,6 +75,29 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const activeRef = useRef<CallInfo | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const remoteSetRef = useRef(false);
+  const startedAtRef = useRef<number | null>(null);
+  const callMsgInsertedRef = useRef<Set<string>>(new Set());
+
+  async function insertCallMessage(
+    callId: string,
+    conversationId: string,
+    senderId: string,
+    kind: Kind,
+    outcome: "missed" | "cancelled" | "declined" | "completed",
+    durationSec: number,
+  ) {
+    if (callMsgInsertedRef.current.has(callId)) return;
+    callMsgInsertedRef.current.add(callId);
+    try {
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: senderId,
+        content: `[[CALL:${kind}:${outcome}:${Math.max(0, Math.floor(durationSec))}]]`,
+      });
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
     activeRef.current = active;
