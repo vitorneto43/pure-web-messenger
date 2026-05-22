@@ -96,12 +96,30 @@ async function setBadge(count) {
   } catch {}
 }
 
+async function closeCallNotifications(callId) {
+  try {
+    const notes = await self.registration.getNotifications();
+    for (const n of notes) {
+      const d = n.data || {};
+      if (d.callId && (!callId || d.callId === callId)) {
+        n.close();
+      } else if (n.tag && n.tag.startsWith("call-")) {
+        n.close();
+      }
+    }
+  } catch {}
+}
+
 self.addEventListener("message", (event) => {
   const data = event.data || {};
   if (data.type === "clear-badge") {
     event.waitUntil(clearBadge());
   } else if (data.type === "set-badge") {
     event.waitUntil(setBadge(Number(data.count) || 0));
+  } else if (data.type === "close-call-notifications") {
+    event.waitUntil(closeCallNotifications(data.callId));
+  } else if (data.type === "skip-waiting") {
+    self.skipWaiting();
   }
 });
 
