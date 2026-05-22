@@ -35,8 +35,7 @@ const KEY_TYPES = [
 ];
 
 export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   const [keyType, setKeyType] = useState<string>("CPF/CNPJ");
