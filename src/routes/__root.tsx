@@ -142,6 +142,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AuthInvalidator />
+        <SplashScreenHider />
         <Outlet />
         
         <Toaster richColors position="top-right" />
