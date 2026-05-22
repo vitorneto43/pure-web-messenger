@@ -77,6 +77,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
+  const [pixOpen, setPixOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -594,7 +595,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     </a>
                   )}
                 {m.content && (
-                  <div className="text-sm whitespace-pre-wrap break-words">{m.content}</div>
+                  <MessageContent content={m.content} isMine={isMine} />
                 )}
                 <div
                   className={`mt-0.5 flex items-center gap-1 text-[10px] ${
@@ -720,6 +721,17 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               disabled={uploading}
             >
               <Paperclip className="size-5" />
+            </Button>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0 text-emerald-500"
+              onClick={() => setPixOpen(true)}
+              title="Enviar Pix"
+            >
+              <QrCode className="size-5" />
             </Button>
             <input
               ref={fileRef}
