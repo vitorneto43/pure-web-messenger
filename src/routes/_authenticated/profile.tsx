@@ -9,11 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { NotificationSettings } from "@/components/NotificationSettings";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
+
+const PIX_TYPES = ["CPF/CNPJ", "E-mail", "Telefone", "Aleatória"];
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -25,6 +34,8 @@ function ProfilePage() {
     display_name: "",
     bio: "",
     avatar_url: "" as string | null,
+    pix_key: "",
+    pix_key_type: "CPF/CNPJ",
   });
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -32,11 +43,19 @@ function ProfilePage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("username, display_name, bio, avatar_url")
+      .select("username, display_name, bio, avatar_url, pix_key, pix_key_type")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
-        if (data) setProfile({ ...data, bio: data.bio ?? "" });
+        if (data)
+          setProfile({
+            username: data.username,
+            display_name: data.display_name,
+            bio: data.bio ?? "",
+            avatar_url: data.avatar_url,
+            pix_key: data.pix_key ?? "",
+            pix_key_type: data.pix_key_type ?? "CPF/CNPJ",
+          });
         setLoading(false);
       });
   }, [user?.id]);
@@ -50,6 +69,8 @@ function ProfilePage() {
         .update({
           display_name: profile.display_name.trim(),
           bio: profile.bio.trim() || null,
+          pix_key: profile.pix_key.trim() || null,
+          pix_key_type: profile.pix_key.trim() ? profile.pix_key_type : null,
         })
         .eq("id", user.id);
       if (error) throw error;
@@ -142,6 +163,43 @@ function ProfilePage() {
               rows={3}
               className="mt-1.5"
             />
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <h2 className="text-lg font-semibold">Chave Pix</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Sua chave Pix preenche automaticamente ao enviar um pagamento no chat.
+          </p>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div>
+              <Label>Tipo</Label>
+              <Select
+                value={profile.pix_key_type}
+                onValueChange={(v) => setProfile((p) => ({ ...p, pix_key_type: v }))}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PIX_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label>Chave</Label>
+              <Input
+                value={profile.pix_key}
+                onChange={(e) => setProfile((p) => ({ ...p, pix_key: e.target.value }))}
+                placeholder="Ex.: email@exemplo.com"
+                maxLength={120}
+                className="mt-1.5"
+              />
+            </div>
           </div>
         </div>
 
