@@ -77,6 +77,8 @@ self.addEventListener("push", (event) => {
         tag: callId ? `call-${callId}` : "wavechat-call",
         renotify: true,
         requireInteraction: true,
+        silent: false,
+        timestamp: typeof data.timestamp === "number" ? data.timestamp : Date.now(),
         vibrate: [400, 200, 400, 200, 400, 200, 400],
         data: { callId, conversationId, kind, url: conversationId ? `/chat/${conversationId}` : "/" },
         actions: [
