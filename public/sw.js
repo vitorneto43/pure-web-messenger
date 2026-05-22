@@ -14,15 +14,21 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
 
-async function bumpBadge() {
+async function bumpBadge(absolute) {
   try {
     if (!self.navigator || !self.navigator.setAppBadge) return;
     const cache = await caches.open("wavechat-badge");
-    const res = await cache.match("count");
-    const cur = res ? Number(await res.text()) || 0 : 0;
-    const next = cur + 1;
+    let next;
+    if (typeof absolute === "number" && absolute >= 0) {
+      next = absolute;
+    } else {
+      const res = await cache.match("count");
+      const cur = res ? Number(await res.text()) || 0 : 0;
+      next = cur + 1;
+    }
     await cache.put("count", new Response(String(next)));
-    await self.navigator.setAppBadge(next);
+    if (next > 0) await self.navigator.setAppBadge(next);
+    else if (self.navigator.clearAppBadge) await self.navigator.clearAppBadge();
   } catch {}
 }
 
@@ -80,7 +86,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       await self.registration.showNotification(title, options);
-      if (isMessage) await bumpBadge();
+      if (isMessage) await bumpBadge(typeof data.badge === "number" ? data.badge : undefined);
     })()
   );
 });
