@@ -646,6 +646,29 @@ export function CallProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Listen for native call actions (from Capacitor plugin or push)
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        action: string;
+        callId: string;
+        extra?: Record<string, string>;
+      };
+      if (detail.action === 'accept') {
+        if (incoming) void acceptIncoming();
+      } else if (detail.action === 'decline') {
+        if (incoming) void declineIncoming();
+      } else if (detail.action === 'end') {
+        void endCall();
+      } else if (detail.action === 'timeout') {
+        if (incoming) void declineIncoming();
+      }
+    };
+    window.addEventListener('wavechat-call-action', handler);
+    return () => window.removeEventListener('wavechat-call-action', handler);
+  }, [incoming, acceptIncoming, declineIncoming, endCall]);
+
   return (
     <CallContext.Provider
       value={{
