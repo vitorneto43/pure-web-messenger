@@ -81,11 +81,13 @@ export const sendCallPush = createServerFn({ method: "POST" })
     if (!subs || subs.length === 0) return { sent: 0 };
 
     const payload = JSON.stringify({
+      type: "call",
       title: data.kind === "video" ? "Chamada de vídeo" : "Chamada de voz",
       body: `${data.callerName} está te ligando…`,
       callId: data.callId,
       conversationId: data.conversationId,
       kind: data.kind,
+      timestamp: Date.now(),
     });
 
     let sent = 0;
@@ -96,7 +98,7 @@ export const sendCallPush = createServerFn({ method: "POST" })
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
-            { TTL: 30, urgency: "high" }
+            { TTL: 45, urgency: "high" }
           );
           sent++;
         } catch (e: any) {
