@@ -41,12 +41,8 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
       return;
     }
     setSearching(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url, email")
-      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%,email.ilike.%${q}%`)
-      .limit(15);
-    setResults(data ?? []);
+    const { data } = await supabase.rpc("search_users", { q });
+    setResults((data as any[]) ?? []);
     setSearching(false);
   }
 
