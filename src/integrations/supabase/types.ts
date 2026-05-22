@@ -212,6 +212,7 @@ export type Database = {
           last_seen: string
           pix_key: string | null
           pix_key_type: string | null
+          preferred_bank: string | null
           updated_at: string
           username: string
         }
@@ -226,6 +227,7 @@ export type Database = {
           last_seen?: string
           pix_key?: string | null
           pix_key_type?: string | null
+          preferred_bank?: string | null
           updated_at?: string
           username: string
         }
@@ -240,6 +242,7 @@ export type Database = {
           last_seen?: string
           pix_key?: string | null
           pix_key_type?: string | null
+          preferred_bank?: string | null
           updated_at?: string
           username?: string
         }
