@@ -783,6 +783,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           </form>
         )}
       </div>
+      <SendPixDialog
+        open={pixOpen}
+        onOpenChange={setPixOpen}
+        onSend={(marker) => sendMessage(marker)}
+      />
     </div>
   );
 }
