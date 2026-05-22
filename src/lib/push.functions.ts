@@ -99,10 +99,11 @@ export const sendCallPush = createServerFn({ method: "POST" })
             { TTL: 45, urgency: "high" },
           );
           sent++;
-        } catch (e: any) {
-          const status = e?.statusCode;
+        } catch (e: unknown) {
+          const err = e as { statusCode?: number; body?: string; message?: string };
+          const status = err.statusCode;
           if (status === 404 || status === 410) toRemove.push(s.id);
-          else console.error("push send failed", status, e?.body || e?.message);
+          else console.error("push send failed", status, err.body || err.message);
         }
       }),
     );
@@ -213,10 +214,11 @@ export const sendMessagePush = createServerFn({ method: "POST" })
             { TTL: 60, urgency: "normal" },
           );
           sent++;
-        } catch (e: any) {
-          const status = e?.statusCode;
+        } catch (e: unknown) {
+          const err = e as { statusCode?: number; body?: string; message?: string };
+          const status = err.statusCode;
           if (status === 404 || status === 410) toRemove.push(s.id);
-          else console.error("push send failed", status, e?.body || e?.message);
+          else console.error("push send failed", status, err.body || err.message);
         }
       }),
     );
