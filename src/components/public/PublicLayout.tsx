@@ -94,11 +94,12 @@ export function PublicFooter() {
           <h4 className="font-semibold mb-3">Fale conosco</h4>
           <ul className="space-y-2 text-muted-foreground">
             <li>
-              <a
+            <a
                 href="mailto:veiganeto46@gmail.com"
                 className="flex items-center gap-2 hover:text-foreground"
               >
-                <Mail className="size-3.5" /> veiganeto46@gmail.com
+                <Mail className="size-3.5" />
+                <span>veiganeto46@gmail.com</span>
               </a>
             </li>
             <li>
@@ -111,7 +112,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-border/60">
         <div className="max-w-5xl mx-auto px-4 py-4 text-xs text-muted-foreground flex flex-col sm:flex-row gap-2 justify-between items-center">
-          <span>© {new Date().getFullYear()} WaveChat. Todos os direitos reservados.</span>
+          <span>© 2025 WaveChat. Todos os direitos reservados.</span>
           <span>Feito com ♥ no Brasil</span>
         </div>
       </div>
