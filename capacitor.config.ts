@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.wavechat.app',
   appName: 'WaveChat',
-  webDir: 'dist/client',
+  webDir: 'capacitor-app',
   // Hosted mode: app loads from production URL so TanStack Start SSR works.
   // Native APIs (push, call UI) still work via Capacitor bridge.
   server: {
