@@ -431,6 +431,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
           },
         }).catch((e) => console.error("sendCallPush failed", e));
 
+        // Also send native FCM push for the Capacitor app (if callee has native token)
+        void sendNativeCallPushFn({
+          data: {
+            callId: data.id,
+            calleeId,
+            conversationId,
+            kind,
+            callerName,
+          },
+        }).catch((e) => console.error("sendNativeCallPush failed", e));
+
         // Auto-cancel if not answered in 45s
         setTimeout(() => {
           const cur = activeRef.current;
