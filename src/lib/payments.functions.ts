@@ -85,19 +85,26 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
     // resolve / create customer with userId metadata
     const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, "");
     let customerId: string | undefined;
-    const found = await stripe.customers.search({
-      query: `metadata['userId']:'${safeUserId}'`,
-      limit: 1,
-    });
-    if (found.data.length) {
-      customerId = found.data[0].id;
-    } else if (claims.email) {
+    try {
+      const found = await stripe.customers.search({
+        query: `metadata['userId']:'${safeUserId}'`,
+        limit: 1,
+      });
+      if (found?.data?.length) customerId = found.data[0].id;
+    } catch (e) {
+      console.warn("[boost] customers.search failed, falling back", e);
+    }
+    if (!customerId && claims.email) {
       const existing = await stripe.customers.list({ email: claims.email, limit: 1 });
-      if (existing.data.length) {
+      if (existing?.data?.length) {
         customerId = existing.data[0].id;
-        await stripe.customers.update(customerId, {
-          metadata: { ...existing.data[0].metadata, userId },
-        });
+        try {
+          await stripe.customers.update(customerId, {
+            metadata: { ...(existing.data[0].metadata ?? {}), userId },
+          });
+        } catch (e) {
+          console.warn("[boost] customers.update failed", e);
+        }
       }
     }
     if (!customerId) {
