@@ -42,11 +42,12 @@ function TermsPage() {
             qualquer tipo de comunicação automatizada não autorizada.
           </Section>
 
-          <Section title="3. Proibição de golpes e abusos">
+          <Destruct title="3. Proibição de golpes e abusos">
             É expressamente proibido aplicar golpes (incluindo golpes via Pix), enganar usuários,
             se passar por terceiros, distribuir malware, conteúdo ilegal, pornografia infantil,
             discurso de ódio, ameaças ou qualquer atividade criminosa.
           </Destruct>
+
           <Section title="4. Uso responsável">
             Use o WaveChat de forma respeitosa. Não publique conteúdo que viole direitos autorais,
             privacidade de terceiros ou a legislação brasileira.
