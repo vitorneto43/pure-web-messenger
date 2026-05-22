@@ -145,7 +145,19 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     (async () => {
-      if (!isCall) await clearBadge();
+      if (!isCall) {
+        await clearBadge();
+        // Close all message notifications for this conversation so the launcher count drops
+        try {
+          const notes = await self.registration.getNotifications();
+          for (const n of notes) {
+            const d = n.data || {};
+            if (!d.callId && (!data.conversationId || d.conversationId === data.conversationId)) {
+              n.close();
+            }
+          }
+        } catch {}
+      }
       const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of allClients) {
         if ("focus" in client) {
@@ -164,4 +176,5 @@ self.addEventListener("notificationclick", (event) => {
       }
     })()
   );
+
 });
