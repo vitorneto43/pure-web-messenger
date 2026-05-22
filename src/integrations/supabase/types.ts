@@ -281,6 +281,130 @@ export type Database = {
         }
         Relationships: []
       }
+      status_boosts: {
+        Row: {
+          activated_at: string | null
+          amount_cents: number
+          checkout_session_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          package: string
+          status: string
+          status_id: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+          views_remaining: number
+          views_total: number
+        }
+        Insert: {
+          activated_at?: string | null
+          amount_cents: number
+          checkout_session_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          package: string
+          status?: string
+          status_id: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+          views_remaining: number
+          views_total: number
+        }
+        Update: {
+          activated_at?: string | null
+          amount_cents?: number
+          checkout_session_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          package?: string
+          status?: string
+          status_id?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+          views_remaining?: number
+          views_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_boosts_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      status_views: {
+        Row: {
+          from_boost: boolean
+          status_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          from_boost?: boolean
+          status_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          from_boost?: boolean
+          status_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_views_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      statuses: {
+        Row: {
+          background: string | null
+          caption: string | null
+          content: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          user_id: string
+        }
+        Insert: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind: string
+          media_url?: string | null
+          user_id: string
+        }
+        Update: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       typing_indicators: {
         Row: {
           conversation_id: string
@@ -314,6 +438,10 @@ export type Database = {
     Functions: {
       is_conversation_member: {
         Args: { _conv_id: string; _user_id: string }
+        Returns: boolean
+      }
+      users_share_conversation: {
+        Args: { _a: string; _b: string }
         Returns: boolean
       }
     }
