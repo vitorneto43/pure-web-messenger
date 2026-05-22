@@ -45,21 +45,16 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
+  // Reset form each time the dialog opens so the user always
+  // chooses the recipient key and value explicitly.
   useEffect(() => {
-    if (!open || !user) return;
-    supabase
-      .from("profiles")
-      .select("display_name, pix_key, pix_key_type")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setName(data.display_name ?? "");
-          if (data.pix_key) setKey(data.pix_key);
-          if (data.pix_key_type) setKeyType(data.pix_key_type);
-        }
-      });
-  }, [open, user?.id]);
+    if (!open) return;
+    setName("");
+    setKey("");
+    setKeyType("CPF/CNPJ");
+    setAmount("");
+    setDescription("");
+  }, [open]);
 
   function send() {
     if (!key.trim()) return toast.error("Informe a chave Pix");
