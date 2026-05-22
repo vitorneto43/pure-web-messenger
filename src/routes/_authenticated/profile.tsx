@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { BoostHistory } from "@/components/profile/BoostHistory";
 import { BANKS } from "@/lib/banks";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -244,6 +245,10 @@ function ProfilePage() {
 
       <div className="mt-6">
         <NotificationSettings />
+      </div>
+
+      <div className="mt-6">
+        <BoostHistory />
       </div>
     </div>
   );
