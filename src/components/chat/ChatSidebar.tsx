@@ -24,6 +24,7 @@ import {
 import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
+import { StatusBar } from "@/components/status/StatusBar";
 import { formatTime } from "@/lib/format-time";
 import { setAppBadge } from "@/lib/app-badge";
 import {
