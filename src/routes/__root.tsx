@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { hideSplashScreen } from "@/integrations/splash-screen";
 
 
 import appCss from "../styles.css?url";
@@ -124,12 +125,24 @@ function AuthInvalidator() {
   return null;
 }
 
+function SplashScreenHider() {
+  useEffect(() => {
+    // Hide native splash screen once React is mounted and rendered
+    const timer = setTimeout(() => {
+      hideSplashScreen();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AuthInvalidator />
+        <SplashScreenHider />
         <Outlet />
         
         <Toaster richColors position="top-right" />
