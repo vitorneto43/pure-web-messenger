@@ -276,6 +276,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const endCallInternal = useCallback(
     async (status: Status) => {
       const current = activeRef.current;
+      const startedAt = startedAtRef.current;
+      startedAtRef.current = null;
       cleanup();
       setActive(null);
       if (current) {
@@ -284,6 +286,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
           .update({ status, ended_at: new Date().toISOString() })
           .eq("id", current.id)
           .in("status", ["ringing", "accepted"]);
+
+        if (current.isCaller) {
+          const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
+          const outcome: "missed" | "cancelled" | "completed" =
+            status === "missed"
+              ? "missed"
+              : startedAt
+                ? "completed"
+                : "cancelled";
+          void insertCallMessage(
+            current.id,
+            current.conversationId,
+            current.callerId,
+            current.kind,
+            outcome,
+            duration,
+          );
+        }
       }
     },
     [cleanup]
