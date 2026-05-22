@@ -271,7 +271,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         </div>
       </div>
 
+      <StatusBar />
+
       <div className="px-3 pt-3 pb-2 space-y-2">
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
