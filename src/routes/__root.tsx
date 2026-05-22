@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { hideSplashScreen } from "@/integrations/splash-screen";
 
 
 import appCss from "../styles.css?url";
