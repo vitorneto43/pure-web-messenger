@@ -139,36 +139,36 @@ export async function endNativeCall(callId: string): Promise<void> {
 }
 
 /** Initialize listeners for call events from the native plugin */
-export function initNativeCallListeners(handlers: {
+export async function initNativeCallListeners(handlers: {
   onAccept: (callId: string, extra: Record<string, string>) => void;
   onDecline: (callId: string) => void;
   onEnd: (callId: string) => void;
   onTimeout: (callId: string) => void;
-}): () => void {
+}): Promise<() => void> {
   if (!isNativeApp() || callKitListenersInitialized) return () => {};
   callKitListenersInitialized = true;
 
-  const removeAccept = IncomingCallKit.addListener('callAccepted', (event: any) => {
+  const handleAccept = await IncomingCallKit.addListener('callAccepted', (event: any) => {
     handlers.onAccept(event.callId, event.extra ?? {});
   });
 
-  const removeDecline = IncomingCallKit.addListener('callDeclined', (event: any) => {
+  const handleDecline = await IncomingCallKit.addListener('callDeclined', (event: any) => {
     handlers.onDecline(event.callId);
   });
 
-  const removeEnd = IncomingCallKit.addListener('callEnded', (event: any) => {
+  const handleEnd = await IncomingCallKit.addListener('callEnded', (event: any) => {
     handlers.onEnd(event.callId);
   });
 
-  const removeTimeout = IncomingCallKit.addListener('callTimedOut', (event: any) => {
+  const handleTimeout = await IncomingCallKit.addListener('callTimedOut', (event: any) => {
     handlers.onTimeout(event.callId);
   });
 
   return () => {
-    removeAccept?.();
-    removeDecline?.();
-    removeEnd?.();
-    removeTimeout?.();
+    handleAccept?.remove();
+    handleDecline?.remove();
+    handleEnd?.remove();
+    handleTimeout?.remove();
     callKitListenersInitialized = false;
   };
 }
