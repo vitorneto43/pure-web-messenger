@@ -18,8 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { encodePixMessage } from "@/lib/pix";
 import { toast } from "sonner";
 
@@ -37,29 +35,23 @@ const KEY_TYPES = [
 ];
 
 export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   const [keyType, setKeyType] = useState<string>("CPF/CNPJ");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
+  // Reset form each time the dialog opens so the user always
+  // chooses the recipient key and value explicitly.
   useEffect(() => {
-    if (!open || !user) return;
-    supabase
-      .from("profiles")
-      .select("display_name, pix_key, pix_key_type")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setName(data.display_name ?? "");
-          if (data.pix_key) setKey(data.pix_key);
-          if (data.pix_key_type) setKeyType(data.pix_key_type);
-        }
-      });
-  }, [open, user?.id]);
+    if (!open) return;
+    setName("");
+    setKey("");
+    setKeyType("CPF/CNPJ");
+    setAmount("");
+    setDescription("");
+  }, [open]);
 
   function send() {
     if (!key.trim()) return toast.error("Informe a chave Pix");
@@ -85,14 +77,19 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
         <DialogHeader>
           <DialogTitle>Enviar Pix</DialogTitle>
           <DialogDescription>
-            Compartilhe uma chave Pix com QR e código copia-e-cola.
+            Informe a chave de destino e o valor. A pessoa pode pagar copiando o código ou lendo o QR.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div>
             <Label>Nome do recebedor</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={25} />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Quem vai receber"
+              maxLength={25}
+            />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-1">
@@ -111,8 +108,13 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>Chave Pix</Label>
-              <Input value={key} onChange={(e) => setKey(e.target.value)} maxLength={120} />
+              <Label>Chave Pix de destino</Label>
+              <Input
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="Cole a chave de quem recebe"
+                maxLength={120}
+              />
             </div>
           </div>
           <div>

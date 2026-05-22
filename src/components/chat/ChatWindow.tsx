@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  Download,
   Image as ImageIcon,
   Loader2,
   Mic,
@@ -17,6 +18,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { downloadFile } from "@/lib/download";
 import { useCall } from "@/hooks/use-call";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -567,34 +569,83 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   </div>
                 )}
                 {m.attachment_url && m.attachment_type?.startsWith("image/") && (
-                  <a href={m.attachment_url} target="_blank" rel="noreferrer">
-                    <img
+                  <div className="relative group mb-1">
+                    <a href={m.attachment_url} target="_blank" rel="noreferrer">
+                      <img
+                        src={m.attachment_url}
+                        alt={m.attachment_name ?? ""}
+                        className="rounded-lg max-h-72 object-cover"
+                      />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        downloadFile(m.attachment_url!, m.attachment_name ?? undefined);
+                      }}
+                      className="absolute top-1.5 right-1.5 size-8 grid place-items-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+                      title="Baixar imagem"
+                    >
+                      <Download className="size-4" />
+                    </button>
+                  </div>
+                )}
+                {m.attachment_url && m.attachment_type?.startsWith("video/") && (
+                  <div className="mb-1 space-y-1">
+                    <video
+                      controls
+                      preload="metadata"
                       src={m.attachment_url}
-                      alt={m.attachment_name ?? ""}
-                      className="rounded-lg max-h-72 mb-1 object-cover"
+                      className="rounded-lg max-h-72 w-full bg-black"
                     />
-                  </a>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadFile(m.attachment_url!, m.attachment_name ?? undefined)
+                      }
+                      className={`text-[11px] inline-flex items-center gap-1 underline ${
+                        isMine ? "text-bubble-out-foreground/80" : "text-muted-foreground"
+                      }`}
+                    >
+                      <Download className="size-3" /> Baixar vídeo
+                    </button>
+                  </div>
                 )}
                 {m.attachment_url && m.attachment_type?.startsWith("audio/") && (
-                  <audio
-                    controls
-                    preload="metadata"
-                    src={m.attachment_url}
-                    className="mb-1 max-w-full"
-                  />
+                  <div className="mb-1 space-y-1">
+                    <audio
+                      controls
+                      preload="metadata"
+                      src={m.attachment_url}
+                      className="max-w-full"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadFile(m.attachment_url!, m.attachment_name ?? undefined)
+                      }
+                      className={`text-[11px] inline-flex items-center gap-1 underline ${
+                        isMine ? "text-bubble-out-foreground/80" : "text-muted-foreground"
+                      }`}
+                    >
+                      <Download className="size-3" /> Baixar áudio
+                    </button>
+                  </div>
                 )}
                 {m.attachment_url &&
                   !m.attachment_type?.startsWith("image/") &&
+                  !m.attachment_type?.startsWith("video/") &&
                   !m.attachment_type?.startsWith("audio/") && (
-                    <a
-                      href={m.attachment_url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadFile(m.attachment_url!, m.attachment_name ?? undefined)
+                      }
                       className="flex items-center gap-2 text-sm underline mb-1"
                     >
-                      <Paperclip className="size-4" />
-                      {m.attachment_name ?? "Arquivo"}
-                    </a>
+                      <Download className="size-4" />
+                      {m.attachment_name ?? "Baixar arquivo"}
+                    </button>
                   )}
                 {m.content && (
                   <MessageContent content={m.content} isMine={isMine} />
