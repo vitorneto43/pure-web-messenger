@@ -154,17 +154,56 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     const title = conv?.is_group ? `${conv.name ?? "Grupo"} • ${senderName}` : senderName;
     const body = data.preview?.trim() ? data.preview : "Enviou uma mensagem";
 
-    const payload = JSON.stringify({
-      type: "message",
-      title,
-      body,
-      conversationId: data.conversationId,
-    });
+    // Compute per-recipient unread badge count (unread messages + unread notifications)
+    const badgeByUser = new Map<string, number>();
+    await Promise.all(
+      recipientIds.map(async (rid) => {
+        try {
+          const { data: mems } = await supabaseAdmin
+            .from("conversation_members")
+            .select("conversation_id, last_read_at")
+            .eq("user_id", rid);
+          let unread = 0;
+          if (mems && mems.length) {
+            const convIds = mems.map((m) => m.conversation_id);
+            const { data: msgs } = await supabaseAdmin
+              .from("messages")
+              .select("conversation_id, sender_id, created_at")
+              .in("conversation_id", convIds)
+              .neq("sender_id", rid)
+              .order("created_at", { ascending: false })
+              .limit(500);
+            const readMap = new Map(mems.map((m) => [m.conversation_id, m.last_read_at]));
+            for (const m of msgs ?? []) {
+              const last = readMap.get(m.conversation_id);
+              if (!last || new Date(m.created_at) > new Date(last as string)) unread += 1;
+            }
+          }
+          const { count: notifUnread } = await supabaseAdmin
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", rid)
+            .is("read_at", null);
+          // +1 to account for this very message that's about to be delivered
+          badgeByUser.set(rid, unread + (notifUnread ?? 0) + 1);
+        } catch {
+          badgeByUser.set(rid, 0);
+        }
+      })
+    );
 
     let sent = 0;
     const toRemove: string[] = [];
     await Promise.all(
       subs.map(async (s) => {
+        const badge = badgeByUser.get(s.user_id) ?? 0;
+        const payload = JSON.stringify({
+          type: "message",
+          title,
+          body,
+          conversationId: data.conversationId,
+          badge,
+        });
         try {
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
