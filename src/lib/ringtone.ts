@@ -92,9 +92,22 @@ export function stopRingtone() {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
       (navigator as any).vibrate?.(0);
+      // Call twice to fully cancel on some Android builds
+      setTimeout(() => { try { (navigator as any).vibrate?.(0); } catch {} }, 50);
     } catch {
       /* ignore */
     }
+  }
+  // Close any system call notifications still showing/vibrating
+  try {
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.controller?.postMessage({ type: "close-call-notifications" });
+      navigator.serviceWorker.ready.then((r) => {
+        r.active?.postMessage({ type: "close-call-notifications" });
+      }).catch(() => {});
+    }
+  } catch {
+    /* ignore */
   }
 }
 

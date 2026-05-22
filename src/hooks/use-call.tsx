@@ -341,6 +341,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const acceptIncoming = useCallback(async () => {
     if (!incoming) return;
     stopRingtone();
+    stopRingback();
     setConnecting(true);
     try {
       await supabase
