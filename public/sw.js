@@ -69,7 +69,6 @@ self.addEventListener("push", (event) => {
         vibrate: [200, 100, 200, 100, 200],
         data: { conversationId, url: conversationId ? `/chat/${conversationId}` : "/" },
       }
-
     : {
         body,
         icon: "/icon-192.png",
@@ -77,8 +76,15 @@ self.addEventListener("push", (event) => {
         tag: callId ? `call-${callId}` : "wavechat-call",
         renotify: true,
         requireInteraction: true,
+        silent: false,
+        timestamp: typeof data.timestamp === "number" ? data.timestamp : Date.now(),
         vibrate: [400, 200, 400, 200, 400, 200, 400],
-        data: { callId, conversationId, kind, url: conversationId ? `/chat/${conversationId}` : "/" },
+        data: {
+          callId,
+          conversationId,
+          kind,
+          url: conversationId ? `/chat/${conversationId}` : "/",
+        },
         actions: [
           { action: "accept", title: "Atender" },
           { action: "decline", title: "Recusar" },
@@ -89,7 +95,7 @@ self.addEventListener("push", (event) => {
     (async () => {
       await self.registration.showNotification(title, options);
       if (isMessage) await bumpBadge(typeof data.badge === "number" ? data.badge : undefined);
-    })()
+    })(),
   );
 });
 
@@ -138,9 +144,9 @@ self.addEventListener("notificationclick", (event) => {
   const url = data.url || "/";
   const isCall = !!data.callId;
   const targetUrl = isCall
-    ? (action === "decline"
-        ? `${url}?call=decline&id=${data.callId || ""}`
-        : `${url}?call=accept&id=${data.callId || ""}`)
+    ? action === "decline"
+      ? `${url}?call=decline&id=${data.callId || ""}`
+      : `${url}?call=accept&id=${data.callId || ""}`
     : url;
 
   event.waitUntil(
@@ -163,10 +169,16 @@ self.addEventListener("notificationclick", (event) => {
         if ("focus" in client) {
           await client.focus();
           if ("navigate" in client) {
-            try { await client.navigate(targetUrl); } catch {}
+            try {
+              await client.navigate(targetUrl);
+            } catch {}
           }
           if (isCall) {
-            client.postMessage({ type: "call-action", action: action || "accept", callId: data.callId });
+            client.postMessage({
+              type: "call-action",
+              action: action || "accept",
+              callId: data.callId,
+            });
           }
           return;
         }
@@ -174,7 +186,6 @@ self.addEventListener("notificationclick", (event) => {
       if (self.clients.openWindow) {
         await self.clients.openWindow(targetUrl);
       }
-    })()
+    })(),
   );
-
 });
