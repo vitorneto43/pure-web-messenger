@@ -33,13 +33,8 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
   async function runSearch(q: string) {
     setQuery(q);
     if (!q.trim()) return setResults([]);
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .neq("id", user!.id)
-      .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
-      .limit(10);
-    setResults(data ?? []);
+    const { data } = await supabase.rpc("search_users", { q });
+    setResults((data as any[]) ?? []);
   }
 
   function toggle(p: any) {
