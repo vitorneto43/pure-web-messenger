@@ -85,13 +85,14 @@ export function CallScreen() {
           </div>
         )}
 
-        {/* Local PiP */}
+        {/* Local PiP — mirrored (selfie view) */}
         {isVideo && localStream && (
           <video
             ref={localVideoRef}
             autoPlay
             playsInline
             muted
+            style={{ transform: "scaleX(-1)" }}
             className="absolute bottom-4 right-4 w-28 h-40 sm:w-40 sm:h-56 rounded-xl object-cover border border-white/20 shadow-2xl bg-zinc-800"
           />
         )}
