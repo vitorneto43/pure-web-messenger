@@ -140,7 +140,16 @@ public class NativeCallForegroundService extends Service {
     private void stopAlerts() {
         handler.removeCallbacksAndMessages(null);
         CallStatusPoller.stop(currentCallId);
-        CallAlertUtils.stopAllCallAlerts(this, currentCallId);
+        WaveChatTelecomManager.endIncomingCall(this, currentCallId);
+        IncomingCallActivity.finishCallScreen(currentCallId);
+        CallAlertUtils.stopCallRingtone(this);
+        CallAlertUtils.stopVibration(this);
+        CallAlertUtils.stopNotificationEffects(this);
+        try {
+            Intent endedIntent = new Intent("com.wavechat.app.CALL_ALERT_ENDED");
+            endedIntent.putExtra("callId", currentCallId);
+            sendBroadcast(endedIntent);
+        } catch (Exception ignored) {}
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) manager.cancel(CallAlertUtils.notificationId(currentCallId));
         try {
