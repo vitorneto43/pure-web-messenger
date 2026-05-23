@@ -16,7 +16,7 @@ import org.json.JSONObject;
 
 public class WaveChatMessagingService extends FirebaseMessagingService {
     private static final String TAG = "WaveChatFCM";
-    private static final String CHANNEL_ID = "wavechat_calls";
+    private static final String CHANNEL_ID = "wavechat_incoming_calls_v2";
     private static final String CHANNEL_NAME = "Chamadas WaveChat";
 
     @Override
@@ -54,9 +54,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
                 NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription("Notificações de chamadas recebidas");
-            channel.setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE), null);
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 400});
+            channel.setSound(null, null);
+            channel.enableVibration(false);
             channel.setBypassDnd(true);
             notificationManager.createNotificationChannel(channel);
         }
@@ -67,8 +66,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         intent.putExtra("callId", callId);
         intent.putExtra("action", "accept");
         PendingIntent pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
+            this, callId.hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         // Build the high-priority call notification
@@ -78,28 +77,30 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setContentText(callerName + " está te ligando…")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setAutoCancel(false)
-            .setOngoing(true)
-            .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE))
-            .setVibrate(new long[]{0, 400})
+            .setAutoCancel(true)
+            .setOngoing(false)
+            .setOnlyAlertOnce(true)
+            .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);
 
         // Add accept/decline actions
-        Intent acceptIntent = new Intent(this, MainActivity.class);
+        Intent acceptIntent = new Intent(this, CallActionReceiver.class);
+        acceptIntent.setAction("com.wavechat.app.CALL_ACCEPT");
         acceptIntent.putExtra("callId", callId);
         acceptIntent.putExtra("action", "accept");
-        PendingIntent acceptPending = PendingIntent.getActivity(
-            this, 1, acceptIntent,
+        PendingIntent acceptPending = PendingIntent.getBroadcast(
+            this, callId.hashCode() + 1, acceptIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         builder.addAction(android.R.drawable.ic_menu_call, "Atender", acceptPending);
 
-        Intent declineIntent = new Intent(this, MainActivity.class);
+        Intent declineIntent = new Intent(this, CallActionReceiver.class);
+        declineIntent.setAction("com.wavechat.app.CALL_DECLINE");
         declineIntent.putExtra("callId", callId);
         declineIntent.putExtra("action", "decline");
-        PendingIntent declinePending = PendingIntent.getActivity(
-            this, 2, declineIntent,
+        PendingIntent declinePending = PendingIntent.getBroadcast(
+            this, callId.hashCode() + 2, declineIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Recusar", declinePending);
