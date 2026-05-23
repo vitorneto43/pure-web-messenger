@@ -251,6 +251,11 @@ public final class CallAlertUtils {
                 player.setStreamType(AudioManager.STREAM_RING);
             }
             player.play();
+            if (!player.isPlaying()) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                startFallbackTone();
+                return;
+            }
             ringtonePlayer = player;
             scheduleRingtoneSafetyStop(context.getApplicationContext());
         } catch (Exception ignored) {
