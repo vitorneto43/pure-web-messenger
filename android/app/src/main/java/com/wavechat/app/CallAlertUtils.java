@@ -70,7 +70,7 @@ public final class CallAlertUtils {
             Intent stopIntent = new Intent(context, NativeCallForegroundService.class);
             stopIntent.setAction(NativeCallForegroundService.ACTION_STOP);
             stopIntent.putExtra("callId", callId);
-            context.startService(stopIntent);
+            context.stopService(stopIntent);
         } catch (Exception ignored) {}
         cancelCallNotification(context, callId);
         stopNotificationEffects(context);
