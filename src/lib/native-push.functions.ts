@@ -276,13 +276,23 @@ export const sendNativeCallCancelPush = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!call) throw new Error("Call not found");
 
-    return sendNativePayloadToUser(
+    const cancelled = await sendNativePayloadToUser(
       data.calleeId,
       {
         type: "call_cancel",
         callId: data.callId,
         timestamp: String(Date.now()),
       },
-      "10s",
+      "30s",
     );
+    const ended = await sendNativePayloadToUser(
+      data.calleeId,
+      {
+        type: "call_end",
+        callId: data.callId,
+        timestamp: String(Date.now()),
+      },
+      "30s",
+    );
+    return { sent: (cancelled.sent ?? 0) + (ended.sent ?? 0) };
   });
