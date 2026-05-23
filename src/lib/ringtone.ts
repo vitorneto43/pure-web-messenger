@@ -65,18 +65,6 @@ export function startRingtone() {
     stopRingtone();
     beep();
     timer = setInterval(beep, 2000);
-    // Vibration where supported (mobile)
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      try {
-        (navigator as any).vibrate?.([400, 200, 400, 200, 400]);
-        const vid = setInterval(() => {
-          (navigator as any).vibrate?.([400, 200, 400, 200, 400]);
-        }, 2000);
-        (timer as any)._vid = vid;
-      } catch {
-        /* ignore */
-      }
-    }
   } catch {
     /* ignore */
   }
@@ -84,8 +72,6 @@ export function startRingtone() {
 
 export function stopRingtone() {
   if (timer) {
-    const vid = (timer as any)._vid;
-    if (vid) clearInterval(vid);
     clearInterval(timer);
     timer = null;
   }
