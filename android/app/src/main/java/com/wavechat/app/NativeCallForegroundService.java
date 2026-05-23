@@ -140,9 +140,7 @@ public class NativeCallForegroundService extends Service {
     private void stopAlerts() {
         handler.removeCallbacksAndMessages(null);
         CallStatusPoller.stop(currentCallId);
-        CallAlertUtils.stopCallRingtone(this);
-        CallAlertUtils.stopVibration(this);
-        CallAlertUtils.stopNotificationEffects(this);
+        CallAlertUtils.stopAllCallAlerts(this, currentCallId);
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) manager.cancel(CallAlertUtils.notificationId(currentCallId));
         try {
