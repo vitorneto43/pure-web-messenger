@@ -16,6 +16,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
+        ensureFirebaseReady();
+        CallAlertUtils.stopVibration(this);
 
         // Check if this is a call notification
         if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
@@ -29,8 +31,17 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String token) {
         super.onNewToken(token);
+        ensureFirebaseReady();
         Log.d(TAG, "Refreshed token: " + token);
         // Token will be picked up by Capacitor PushNotifications plugin
+    }
+
+    private void ensureFirebaseReady() {
+        try {
+            if (com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
+                com.google.firebase.FirebaseApp.initializeApp(this);
+            }
+        } catch (Exception ignored) {}
     }
 
     private void showIncomingCallNotification(java.util.Map<String, String> data) {

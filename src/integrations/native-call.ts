@@ -8,8 +8,14 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
+let registered = false;
+
 export function isNativeApp(): boolean {
   return Capacitor.isNativePlatform();
+}
+
+export function hasNativePushConfig(): boolean {
+  return import.meta.env.VITE_ENABLE_NATIVE_PUSH === 'true';
 }
 
 export function isAndroid(): boolean {
@@ -22,7 +28,7 @@ export function isIOS(): boolean {
 
 /** Request notification permission only (no CallKit anymore) */
 export async function requestCallPermissions(): Promise<void> {
-  if (!isNativeApp()) return;
+  if (!isNativeApp() || !hasNativePushConfig()) return;
   try {
     await PushNotifications.requestPermissions();
   } catch (e) {
@@ -35,6 +41,12 @@ export async function registerNativePush(
   saveTokenFn: (token: string, platform: 'android' | 'ios') => Promise<void>,
 ): Promise<void> {
   if (!isNativeApp()) return;
+  if (!hasNativePushConfig()) {
+    console.warn('Native push disabled: GOOGLE_SERVICES_JSON is not configured for this Android build.');
+    return;
+  }
+  if (registered) return;
+  registered = true;
 
   try {
     const permResult = await PushNotifications.requestPermissions();
@@ -67,6 +79,7 @@ export async function registerNativePush(
       handleNativePushPayload(action.notification.data);
     });
   } catch (e) {
+    registered = false;
     console.error('Native push registration failed', e);
   }
 }

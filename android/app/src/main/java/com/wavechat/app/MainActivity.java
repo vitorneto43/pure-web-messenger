@@ -12,6 +12,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ensureFirebaseReady();
+        CallAlertUtils.stopVibration(this);
         dispatchCallIntent(getIntent());
     }
 
@@ -19,7 +21,19 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        CallAlertUtils.stopVibration(this);
         dispatchCallIntent(intent);
+    }
+
+    private void ensureFirebaseReady() {
+        try {
+            android.app.Application app = getApplication();
+            if (app instanceof WaveChatApplication) {
+                ((WaveChatApplication) app).initializeFirebase();
+            } else if (com.google.firebase.FirebaseApp.getApps(this).isEmpty()) {
+                com.google.firebase.FirebaseApp.initializeApp(this);
+            }
+        } catch (Exception ignored) {}
     }
 
     private void dispatchCallIntent(android.content.Intent intent) {
