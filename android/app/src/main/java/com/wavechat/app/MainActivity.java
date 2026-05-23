@@ -11,9 +11,15 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(WaveChatCallPlugin.class);
         super.onCreate(savedInstanceState);
         ensureFirebaseReady();
-        CallAlertUtils.stopVibration(this);
+        if (getIntent() != null && getIntent().getStringExtra("callId") != null) {
+            CallAlertUtils.stopAllCallAlerts(this, getIntent().getStringExtra("callId"));
+        } else {
+            CallAlertUtils.stopVibration(this);
+            CallAlertUtils.stopCallRingtone(this);
+        }
         dispatchCallIntent(getIntent());
     }
 
@@ -21,7 +27,12 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        CallAlertUtils.stopVibration(this);
+        if (intent != null && intent.getStringExtra("callId") != null) {
+            CallAlertUtils.stopAllCallAlerts(this, intent.getStringExtra("callId"));
+        } else {
+            CallAlertUtils.stopVibration(this);
+            CallAlertUtils.stopCallRingtone(this);
+        }
         dispatchCallIntent(intent);
     }
 
