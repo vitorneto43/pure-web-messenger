@@ -1,6 +1,10 @@
 package com.wavechat.app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -14,6 +18,13 @@ public class IncomingCallActivity extends Activity {
     private String callId;
     private String callerName;
     private String kind;
+    private final BroadcastReceiver callEndedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String endedCallId = intent.getStringExtra("callId");
+            if (callId == null || callId.equals(endedCallId)) finish();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +35,7 @@ public class IncomingCallActivity extends Activity {
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         setContentView(buildLayout());
+        registerCallEndedReceiver();
     }
 
     @Override
@@ -33,6 +45,23 @@ public class IncomingCallActivity extends Activity {
         readExtras();
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            unregisterReceiver(callEndedReceiver);
+        } catch (Exception ignored) {}
+        super.onDestroy();
+    }
+
+    private void registerCallEndedReceiver() {
+        IntentFilter filter = new IntentFilter("com.wavechat.app.CALL_ALERT_ENDED");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(callEndedReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(callEndedReceiver, filter);
+        }
     }
 
     private void configureWindow() {
