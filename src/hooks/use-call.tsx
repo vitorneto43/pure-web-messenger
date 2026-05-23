@@ -495,25 +495,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
     [user, createPeerConnection, setupSignaling, endCallInternal, cleanup]
   );
 
-  const acceptIncoming = useCallback(async () => {
-    if (!incoming) return;
+  const acceptIncomingCall = useCallback(async (call: CallInfo) => {
     stopRingtone();
     stopRingback();
-    if (isNativeApp()) void endNativeCall(incoming.id);
+    if (isNativeApp()) await endNativeCall(call.id);
     setConnecting(true);
     try {
       await supabase
         .from("calls")
         .update({ status: "accepted", started_at: new Date().toISOString() })
-        .eq("id", incoming.id);
+        .eq("id", call.id);
 
-      const info: CallInfo = { ...incoming, status: "accepted" };
+      const info: CallInfo = { ...call, status: "accepted" };
       setActive(info);
       activeRef.current = info;
       setIncoming(null);
 
-      await createPeerConnection(incoming.kind, false);
-      setupSignaling(incoming.id, false, incoming.kind);
+      await createPeerConnection(call.kind, false);
+      setupSignaling(call.id, false, call.kind);
     } catch (e: any) {
       toast.error("Falha ao atender: " + e.message);
       cleanup();
@@ -522,16 +521,26 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
   }, [incoming, createPeerConnection, setupSignaling, cleanup]);
 
-  const declineIncoming = useCallback(async () => {
-    if (!incoming) return;
+  const acceptIncoming = useCallback(async () => {
+    if (!incomingRef.current) return;
+    await acceptIncomingCall(incomingRef.current);
+  }, [acceptIncomingCall]);
+
+  const declineIncomingCall = useCallback(async (call: CallInfo) => {
     stopRingtone();
-    if (isNativeApp()) void endNativeCall(incoming.id);
+    stopRingback();
+    if (isNativeApp()) await endNativeCall(call.id);
     await supabase
       .from("calls")
       .update({ status: "declined", ended_at: new Date().toISOString() })
-      .eq("id", incoming.id);
+      .eq("id", call.id);
     setIncoming(null);
-  }, [incoming]);
+  }, []);
+
+  const declineIncoming = useCallback(async () => {
+    if (!incomingRef.current) return;
+    await declineIncomingCall(incomingRef.current);
+  }, [declineIncomingCall]);
 
   const endCall = useCallback(async () => {
     await endCallInternal("ended");
