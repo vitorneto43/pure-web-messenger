@@ -55,15 +55,19 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         serviceIntent.putExtra("callerName", callerName);
         serviceIntent.putExtra("kind", kind);
         serviceIntent.putExtra("conversationId", conversationId);
+        boolean serviceStarted = false;
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(serviceIntent);
             } else {
                 startService(serviceIntent);
             }
+            serviceStarted = true;
         } catch (Exception e) {
             Log.w(TAG, "Foreground call service failed, falling back to direct notification", e);
         }
+
+        if (serviceStarted) return;
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
