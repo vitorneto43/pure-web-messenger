@@ -130,6 +130,8 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager == null) return;
+            stopCallRingtone(context);
+            stopVibration(context);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && inCallFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(inCallFocusRequest);
                 inCallFocusRequest = null;
