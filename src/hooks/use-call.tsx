@@ -346,6 +346,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       const startedAt = startedAtRef.current;
       startedAtRef.current = null;
       cleanup();
+      if (current && isNativeApp()) void endNativeCall(current.id);
       setActive(null);
       if (current) {
         await supabase
@@ -463,6 +464,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!incoming) return;
     stopRingtone();
     stopRingback();
+    if (isNativeApp()) void endNativeCall(incoming.id);
     setConnecting(true);
     try {
       await supabase
@@ -488,6 +490,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const declineIncoming = useCallback(async () => {
     if (!incoming) return;
     stopRingtone();
+    if (isNativeApp()) void endNativeCall(incoming.id);
     await supabase
       .from("calls")
       .update({ status: "declined", ended_at: new Date().toISOString() })
@@ -633,6 +636,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
           setIncoming((curr) => {
             if (curr && curr.id === row.id && row.status !== "ringing") {
               stopRingtone();
+              if (isNativeApp()) void endNativeCall(row.id);
               return null;
             }
             return curr;
