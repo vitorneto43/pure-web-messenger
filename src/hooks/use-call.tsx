@@ -420,7 +420,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
           .in("status", ["ringing", "accepted"]);
 
         if (current.isCaller && current.status === "ringing") {
-          void sendNativeCallCancelPushFn({
+          await sendNativeCallCancelPushFn({
             data: { callId: current.id, calleeId: current.calleeId },
           }).catch((e) => console.error("sendNativeCallCancelPush failed", e));
         }
