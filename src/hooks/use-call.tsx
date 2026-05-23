@@ -346,6 +346,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       const startedAt = startedAtRef.current;
       startedAtRef.current = null;
       cleanup();
+      if (current && isNativeApp()) void endNativeCall(current.id);
       setActive(null);
       if (current) {
         await supabase
