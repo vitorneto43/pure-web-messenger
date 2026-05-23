@@ -18,32 +18,13 @@ android {
     }
     signingConfigs {
         release {
-            // IMPORTANT: Use environment variables for production builds
-            // Set these before building:
-            // export ANDROID_KEYSTORE_FILE=/path/to/keystore.jks
-            // export ANDROID_KEYSTORE_PASSWORD=your_keystore_password
-            // export ANDROID_KEY_ALIAS=your_key_alias
-            // export ANDROID_KEY_PASSWORD=your_key_password
-            
-            def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
-            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            def keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-            def keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-            
-            if (keystoreFile && keystorePassword && keyAlias && keyPassword) {
-                storeFile file(keystoreFile)
-                storePassword keystorePassword
-                keyAlias keyAlias
-                keyPassword keyPassword
-            } else {
-                // Fallback for development only - DO NOT use in production
-                storeFile file("keystore.jks")
-                storePassword "wavechat_dev_2026"
-                keyAlias "wavechat-dev"
-                keyPassword "wavechat_dev_2026"
-            }
+            storeFile file(System.getenv("ANDROID_KEYSTORE_FILE") ?: "keystore.jks")
+            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "WaveChat2026"
+            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "wavechat"
+            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: "WaveChat2026"
         }
     }
+
     buildTypes {
         release {
             minifyEnabled false
