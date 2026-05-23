@@ -36,6 +36,7 @@ public class NativeCallForegroundService extends Service {
         String callerName = intent.getStringExtra("callerName");
         String kind = intent.getStringExtra("kind");
         String conversationId = intent.getStringExtra("conversationId");
+        boolean telecomShown = intent.getBooleanExtra("telecomShown", false);
         if (callerName == null || callerName.trim().isEmpty()) callerName = "Alguém";
         if (kind == null || kind.trim().isEmpty()) kind = "audio";
         if (conversationId == null) conversationId = "";
@@ -44,7 +45,7 @@ public class NativeCallForegroundService extends Service {
         acquireWakeLock();
         Notification notification = buildCallNotification(currentCallId, callerName, kind, conversationId);
         startForeground(CallAlertUtils.notificationId(currentCallId), notification);
-        CallAlertUtils.startCallRingtone(this);
+        if (!telecomShown || Build.VERSION.SDK_INT < Build.VERSION_CODES.O) CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, currentCallId);
 
@@ -103,7 +104,9 @@ public class NativeCallForegroundService extends Service {
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(false)
-            .setSilent(true)
+            .setDefaults(0)
+            .setVibrate(new long[] { 0L })
+            .setSound(null)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(openPending, true)
             .setContentIntent(openPending)
@@ -137,9 +140,16 @@ public class NativeCallForegroundService extends Service {
     private void stopAlerts() {
         handler.removeCallbacksAndMessages(null);
         CallStatusPoller.stop(currentCallId);
+        WaveChatTelecomManager.endIncomingCall(this, currentCallId);
+        IncomingCallActivity.finishCallScreen(currentCallId);
         CallAlertUtils.stopCallRingtone(this);
         CallAlertUtils.stopVibration(this);
         CallAlertUtils.stopNotificationEffects(this);
+        try {
+            Intent endedIntent = new Intent("com.wavechat.app.CALL_ALERT_ENDED");
+            endedIntent.putExtra("callId", currentCallId);
+            sendBroadcast(endedIntent);
+        } catch (Exception ignored) {}
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) manager.cancel(CallAlertUtils.notificationId(currentCallId));
         try {

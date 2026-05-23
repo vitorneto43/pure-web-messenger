@@ -56,9 +56,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         String kind = data.getOrDefault("kind", "audio");
         String conversationId = data.getOrDefault("conversationId", "");
 
-        if (WaveChatTelecomManager.showIncomingCall(this, callId, callerName, kind, conversationId)) {
-            return;
-        }
+        boolean telecomShown = WaveChatTelecomManager.showIncomingCall(this, callId, callerName, kind, conversationId);
 
         Intent serviceIntent = new Intent(this, NativeCallForegroundService.class);
         serviceIntent.setAction(NativeCallForegroundService.ACTION_START);
@@ -66,6 +64,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         serviceIntent.putExtra("callerName", callerName);
         serviceIntent.putExtra("kind", kind);
         serviceIntent.putExtra("conversationId", conversationId);
+        serviceIntent.putExtra("telecomShown", telecomShown);
         boolean serviceStarted = false;
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -105,7 +104,9 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(false)
-            .setSilent(true)
+            .setDefaults(0)
+            .setVibrate(new long[] { 0L })
+            .setSound(null)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);

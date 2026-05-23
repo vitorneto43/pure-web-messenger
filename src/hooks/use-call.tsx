@@ -413,16 +413,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
       if (current && isNativeApp()) void endNativeCall(current.id);
       setActive(null);
       if (current) {
-        await supabase
-          .from("calls")
-          .update({ status, ended_at: new Date().toISOString() })
-          .eq("id", current.id)
-          .in("status", ["ringing", "accepted"]);
-
         if (current.isCaller && current.status === "ringing") {
-          void sendNativeCallCancelPushFn({
+          const cancelSynced = await sendNativeCallCancelPushFn({
             data: { callId: current.id, calleeId: current.calleeId },
-          }).catch((e) => console.error("sendNativeCallCancelPush failed", e));
+          })
+            .then(() => true)
+            .catch((e) => {
+              console.error("sendNativeCallCancelPush failed", e);
+              return false;
+            });
+          if (!cancelSynced) {
+            await supabase
+              .from("calls")
+              .update({ status, ended_at: new Date().toISOString() })
+              .eq("id", current.id)
+              .in("status", ["ringing", "accepted"]);
+          }
+        } else {
+          await supabase
+            .from("calls")
+            .update({ status, ended_at: new Date().toISOString() })
+            .eq("id", current.id)
+            .in("status", ["ringing", "accepted"]);
         }
 
         if (current.isCaller) {
