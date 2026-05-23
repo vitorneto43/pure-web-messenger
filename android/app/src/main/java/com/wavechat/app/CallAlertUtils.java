@@ -116,7 +116,26 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
     }
 
-    private static Uri callRingtoneUri(Context context) {
+    public static void configureInCallAudio(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager == null) return;
+            audioManager.abandonAudioFocus(audioFocusListener);
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.setSpeakerphoneOn(true);
+        } catch (Exception ignored) {}
+    }
+
+    public static void resetInCallAudio(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager == null) return;
+            audioManager.setSpeakerphoneOn(false);
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+        } catch (Exception ignored) {}
+    }
+
+    public static Uri callRingtoneUri(Context context) {
         Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
             context.getApplicationContext(),
             RingtoneManager.TYPE_RINGTONE
