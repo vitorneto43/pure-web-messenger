@@ -158,11 +158,24 @@ public final class CallAlertUtils {
                     AudioManager.AUDIOFOCUS_GAIN
                 );
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                audioManager.setCommunicationDevice(null);
-            }
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            audioManager.setSpeakerphoneOn(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                java.util.List<android.media.AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
+                android.media.AudioDeviceInfo target = null;
+                for (android.media.AudioDeviceInfo device : devices) {
+                    int type = device.getType();
+                    if (type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO || type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
+                        target = device;
+                        break;
+                    }
+                    if (target == null && type == android.media.AudioDeviceInfo.TYPE_BUILTIN_EARPIECE) {
+                        target = device;
+                    }
+                }
+                if (target != null) audioManager.setCommunicationDevice(target);
+            } else {
+                audioManager.setSpeakerphoneOn(false);
+            }
         } catch (Exception ignored) {}
     }
 
