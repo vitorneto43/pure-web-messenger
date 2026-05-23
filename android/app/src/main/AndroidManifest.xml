@@ -39,6 +39,10 @@
 
         </activity>
 
+        <receiver
+            android:name=".CallActionReceiver"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

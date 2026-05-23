@@ -82,6 +82,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const signalChanRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const activeRef = useRef<CallInfo | null>(null);
+  const incomingRef = useRef<CallInfo | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const remoteSetRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
@@ -114,6 +115,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    incomingRef.current = incoming;
+  }, [incoming]);
 
   // Initialize native call listeners and push registration when in native app
   useEffect(() => {
@@ -200,6 +205,36 @@ export function CallProvider({ children }: { children: ReactNode }) {
     pendingCandidatesRef.current = [];
     remoteSetRef.current = false;
   }, []);
+
+  const loadIncomingCall = useCallback(async (callId: string) => {
+    const { data: row } = await supabase
+      .from("calls")
+      .select("id, conversation_id, caller_id, callee_id, kind, status")
+      .eq("id", callId)
+      .single();
+    if (!row || row.callee_id !== user?.id || row.status !== "ringing") return null;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", row.caller_id)
+      .single();
+
+    const incomingInfo: CallInfo = {
+      id: row.id,
+      conversationId: row.conversation_id,
+      callerId: row.caller_id,
+      calleeId: row.callee_id,
+      kind: row.kind as Kind,
+      status: "ringing",
+      isCaller: false,
+      peerProfile: prof
+        ? { id: prof.id, display_name: prof.display_name, avatar_url: prof.avatar_url }
+        : undefined,
+    };
+    setIncoming(incomingInfo);
+    return incomingInfo;
+  }, [user?.id]);
 
   const setupSignaling = useCallback(
     (callId: string, isCaller: boolean, kind: Kind) => {
@@ -460,25 +495,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
     [user, createPeerConnection, setupSignaling, endCallInternal, cleanup]
   );
 
-  const acceptIncoming = useCallback(async () => {
-    if (!incoming) return;
+  const acceptIncomingCall = useCallback(async (call: CallInfo) => {
     stopRingtone();
     stopRingback();
-    if (isNativeApp()) void endNativeCall(incoming.id);
+    if (isNativeApp()) await endNativeCall(call.id);
     setConnecting(true);
     try {
       await supabase
         .from("calls")
         .update({ status: "accepted", started_at: new Date().toISOString() })
-        .eq("id", incoming.id);
+        .eq("id", call.id);
 
-      const info: CallInfo = { ...incoming, status: "accepted" };
+      const info: CallInfo = { ...call, status: "accepted" };
       setActive(info);
       activeRef.current = info;
       setIncoming(null);
 
-      await createPeerConnection(incoming.kind, false);
-      setupSignaling(incoming.id, false, incoming.kind);
+      await createPeerConnection(call.kind, false);
+      setupSignaling(call.id, false, call.kind);
     } catch (e: any) {
       toast.error("Falha ao atender: " + e.message);
       cleanup();
@@ -487,16 +521,26 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
   }, [incoming, createPeerConnection, setupSignaling, cleanup]);
 
-  const declineIncoming = useCallback(async () => {
-    if (!incoming) return;
+  const acceptIncoming = useCallback(async () => {
+    if (!incomingRef.current) return;
+    await acceptIncomingCall(incomingRef.current);
+  }, [acceptIncomingCall]);
+
+  const declineIncomingCall = useCallback(async (call: CallInfo) => {
     stopRingtone();
-    if (isNativeApp()) void endNativeCall(incoming.id);
+    stopRingback();
+    if (isNativeApp()) await endNativeCall(call.id);
     await supabase
       .from("calls")
       .update({ status: "declined", ended_at: new Date().toISOString() })
-      .eq("id", incoming.id);
+      .eq("id", call.id);
     setIncoming(null);
-  }, [incoming]);
+  }, []);
+
+  const declineIncoming = useCallback(async () => {
+    if (!incomingRef.current) return;
+    await declineIncomingCall(incomingRef.current);
+  }, [declineIncomingCall]);
 
   const endCall = useCallback(async () => {
     await endCallInternal("ended");
@@ -653,25 +697,62 @@ export function CallProvider({ children }: { children: ReactNode }) {
   // Listen for native call actions (from Capacitor plugin or push)
   useEffect(() => {
     if (!isNativeApp()) return;
-    const handler = (e: Event) => {
+    const runAction = async (detail: { action?: string; callId?: string }) => {
+      if (!detail.callId) return;
+      const call = incomingRef.current?.id === detail.callId
+        ? incomingRef.current
+        : await loadIncomingCall(detail.callId);
+      if (detail.action === 'accept') {
+        if (call) await acceptIncomingCall(call);
+      } else if (detail.action === 'decline') {
+        if (call) await declineIncomingCall(call);
+      } else if (detail.action === 'end') {
+        await endCall();
+      } else if (detail.action === 'timeout') {
+        if (call) await declineIncomingCall(call);
+      } else if (detail.action === 'open') {
+        if (call) startRingtone();
+      }
+    };
+
+    const actionHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail as {
         action: string;
         callId: string;
         extra?: Record<string, string>;
       };
-      if (detail.action === 'accept') {
-        if (incoming) void acceptIncoming();
-      } else if (detail.action === 'decline') {
-        if (incoming) void declineIncoming();
-      } else if (detail.action === 'end') {
-        void endCall();
-      } else if (detail.action === 'timeout') {
-        if (incoming) void declineIncoming();
-      }
+      void runAction(detail);
     };
-    window.addEventListener('wavechat-call-action', handler);
-    return () => window.removeEventListener('wavechat-call-action', handler);
-  }, [incoming, acceptIncoming, declineIncoming, endCall]);
+
+    const intentHandler = (e: Event) => {
+      void runAction((e as CustomEvent).detail ?? {});
+    };
+
+    const pushHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { callId?: string };
+      void runAction({ action: 'open', callId: detail?.callId });
+    };
+
+    window.addEventListener('wavechat-call-action', actionHandler);
+    window.addEventListener('wavechat-android-intent', intentHandler);
+    window.addEventListener('wavechat-native-call', pushHandler);
+
+    try {
+      const pending = localStorage.getItem('wavechat_pending_call_intent');
+      if (pending) {
+        localStorage.removeItem('wavechat_pending_call_intent');
+        void runAction(JSON.parse(pending));
+      }
+    } catch {
+      /* ignore */
+    }
+
+    return () => {
+      window.removeEventListener('wavechat-call-action', actionHandler);
+      window.removeEventListener('wavechat-android-intent', intentHandler);
+      window.removeEventListener('wavechat-native-call', pushHandler);
+    };
+  }, [acceptIncomingCall, declineIncomingCall, endCall, loadIncomingCall]);
 
   return (
     <CallContext.Provider

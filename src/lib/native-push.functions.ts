@@ -83,14 +83,6 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
         timestamp: String(Date.now()),
       },
       priority: "high",
-      android: {
-        priority: "high",
-        notification: {
-          channel_id: "wavechat_calls",
-          sound: "default",
-          priority: "high",
-        },
-      },
     };
 
     let sent = 0;

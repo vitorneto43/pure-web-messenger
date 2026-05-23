@@ -122,7 +122,7 @@ export async function showNativeIncomingCall(params: {
       timeoutMs: 45_000,
       extra: params.extra ?? {},
       android: {
-        channelId: 'wavechat_calls',
+        channelId: 'wavechat_incoming_calls_v2',
         channelName: 'Chamadas WaveChat',
         showFullScreen: true,
         isHighPriority: true,
@@ -155,6 +155,7 @@ export async function endNativeCall(callId: string): Promise<void> {
   // Force-stop any ongoing system vibration as a last resort.
   try {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.([]);
       navigator.vibrate?.(0);
     }
   } catch {
@@ -173,19 +174,23 @@ export async function initNativeCallListeners(handlers: {
   callKitListenersInitialized = true;
 
   const handleAccept = await IncomingCallKit.addListener('callAccepted', (event: any) => {
-    handlers.onAccept(event.callId, event.extra ?? {});
+    const call = event?.call ?? event;
+    handlers.onAccept(call.callId, call.extra ?? {});
   });
 
   const handleDecline = await IncomingCallKit.addListener('callDeclined', (event: any) => {
-    handlers.onDecline(event.callId);
+    const call = event?.call ?? event;
+    handlers.onDecline(call.callId);
   });
 
   const handleEnd = await IncomingCallKit.addListener('callEnded', (event: any) => {
-    handlers.onEnd(event.callId);
+    const call = event?.call ?? event;
+    handlers.onEnd(call.callId);
   });
 
   const handleTimeout = await IncomingCallKit.addListener('callTimedOut', (event: any) => {
-    handlers.onTimeout(event.callId);
+    const call = event?.call ?? event;
+    handlers.onTimeout(call.callId);
   });
 
   return () => {
