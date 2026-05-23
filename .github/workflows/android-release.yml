@@ -52,7 +52,6 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-          VITE_ENABLE_NATIVE_PUSH: ${{ env.VITE_ENABLE_NATIVE_PUSH }}
         run: bun run build
 
       - name: Sync Capacitor
