@@ -728,6 +728,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!isNativeApp()) return;
     const runAction = async (detail: { action?: string; callId?: string }) => {
       if (!detail.callId) return;
+      const actionKey = `${detail.action ?? 'open'}:${detail.callId}`;
+      if (processedNativeActionsRef.current.has(actionKey)) return;
+      processedNativeActionsRef.current.add(actionKey);
       if (isNativeApp()) {
         if (detail.action === 'accept') void stopNativeRinging(detail.callId);
         else void endNativeCall(detail.callId);
