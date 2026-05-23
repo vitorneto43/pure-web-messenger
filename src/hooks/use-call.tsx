@@ -82,6 +82,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const signalChanRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const activeRef = useRef<CallInfo | null>(null);
+  const incomingRef = useRef<CallInfo | null>(null);
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const remoteSetRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
@@ -114,6 +115,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    incomingRef.current = incoming;
+  }, [incoming]);
 
   // Initialize native call listeners and push registration when in native app
   useEffect(() => {
