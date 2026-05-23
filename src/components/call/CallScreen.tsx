@@ -23,17 +23,27 @@ export function CallScreen() {
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+      // CRITICAL: feed ONLY the video tracks to the local preview.
+      // If the full stream (incl. mic) is attached, some WebViews ignore
+      // `muted` and play the local mic back to the user → they hear themselves.
+      const videoOnly = new MediaStream(localStream.getVideoTracks());
+      localVideoRef.current.srcObject = videoOnly;
+      localVideoRef.current.muted = true;
+      (localVideoRef.current as HTMLVideoElement).volume = 0;
     }
   }, [localStream]);
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.muted = active?.kind !== "video";
+      // Video element gets video-only; audio always routed through <audio>.
+      const videoOnly = new MediaStream(remoteStream.getVideoTracks());
+      remoteVideoRef.current.srcObject = videoOnly;
+      remoteVideoRef.current.muted = true;
+      (remoteVideoRef.current as HTMLVideoElement).volume = 0;
     }
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = active?.kind === "video" ? null : remoteStream;
+    if (remoteAudioRef.current && remoteStream) {
+      const audioOnly = new MediaStream(remoteStream.getAudioTracks());
+      remoteAudioRef.current.srcObject = audioOnly;
       remoteAudioRef.current.volume = 1;
     }
   }, [remoteStream, active?.kind]);
