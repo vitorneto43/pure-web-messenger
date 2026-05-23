@@ -10,10 +10,10 @@ public class CallActionReceiver extends BroadcastReceiver {
         String callId = intent.getStringExtra("callId");
         String action = intent.getStringExtra("action");
 
+        // Stop ringtone, notification, foreground service and any vibration before opening the app.
+        // This is essential on older Android devices, where vibration may otherwise survive the UI transition.
         CallAlertUtils.stopAllCallAlerts(context, callId);
-        if ("decline".equals(action)) {
-            WaveChatTelecomManager.endIncomingCall(context, callId);
-        }
+        WaveChatTelecomManager.endIncomingCall(context, callId);
         context.startActivity(CallAlertUtils.mainActivityIntent(context, callId, action));
     }
 }
