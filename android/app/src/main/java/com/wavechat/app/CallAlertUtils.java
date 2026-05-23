@@ -20,7 +20,7 @@ import android.provider.Settings;
 
 public final class CallAlertUtils {
     public static final String CHANNEL_ID = "wavechat_calls_native_v5";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v8";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v9";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static Ringtone ringtonePlayer;
     private static ToneGenerator fallbackTone;
@@ -48,6 +48,7 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_calls_alert_v5");
         manager.deleteNotificationChannel("wavechat_calls_alert_v6");
         manager.deleteNotificationChannel("wavechat_calls_alert_v7");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v8");
         manager.deleteNotificationChannel(CHANNEL_ID);
 
         AudioAttributes ringAttrs = new AudioAttributes.Builder()
