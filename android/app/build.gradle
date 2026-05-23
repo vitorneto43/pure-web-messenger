@@ -18,11 +18,11 @@ android {
     }
     signingConfigs {
         release {
-            if (System.getenv("ANDROID_KEYSTORE_BASE64")) {
+            if (file("keystore.jks").exists()) {
                 storeFile file("keystore.jks")
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "WaveChat2026"
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "wavechat"
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: "WaveChat2026"
             }
         }
     }
@@ -30,7 +30,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            if (System.getenv("ANDROID_KEYSTORE_BASE64")) {
+            if (file("keystore.jks").exists()) {
                 signingConfig signingConfigs.release
             }
         }
