@@ -1,18 +1,14 @@
 package com.wavechat.app;
 
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import org.json.JSONObject;
 
 public class WaveChatMessagingService extends FirebaseMessagingService {
     private static final String TAG = "WaveChatFCM";
@@ -44,6 +40,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         String conversationId = data.getOrDefault("conversationId", "");
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager == null) return;
         CallAlertUtils.createSilentCallChannel(this);
         CallAlertUtils.stopVibration(this);
 
@@ -94,6 +91,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Recusar", declinePending);
 
         notificationManager.notify(CallAlertUtils.notificationId(callId), builder.build());
-        startActivity(intent);
+        try {
+            startActivity(intent);
+        } catch (Exception ignored) {}
     }
 }
