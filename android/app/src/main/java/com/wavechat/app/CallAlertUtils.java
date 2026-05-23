@@ -20,13 +20,19 @@ import android.os.VibratorManager;
 import android.provider.Settings;
 
 public final class CallAlertUtils {
-    public static final String CHANNEL_ID = "wavechat_calls_native_v6";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v10";
+    public static final String CHANNEL_ID = "wavechat_calls_native_v7";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v11";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static Ringtone ringtonePlayer;
     private static ToneGenerator fallbackTone;
     private static Handler fallbackHandler;
     private static Runnable fallbackRunnable;
+    private static Handler ringtoneSafetyHandler;
+    private static Runnable ringtoneSafetyRunnable;
+    private static Handler vibrationHandler;
+    private static Runnable vibrationRunnable;
+    private static long vibrationStartedAt;
+    private static final long MAX_ALERT_DURATION_MS = 45_000L;
     private static AudioFocusRequest inCallFocusRequest;
     private static Vibrator currentVibrator;  // FIX: Track current vibrator
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
@@ -53,7 +59,9 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_calls_alert_v7");
         manager.deleteNotificationChannel("wavechat_calls_alert_v8");
         manager.deleteNotificationChannel("wavechat_calls_alert_v9");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v10");
         manager.deleteNotificationChannel("wavechat_calls_native_v5");
+        manager.deleteNotificationChannel("wavechat_calls_native_v6");
         manager.deleteNotificationChannel(CHANNEL_ID);
 
         AudioAttributes ringAttrs = new AudioAttributes.Builder()
@@ -69,8 +77,8 @@ public final class CallAlertUtils {
         );
         channel.setDescription("Tela de chamada recebida do WaveChat");
         channel.setSound(null, null);
-        channel.enableVibration(true);
-        channel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
+        channel.enableVibration(false);
+        channel.setVibrationPattern(null);
         channel.enableLights(false);
         channel.setShowBadge(false);
         channel.setBypassDnd(false);
@@ -84,8 +92,8 @@ public final class CallAlertUtils {
         );
         alertChannel.setDescription("Alerta de chamada recebida do WaveChat");
         alertChannel.setSound(null, null);
-        alertChannel.enableVibration(true);
-        alertChannel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
+        alertChannel.enableVibration(false);
+        alertChannel.setVibrationPattern(null);
         alertChannel.enableLights(true);
         alertChannel.setShowBadge(false);
         alertChannel.setBypassDnd(false);
@@ -228,6 +236,11 @@ public final class CallAlertUtils {
             }
 
             Ringtone player = RingtoneManager.getRingtone(context.getApplicationContext(), callRingtoneUri(context));
+            if (player == null) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                startFallbackTone();
+                return;
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) player.setLooping(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 player.setAudioAttributes(new AudioAttributes.Builder()
@@ -238,10 +251,24 @@ public final class CallAlertUtils {
                 player.setStreamType(AudioManager.STREAM_RING);
             }
             player.play();
+            if (!player.isPlaying()) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                startFallbackTone();
+                return;
+            }
             ringtonePlayer = player;
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
         } catch (Exception ignored) {
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
             startFallbackTone();
         }
+    }
+
+    private static synchronized void scheduleRingtoneSafetyStop(Context context) {
+        if (ringtoneSafetyHandler == null) ringtoneSafetyHandler = new Handler(Looper.getMainLooper());
+        if (ringtoneSafetyRunnable != null) ringtoneSafetyHandler.removeCallbacks(ringtoneSafetyRunnable);
+        ringtoneSafetyRunnable = () -> stopCallRingtone(context);
+        ringtoneSafetyHandler.postDelayed(ringtoneSafetyRunnable, MAX_ALERT_DURATION_MS);
     }
 
     private static synchronized void startFallbackTone() {
@@ -262,6 +289,18 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
     }
 
+    private static synchronized void stopRingtoneSafetyStop() {
+        try {
+            if (ringtoneSafetyHandler != null && ringtoneSafetyRunnable != null) {
+                ringtoneSafetyHandler.removeCallbacks(ringtoneSafetyRunnable);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            ringtoneSafetyRunnable = null;
+            ringtoneSafetyHandler = null;
+        }
+    }
+
     private static synchronized void stopFallbackTone() {
         try {
             if (fallbackHandler != null && fallbackRunnable != null) fallbackHandler.removeCallbacks(fallbackRunnable);
@@ -276,6 +315,7 @@ public final class CallAlertUtils {
 
     public static synchronized void stopCallRingtone(Context context) {
         try {
+            stopRingtoneSafetyStop();
             stopFallbackTone();
             if (ringtonePlayer != null) {
                 if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
@@ -290,12 +330,28 @@ public final class CallAlertUtils {
         }
     }
 
-    // FIX: Improved vibration handling
-    public static void startCallVibration(Context context) {
+    public static synchronized void startCallVibration(Context context) {
+        stopVibration(context);
+        vibrationStartedAt = System.currentTimeMillis();
+        vibrationHandler = new Handler(Looper.getMainLooper());
+        Context appContext = context.getApplicationContext();
+        vibrationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - vibrationStartedAt >= MAX_ALERT_DURATION_MS) {
+                    stopVibration(appContext);
+                    return;
+                }
+                vibrateOnce(appContext);
+                if (vibrationHandler != null) vibrationHandler.postDelayed(this, 3_200L);
+            }
+        };
+        vibrationHandler.post(vibrationRunnable);
+    }
+
+    private static void vibrateOnce(Context context) {
         try {
-            // FIX: Use -1 instead of 0 for infinite repeat
-            // Pattern: wait 0ms, vibrate 750ms, wait 450ms, vibrate 750ms, wait 1400ms, then repeat
-            long[] pattern = new long[] { 0L, 750L, 450L, 750L, 1400L };
+            long[] pattern = new long[] { 0L, 650L, 350L, 650L };
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 if (vm != null) {
@@ -313,17 +369,17 @@ public final class CallAlertUtils {
     private static void vibrate(Vibrator vibrator, long[] pattern) {
         if (vibrator == null || !vibrator.hasVibrator()) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // FIX: Use -1 to repeat indefinitely (will be stopped by stopVibration)
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
         } else {
-            // FIX: Use 0 to repeat indefinitely (will be stopped by stopVibration)
-            vibrator.vibrate(pattern, 0);
+            vibrator.vibrate(pattern, -1);
         }
     }
 
-    // FIX: Improved vibration stopping
-    public static void stopVibration(Context context) {
+    public static synchronized void stopVibration(Context context) {
         try {
+            if (vibrationHandler != null && vibrationRunnable != null) {
+                vibrationHandler.removeCallbacks(vibrationRunnable);
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 if (vm != null) {
@@ -336,6 +392,9 @@ public final class CallAlertUtils {
                 }
             }
             currentVibrator = null;
+            vibrationStartedAt = 0L;
+            vibrationRunnable = null;
+            vibrationHandler = null;
         } catch (Exception ignored) {}
     }
 
