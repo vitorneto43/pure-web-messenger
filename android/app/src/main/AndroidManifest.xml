@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Required for incoming call notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -63,6 +64,10 @@
         </provider>
 
         <!-- Firebase Messaging Service for call push notifications -->
+        <service
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+            tools:node="remove" />
+
         <service
             android:name=".WaveChatMessagingService"
             android:exported="false">
