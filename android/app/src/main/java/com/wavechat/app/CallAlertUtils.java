@@ -101,6 +101,7 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
         cancelCallNotification(context, callId);
         WaveChatTelecomManager.endIncomingCall(context, callId);
+        IncomingCallActivity.finishCallScreen(callId);
         stopCallRingtone(context);
         stopNotificationEffects(context);
         stopVibration(context);
