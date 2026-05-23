@@ -27,6 +27,12 @@ public final class CallAlertUtils {
     private static ToneGenerator fallbackTone;
     private static Handler fallbackHandler;
     private static Runnable fallbackRunnable;
+    private static Handler ringtoneSafetyHandler;
+    private static Runnable ringtoneSafetyRunnable;
+    private static Handler vibrationHandler;
+    private static Runnable vibrationRunnable;
+    private static long vibrationStartedAt;
+    private static final long MAX_ALERT_DURATION_MS = 45_000L;
     private static AudioFocusRequest inCallFocusRequest;
     private static Vibrator currentVibrator;  // FIX: Track current vibrator
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
@@ -69,8 +75,8 @@ public final class CallAlertUtils {
         );
         channel.setDescription("Tela de chamada recebida do WaveChat");
         channel.setSound(null, null);
-        channel.enableVibration(true);
-        channel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
+        channel.enableVibration(false);
+        channel.setVibrationPattern(null);
         channel.enableLights(false);
         channel.setShowBadge(false);
         channel.setBypassDnd(false);
@@ -84,8 +90,8 @@ public final class CallAlertUtils {
         );
         alertChannel.setDescription("Alerta de chamada recebida do WaveChat");
         alertChannel.setSound(null, null);
-        alertChannel.enableVibration(true);
-        alertChannel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
+        alertChannel.enableVibration(false);
+        alertChannel.setVibrationPattern(null);
         alertChannel.enableLights(true);
         alertChannel.setShowBadge(false);
         alertChannel.setBypassDnd(false);
