@@ -31,6 +31,11 @@ public class WaveChatConnectionService extends ConnectionService {
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, callId);
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                startActivity(CallAlertUtils.incomingCallIntent(this, callId, callerName, kind, conversationId));
+            } catch (Exception ignored) {}
+        }, 500);
         return connection;
     }
 
