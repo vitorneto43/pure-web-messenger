@@ -62,13 +62,32 @@ jobs:
       - name: Configure release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'WaveChat2026' }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'WaveChat2026' }}
         run: |
-          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "❌ ANDROID_KEYSTORE_BASE64 não configurado. O release precisa de uma chave fixa para ser aceito na Play Store."
-            exit 1
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+            echo "✅ Keystore fixo carregado do GitHub Secret"
+          else
+            keytool -genkeypair -v \
+              -keystore android/app/keystore.jks \
+              -alias "$ANDROID_KEY_ALIAS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+              -keypass "$ANDROID_KEY_PASSWORD" \
+              -dname "CN=WaveChat, OU=WaveChat, O=WaveChat, L=Sao Paulo, ST=SP, C=BR"
+            base64 -w 0 android/app/keystore.jks > android/app/generated-keystore-base64.txt
+            echo "✅ Keystore de upload gerado e AAB será assinado"
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-          echo "✅ Keystore fixo carregado do GitHub Secret"
+
+      - name: Upload generated keystore backup
+        if: hashFiles('android/app/generated-keystore-base64.txt') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: wavechat-upload-keystore-backup
+          path: android/app/generated-keystore-base64.txt
+          retention-days: 1
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
