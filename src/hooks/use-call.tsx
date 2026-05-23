@@ -697,25 +697,62 @@ export function CallProvider({ children }: { children: ReactNode }) {
   // Listen for native call actions (from Capacitor plugin or push)
   useEffect(() => {
     if (!isNativeApp()) return;
-    const handler = (e: Event) => {
+    const runAction = async (detail: { action?: string; callId?: string }) => {
+      if (!detail.callId) return;
+      const call = incomingRef.current?.id === detail.callId
+        ? incomingRef.current
+        : await loadIncomingCall(detail.callId);
+      if (detail.action === 'accept') {
+        if (call) await acceptIncomingCall(call);
+      } else if (detail.action === 'decline') {
+        if (call) await declineIncomingCall(call);
+      } else if (detail.action === 'end') {
+        await endCall();
+      } else if (detail.action === 'timeout') {
+        if (call) await declineIncomingCall(call);
+      } else if (detail.action === 'open') {
+        if (call) startRingtone();
+      }
+    };
+
+    const actionHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail as {
         action: string;
         callId: string;
         extra?: Record<string, string>;
       };
-      if (detail.action === 'accept') {
-        if (incoming) void acceptIncoming();
-      } else if (detail.action === 'decline') {
-        if (incoming) void declineIncoming();
-      } else if (detail.action === 'end') {
-        void endCall();
-      } else if (detail.action === 'timeout') {
-        if (incoming) void declineIncoming();
-      }
+      void runAction(detail);
     };
-    window.addEventListener('wavechat-call-action', handler);
-    return () => window.removeEventListener('wavechat-call-action', handler);
-  }, [incoming, acceptIncoming, declineIncoming, endCall]);
+
+    const intentHandler = (e: Event) => {
+      void runAction((e as CustomEvent).detail ?? {});
+    };
+
+    const pushHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { callId?: string };
+      void runAction({ action: 'open', callId: detail?.callId });
+    };
+
+    window.addEventListener('wavechat-call-action', actionHandler);
+    window.addEventListener('wavechat-android-intent', intentHandler);
+    window.addEventListener('wavechat-native-call', pushHandler);
+
+    try {
+      const pending = localStorage.getItem('wavechat_pending_call_intent');
+      if (pending) {
+        localStorage.removeItem('wavechat_pending_call_intent');
+        void runAction(JSON.parse(pending));
+      }
+    } catch {
+      /* ignore */
+    }
+
+    return () => {
+      window.removeEventListener('wavechat-call-action', actionHandler);
+      window.removeEventListener('wavechat-android-intent', intentHandler);
+      window.removeEventListener('wavechat-native-call', pushHandler);
+    };
+  }, [acceptIncomingCall, declineIncomingCall, endCall, loadIncomingCall]);
 
   return (
     <CallContext.Provider
