@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
@@ -50,6 +51,7 @@ public final class CallAlertUtils {
 
     public static void stopAllCallAlerts(Context context, String callId) {
         cancelCallNotification(context, callId);
+        stopNotificationEffects(context);
         stopVibration(context);
     }
 
@@ -57,6 +59,17 @@ public final class CallAlertUtils {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
         if (callId != null) manager.cancel(notificationId(callId));
+        manager.cancelAll();
+    }
+
+    public static void stopNotificationEffects(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_SAME, 0);
+                audioManager.adjustStreamVolume(AudioManager.STREAM_RING, AudioManager.ADJUST_SAME, 0);
+            }
+        } catch (Exception ignored) {}
     }
 
     public static void stopVibration(Context context) {

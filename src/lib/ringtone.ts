@@ -119,4 +119,9 @@ export function stopRingback() {
     clearInterval(ringbackTimer);
     ringbackTimer = null;
   }
+  if (ctx) {
+    const oldCtx = ctx;
+    ctx = null;
+    oldCtx.close().catch(() => {});
+  }
 }

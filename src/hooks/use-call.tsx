@@ -275,6 +275,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       channel.on("broadcast", { event: "answer" }, async ({ payload }) => {
         if (!pcRef.current || !isCaller) return;
         try {
+          stopRingback();
           await pcRef.current.setRemoteDescription(payload.sdp);
           remoteSetRef.current = true;
           await drainCandidates();
@@ -300,6 +301,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       channel.on("broadcast", { event: "ready" }, async () => {
         if (!isCaller || !pcRef.current) return;
         try {
+          stopRingback();
           const offer = await pcRef.current.createOffer({
             offerToReceiveAudio: true,
             offerToReceiveVideo: kind === "video",
@@ -362,7 +364,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
-        if (state === "connected") setConnecting(false);
+        if (state === "connected") {
+          stopRingback();
+          stopRingtone();
+          setConnecting(false);
+        }
         if (state === "failed" || state === "disconnected") {
           toast.error("Chamada desconectada");
           void endCallInternal("ended");

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -19,12 +20,10 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         ensureFirebaseReady();
         CallAlertUtils.stopVibration(this);
 
-        // Check if this is a call notification
         if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
             showIncomingCallNotification(remoteMessage.getData());
         } else {
-            // Delegate to Capacitor PushNotifications plugin
-            // The plugin will handle normal notifications
+            PushNotificationsPlugin.sendRemoteMessage(remoteMessage);
         }
     }
 
@@ -33,7 +32,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         super.onNewToken(token);
         ensureFirebaseReady();
         Log.d(TAG, "Refreshed token: " + token);
-        // Token will be picked up by Capacitor PushNotifications plugin
+        PushNotificationsPlugin.onNewToken(token);
     }
 
     private void ensureFirebaseReady() {
