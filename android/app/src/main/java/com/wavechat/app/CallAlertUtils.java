@@ -321,12 +321,28 @@ public final class CallAlertUtils {
         }
     }
 
-    // FIX: Improved vibration handling
-    public static void startCallVibration(Context context) {
+    public static synchronized void startCallVibration(Context context) {
+        stopVibration(context);
+        vibrationStartedAt = System.currentTimeMillis();
+        vibrationHandler = new Handler(Looper.getMainLooper());
+        Context appContext = context.getApplicationContext();
+        vibrationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - vibrationStartedAt >= MAX_ALERT_DURATION_MS) {
+                    stopVibration(appContext);
+                    return;
+                }
+                vibrateOnce(appContext);
+                if (vibrationHandler != null) vibrationHandler.postDelayed(this, 3_200L);
+            }
+        };
+        vibrationHandler.post(vibrationRunnable);
+    }
+
+    private static void vibrateOnce(Context context) {
         try {
-            // FIX: Use -1 instead of 0 for infinite repeat
-            // Pattern: wait 0ms, vibrate 750ms, wait 450ms, vibrate 750ms, wait 1400ms, then repeat
-            long[] pattern = new long[] { 0L, 750L, 450L, 750L, 1400L };
+            long[] pattern = new long[] { 0L, 650L, 350L, 650L };
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 if (vm != null) {
@@ -344,17 +360,17 @@ public final class CallAlertUtils {
     private static void vibrate(Vibrator vibrator, long[] pattern) {
         if (vibrator == null || !vibrator.hasVibrator()) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // FIX: Use -1 to repeat indefinitely (will be stopped by stopVibration)
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
         } else {
-            // FIX: Use 0 to repeat indefinitely (will be stopped by stopVibration)
-            vibrator.vibrate(pattern, 0);
+            vibrator.vibrate(pattern, -1);
         }
     }
 
-    // FIX: Improved vibration stopping
-    public static void stopVibration(Context context) {
+    public static synchronized void stopVibration(Context context) {
         try {
+            if (vibrationHandler != null && vibrationRunnable != null) {
+                vibrationHandler.removeCallbacks(vibrationRunnable);
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 if (vm != null) {
@@ -367,6 +383,9 @@ public final class CallAlertUtils {
                 }
             }
             currentVibrator = null;
+            vibrationStartedAt = 0L;
+            vibrationRunnable = null;
+            vibrationHandler = null;
         } catch (Exception ignored) {}
     }
 
