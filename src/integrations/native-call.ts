@@ -136,13 +136,29 @@ export async function showNativeIncomingCall(params: {
   }
 }
 
-/** End a native call UI */
+/** End a native call UI and clear any related FCM notifications/vibration */
 export async function endNativeCall(callId: string): Promise<void> {
   if (!isNativeApp()) return;
   try {
     await IncomingCallKit.endCall({ callId });
   } catch (e) {
     console.error('Failed to end native call', e);
+  }
+  // Also dismiss the FCM-posted incoming-call notification, which carries
+  // its own vibration pattern and would otherwise keep buzzing after
+  // accept/decline/cancel.
+  try {
+    await PushNotifications.removeAllDeliveredNotifications();
+  } catch (e) {
+    console.error('Failed to clear delivered notifications', e);
+  }
+  // Force-stop any ongoing system vibration as a last resort.
+  try {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.(0);
+    }
+  } catch {
+    /* ignore */
   }
 }
 
