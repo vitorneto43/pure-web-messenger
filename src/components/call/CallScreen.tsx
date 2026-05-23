@@ -23,7 +23,13 @@ export function CallScreen() {
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+      // CRITICAL: feed ONLY the video tracks to the local preview.
+      // If the full stream (incl. mic) is attached, some WebViews ignore
+      // `muted` and play the local mic back to the user → they hear themselves.
+      const videoOnly = new MediaStream(localStream.getVideoTracks());
+      localVideoRef.current.srcObject = videoOnly;
+      localVideoRef.current.muted = true;
+      (localVideoRef.current as HTMLVideoElement).volume = 0;
     }
   }, [localStream]);
 
