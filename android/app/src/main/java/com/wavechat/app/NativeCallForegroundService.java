@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -12,6 +13,7 @@ import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.Person;
 
 public class NativeCallForegroundService extends Service {
     public static final String ACTION_START = "com.wavechat.app.NATIVE_CALL_START";
@@ -42,6 +44,7 @@ public class NativeCallForegroundService extends Service {
         acquireWakeLock();
         Notification notification = buildCallNotification(currentCallId, callerName, kind, conversationId);
         startForeground(CallAlertUtils.notificationId(currentCallId), notification);
+        CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
 
         Intent screenIntent = CallAlertUtils.incomingCallIntent(this, currentCallId, callerName, kind, conversationId);
@@ -89,7 +92,7 @@ public class NativeCallForegroundService extends Service {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        return new NotificationCompat.Builder(this, CallAlertUtils.ALERT_CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CallAlertUtils.ALERT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle("video".equals(kind) ? "Chamada de vídeo" : "Chamada de voz")
             .setContentText(callerName + " está te ligando…")
@@ -99,14 +102,24 @@ public class NativeCallForegroundService extends Service {
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(false)
+            .setSilent(true)
             .setSound(null)
             .setVibrate(new long[] { 0L, 750L, 450L, 750L, 1400L })
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(openPending, true)
             .setContentIntent(openPending)
             .addAction(android.R.drawable.ic_menu_call, "Atender", acceptPending)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Recusar", declinePending)
-            .build();
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Recusar", declinePending);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setStyle(NotificationCompat.CallStyle.forIncomingCall(
+                new Person.Builder().setName(callerName).setImportant(true).build(),
+                declinePending,
+                acceptPending
+            ));
+        }
+
+        return builder.build();
     }
 
     private void acquireWakeLock() {
@@ -124,6 +137,7 @@ public class NativeCallForegroundService extends Service {
 
     private void stopAlerts() {
         handler.removeCallbacksAndMessages(null);
+        CallAlertUtils.stopCallRingtone(this);
         CallAlertUtils.stopVibration(this);
         CallAlertUtils.stopNotificationEffects(this);
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
