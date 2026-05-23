@@ -463,6 +463,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!incoming) return;
     stopRingtone();
     stopRingback();
+    if (isNativeApp()) void endNativeCall(incoming.id);
     setConnecting(true);
     try {
       await supabase
@@ -488,6 +489,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const declineIncoming = useCallback(async () => {
     if (!incoming) return;
     stopRingtone();
+    if (isNativeApp()) void endNativeCall(incoming.id);
     await supabase
       .from("calls")
       .update({ status: "declined", ended_at: new Date().toISOString() })
