@@ -92,6 +92,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const callMsgInsertedRef = useRef<Set<string>>(new Set());
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeTokenSavedRef = useRef(false);
+  const processedNativeActionsRef = useRef<Set<string>>(new Set());
   const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
   const sendNativeCallCancelPushFn = useServerFn(sendNativeCallCancelPush);
 
@@ -435,7 +436,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [cleanup]
+    [cleanup, sendNativeCallCancelPushFn]
   );
 
   const startCall = useCallback<CallContextValue["startCall"]>(
@@ -518,10 +519,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setActive(null);
       }
     },
-    [user, createPeerConnection, setupSignaling, endCallInternal, cleanup]
+    [user, createPeerConnection, setupSignaling, endCallInternal, cleanup, sendNativeCallPushFn]
   );
 
   const acceptIncomingCall = useCallback(async (call: CallInfo) => {
+    if (activeRef.current?.id === call.id) return;
     stopRingtone();
     stopRingback();
     if (isNativeApp()) await stopNativeRinging(call.id);
