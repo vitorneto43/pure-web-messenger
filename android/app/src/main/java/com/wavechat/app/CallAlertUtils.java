@@ -237,6 +237,7 @@ public final class CallAlertUtils {
 
             Ringtone player = RingtoneManager.getRingtone(context.getApplicationContext(), callRingtoneUri(context));
             if (player == null) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
                 startFallbackTone();
                 return;
             }
@@ -253,6 +254,7 @@ public final class CallAlertUtils {
             ringtonePlayer = player;
             scheduleRingtoneSafetyStop(context.getApplicationContext());
         } catch (Exception ignored) {
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
             startFallbackTone();
         }
     }
