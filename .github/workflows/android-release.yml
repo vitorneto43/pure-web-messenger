@@ -89,8 +89,12 @@ jobs:
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-            echo "✅ Keystore fixo carregado do GitHub Secret"
+            echo "✅ Keystore fixo carregado do GitHub Secret ANDROID_KEYSTORE_BASE64"
           else
+            echo "⚠️ ATENÇÃO: ANDROID_KEYSTORE_BASE64 não está configurado."
+            echo "⚠️ Vou gerar uma keystore NOVA — esta build terá uma assinatura DIFERENTE de builds anteriores."
+            echo "⚠️ Se você JÁ enviou um AAB para a Play Console, esta build será REJEITADA."
+            echo "⚠️ Baixe o artifact 'wavechat-upload-keystore-backup' e salve em ANDROID_KEYSTORE_BASE64 nos GitHub Secrets para reutilizar."
             keytool -genkeypair -v \
               -keystore android/app/keystore.jks \
               -alias "$ANDROID_KEY_ALIAS" \
@@ -99,8 +103,14 @@ jobs:
               -keypass "$ANDROID_KEY_PASSWORD" \
               -dname "CN=WaveChat, OU=WaveChat, O=WaveChat, L=Sao Paulo, ST=SP, C=BR"
             base64 -w 0 android/app/keystore.jks > android/app/generated-keystore-base64.txt
-            echo "✅ Keystore de upload gerado e AAB será assinado"
+            echo "✅ Keystore de upload gerado (salve o artifact!)"
           fi
+          echo ""
+          echo "📋 Fingerprint da keystore usada nesta build (compare com a Play Console):"
+          keytool -list -v -keystore android/app/keystore.jks \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            | grep -E "SHA1|SHA-256|MD5" || true
 
       - name: Upload generated keystore backup
         if: hashFiles('android/app/generated-keystore-base64.txt') != ''
@@ -108,7 +118,8 @@ jobs:
         with:
           name: wavechat-upload-keystore-backup
           path: android/app/generated-keystore-base64.txt
-          retention-days: 1
+          retention-days: 90
+
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
