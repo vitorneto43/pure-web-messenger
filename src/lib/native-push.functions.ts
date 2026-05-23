@@ -276,15 +276,6 @@ export const sendNativeCallCancelPush = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!call) throw new Error("Call not found");
 
-    const { error: updateError } = await (supabaseAdmin as any)
-      .from("calls")
-      .update({ status: "cancelled", ended_at: new Date().toISOString() })
-      .eq("id", data.callId)
-      .eq("caller_id", context.userId)
-      .eq("callee_id", data.calleeId)
-      .eq("status", "ringing");
-    if (updateError) throw new Error(updateError.message);
-
     const cancelled = await sendNativePayloadToUser(
       data.calleeId,
       {
