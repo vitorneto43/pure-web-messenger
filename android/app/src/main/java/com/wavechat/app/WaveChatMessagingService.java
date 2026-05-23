@@ -50,6 +50,10 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         String kind = data.getOrDefault("kind", "audio");
         String conversationId = data.getOrDefault("conversationId", "");
 
+        if (WaveChatTelecomManager.showIncomingCall(this, callId, callerName, kind, conversationId)) {
+            return;
+        }
+
         Intent serviceIntent = new Intent(this, NativeCallForegroundService.class);
         serviceIntent.setAction(NativeCallForegroundService.ACTION_START);
         serviceIntent.putExtra("callId", callId);

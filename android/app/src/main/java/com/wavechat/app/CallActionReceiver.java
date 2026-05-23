@@ -11,6 +11,9 @@ public class CallActionReceiver extends BroadcastReceiver {
         String action = intent.getStringExtra("action");
 
         CallAlertUtils.stopAllCallAlerts(context, callId);
+        if ("decline".equals(action)) {
+            WaveChatTelecomManager.endIncomingCall(context, callId);
+        }
         context.startActivity(CallAlertUtils.mainActivityIntent(context, callId, action));
     }
 }
