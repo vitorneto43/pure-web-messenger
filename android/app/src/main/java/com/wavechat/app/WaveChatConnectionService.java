@@ -23,7 +23,8 @@ public class WaveChatConnectionService extends ConnectionService {
         connection.setAddress(request.getAddress(), android.telecom.TelecomManager.PRESENTATION_ALLOWED);
         connection.setCallerDisplayName(callerName, android.telecom.TelecomManager.PRESENTATION_ALLOWED);
         connection.setConnectionCapabilities(Connection.CAPABILITY_MUTE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) connection.setConnectionProperties(Connection.PROPERTY_SELF_MANAGED);
+        connection.setAudioModeIsVoip(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) connection.setConnectionProperties(Connection.PROPERTY_SELF_MANAGED);
         connection.setRinging();
         WaveChatTelecomManager.registerConnection(callId, connection);
         CallAlertUtils.createSilentCallChannel(this);
