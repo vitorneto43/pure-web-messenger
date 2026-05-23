@@ -110,6 +110,85 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
   return body.access_token;
 }
 
+async function sendNativePayloadToUser(
+  userId: string,
+  dataPayload: Record<string, string>,
+  ttl = "45s",
+) {
+  const sa = loadServiceAccount();
+  const accessToken = await getAccessToken(sa);
+  const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+
+  const { data: tokens, error } = await (supabaseAdmin as any)
+    .from("native_push_tokens")
+    .select("token")
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  if (!tokens || tokens.length === 0) return { sent: 0 };
+
+  let sent = 0;
+  const toRemove: string[] = [];
+  await Promise.all(
+    tokens.map(async (t: { token: string }) => {
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            message: {
+              token: t.token,
+              data: dataPayload,
+              android: {
+                priority: "HIGH",
+                ttl,
+                direct_boot_ok: true,
+              },
+              apns: {
+                headers: {
+                  "apns-priority": "10",
+                  "apns-push-type": "alert",
+                },
+                payload: {
+                  aps: {
+                    "content-available": 1,
+                    sound: dataPayload.type === "call" ? "default" : undefined,
+                  },
+                },
+              },
+            },
+          }),
+        });
+        if (res.ok) {
+          sent++;
+        } else {
+          const body = await res.text().catch(() => "");
+          if (
+            res.status === 404 ||
+            res.status === 410 ||
+            body.includes("UNREGISTERED") ||
+            body.includes("registration-token-not-registered")
+          ) {
+            toRemove.push(t.token);
+          } else {
+            console.error("FCM v1 send failed", res.status, body);
+          }
+        }
+      } catch (e) {
+        console.error("FCM v1 send exception", e);
+      }
+    }),
+  );
+
+  if (toRemove.length) {
+    await (supabaseAdmin as any).from("native_push_tokens").delete().in("token", toRemove);
+  }
+
+  return { sent };
+}
+
 export const saveNativeToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -162,17 +241,6 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const sa = loadServiceAccount();
-    const accessToken = await getAccessToken(sa);
-    const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
-
-    const { data: tokens, error } = await (supabaseAdmin as any)
-      .from("native_push_tokens")
-      .select("token")
-      .eq("user_id", data.calleeId);
-    if (error) throw new Error(error.message);
-    if (!tokens || tokens.length === 0) return { sent: 0 };
-
     // Data-only payload: this is required so Android calls WaveChatMessagingService
     // while the app is closed; a notification payload would bypass our native
     // Telecom/phone-call UI and only show a normal notification.
@@ -184,72 +252,37 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
       callerName: data.callerName,
       timestamp: String(Date.now()),
     };
+    return sendNativePayloadToUser(data.calleeId, dataPayload, "45s");
+  });
 
-    let sent = 0;
-    const toRemove: string[] = [];
-    await Promise.all(
-      tokens.map(async (t: { token: string }) => {
-        try {
-          const res = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              message: {
-                token: t.token,
-                data: dataPayload,
-                android: {
-                  priority: "HIGH",
-                  ttl: "45s",
-                  // direct_boot_ok lets the message reach the device even
-                  // before the user unlocks after reboot
-                  direct_boot_ok: true,
-                },
-                apns: {
-                  headers: {
-                    "apns-priority": "10",
-                    "apns-push-type": "alert",
-                  },
-                  payload: {
-                    aps: {
-                      "content-available": 1,
-                      sound: "default",
-                    },
-                  },
-                },
-              },
-            }),
-          });
-          if (res.ok) {
-            sent++;
-          } else {
-            const body = await res.text().catch(() => "");
-            // UNREGISTERED / INVALID_ARGUMENT for the token field => prune
-            if (
-              res.status === 404 ||
-              res.status === 410 ||
-              body.includes("UNREGISTERED") ||
-              body.includes("registration-token-not-registered")
-            ) {
-              toRemove.push(t.token);
-            } else {
-              console.error("FCM v1 send failed", res.status, body);
-            }
-          }
-        } catch (e) {
-          console.error("FCM v1 send exception", e);
-        }
-      }),
+export const sendNativeCallCancelPush = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        callId: z.string().uuid(),
+        calleeId: z.string().uuid(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: call, error } = await (supabaseAdmin as any)
+      .from("calls")
+      .select("id")
+      .eq("id", data.callId)
+      .eq("caller_id", context.userId)
+      .eq("callee_id", data.calleeId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!call) throw new Error("Call not found");
+
+    return sendNativePayloadToUser(
+      data.calleeId,
+      {
+        type: "call_cancel",
+        callId: data.callId,
+        timestamp: String(Date.now()),
+      },
+      "10s",
     );
-
-    if (toRemove.length) {
-      await (supabaseAdmin as any)
-        .from("native_push_tokens")
-        .delete()
-        .in("token", toRemove);
-    }
-
-    return { sent };
   });
