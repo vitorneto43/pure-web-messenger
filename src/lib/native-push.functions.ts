@@ -17,14 +17,21 @@ interface ServiceAccount {
 let cachedToken: { token: string; exp: number } | null = null;
 
 function loadServiceAccount(): ServiceAccount {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON not configured");
-  let parsed: ServiceAccount;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
+  let parsed: ServiceAccount | null = null;
+  const candidates = [
+    raw,
+    raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, ""),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const value = JSON.parse(candidate);
+      parsed = typeof value === "string" ? JSON.parse(value) : value;
+      break;
+    } catch {}
   }
+  if (!parsed) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
   if (!parsed.client_email || !parsed.private_key || !parsed.project_id) {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON missing required fields");
   }
