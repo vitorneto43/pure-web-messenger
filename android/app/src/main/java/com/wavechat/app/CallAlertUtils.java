@@ -112,9 +112,22 @@ public final class CallAlertUtils {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
                 audioManager.abandonAudioFocus(audioFocusListener);
-                audioManager.setMode(AudioManager.MODE_NORMAL);
             }
         } catch (Exception ignored) {}
+    }
+
+    private static Uri callRingtoneUri(Context context) {
+        Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
+            context.getApplicationContext(),
+            RingtoneManager.TYPE_RINGTONE
+        );
+        if (ringtoneUri == null) {
+            ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
+                context.getApplicationContext(),
+                RingtoneManager.TYPE_NOTIFICATION
+            );
+        }
+        return ringtoneUri == null ? Settings.System.DEFAULT_RINGTONE_URI : ringtoneUri;
     }
 
     public static synchronized void startCallRingtone(Context context) {
@@ -131,14 +144,8 @@ public final class CallAlertUtils {
                 );
             }
 
-            Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
-                context.getApplicationContext(),
-                RingtoneManager.TYPE_RINGTONE
-            );
-            if (ringtoneUri == null) ringtoneUri = Settings.System.DEFAULT_RINGTONE_URI;
-
             MediaPlayer player = new MediaPlayer();
-            player.setDataSource(context.getApplicationContext(), ringtoneUri);
+            player.setDataSource(context.getApplicationContext(), callRingtoneUri(context));
             player.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -148,11 +155,44 @@ public final class CallAlertUtils {
             player.prepare();
             player.start();
             ringtonePlayer = player;
+        } catch (Exception ignored) {
+            startFallbackTone();
+        }
+    }
+
+    private static synchronized void startFallbackTone() {
+        try {
+            stopFallbackTone();
+            fallbackTone = new ToneGenerator(AudioManager.STREAM_RING, 100);
+            fallbackHandler = new Handler(Looper.getMainLooper());
+            fallbackRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (fallbackTone != null) fallbackTone.startTone(ToneGenerator.TONE_SUP_RINGTONE, 1200);
+                        if (fallbackHandler != null) fallbackHandler.postDelayed(this, 2500);
+                    } catch (Exception ignored) {}
+                }
+            };
+            fallbackHandler.post(fallbackRunnable);
         } catch (Exception ignored) {}
+    }
+
+    private static synchronized void stopFallbackTone() {
+        try {
+            if (fallbackHandler != null && fallbackRunnable != null) fallbackHandler.removeCallbacks(fallbackRunnable);
+            if (fallbackTone != null) fallbackTone.release();
+        } catch (Exception ignored) {
+        } finally {
+            fallbackTone = null;
+            fallbackHandler = null;
+            fallbackRunnable = null;
+        }
     }
 
     public static synchronized void stopCallRingtone(Context context) {
         try {
+            stopFallbackTone();
             if (ringtonePlayer != null) {
                 if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
                 ringtonePlayer.release();
