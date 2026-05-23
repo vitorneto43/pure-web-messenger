@@ -122,7 +122,7 @@ export async function showNativeIncomingCall(params: {
       timeoutMs: 45_000,
       extra: params.extra ?? {},
       android: {
-        channelId: 'wavechat_calls',
+        channelId: 'wavechat_incoming_calls_v2',
         channelName: 'Chamadas WaveChat',
         showFullScreen: true,
         isHighPriority: true,
@@ -155,6 +155,7 @@ export async function endNativeCall(callId: string): Promise<void> {
   // Force-stop any ongoing system vibration as a last resort.
   try {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.([]);
       navigator.vibrate?.(0);
     }
   } catch {
