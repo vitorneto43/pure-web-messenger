@@ -344,10 +344,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: { ideal: true },
-          noiseSuppression: { ideal: true },
-          autoGainControl: { ideal: false },
-          channelCount: { ideal: 1 },
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
           sampleRate: { ideal: 48000 },
           sampleSize: { ideal: 16 },
         },
