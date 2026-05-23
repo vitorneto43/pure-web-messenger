@@ -8,6 +8,10 @@ import { Capacitor } from '@capacitor/core';
 let callKitListenersInitialized = false;
 let fcmToken: string | null = null;
 
+function isNativePushEnabled(): boolean {
+  return import.meta.env.VITE_ENABLE_NATIVE_PUSH === 'true';
+}
+
 export function isNativeApp(): boolean {
   return Capacitor.isNativePlatform();
 }
@@ -38,6 +42,10 @@ export async function registerNativePush(
   saveTokenFn: (token: string, platform: 'android' | 'ios') => Promise<void>,
 ): Promise<void> {
   if (!isNativeApp()) return;
+  if (!isNativePushEnabled()) {
+    console.info('Native push disabled: Firebase configuration not available in this build');
+    return;
+  }
 
   try {
     const permResult = await PushNotifications.requestPermissions();
