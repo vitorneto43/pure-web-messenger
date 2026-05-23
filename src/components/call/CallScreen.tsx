@@ -35,11 +35,15 @@ export function CallScreen() {
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.muted = active?.kind !== "video";
+      // Video element gets video-only; audio always routed through <audio>.
+      const videoOnly = new MediaStream(remoteStream.getVideoTracks());
+      remoteVideoRef.current.srcObject = videoOnly;
+      remoteVideoRef.current.muted = true;
+      (remoteVideoRef.current as HTMLVideoElement).volume = 0;
     }
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = active?.kind === "video" ? null : remoteStream;
+    if (remoteAudioRef.current && remoteStream) {
+      const audioOnly = new MediaStream(remoteStream.getAudioTracks());
+      remoteAudioRef.current.srcObject = audioOnly;
       remoteAudioRef.current.volume = 1;
     }
   }, [remoteStream, active?.kind]);
