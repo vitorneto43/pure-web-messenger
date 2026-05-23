@@ -32,8 +32,8 @@ export function CallScreen() {
       remoteVideoRef.current.srcObject = remoteStream;
       remoteVideoRef.current.muted = active?.kind !== "video";
     }
-    if (remoteAudioRef.current && remoteStream) {
-      remoteAudioRef.current.srcObject = remoteStream;
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = active?.kind === "video" ? null : remoteStream;
       remoteAudioRef.current.volume = 1;
     }
   }, [remoteStream, active?.kind]);
