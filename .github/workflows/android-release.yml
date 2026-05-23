@@ -59,27 +59,16 @@ jobs:
             rm -f android/app/google-services.json
           fi
 
-      - name: Generate keystore
+      - name: Configure release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-            echo "✅ Keystore carregado do secret"
-          else
-            echo "🆕 Gerando keystore temporário..."
-            keytool -genkey -v \
-              -keystore android/app/keystore.jks \
-              -alias wavechat \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass WaveChat2026 \
-              -keypass WaveChat2026 \
-              -dname "CN=WaveChat, OU=WaveChat, O=WaveChat, L=Sao Paulo, ST=SP, C=BR"
-            echo "⚠️ Keystore temporário gerado. Para Play Store, crie o secret ANDROID_KEYSTORE_BASE64"
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 não configurado. O release precisa de uma chave fixa para ser aceito na Play Store."
+            exit 1
           fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          echo "✅ Keystore fixo carregado do GitHub Secret"
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -103,6 +92,13 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'WaveChat2026' }}
         run: ./gradlew bundleRelease
+
+      - name: Verify AAB signature
+        if: github.event.inputs.build_type == 'aab'
+        working-directory: android
+        run: |
+          jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
+          echo "✅ AAB verificado: pacote está assinado"
 
       - name: Upload Release APK
         if: github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == ''
