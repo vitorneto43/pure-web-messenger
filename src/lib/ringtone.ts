@@ -61,8 +61,8 @@ function ringbackTone() {
 
 export function startRingtone() {
   try {
-    if (!ensureCtx()) return;
     stopRingtone();
+    if (!ensureCtx()) return;
     beep();
     timer = setInterval(beep, 2000);
   } catch {
@@ -94,6 +94,11 @@ export function stopRingtone() {
     }
   } catch {
     /* ignore */
+  }
+  if (ctx) {
+    const oldCtx = ctx;
+    ctx = null;
+    oldCtx.close().catch(() => {});
   }
 }
 
