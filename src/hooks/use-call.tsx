@@ -16,6 +16,8 @@ import {
   isNativeApp,
   showNativeIncomingCall,
   endNativeCall,
+  configureNativeCallAudio,
+  resetNativeCallAudio,
   initNativeCallListeners,
   registerNativePush,
 } from "@/integrations/native-call";
@@ -178,6 +180,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const cleanup = useCallback(() => {
     stopRingtone();
     stopRingback();
+    if (isNativeApp()) void resetNativeCallAudio();
     if (pcRef.current) {
       pcRef.current.onicecandidate = null;
       pcRef.current.ontrack = null;
@@ -334,11 +337,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
       pcRef.current = pc;
 
+      if (isNativeApp()) await configureNativeCallAudio();
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: false },
+          channelCount: { ideal: 1 },
+          sampleRate: { ideal: 48000 },
+          sampleSize: { ideal: 16 },
         },
         video: kind === "video" ? { width: 1280, height: 720 } : false,
       });
