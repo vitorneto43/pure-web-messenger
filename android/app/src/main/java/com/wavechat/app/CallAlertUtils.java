@@ -123,6 +123,21 @@ public final class CallAlertUtils {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager == null) return;
             audioManager.abandonAudioFocus(audioFocusListener);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                audioManager.requestAudioFocus(new AudioManager.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build())
+                    .setOnAudioFocusChangeListener(audioFocusListener)
+                    .build());
+            } else {
+                audioManager.requestAudioFocus(
+                    audioFocusListener,
+                    AudioManager.STREAM_VOICE_CALL,
+                    AudioManager.AUDIOFOCUS_GAIN
+                );
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 audioManager.setCommunicationDevice(null);
             }
