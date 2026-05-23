@@ -36,6 +36,7 @@ public class IncomingCallActivity extends Activity {
         configureWindow();
         readExtras();
         CallAlertUtils.createSilentCallChannel(this);
+        CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, callId);
         setContentView(buildLayout());
@@ -48,6 +49,7 @@ public class IncomingCallActivity extends Activity {
         currentActivity = new WeakReference<>(this);
         setIntent(intent);
         readExtras();
+        CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, callId);
     }

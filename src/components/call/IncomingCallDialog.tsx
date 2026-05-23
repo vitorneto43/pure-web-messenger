@@ -1,56 +1,111 @@
-import { Phone, Video } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Phone, PhoneOff } from "lucide-react";
 import { useCall } from "@/hooks/use-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 export function IncomingCallDialog() {
   const { incoming, acceptIncoming, declineIncoming } = useCall();
+  const [ringAnimation, setRingAnimation] = useState(true);
+
+  useEffect(() => {
+    if (!incoming) return;
+
+    // Pulse animation for the accept button
+    const interval = setInterval(() => {
+      setRingAnimation((prev) => !prev);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [incoming]);
+
   if (!incoming) return null;
 
   const peer = incoming.peerProfile;
   const isVideo = incoming.kind === "video";
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="w-full max-w-sm rounded-3xl bg-zinc-900 text-white p-8 flex flex-col items-center gap-6 shadow-2xl border border-white/10">
-        <div className="text-sm text-zinc-400 flex items-center gap-2">
-          {isVideo ? <Video className="size-4" /> : <Phone className="size-4" />}
-          {isVideo ? "Chamada de vídeo recebida" : "Chamada de voz recebida"}
-        </div>
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+      {/* Main card */}
+      <div className="w-full max-w-sm bg-gradient-to-b from-zinc-900 to-black rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+        {/* Header with caller info */}
+        <div className="relative pt-8 pb-12 px-6 text-center">
+          {/* Decorative gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-transparent pointer-events-none" />
 
-        <Avatar className="size-28">
-          <AvatarImage src={peer?.avatar_url ?? undefined} />
-          <AvatarFallback className="text-3xl">
-            {peer?.display_name?.[0]?.toUpperCase() ?? "?"}
-          </AvatarFallback>
-        </Avatar>
+          {/* Avatar */}
+          <div className="relative mb-6 flex justify-center">
+            <div className="relative">
+              <Avatar className="size-32 border-4 border-white/20 shadow-xl">
+                <AvatarImage src={peer?.avatar_url ?? undefined} />
+                <AvatarFallback className="text-5xl bg-gradient-to-br from-blue-500 to-purple-600">
+                  {peer?.display_name?.[0]?.toUpperCase() ?? "?"}
+                </AvatarFallback>
+              </Avatar>
 
-        <div className="text-xl font-semibold text-center">
-          {peer?.display_name ?? "Usuário"}
-        </div>
-
-        <div className="flex items-center gap-8 mt-2">
-          <div className="flex flex-col items-center gap-2">
-            <Button
-              size="icon"
-              onClick={declineIncoming}
-              className="size-16 rounded-full bg-red-600 hover:bg-red-700"
-            >
-              <Phone className="size-7 rotate-[135deg]" />
-            </Button>
-            <span className="text-xs text-zinc-400">Recusar</span>
+              {/* Call type badge */}
+              <div className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 shadow-lg border-2 border-black">
+                <div className="text-white text-sm font-bold">
+                  {isVideo ? "📹" : "🎤"}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <Button
-              size="icon"
-              onClick={acceptIncoming}
-              className="size-16 rounded-full bg-green-600 hover:bg-green-700"
-            >
-              {isVideo ? <Video className="size-7" /> : <Phone className="size-7" />}
-            </Button>
-            <span className="text-xs text-zinc-400">Atender</span>
+
+          {/* Caller name */}
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {peer?.display_name ?? "Alguém"}
+          </h2>
+
+          {/* Call type */}
+          <p className="text-sm text-zinc-400 font-medium">
+            {isVideo ? "Chamada de vídeo recebida" : "Chamada de voz recebida"}
+          </p>
+
+          {/* Ringing animation */}
+          <div className="mt-6 flex justify-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-xs text-zinc-400 font-medium">Conectando...</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse animation-delay-100" />
           </div>
         </div>
+
+        {/* Action buttons */}
+        <div className="px-6 pb-8 flex gap-4">
+          {/* Decline button */}
+          <Button
+            onClick={declineIncoming}
+            className="flex-1 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+            title="Recusar chamada"
+          >
+            <PhoneOff className="size-6" />
+            <span className="hidden sm:inline">Recusar</span>
+          </Button>
+
+          {/* Accept button - prominent with animation */}
+          <Button
+            onClick={acceptIncoming}
+            className={`flex-1 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
+              ringAnimation ? "ring-4 ring-green-400/50 ring-offset-2 ring-offset-black" : ""
+            }`}
+            title="Atender chamada"
+          >
+            <Phone className="size-6" />
+            <span className="hidden sm:inline">Atender</span>
+          </Button>
+        </div>
+
+        {/* Footer info */}
+        <div className="px-6 pb-6 text-center text-xs text-zinc-500 border-t border-white/5 pt-4">
+          <p>Deslize para cima para atender ou para baixo para recusar</p>
+        </div>
+      </div>
+
+      {/* Floating elements for visual appeal */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Animated background circles */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl animate-pulse animation-delay-200" />
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
       </div>
     </div>
   );

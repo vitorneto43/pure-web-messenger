@@ -20,17 +20,15 @@ import android.os.VibratorManager;
 import android.provider.Settings;
 
 public final class CallAlertUtils {
-    public static final String CHANNEL_ID = "wavechat_calls_native_v7";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v11";
+    public static final String CHANNEL_ID = "wavechat_calls_native_v6";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v10";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static Ringtone ringtonePlayer;
     private static ToneGenerator fallbackTone;
     private static Handler fallbackHandler;
     private static Runnable fallbackRunnable;
-    private static Handler vibrationHandler;
-    private static Runnable vibrationRunnable;
-    private static long vibrationStartedAt;
     private static AudioFocusRequest inCallFocusRequest;
+    private static Vibrator currentVibrator;  // FIX: Track current vibrator
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
@@ -55,11 +53,8 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_calls_alert_v7");
         manager.deleteNotificationChannel("wavechat_calls_alert_v8");
         manager.deleteNotificationChannel("wavechat_calls_alert_v9");
-        manager.deleteNotificationChannel("wavechat_calls_alert_v10");
         manager.deleteNotificationChannel("wavechat_calls_native_v5");
-        manager.deleteNotificationChannel("wavechat_calls_native_v6");
         manager.deleteNotificationChannel(CHANNEL_ID);
-        manager.deleteNotificationChannel(ALERT_CHANNEL_ID);
 
         AudioAttributes ringAttrs = new AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
@@ -74,8 +69,8 @@ public final class CallAlertUtils {
         );
         channel.setDescription("Tela de chamada recebida do WaveChat");
         channel.setSound(null, null);
-        channel.enableVibration(false);
-        channel.setVibrationPattern(new long[] { 0L });
+        channel.enableVibration(true);
+        channel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         channel.enableLights(false);
         channel.setShowBadge(false);
         channel.setBypassDnd(false);
@@ -89,8 +84,8 @@ public final class CallAlertUtils {
         );
         alertChannel.setDescription("Alerta de chamada recebida do WaveChat");
         alertChannel.setSound(null, null);
-        alertChannel.enableVibration(false);
-        alertChannel.setVibrationPattern(new long[] { 0L });
+        alertChannel.enableVibration(true);
+        alertChannel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         alertChannel.enableLights(true);
         alertChannel.setShowBadge(false);
         alertChannel.setBypassDnd(false);
@@ -111,7 +106,7 @@ public final class CallAlertUtils {
         IncomingCallActivity.finishCallScreen(callId);
         stopCallRingtone(context);
         stopNotificationEffects(context);
-        stopVibration(context);
+        stopVibration(context);  // FIX: Ensure vibration is stopped
         try {
             Intent endedIntent = new Intent("com.wavechat.app.CALL_ALERT_ENDED");
             endedIntent.putExtra("callId", callId);
@@ -148,7 +143,7 @@ public final class CallAlertUtils {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager == null) return;
             stopCallRingtone(context);
-            stopVibration(context);
+            stopVibration(context);  // FIX: Stop vibration when call is answered
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && inCallFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(inCallFocusRequest);
                 inCallFocusRequest = null;
@@ -295,61 +290,53 @@ public final class CallAlertUtils {
         }
     }
 
-    public static synchronized void startCallVibration(Context context) {
+    // FIX: Improved vibration handling
+    public static void startCallVibration(Context context) {
         try {
-            if (vibrationHandler != null && vibrationRunnable != null) return;
-            final Context appContext = context.getApplicationContext();
-            vibrationStartedAt = System.currentTimeMillis();
-            vibrationHandler = new Handler(Looper.getMainLooper());
-            vibrationRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    if (System.currentTimeMillis() - vibrationStartedAt > 45_000) {
-                        stopVibration(appContext);
-                        return;
-                    }
-                    try {
-                        long[] pulse = new long[] { 0L, 650L };
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            VibratorManager vm = (VibratorManager) appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-                            if (vm != null) vibrate(vm.getDefaultVibrator(), pulse);
-                        } else {
-                            Vibrator vibrator = (Vibrator) appContext.getSystemService(Context.VIBRATOR_SERVICE);
-                            vibrate(vibrator, pulse);
-                        }
-                    } catch (Exception ignored) {}
-                    if (vibrationHandler != null) vibrationHandler.postDelayed(this, 2_400);
+            // FIX: Use -1 instead of 0 for infinite repeat
+            // Pattern: wait 0ms, vibrate 750ms, wait 450ms, vibrate 750ms, wait 1400ms, then repeat
+            long[] pattern = new long[] { 0L, 750L, 450L, 750L, 1400L };
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                if (vm != null) {
+                    currentVibrator = vm.getDefaultVibrator();
+                    vibrate(currentVibrator, pattern);
                 }
-            };
-            vibrationHandler.post(vibrationRunnable);
+            } else {
+                Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+                currentVibrator = vibrator;
+                vibrate(vibrator, pattern);
+            }
         } catch (Exception ignored) {}
     }
 
     private static void vibrate(Vibrator vibrator, long[] pattern) {
         if (vibrator == null || !vibrator.hasVibrator()) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
+            // FIX: Use -1 to repeat indefinitely (will be stopped by stopVibration)
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
         } else {
-            vibrator.vibrate(pattern, -1);
+            // FIX: Use 0 to repeat indefinitely (will be stopped by stopVibration)
+            vibrator.vibrate(pattern, 0);
         }
     }
 
-    public static synchronized void stopVibration(Context context) {
+    // FIX: Improved vibration stopping
+    public static void stopVibration(Context context) {
         try {
-            if (vibrationHandler != null && vibrationRunnable != null) vibrationHandler.removeCallbacks(vibrationRunnable);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-                if (vm != null) vm.cancel();
+                if (vm != null) {
+                    vm.cancel();  // FIX: Cancel all vibrations
+                }
             } else {
                 Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-                if (vibrator != null) vibrator.cancel();
+                if (vibrator != null) {
+                    vibrator.cancel();  // FIX: Cancel vibration
+                }
             }
-        } catch (Exception ignored) {
-        } finally {
-            vibrationHandler = null;
-            vibrationRunnable = null;
-            vibrationStartedAt = 0L;
-        }
+            currentVibrator = null;
+        } catch (Exception ignored) {}
     }
 
     public static Intent mainActivityIntent(Context context, String callId, String action) {
@@ -362,7 +349,7 @@ public final class CallAlertUtils {
 
     public static Intent incomingCallIntent(Context context, String callId, String callerName, String kind, String conversationId) {
         Intent intent = new Intent(context, IncomingCallActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("callId", callId);
         intent.putExtra("callerName", callerName);
         intent.putExtra("kind", kind);

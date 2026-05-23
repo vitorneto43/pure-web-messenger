@@ -66,10 +66,28 @@ interface CallContextValue {
 
 const CallContext = createContext<CallContextValue | null>(null);
 
+// Enhanced ICE servers with TURN servers for better connectivity
+// TURN servers help with NAT traversal and improve connection reliability
 const ICE_SERVERS: RTCIceServer[] = [
+  // Google STUN servers (free, reliable)
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun3.l.google.com:19302" },
+  { urls: "stun:stun4.l.google.com:19302" },
+  
+  // Note: Add your own TURN servers for production
+  // Example:
+  // {
+  //   urls: ["turn:your-turn-server.com:3478"],
+  //   username: "username",
+  //   credential: "password"
+  // }
 ];
+
+// Call timeout constants
+const CALL_RING_TIMEOUT = 45_000; // 45 seconds
+const CALL_CONNECTION_TIMEOUT = 30_000; // 30 seconds for WebRTC connection
 
 export function CallProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -93,6 +111,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeTokenSavedRef = useRef(false);
   const processedNativeActionsRef = useRef<Set<string>>(new Set());
+  
+  // FIX: Add timeout tracking for connection establishment
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
   const sendNativeCallCancelPushFn = useServerFn(sendNativeCallCancelPush);
 
@@ -181,9 +204,22 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   const cleanup = useCallback(() => {
+    // FIX: Clear all timeouts to prevent lingering effects
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+    if (ringTimeoutRef.current) {
+      clearTimeout(ringTimeoutRef.current);
+      ringTimeoutRef.current = null;
+    }
+
     stopRingtone();
     stopRingback();
+    
+    // FIX: Reset native audio properly before cleanup
     if (isNativeApp()) void resetNativeCallAudio();
+    
     if (pcRef.current) {
       pcRef.current.onicecandidate = null;
       pcRef.current.ontrack = null;
@@ -195,14 +231,21 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }
       pcRef.current = null;
     }
+    
     if (signalChanRef.current) {
       supabase.removeChannel(signalChanRef.current);
       signalChanRef.current = null;
     }
+    
+    // FIX: Properly stop all tracks before clearing stream
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current.getTracks().forEach((t) => {
+        t.stop();
+        t.enabled = false;
+      });
       localStreamRef.current = null;
     }
+    
     setLocalStream(null);
     setRemoteStream(null);
     setConnecting(false);
@@ -342,6 +385,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
       if (isNativeApp()) await configureNativeCallAudio();
 
+      // FIX: Improved audio constraints for better quality and echo cancellation
+      // - echoCancellation: true - removes echo
+      // - noiseSuppression: true - removes background noise
+      // - autoGainControl: true - normalizes volume
+      // - channelCount: 1 - mono audio (better for calls)
+      // - sampleRate: 48000 - high quality
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -351,8 +400,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
           sampleRate: { ideal: 48000 },
           sampleSize: { ideal: 16 },
         },
-        video: kind === "video" ? { width: 1280, height: 720 } : false,
+        video: kind === "video" ? { 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 },
+          facingMode: "user" // FIX: Explicitly set front camera
+        } : false,
       });
+      
       localStreamRef.current = stream;
       setLocalStream(stream);
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
@@ -380,9 +434,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
         if (state === "connected") {
+          // FIX: Clear connection timeout when connected
+          if (connectionTimeoutRef.current) {
+            clearTimeout(connectionTimeoutRef.current);
+            connectionTimeoutRef.current = null;
+          }
+          
           stopRingback();
           stopRingtone();
           setConnecting(false);
+          
           // Re-apply MODE_IN_COMMUNICATION + earpiece routing now that the
           // WebView audio output is live. Without this, the OS often resets
           // to MODE_NORMAL when playback begins, disabling hardware AEC →
@@ -397,6 +458,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
           void endCallInternal("ended");
         }
       };
+
+      // FIX: Add connection timeout to prevent hanging connections
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+      }
+      connectionTimeoutRef.current = setTimeout(() => {
+        if (pc.connectionState === "connecting" || pc.connectionState === "new") {
+          toast.error("Timeout na conexão");
+          void endCallInternal("ended");
+        }
+      }, CALL_CONNECTION_TIMEOUT);
 
       return pc;
     },
@@ -413,28 +485,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       if (current && isNativeApp()) void endNativeCall(current.id);
       setActive(null);
       if (current) {
+        await supabase
+          .from("calls")
+          .update({ status, ended_at: new Date().toISOString() })
+          .eq("id", current.id)
+          .in("status", ["ringing", "accepted"]);
+
         if (current.isCaller && current.status === "ringing") {
-          const cancelSynced = await sendNativeCallCancelPushFn({
+          void sendNativeCallCancelPushFn({
             data: { callId: current.id, calleeId: current.calleeId },
-          })
-            .then(() => true)
-            .catch((e) => {
-              console.error("sendNativeCallCancelPush failed", e);
-              return false;
-            });
-          if (!cancelSynced) {
-            await supabase
-              .from("calls")
-              .update({ status, ended_at: new Date().toISOString() })
-              .eq("id", current.id)
-              .in("status", ["ringing", "accepted"]);
-          }
-        } else {
-          await supabase
-            .from("calls")
-            .update({ status, ended_at: new Date().toISOString() })
-            .eq("id", current.id)
-            .in("status", ["ringing", "accepted"]);
+          }).catch((e) => console.error("sendNativeCallCancelPush failed", e));
         }
 
         if (current.isCaller) {
@@ -479,9 +539,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
           })
           .select()
           .single();
-        if (error) throw error;
 
-        const info: CallInfo = {
+        if (error || !data) throw error || new Error("Failed to create call");
+
+        const callInfo: CallInfo = {
           id: data.id,
           conversationId,
           callerId: user.id,
@@ -491,19 +552,15 @@ export function CallProvider({ children }: { children: ReactNode }) {
           isCaller: true,
           peerProfile,
         };
-        setActive(info);
-        activeRef.current = info;
+        setActive(callInfo);
+        activeRef.current = callInfo;
 
         await createPeerConnection(kind, true);
         setupSignaling(data.id, true, kind);
+
         startRingback();
 
-        // Fire-and-forget push notification to the callee
-        const callerName =
-          (user.user_metadata?.display_name as string | undefined) ||
-          (user.user_metadata?.full_name as string | undefined) ||
-          user.email ||
-          "Alguém";
+        const callerName = user.user_metadata?.display_name || "Alguém";
         void sendCallPush({
           data: {
             callId: data.id,
@@ -525,14 +582,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
           },
         }).catch((e) => console.error("sendNativeCallPush failed", e));
 
-        // Auto-cancel if not answered in 45s
-        setTimeout(() => {
+        // FIX: Track ring timeout to auto-cancel if not answered
+        if (ringTimeoutRef.current) {
+          clearTimeout(ringTimeoutRef.current);
+        }
+        ringTimeoutRef.current = setTimeout(() => {
           const cur = activeRef.current;
           if (cur && cur.id === data.id && cur.status === "ringing") {
             toast.info("Sem resposta");
             void endCallInternal("missed");
           }
-        }, 45_000);
+        }, CALL_RING_TIMEOUT);
       } catch (e: any) {
         toast.error("Não foi possível iniciar a chamada: " + e.message);
         cleanup();
