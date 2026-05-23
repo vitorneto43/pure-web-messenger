@@ -38,6 +38,7 @@ public class IncomingCallActivity extends Activity {
         CallAlertUtils.createSilentCallChannel(this);
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+        CallAlertUtils.watchCallStatus(this, callId);
         setContentView(buildLayout());
         registerCallEndedReceiver();
     }
@@ -50,6 +51,7 @@ public class IncomingCallActivity extends Activity {
         readExtras();
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+        CallAlertUtils.watchCallStatus(this, callId);
     }
 
     @Override
@@ -59,6 +61,7 @@ public class IncomingCallActivity extends Activity {
         } catch (Exception ignored) {}
         IncomingCallActivity current = currentActivity == null ? null : currentActivity.get();
         if (current == this) currentActivity = null;
+        CallStatusPoller.stop(callId);
         super.onDestroy();
     }
 
