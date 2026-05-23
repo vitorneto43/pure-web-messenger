@@ -24,6 +24,9 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getData() != null && "call_cancel".equals(remoteMessage.getData().get("type"))) {
             String callId = remoteMessage.getData().getOrDefault("callId", "");
             CallAlertUtils.stopAllCallAlerts(this, callId);
+        } else if (remoteMessage.getData() != null && "call_end".equals(remoteMessage.getData().get("type"))) {
+            String callId = remoteMessage.getData().getOrDefault("callId", "");
+            CallAlertUtils.stopAllCallAlerts(this, callId);
         } else if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
             showIncomingCallNotification(remoteMessage.getData());
         } else {
@@ -82,6 +85,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         CallAlertUtils.createSilentCallChannel(this);
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+        CallAlertUtils.watchCallStatus(this, callId);
 
         // WhatsApp-style: open a dedicated native incoming-call screen even if the app is closed.
         Intent intent = CallAlertUtils.incomingCallIntent(this, callId, callerName, kind, conversationId);

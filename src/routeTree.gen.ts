@@ -23,6 +23,7 @@ import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
+import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -96,6 +97,11 @@ const ApiPublicPaymentsRefundSweeperRoute =
     path: '/api/public/payments/refund-sweeper',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCallsStatusRoute = ApiPublicCallsStatusRouteImport.update({
+  id: '/api/public/calls/status',
+  path: '/api/public/calls/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/profile'
     | '/chat/$conversationId'
+    | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/'
     | '/chat/$conversationId'
+    | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
   id:
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
+    | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsRefundSweeperRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/calls/status': {
+      id: '/api/public/calls/status'
+      path: '/api/public/calls/status'
+      fullPath: '/api/public/calls/status'
+      preLoaderRoute: typeof ApiPublicCallsStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -345,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
   ApiPublicPaymentsRefundSweeperRoute: ApiPublicPaymentsRefundSweeperRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
