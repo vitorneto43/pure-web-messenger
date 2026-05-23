@@ -166,8 +166,9 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!tokens || tokens.length === 0) return { sent: 0 };
 
-    // data-only payload so our Android service decides how to display the
-    // full-screen call UI (no system notification banner shown by FCM itself)
+    // Data-only payload: this is required so Android calls WaveChatMessagingService
+    // while the app is closed; a notification payload would bypass our native
+    // Telecom/phone-call UI and only show a normal notification.
     const dataPayload = {
       type: "call",
       callId: data.callId,
@@ -191,10 +192,6 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
             body: JSON.stringify({
               message: {
                 token: t.token,
-                notification: {
-                  title: data.kind === "video" ? "Chamada de vídeo" : "Chamada de voz",
-                  body: `${data.callerName} está te ligando…`,
-                },
                 data: dataPayload,
                 android: {
                   priority: "HIGH",
@@ -202,16 +199,6 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
                   // direct_boot_ok lets the message reach the device even
                   // before the user unlocks after reboot
                   direct_boot_ok: true,
-                  notification: {
-                    channel_id: "wavechat_calls_alert_v8",
-                    notification_priority: "PRIORITY_MAX",
-                    visibility: "PUBLIC",
-                    sound: "default",
-                    default_vibrate_timings: false,
-                    vibrate_timings: ["0s", "0.9s", "0.35s", "0.9s", "1.2s"],
-                    sticky: true,
-                    tag: data.callId,
-                  },
                 },
                 apns: {
                   headers: {

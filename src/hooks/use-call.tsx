@@ -16,6 +16,7 @@ import {
   isNativeApp,
   showNativeIncomingCall,
   endNativeCall,
+  stopNativeRinging,
   configureNativeCallAudio,
   resetNativeCallAudio,
   initNativeCallListeners,
@@ -516,7 +517,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const acceptIncomingCall = useCallback(async (call: CallInfo) => {
     stopRingtone();
     stopRingback();
-    if (isNativeApp()) await endNativeCall(call.id);
+    if (isNativeApp()) await stopNativeRinging(call.id);
     setConnecting(true);
     try {
       await supabase
@@ -717,7 +718,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!isNativeApp()) return;
     const runAction = async (detail: { action?: string; callId?: string }) => {
       if (!detail.callId) return;
-      if (isNativeApp()) void endNativeCall(detail.callId);
+      if (isNativeApp()) {
+        if (detail.action === 'accept') void stopNativeRinging(detail.callId);
+        else void endNativeCall(detail.callId);
+      }
       const call = incomingRef.current?.id === detail.callId
         ? incomingRef.current
         : await loadIncomingCall(detail.callId);
