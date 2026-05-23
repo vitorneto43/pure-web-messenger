@@ -8,6 +8,8 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
+let registered = false;
+
 export function isNativeApp(): boolean {
   return Capacitor.isNativePlatform();
 }
@@ -35,6 +37,8 @@ export async function registerNativePush(
   saveTokenFn: (token: string, platform: 'android' | 'ios') => Promise<void>,
 ): Promise<void> {
   if (!isNativeApp()) return;
+  if (registered) return;
+  registered = true;
 
   try {
     const permResult = await PushNotifications.requestPermissions();
@@ -67,6 +71,7 @@ export async function registerNativePush(
       handleNativePushPayload(action.notification.data);
     });
   } catch (e) {
+    registered = false;
     console.error('Native push registration failed', e);
   }
 }
