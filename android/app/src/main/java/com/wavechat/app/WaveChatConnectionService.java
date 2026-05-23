@@ -74,6 +74,17 @@ public class WaveChatConnectionService extends ConnectionService {
         }
 
         @Override
+        public void onAnswer(int videoState) {
+            answer();
+        }
+
+        @Override
+        public void onShowIncomingCallUi() {
+            Intent intent = CallAlertUtils.incomingCallIntent(context, callId, callerName, kind, conversationId);
+            context.startActivity(intent);
+        }
+
+        @Override
         public void onReject() {
             reject();
         }
