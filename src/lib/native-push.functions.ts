@@ -191,6 +191,10 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
             body: JSON.stringify({
               message: {
                 token: t.token,
+                notification: {
+                  title: data.kind === "video" ? "Chamada de vídeo" : "Chamada de voz",
+                  body: `${data.callerName} está te ligando…`,
+                },
                 data: dataPayload,
                 android: {
                   priority: "HIGH",
@@ -198,6 +202,16 @@ export const sendNativeCallPush = createServerFn({ method: "POST" })
                   // direct_boot_ok lets the message reach the device even
                   // before the user unlocks after reboot
                   direct_boot_ok: true,
+                  notification: {
+                    channel_id: "wavechat_calls_alert_v8",
+                    notification_priority: "PRIORITY_MAX",
+                    visibility: "PUBLIC",
+                    sound: "default",
+                    default_vibrate_timings: false,
+                    vibrate_timings: ["0s", "0.9s", "0.35s", "0.9s", "1.2s"],
+                    sticky: true,
+                    tag: data.callId,
+                  },
                 },
                 apns: {
                   headers: {

@@ -16,4 +16,20 @@ public class WaveChatCallPlugin extends Plugin {
         result.put("ok", true);
         call.resolve(result);
     }
+
+    @PluginMethod
+    public void configureAudio(PluginCall call) {
+        CallAlertUtils.configureInCallAudio(getContext());
+        JSObject result = new JSObject();
+        result.put("ok", true);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void resetAudio(PluginCall call) {
+        CallAlertUtils.resetInCallAudio(getContext());
+        JSObject result = new JSObject();
+        result.put("ok", true);
+        call.resolve(result);
+    }
 }

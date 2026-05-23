@@ -8,7 +8,11 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
-const WaveChatCall = registerPlugin<{ stopAlerts(options: { callId?: string }): Promise<{ ok: boolean }> }>('WaveChatCall');
+const WaveChatCall = registerPlugin<{
+  stopAlerts(options: { callId?: string }): Promise<{ ok: boolean }>;
+  configureAudio(): Promise<{ ok: boolean }>;
+  resetAudio(): Promise<{ ok: boolean }>;
+}>('WaveChatCall');
 
 let registered = false;
 
@@ -132,6 +136,24 @@ export async function endNativeCall(_callId: string): Promise<void> {
     }
   } catch {
     /* ignore */
+  }
+}
+
+export async function configureNativeCallAudio(): Promise<void> {
+  if (!isNativeApp()) return;
+  try {
+    await WaveChatCall.configureAudio();
+  } catch (e) {
+    console.error('Failed to configure native call audio', e);
+  }
+}
+
+export async function resetNativeCallAudio(): Promise<void> {
+  if (!isNativeApp()) return;
+  try {
+    await WaveChatCall.resetAudio();
+  } catch (e) {
+    console.error('Failed to reset native call audio', e);
   }
 }
 

@@ -93,10 +93,9 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setOngoing(false)
-            .setOnlyAlertOnce(true)
-            .setSilent(true)
-            .setVibrate(new long[] { 0L, 750L, 450L, 750L, 1400L })
-            .setSound(null)
+            .setOnlyAlertOnce(false)
+            .setSound(CallAlertUtils.callRingtoneUri(this))
+            .setVibrate(new long[] { 0L, 900L, 350L, 900L, 1200L })
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);

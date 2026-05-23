@@ -8,18 +8,24 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
 
 public final class CallAlertUtils {
-    public static final String CHANNEL_ID = "wavechat_calls_native_v4";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v6";
+    public static final String CHANNEL_ID = "wavechat_calls_native_v5";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v8";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static MediaPlayer ringtonePlayer;
+    private static ToneGenerator fallbackTone;
+    private static Handler fallbackHandler;
+    private static Runnable fallbackRunnable;
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
@@ -38,8 +44,17 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_incoming_calls_v2");
         manager.deleteNotificationChannel("wavechat_call_channel");
         manager.deleteNotificationChannel("wavechat_calls_native_v3");
+        manager.deleteNotificationChannel("wavechat_calls_native_v4");
         manager.deleteNotificationChannel("wavechat_calls_alert_v5");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v6");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v7");
         manager.deleteNotificationChannel(CHANNEL_ID);
+
+        AudioAttributes ringAttrs = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build();
+        Uri ringUri = callRingtoneUri(context);
 
         NotificationChannel channel = new NotificationChannel(
             CHANNEL_ID,
@@ -47,9 +62,9 @@ public final class CallAlertUtils {
             NotificationManager.IMPORTANCE_HIGH
         );
         channel.setDescription("Tela de chamada recebida do WaveChat");
-        channel.setSound(null, new AudioAttributes.Builder().build());
-        channel.enableVibration(false);
-        channel.setVibrationPattern(new long[] { 0L });
+        channel.setSound(ringUri, ringAttrs);
+        channel.enableVibration(true);
+        channel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         channel.enableLights(false);
         channel.setShowBadge(false);
         channel.setBypassDnd(false);
@@ -62,9 +77,9 @@ public final class CallAlertUtils {
             NotificationManager.IMPORTANCE_HIGH
         );
         alertChannel.setDescription("Alerta de chamada recebida do WaveChat");
-        alertChannel.setSound(null, new AudioAttributes.Builder().build());
+        alertChannel.setSound(ringUri, ringAttrs);
         alertChannel.enableVibration(true);
-        alertChannel.setVibrationPattern(new long[] { 0L, 750L, 450L, 750L, 1400L });
+        alertChannel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         alertChannel.enableLights(true);
         alertChannel.setShowBadge(false);
         alertChannel.setBypassDnd(false);
@@ -97,9 +112,41 @@ public final class CallAlertUtils {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
                 audioManager.abandonAudioFocus(audioFocusListener);
-                audioManager.setMode(AudioManager.MODE_NORMAL);
             }
         } catch (Exception ignored) {}
+    }
+
+    public static void configureInCallAudio(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager == null) return;
+            audioManager.abandonAudioFocus(audioFocusListener);
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.setSpeakerphoneOn(true);
+        } catch (Exception ignored) {}
+    }
+
+    public static void resetInCallAudio(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager == null) return;
+            audioManager.setSpeakerphoneOn(false);
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+        } catch (Exception ignored) {}
+    }
+
+    public static Uri callRingtoneUri(Context context) {
+        Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
+            context.getApplicationContext(),
+            RingtoneManager.TYPE_RINGTONE
+        );
+        if (ringtoneUri == null) {
+            ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
+                context.getApplicationContext(),
+                RingtoneManager.TYPE_NOTIFICATION
+            );
+        }
+        return ringtoneUri == null ? Settings.System.DEFAULT_RINGTONE_URI : ringtoneUri;
     }
 
     public static synchronized void startCallRingtone(Context context) {
@@ -116,14 +163,8 @@ public final class CallAlertUtils {
                 );
             }
 
-            Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
-                context.getApplicationContext(),
-                RingtoneManager.TYPE_RINGTONE
-            );
-            if (ringtoneUri == null) ringtoneUri = Settings.System.DEFAULT_RINGTONE_URI;
-
             MediaPlayer player = new MediaPlayer();
-            player.setDataSource(context.getApplicationContext(), ringtoneUri);
+            player.setDataSource(context.getApplicationContext(), callRingtoneUri(context));
             player.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -133,11 +174,44 @@ public final class CallAlertUtils {
             player.prepare();
             player.start();
             ringtonePlayer = player;
+        } catch (Exception ignored) {
+            startFallbackTone();
+        }
+    }
+
+    private static synchronized void startFallbackTone() {
+        try {
+            stopFallbackTone();
+            fallbackTone = new ToneGenerator(AudioManager.STREAM_RING, 100);
+            fallbackHandler = new Handler(Looper.getMainLooper());
+            fallbackRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (fallbackTone != null) fallbackTone.startTone(ToneGenerator.TONE_SUP_RINGTONE, 1200);
+                        if (fallbackHandler != null) fallbackHandler.postDelayed(this, 2500);
+                    } catch (Exception ignored) {}
+                }
+            };
+            fallbackHandler.post(fallbackRunnable);
         } catch (Exception ignored) {}
+    }
+
+    private static synchronized void stopFallbackTone() {
+        try {
+            if (fallbackHandler != null && fallbackRunnable != null) fallbackHandler.removeCallbacks(fallbackRunnable);
+            if (fallbackTone != null) fallbackTone.release();
+        } catch (Exception ignored) {
+        } finally {
+            fallbackTone = null;
+            fallbackHandler = null;
+            fallbackRunnable = null;
+        }
     }
 
     public static synchronized void stopCallRingtone(Context context) {
         try {
+            stopFallbackTone();
             if (ringtonePlayer != null) {
                 if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
                 ringtonePlayer.release();
