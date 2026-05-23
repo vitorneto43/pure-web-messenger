@@ -27,6 +27,7 @@ public final class CallAlertUtils {
     private static ToneGenerator fallbackTone;
     private static Handler fallbackHandler;
     private static Runnable fallbackRunnable;
+    private static AudioFocusRequest inCallFocusRequest;
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
@@ -114,6 +115,10 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && inCallFocusRequest != null) {
+                    audioManager.abandonAudioFocusRequest(inCallFocusRequest);
+                    inCallFocusRequest = null;
+                }
                 audioManager.abandonAudioFocus(audioFocusListener);
             }
         } catch (Exception ignored) {}
@@ -123,15 +128,20 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && inCallFocusRequest != null) {
+                audioManager.abandonAudioFocusRequest(inCallFocusRequest);
+                inCallFocusRequest = null;
+            }
             audioManager.abandonAudioFocus(audioFocusListener);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                audioManager.requestAudioFocus(new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                inCallFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                     .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build())
                     .setOnAudioFocusChangeListener(audioFocusListener)
-                    .build());
+                    .build();
+                audioManager.requestAudioFocus(inCallFocusRequest);
             } else {
                 audioManager.requestAudioFocus(
                     audioFocusListener,
@@ -151,6 +161,11 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && inCallFocusRequest != null) {
+                audioManager.abandonAudioFocusRequest(inCallFocusRequest);
+                inCallFocusRequest = null;
+            }
+            audioManager.abandonAudioFocus(audioFocusListener);
             audioManager.setSpeakerphoneOn(false);
             audioManager.setMode(AudioManager.MODE_NORMAL);
         } catch (Exception ignored) {}
