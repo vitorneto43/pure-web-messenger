@@ -92,7 +92,11 @@ public class WaveChatConnectionService extends ConnectionService {
 
         @Override
         public void onDisconnect() {
-            reject();
+            CallAlertUtils.stopCallRingtone(context);
+            CallAlertUtils.stopVibration(context);
+            setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+            WaveChatTelecomManager.unregisterConnection(callId);
+            destroy();
         }
 
         @Override
