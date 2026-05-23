@@ -4,17 +4,23 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
+import android.provider.Settings;
 
 public final class CallAlertUtils {
     public static final String CHANNEL_ID = "wavechat_calls_native_v4";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v5";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v6";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
+    private static MediaPlayer ringtonePlayer;
+    private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
 
@@ -32,6 +38,7 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_incoming_calls_v2");
         manager.deleteNotificationChannel("wavechat_call_channel");
         manager.deleteNotificationChannel("wavechat_calls_native_v3");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v5");
         manager.deleteNotificationChannel(CHANNEL_ID);
 
         NotificationChannel channel = new NotificationChannel(
@@ -73,6 +80,7 @@ public final class CallAlertUtils {
             context.stopService(stopIntent);
         } catch (Exception ignored) {}
         cancelCallNotification(context, callId);
+        stopCallRingtone(context);
         stopNotificationEffects(context);
         stopVibration(context);
     }
@@ -88,10 +96,60 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
-                audioManager.abandonAudioFocus(null);
+                audioManager.abandonAudioFocus(audioFocusListener);
                 audioManager.setMode(AudioManager.MODE_NORMAL);
             }
         } catch (Exception ignored) {}
+    }
+
+    public static synchronized void startCallRingtone(Context context) {
+        try {
+            if (ringtonePlayer != null && ringtonePlayer.isPlaying()) return;
+            stopCallRingtone(context);
+
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.requestAudioFocus(
+                    audioFocusListener,
+                    AudioManager.STREAM_RING,
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+                );
+            }
+
+            Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
+                context.getApplicationContext(),
+                RingtoneManager.TYPE_RINGTONE
+            );
+            if (ringtoneUri == null) ringtoneUri = Settings.System.DEFAULT_RINGTONE_URI;
+
+            MediaPlayer player = new MediaPlayer();
+            player.setDataSource(context.getApplicationContext(), ringtoneUri);
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build());
+            player.setLooping(true);
+            player.setVolume(1.0f, 1.0f);
+            player.prepare();
+            player.start();
+            ringtonePlayer = player;
+        } catch (Exception ignored) {}
+    }
+
+    public static synchronized void stopCallRingtone(Context context) {
+        try {
+            if (ringtonePlayer != null) {
+                if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
+                ringtonePlayer.release();
+            }
+        } catch (Exception ignored) {
+        } finally {
+            ringtonePlayer = null;
+            try {
+                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                if (audioManager != null) audioManager.abandonAudioFocus(audioFocusListener);
+            } catch (Exception ignored) {}
+        }
     }
 
     public static void startCallVibration(Context context) {

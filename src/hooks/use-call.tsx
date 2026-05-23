@@ -709,6 +709,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!isNativeApp()) return;
     const runAction = async (detail: { action?: string; callId?: string }) => {
       if (!detail.callId) return;
+      if (isNativeApp()) void endNativeCall(detail.callId);
       const call = incomingRef.current?.id === detail.callId
         ? incomingRef.current
         : await loadIncomingCall(detail.callId);
@@ -735,7 +736,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
     };
 
     const intentHandler = (e: Event) => {
-      void runAction((e as CustomEvent).detail ?? {});
+      const event = e as CustomEvent & { action?: string; callId?: string };
+      void runAction(event.detail ?? { action: event.action, callId: event.callId });
     };
 
     const pushHandler = (e: Event) => {

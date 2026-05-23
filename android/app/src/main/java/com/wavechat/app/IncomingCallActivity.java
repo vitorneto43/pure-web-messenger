@@ -21,6 +21,7 @@ public class IncomingCallActivity extends Activity {
         configureWindow();
         readExtras();
         CallAlertUtils.createSilentCallChannel(this);
+        CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         setContentView(buildLayout());
     }
@@ -30,6 +31,7 @@ public class IncomingCallActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         readExtras();
+        CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
     }
 

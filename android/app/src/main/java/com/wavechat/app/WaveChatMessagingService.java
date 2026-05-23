@@ -7,6 +7,7 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.Person;
 
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -72,6 +73,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
         CallAlertUtils.createSilentCallChannel(this);
+        CallAlertUtils.startCallRingtone(this);
+        CallAlertUtils.startCallVibration(this);
 
         // WhatsApp-style: open a dedicated native incoming-call screen even if the app is closed.
         Intent intent = CallAlertUtils.incomingCallIntent(this, callId, callerName, kind, conversationId);
@@ -91,7 +94,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(true)
-            .setSilent(false)
+            .setSilent(true)
             .setVibrate(new long[] { 0L, 750L, 450L, 750L, 1400L })
             .setSound(null)
             .setTimeoutAfter(45_000)
@@ -118,6 +121,14 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Recusar", declinePending);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setStyle(NotificationCompat.CallStyle.forIncomingCall(
+                new Person.Builder().setName(callerName).setImportant(true).build(),
+                declinePending,
+                acceptPending
+            ));
+        }
 
         notificationManager.notify(CallAlertUtils.notificationId(callId), builder.build());
         try {
