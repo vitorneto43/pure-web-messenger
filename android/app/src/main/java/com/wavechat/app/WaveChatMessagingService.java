@@ -104,7 +104,9 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(false)
-            .setSilent(true)
+            .setDefaults(0)
+            .setVibrate(new long[] { 0L })
+            .setSound(null)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);
