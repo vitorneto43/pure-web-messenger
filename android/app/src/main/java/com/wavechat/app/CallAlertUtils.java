@@ -4,17 +4,23 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
+import android.provider.Settings;
 
 public final class CallAlertUtils {
     public static final String CHANNEL_ID = "wavechat_calls_native_v4";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v5";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v6";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
+    private static MediaPlayer ringtonePlayer;
+    private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
 
@@ -32,6 +38,7 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_incoming_calls_v2");
         manager.deleteNotificationChannel("wavechat_call_channel");
         manager.deleteNotificationChannel("wavechat_calls_native_v3");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v5");
         manager.deleteNotificationChannel(CHANNEL_ID);
 
         NotificationChannel channel = new NotificationChannel(
