@@ -56,7 +56,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             channel.setDescription("Notificações de chamadas recebidas");
             channel.setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE), null);
             channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{400, 200, 400, 200, 400, 200, 400});
+            channel.setVibrationPattern(new long[]{0, 400});
             channel.setBypassDnd(true);
             notificationManager.createNotificationChannel(channel);
         }
@@ -81,7 +81,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(false)
             .setOngoing(true)
             .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE))
-            .setVibrate(new long[]{400, 200, 400, 200, 400, 200, 400})
+            .setVibrate(new long[]{0, 400})
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);
 
