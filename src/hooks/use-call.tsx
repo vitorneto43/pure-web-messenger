@@ -22,7 +22,7 @@ import {
   initNativeCallListeners,
   registerNativePush,
 } from "@/integrations/native-call";
-import { saveNativeToken, sendNativeCallPush } from "@/lib/native-push.functions";
+import { saveNativeToken, sendNativeCallCancelPush, sendNativeCallPush } from "@/lib/native-push.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 type Kind = "audio" | "video";
@@ -93,6 +93,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeTokenSavedRef = useRef(false);
   const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
+  const sendNativeCallCancelPushFn = useServerFn(sendNativeCallCancelPush);
 
   async function insertCallMessage(
     callId: string,
@@ -409,6 +410,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
           .eq("id", current.id)
           .in("status", ["ringing", "accepted"]);
 
+        if (current.isCaller && current.status === "ringing") {
+          void sendNativeCallCancelPushFn({
+            data: { callId: current.id, calleeId: current.calleeId },
+          }).catch((e) => console.error("sendNativeCallCancelPush failed", e));
+        }
+
         if (current.isCaller) {
           const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
           const outcome: "missed" | "cancelled" | "completed" =
@@ -562,7 +569,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [declineIncomingCall]);
 
   const endCall = useCallback(async () => {
-    await endCallInternal("ended");
+    const current = activeRef.current;
+    await endCallInternal(current?.isCaller && current.status === "ringing" ? "cancelled" : "ended");
   }, [endCallInternal]);
 
   const toggleMic = useCallback(() => {
