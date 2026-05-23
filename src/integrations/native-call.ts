@@ -1,12 +1,12 @@
-// Native call integration using @capgo/capacitor-incoming-call-kit
-// This only runs inside the Capacitor native app, not in browser PWA.
+// Native call integration — FCM-only implementation.
+// We removed the previous @capgo/capacitor-incoming-call-kit plugin because
+// it produced uncontrollable vibration loops and conflicted with the WebRTC
+// audio session (causing noise on accept). Incoming-call UI on Android is
+// now handled entirely by the FCM full-screen-intent notification posted by
+// WaveChatMessagingService.java (no vibration, no extra audio session).
 
-import { IncomingCallKit } from '@capgo/capacitor-incoming-call-kit';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
-
-let callKitListenersInitialized = false;
-let fcmToken: string | null = null;
 
 function isNativePushEnabled(): boolean {
   return import.meta.env.VITE_ENABLE_NATIVE_PUSH === 'true';
@@ -24,16 +24,13 @@ export function isIOS(): boolean {
   return Capacitor.getPlatform() === 'ios';
 }
 
-/** Request all required permissions for incoming calls */
+/** Request notification permission only (no CallKit anymore) */
 export async function requestCallPermissions(): Promise<void> {
   if (!isNativeApp()) return;
   try {
-    await IncomingCallKit.requestPermissions();
-    if (isAndroid()) {
-      await IncomingCallKit.requestFullScreenIntentPermission();
-    }
+    await PushNotifications.requestPermissions();
   } catch (e) {
-    console.error('Failed to request call permissions', e);
+    console.error('Failed to request push permissions', e);
   }
 }
 
@@ -56,13 +53,11 @@ export async function registerNativePush(
 
     await PushNotifications.register();
 
-    // Listen for registration token
     PushNotifications.addListener('registration', async (token) => {
-      fcmToken = token.value;
       const platform = isAndroid() ? 'android' : 'ios';
       try {
         await saveTokenFn(token.value, platform);
-        console.log('FCM token registered', platform, token.value.slice( 0, 20) + '...');
+        console.log('FCM token registered', platform, token.value.slice(0, 20) + '...');
       } catch (e) {
         console.error('Failed to save FCM token', e);
       }
@@ -72,12 +67,10 @@ export async function registerNativePush(
       console.error('Push registration error', err);
     });
 
-    // Listen for push received (app in foreground)
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       handleNativePushPayload(notification.data);
     });
 
-    // Listen for action performed (user tapped notification or button)
     PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
       handleNativePushPayload(action.notification.data);
     });
@@ -86,7 +79,6 @@ export async function registerNativePush(
   }
 }
 
-/** Handle push payload for calls */
 function handleNativePushPayload(data?: Record<string, unknown>): void {
   if (!data || data.type !== 'call') return;
   const callId = data.callId as string | undefined;
@@ -96,7 +88,6 @@ function handleNativePushPayload(data?: Record<string, unknown>): void {
 
   if (!callId) return;
 
-  // Dispatch a custom event that the React app listens to
   window.dispatchEvent(
     new CustomEvent('wavechat-native-call', {
       detail: { callId, callerName, kind, conversationId },
@@ -104,58 +95,31 @@ function handleNativePushPayload(data?: Record<string, unknown>): void {
   );
 }
 
-/** Show native incoming-call UI (ringtone + full-screen) */
-export async function showNativeIncomingCall(params: {
+/**
+ * Incoming-call UI is shown by the FCM full-screen-intent notification
+ * posted server-side. In-app (foreground) ringing is handled by the React
+ * IncomingCallDialog + startRingtone(). This is a no-op kept for API
+ * compatibility with the previous CallKit integration.
+ */
+export async function showNativeIncomingCall(_params: {
   callId: string;
   callerName: string;
   hasVideo: boolean;
   extra?: Record<string, string>;
 }): Promise<void> {
-  if (!isNativeApp()) return;
-  try {
-    await IncomingCallKit.showIncomingCall({
-      callId: params.callId,
-      callerName: params.callerName,
-      handle: params.callerName,
-      appName: 'WaveChat',
-      hasVideo: params.hasVideo,
-      timeoutMs: 45_000,
-      extra: params.extra ?? {},
-      android: {
-        channelId: 'wavechat_incoming_calls_v2',
-        channelName: 'Chamadas WaveChat',
-        showFullScreen: true,
-        isHighPriority: true,
-      },
-      ios: {
-        handleType: 'generic',
-      },
-    });
-  } catch (e) {
-    console.error('Failed to show native incoming call', e);
-  }
+  return;
 }
 
-/** End a native call UI and clear any related FCM notifications/vibration */
-export async function endNativeCall(callId: string): Promise<void> {
+/** Dismiss any delivered call notifications and force-stop vibration. */
+export async function endNativeCall(_callId: string): Promise<void> {
   if (!isNativeApp()) return;
-  try {
-    await IncomingCallKit.endCall({ callId });
-  } catch (e) {
-    console.error('Failed to end native call', e);
-  }
-  // Also dismiss the FCM-posted incoming-call notification, which carries
-  // its own vibration pattern and would otherwise keep buzzing after
-  // accept/decline/cancel.
   try {
     await PushNotifications.removeAllDeliveredNotifications();
   } catch (e) {
     console.error('Failed to clear delivered notifications', e);
   }
-  // Force-stop any ongoing system vibration as a last resort.
   try {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate?.([]);
       navigator.vibrate?.(0);
     }
   } catch {
@@ -163,41 +127,17 @@ export async function endNativeCall(callId: string): Promise<void> {
   }
 }
 
-/** Initialize listeners for call events from the native plugin */
-export async function initNativeCallListeners(handlers: {
+/**
+ * No CallKit anymore — accept/decline come from the FCM notification's action
+ * buttons, which are wired through CallActionReceiver → MainActivity →
+ * window 'wavechat-android-intent' event (see use-call.tsx). This stub keeps
+ * the previous API surface working.
+ */
+export async function initNativeCallListeners(_handlers: {
   onAccept: (callId: string, extra: Record<string, string>) => void;
   onDecline: (callId: string) => void;
   onEnd: (callId: string) => void;
   onTimeout: (callId: string) => void;
 }): Promise<() => void> {
-  if (!isNativeApp() || callKitListenersInitialized) return () => {};
-  callKitListenersInitialized = true;
-
-  const handleAccept = await IncomingCallKit.addListener('callAccepted', (event: any) => {
-    const call = event?.call ?? event;
-    handlers.onAccept(call.callId, call.extra ?? {});
-  });
-
-  const handleDecline = await IncomingCallKit.addListener('callDeclined', (event: any) => {
-    const call = event?.call ?? event;
-    handlers.onDecline(call.callId);
-  });
-
-  const handleEnd = await IncomingCallKit.addListener('callEnded', (event: any) => {
-    const call = event?.call ?? event;
-    handlers.onEnd(call.callId);
-  });
-
-  const handleTimeout = await IncomingCallKit.addListener('callTimedOut', (event: any) => {
-    const call = event?.call ?? event;
-    handlers.onTimeout(call.callId);
-  });
-
-  return () => {
-    handleAccept?.remove();
-    handleDecline?.remove();
-    handleEnd?.remove();
-    handleTimeout?.remove();
-    callKitListenersInitialized = false;
-  };
+  return () => {};
 }
