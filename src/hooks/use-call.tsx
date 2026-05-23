@@ -206,6 +206,36 @@ export function CallProvider({ children }: { children: ReactNode }) {
     remoteSetRef.current = false;
   }, []);
 
+  const loadIncomingCall = useCallback(async (callId: string) => {
+    const { data: row } = await supabase
+      .from("calls")
+      .select("id, conversation_id, caller_id, callee_id, kind, status")
+      .eq("id", callId)
+      .single();
+    if (!row || row.callee_id !== user?.id || row.status !== "ringing") return null;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", row.caller_id)
+      .single();
+
+    const incomingInfo: CallInfo = {
+      id: row.id,
+      conversationId: row.conversation_id,
+      callerId: row.caller_id,
+      calleeId: row.callee_id,
+      kind: row.kind as Kind,
+      status: "ringing",
+      isCaller: false,
+      peerProfile: prof
+        ? { id: prof.id, display_name: prof.display_name, avatar_url: prof.avatar_url }
+        : undefined,
+    };
+    setIncoming(incomingInfo);
+    return incomingInfo;
+  }, [user?.id]);
+
   const setupSignaling = useCallback(
     (callId: string, isCaller: boolean, kind: Kind) => {
       const channel = supabase.channel(`call:${callId}`, {
