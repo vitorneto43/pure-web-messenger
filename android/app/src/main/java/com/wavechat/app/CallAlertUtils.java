@@ -8,18 +8,24 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
 
 public final class CallAlertUtils {
-    public static final String CHANNEL_ID = "wavechat_calls_native_v4";
-    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v6";
+    public static final String CHANNEL_ID = "wavechat_calls_native_v5";
+    public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v8";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static MediaPlayer ringtonePlayer;
+    private static ToneGenerator fallbackTone;
+    private static Handler fallbackHandler;
+    private static Runnable fallbackRunnable;
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
 
     private CallAlertUtils() {}
@@ -38,8 +44,17 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_incoming_calls_v2");
         manager.deleteNotificationChannel("wavechat_call_channel");
         manager.deleteNotificationChannel("wavechat_calls_native_v3");
+        manager.deleteNotificationChannel("wavechat_calls_native_v4");
         manager.deleteNotificationChannel("wavechat_calls_alert_v5");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v6");
+        manager.deleteNotificationChannel("wavechat_calls_alert_v7");
         manager.deleteNotificationChannel(CHANNEL_ID);
+
+        AudioAttributes ringAttrs = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build();
+        Uri ringUri = callRingtoneUri(context);
 
         NotificationChannel channel = new NotificationChannel(
             CHANNEL_ID,
@@ -47,9 +62,9 @@ public final class CallAlertUtils {
             NotificationManager.IMPORTANCE_HIGH
         );
         channel.setDescription("Tela de chamada recebida do WaveChat");
-        channel.setSound(null, new AudioAttributes.Builder().build());
-        channel.enableVibration(false);
-        channel.setVibrationPattern(new long[] { 0L });
+        channel.setSound(ringUri, ringAttrs);
+        channel.enableVibration(true);
+        channel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         channel.enableLights(false);
         channel.setShowBadge(false);
         channel.setBypassDnd(false);
@@ -62,9 +77,9 @@ public final class CallAlertUtils {
             NotificationManager.IMPORTANCE_HIGH
         );
         alertChannel.setDescription("Alerta de chamada recebida do WaveChat");
-        alertChannel.setSound(null, new AudioAttributes.Builder().build());
+        alertChannel.setSound(ringUri, ringAttrs);
         alertChannel.enableVibration(true);
-        alertChannel.setVibrationPattern(new long[] { 0L, 750L, 450L, 750L, 1400L });
+        alertChannel.setVibrationPattern(new long[] { 0L, 900L, 350L, 900L, 1200L });
         alertChannel.enableLights(true);
         alertChannel.setShowBadge(false);
         alertChannel.setBypassDnd(false);
