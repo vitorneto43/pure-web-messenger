@@ -45,6 +45,9 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON" ] && echo "$GOOGLE_SERVICES_JSON" | grep -q '"project_info"'; then
             echo "VITE_ENABLE_NATIVE_PUSH=true" >> "$GITHUB_ENV"
+          elif [ -f android/app/google-services.json ] && grep -q '"project_info"' android/app/google-services.json; then
+            echo "VITE_ENABLE_NATIVE_PUSH=true" >> "$GITHUB_ENV"
+            echo "✅ Usando google-services.json do projeto"
           else
             echo "VITE_ENABLE_NATIVE_PUSH=false" >> "$GITHUB_ENV"
             echo "⚠️ GOOGLE_SERVICES_JSON ausente ou inválido — APK será gerado, mas chamadas com app fechado ficam sem push nativo"
@@ -68,6 +71,9 @@ jobs:
             echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
             echo "VITE_ENABLE_NATIVE_PUSH=true" >> "$GITHUB_ENV"
             echo "✅ google-services.json criado"
+          elif [ -f android/app/google-services.json ] && grep -q '"project_info"' android/app/google-services.json; then
+            echo "VITE_ENABLE_NATIVE_PUSH=true" >> "$GITHUB_ENV"
+            echo "✅ google-services.json já existe no projeto"
           else
             echo "VITE_ENABLE_NATIVE_PUSH=false" >> "$GITHUB_ENV"
             echo "⚠️ GOOGLE_SERVICES_JSON ausente ou inválido — seguindo sem google-services.json"

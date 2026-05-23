@@ -3,6 +3,7 @@ package com.wavechat.app;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -18,7 +19,6 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         ensureFirebaseReady();
-        CallAlertUtils.stopVibration(this);
 
         if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
             showIncomingCallNotification(remoteMessage.getData());
@@ -49,10 +49,29 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         String kind = data.getOrDefault("kind", "audio");
         String conversationId = data.getOrDefault("conversationId", "");
 
+        Intent serviceIntent = new Intent(this, NativeCallForegroundService.class);
+        serviceIntent.setAction(NativeCallForegroundService.ACTION_START);
+        serviceIntent.putExtra("callId", callId);
+        serviceIntent.putExtra("callerName", callerName);
+        serviceIntent.putExtra("kind", kind);
+        serviceIntent.putExtra("conversationId", conversationId);
+        boolean serviceStarted = false;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            serviceStarted = true;
+        } catch (Exception e) {
+            Log.w(TAG, "Foreground call service failed, falling back to direct notification", e);
+        }
+
+        if (serviceStarted) return;
+
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
         CallAlertUtils.createSilentCallChannel(this);
-        CallAlertUtils.stopVibration(this);
 
         // WhatsApp-style: open a dedicated native incoming-call screen even if the app is closed.
         Intent intent = CallAlertUtils.incomingCallIntent(this, callId, callerName, kind, conversationId);
@@ -62,7 +81,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         );
 
         // Build the high-priority call notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CallAlertUtils.CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CallAlertUtils.ALERT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_call)
             .setContentTitle(kind.equals("video") ? "Chamada de vídeo" : "Chamada de voz")
             .setContentText(callerName + " está te ligando…")
@@ -72,8 +91,8 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(true)
-            .setSilent(true)
-            .setVibrate(new long[] { 0L })
+            .setSilent(false)
+            .setVibrate(new long[] { 0L, 750L, 450L, 750L, 1400L })
             .setSound(null)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)

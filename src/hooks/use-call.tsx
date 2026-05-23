@@ -335,7 +335,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pcRef.current = pc;
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
         video: kind === "video" ? { width: 1280, height: 720 } : false,
       });
       localStreamRef.current = stream;
