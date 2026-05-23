@@ -234,6 +234,10 @@ public final class CallAlertUtils {
             }
 
             Ringtone player = RingtoneManager.getRingtone(context.getApplicationContext(), callRingtoneUri(context));
+            if (player == null) {
+                startFallbackTone();
+                return;
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) player.setLooping(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 player.setAudioAttributes(new AudioAttributes.Builder()
@@ -245,9 +249,17 @@ public final class CallAlertUtils {
             }
             player.play();
             ringtonePlayer = player;
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
         } catch (Exception ignored) {
             startFallbackTone();
         }
+    }
+
+    private static synchronized void scheduleRingtoneSafetyStop(Context context) {
+        if (ringtoneSafetyHandler == null) ringtoneSafetyHandler = new Handler(Looper.getMainLooper());
+        if (ringtoneSafetyRunnable != null) ringtoneSafetyHandler.removeCallbacks(ringtoneSafetyRunnable);
+        ringtoneSafetyRunnable = () -> stopCallRingtone(context);
+        ringtoneSafetyHandler.postDelayed(ringtoneSafetyRunnable, MAX_ALERT_DURATION_MS);
     }
 
     private static synchronized void startFallbackTone() {
@@ -268,6 +280,18 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
     }
 
+    private static synchronized void stopRingtoneSafetyStop() {
+        try {
+            if (ringtoneSafetyHandler != null && ringtoneSafetyRunnable != null) {
+                ringtoneSafetyHandler.removeCallbacks(ringtoneSafetyRunnable);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            ringtoneSafetyRunnable = null;
+            ringtoneSafetyHandler = null;
+        }
+    }
+
     private static synchronized void stopFallbackTone() {
         try {
             if (fallbackHandler != null && fallbackRunnable != null) fallbackHandler.removeCallbacks(fallbackRunnable);
@@ -282,6 +306,7 @@ public final class CallAlertUtils {
 
     public static synchronized void stopCallRingtone(Context context) {
         try {
+            stopRingtoneSafetyStop();
             stopFallbackTone();
             if (ringtonePlayer != null) {
                 if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
