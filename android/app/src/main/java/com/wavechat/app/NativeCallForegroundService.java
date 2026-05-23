@@ -44,7 +44,7 @@ public class NativeCallForegroundService extends Service {
         acquireWakeLock();
         Notification notification = buildCallNotification(currentCallId, callerName, kind, conversationId);
         startForeground(CallAlertUtils.notificationId(currentCallId), notification);
-        CallAlertUtils.startCallRingtone(this);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, currentCallId);
 
@@ -103,7 +103,7 @@ public class NativeCallForegroundService extends Service {
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(false)
-            .setSilent(true)
+            .setDefaults(0)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(openPending, true)
             .setContentIntent(openPending)
