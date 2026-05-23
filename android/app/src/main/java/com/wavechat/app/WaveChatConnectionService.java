@@ -30,6 +30,7 @@ public class WaveChatConnectionService extends ConnectionService {
         CallAlertUtils.createSilentCallChannel(this);
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+        CallAlertUtils.watchCallStatus(this, callId);
         return connection;
     }
 
@@ -94,6 +95,7 @@ public class WaveChatConnectionService extends ConnectionService {
         public void onDisconnect() {
             CallAlertUtils.stopCallRingtone(context);
             CallAlertUtils.stopVibration(context);
+            CallStatusPoller.stop(callId);
             setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
             WaveChatTelecomManager.unregisterConnection(callId);
             destroy();
@@ -107,6 +109,7 @@ public class WaveChatConnectionService extends ConnectionService {
         private void answer() {
             CallAlertUtils.stopCallRingtone(context);
             CallAlertUtils.stopVibration(context);
+            CallStatusPoller.stop(callId);
             CallAlertUtils.configureInCallAudio(context);
             setActive();
             Intent intent = CallAlertUtils.mainActivityIntent(context, callId, "accept");
@@ -119,6 +122,7 @@ public class WaveChatConnectionService extends ConnectionService {
         private void reject() {
             CallAlertUtils.stopCallRingtone(context);
             CallAlertUtils.stopVibration(context);
+            CallStatusPoller.stop(callId);
             setDisconnected(new DisconnectCause(DisconnectCause.REJECTED));
             WaveChatTelecomManager.unregisterConnection(callId);
             Intent intent = CallAlertUtils.mainActivityIntent(context, callId, "decline");
