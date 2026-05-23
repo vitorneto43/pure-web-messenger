@@ -46,6 +46,7 @@ public class NativeCallForegroundService extends Service {
         startForeground(CallAlertUtils.notificationId(currentCallId), notification);
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+        CallAlertUtils.watchCallStatus(this, currentCallId);
 
         Intent screenIntent = CallAlertUtils.incomingCallIntent(this, currentCallId, callerName, kind, conversationId);
         try {
@@ -135,6 +136,7 @@ public class NativeCallForegroundService extends Service {
 
     private void stopAlerts() {
         handler.removeCallbacksAndMessages(null);
+        CallStatusPoller.stop(currentCallId);
         CallAlertUtils.stopCallRingtone(this);
         CallAlertUtils.stopVibration(this);
         CallAlertUtils.stopNotificationEffects(this);
