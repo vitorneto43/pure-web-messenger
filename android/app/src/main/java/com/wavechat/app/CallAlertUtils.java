@@ -33,6 +33,9 @@ public final class CallAlertUtils {
     private static Runnable vibrationRunnable;
     private static long vibrationStartedAt;
     private static final long MAX_ALERT_DURATION_MS = 45_000L;
+    // Native vibration was the source of the infinite vibration loop on older Android devices.
+    // Keep it disabled by default; the ringtone + full-screen call UI are enough for incoming calls.
+    private static final boolean ENABLE_NATIVE_CALL_VIBRATION = false;
     private static AudioFocusRequest inCallFocusRequest;
     private static Vibrator currentVibrator;  // FIX: Track current vibrator
     private static final AudioManager.OnAudioFocusChangeListener audioFocusListener = focusChange -> {};
@@ -331,7 +334,14 @@ public final class CallAlertUtils {
     }
 
     public static synchronized void startCallVibration(Context context) {
+        // IMPORTANT FIX:
+        // Older Android devices can keep vibrating when multiple call alerts are started
+        // by FCM + foreground service + incoming-call activity at the same time.
+        // We always cancel any previous vibration and, by default, do NOT start a new
+        // native vibration loop. This prevents the "vibrando sem parar" bug.
         stopVibration(context);
+        if (!ENABLE_NATIVE_CALL_VIBRATION) return;
+
         vibrationStartedAt = System.currentTimeMillis();
         vibrationHandler = new Handler(Looper.getMainLooper());
         Context appContext = context.getApplicationContext();

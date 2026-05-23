@@ -61,6 +61,9 @@ public class IncomingCallActivity extends Activity {
         } catch (Exception ignored) {}
         IncomingCallActivity current = currentActivity == null ? null : currentActivity.get();
         if (current == this) currentActivity = null;
+        // Safety: never leave ringtone/vibration alive when the native incoming screen closes.
+        CallAlertUtils.stopCallRingtone(this);
+        CallAlertUtils.stopVibration(this);
         CallStatusPoller.stop(callId);
         super.onDestroy();
     }

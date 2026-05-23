@@ -32,7 +32,14 @@ public class NativeCallForegroundService extends Service {
             return START_NOT_STICKY;
         }
 
-        currentCallId = intent.getStringExtra("callId");
+        String newCallId = intent.getStringExtra("callId");
+        // Safety: a duplicated FCM push or activity restart must not create a second alert loop.
+        if (currentCallId != null && !currentCallId.equals(newCallId)) {
+            stopAlerts();
+        } else {
+            CallAlertUtils.stopVibration(this);
+        }
+        currentCallId = newCallId;
         String callerName = intent.getStringExtra("callerName");
         String kind = intent.getStringExtra("kind");
         String conversationId = intent.getStringExtra("conversationId");
