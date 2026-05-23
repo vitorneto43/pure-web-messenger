@@ -53,8 +53,10 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON" ] && echo "$GOOGLE_SERVICES_JSON" | grep -q '"project_info"'; then
             echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+            echo "VITE_ENABLE_NATIVE_PUSH=true" >> "$GITHUB_ENV"
             echo "✅ google-services.json criado"
           else
+            echo "VITE_ENABLE_NATIVE_PUSH=false" >> "$GITHUB_ENV"
             echo "⚠️  GOOGLE_SERVICES_JSON ausente ou inválido — push notifications desabilitadas"
             rm -f android/app/google-services.json
           fi
