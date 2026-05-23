@@ -14,7 +14,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
+
 public class IncomingCallActivity extends Activity {
+    private static WeakReference<IncomingCallActivity> currentActivity;
     private String callId;
     private String callerName;
     private String kind;
@@ -29,6 +32,7 @@ public class IncomingCallActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        currentActivity = new WeakReference<>(this);
         configureWindow();
         readExtras();
         CallAlertUtils.createSilentCallChannel(this);
@@ -41,6 +45,7 @@ public class IncomingCallActivity extends Activity {
     @Override
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
+        currentActivity = new WeakReference<>(this);
         setIntent(intent);
         readExtras();
         CallAlertUtils.startCallRingtone(this);
@@ -52,7 +57,17 @@ public class IncomingCallActivity extends Activity {
         try {
             unregisterReceiver(callEndedReceiver);
         } catch (Exception ignored) {}
+        IncomingCallActivity current = currentActivity == null ? null : currentActivity.get();
+        if (current == this) currentActivity = null;
         super.onDestroy();
+    }
+
+    public static void finishCallScreen(String endedCallId) {
+        IncomingCallActivity activity = currentActivity == null ? null : currentActivity.get();
+        if (activity == null) return;
+        if (activity.callId == null || activity.callId.equals(endedCallId)) {
+            activity.runOnUiThread(activity::finish);
+        }
     }
 
     private void registerCallEndedReceiver() {
