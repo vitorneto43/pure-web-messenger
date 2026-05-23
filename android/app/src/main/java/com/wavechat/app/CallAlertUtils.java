@@ -160,6 +160,7 @@ public final class CallAlertUtils {
                 );
             }
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.setSpeakerphoneOn(false);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 java.util.List<android.media.AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
                 android.media.AudioDeviceInfo target = null;
@@ -174,8 +175,6 @@ public final class CallAlertUtils {
                     }
                 }
                 if (target != null) audioManager.setCommunicationDevice(target);
-            } else {
-                audioManager.setSpeakerphoneOn(false);
             }
         } catch (Exception ignored) {}
     }
