@@ -105,6 +105,8 @@ public class NativeCallForegroundService extends Service {
             .setAutoCancel(false)
             .setOnlyAlertOnce(false)
             .setDefaults(0)
+            .setVibrate(new long[] { 0L })
+            .setSound(null)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(openPending, true)
             .setContentIntent(openPending)
