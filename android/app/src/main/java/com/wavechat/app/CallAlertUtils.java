@@ -104,6 +104,11 @@ public final class CallAlertUtils {
         stopCallRingtone(context);
         stopNotificationEffects(context);
         stopVibration(context);
+        try {
+            Intent endedIntent = new Intent("com.wavechat.app.CALL_ALERT_ENDED");
+            endedIntent.putExtra("callId", callId);
+            context.sendBroadcast(endedIntent);
+        } catch (Exception ignored) {}
     }
 
     public static void cancelCallNotification(Context context, String callId) {
