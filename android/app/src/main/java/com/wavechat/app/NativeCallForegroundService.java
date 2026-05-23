@@ -36,6 +36,7 @@ public class NativeCallForegroundService extends Service {
         String callerName = intent.getStringExtra("callerName");
         String kind = intent.getStringExtra("kind");
         String conversationId = intent.getStringExtra("conversationId");
+        boolean telecomShown = intent.getBooleanExtra("telecomShown", false);
         if (callerName == null || callerName.trim().isEmpty()) callerName = "Alguém";
         if (kind == null || kind.trim().isEmpty()) kind = "audio";
         if (conversationId == null) conversationId = "";
@@ -44,7 +45,7 @@ public class NativeCallForegroundService extends Service {
         acquireWakeLock();
         Notification notification = buildCallNotification(currentCallId, callerName, kind, conversationId);
         startForeground(CallAlertUtils.notificationId(currentCallId), notification);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) CallAlertUtils.startCallRingtone(this);
+        if (!telecomShown || Build.VERSION.SDK_INT < Build.VERSION_CODES.O) CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         CallAlertUtils.watchCallStatus(this, currentCallId);
 
