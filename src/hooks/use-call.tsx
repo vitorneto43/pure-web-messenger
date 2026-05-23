@@ -635,6 +635,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
           setIncoming((curr) => {
             if (curr && curr.id === row.id && row.status !== "ringing") {
               stopRingtone();
+              if (isNativeApp()) void endNativeCall(row.id);
               return null;
             }
             return curr;
