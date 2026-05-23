@@ -621,7 +621,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             });
           }
 
-          startRingtone();
+          if (!isNativeApp()) startRingtone();
         }
       )
       .on(
@@ -711,7 +711,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       } else if (detail.action === 'timeout') {
         if (call) await declineIncomingCall(call);
       } else if (detail.action === 'open') {
-        if (call) startRingtone();
+        if (call && !isNativeApp()) startRingtone();
       }
     };
 
