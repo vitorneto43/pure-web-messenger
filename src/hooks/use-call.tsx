@@ -383,6 +383,14 @@ export function CallProvider({ children }: { children: ReactNode }) {
           stopRingback();
           stopRingtone();
           setConnecting(false);
+          // Re-apply MODE_IN_COMMUNICATION + earpiece routing now that the
+          // WebView audio output is live. Without this, the OS often resets
+          // to MODE_NORMAL when playback begins, disabling hardware AEC →
+          // the remote mic captures the speaker and the caller hears themselves.
+          if (isNativeApp()) {
+            void configureNativeCallAudio();
+            setTimeout(() => { void configureNativeCallAudio(); }, 600);
+          }
         }
         if (state === "failed" || state === "disconnected") {
           toast.error("Chamada desconectada");
