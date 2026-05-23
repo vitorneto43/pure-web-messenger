@@ -15,7 +15,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         ensureFirebaseReady();
         if (getIntent() != null && getIntent().getStringExtra("callId") != null) {
-            CallAlertUtils.stopAllCallAlerts(this, getIntent().getStringExtra("callId"));
+            stopNativeAlertForIntent(getIntent());
         } else {
             CallAlertUtils.stopVibration(this);
             CallAlertUtils.stopCallRingtone(this);
@@ -28,7 +28,7 @@ public class MainActivity extends BridgeActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent != null && intent.getStringExtra("callId") != null) {
-            CallAlertUtils.stopAllCallAlerts(this, intent.getStringExtra("callId"));
+            stopNativeAlertForIntent(intent);
         } else {
             CallAlertUtils.stopVibration(this);
             CallAlertUtils.stopCallRingtone(this);
@@ -60,5 +60,17 @@ public class MainActivity extends BridgeActivity {
             bridge.triggerWindowJSEvent("wavechat-android-intent", data.toString());
             bridge.eval("localStorage.setItem('wavechat_pending_call_intent', " + JSONObject.quote(data.toString()) + ")", null);
         } catch (Exception ignored) {}
+    }
+
+    private void stopNativeAlertForIntent(android.content.Intent intent) {
+        String callId = intent.getStringExtra("callId");
+        String action = intent.getStringExtra("action");
+        if ("accept".equals(action)) {
+            CallAlertUtils.stopCallRingtone(this);
+            CallAlertUtils.stopVibration(this);
+            CallAlertUtils.cancelCallNotification(this, callId);
+        } else {
+            CallAlertUtils.stopAllCallAlerts(this, callId);
+        }
     }
 }

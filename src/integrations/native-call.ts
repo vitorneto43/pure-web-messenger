@@ -10,6 +10,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 
 const WaveChatCall = registerPlugin<{
   stopAlerts(options: { callId?: string }): Promise<{ ok: boolean }>;
+  stopRinging(options: { callId?: string }): Promise<{ ok: boolean }>;
   configureAudio(): Promise<{ ok: boolean }>;
   resetAudio(): Promise<{ ok: boolean }>;
 }>('WaveChatCall');
@@ -136,6 +137,15 @@ export async function endNativeCall(_callId: string): Promise<void> {
     }
   } catch {
     /* ignore */
+  }
+}
+
+export async function stopNativeRinging(_callId: string): Promise<void> {
+  if (!isNativeApp()) return;
+  try {
+    await WaveChatCall.stopRinging({ callId: _callId });
+  } catch (e) {
+    console.error('Failed to stop native ringing', e);
   }
 }
 

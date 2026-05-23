@@ -18,6 +18,17 @@ public class WaveChatCallPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void stopRinging(PluginCall call) {
+        String callId = call.getString("callId", null);
+        CallAlertUtils.stopCallRingtone(getContext());
+        CallAlertUtils.stopVibration(getContext());
+        CallAlertUtils.cancelCallNotification(getContext(), callId);
+        JSObject result = new JSObject();
+        result.put("ok", true);
+        call.resolve(result);
+    }
+
+    @PluginMethod
     public void configureAudio(PluginCall call) {
         CallAlertUtils.configureInCallAudio(getContext());
         JSObject result = new JSObject();
