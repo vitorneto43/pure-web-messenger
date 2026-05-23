@@ -87,7 +87,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(true)
-            .setSilent(true)
+            .setSilent(false)
             .setVibrate(new long[] { 0L, 750L, 450L, 750L, 1400L })
             .setSound(null)
             .setTimeoutAfter(45_000)
