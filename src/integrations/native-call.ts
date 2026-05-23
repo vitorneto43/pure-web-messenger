@@ -6,7 +6,9 @@
 // WaveChatMessagingService.java (no vibration, no extra audio session).
 
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+const WaveChatCall = registerPlugin<{ stopAlerts(options: { callId?: string }): Promise<{ ok: boolean }> }>('WaveChatCall');
 
 let registered = false;
 
@@ -114,6 +116,11 @@ export async function showNativeIncomingCall(_params: {
 /** Dismiss any delivered call notifications and force-stop vibration. */
 export async function endNativeCall(_callId: string): Promise<void> {
   if (!isNativeApp()) return;
+  try {
+    await WaveChatCall.stopAlerts({ callId: _callId });
+  } catch (e) {
+    console.error('Failed to stop native call alerts', e);
+  }
   try {
     await PushNotifications.removeAllDeliveredNotifications();
   } catch (e) {
