@@ -13,6 +13,12 @@ import { saveSubscription } from "@/lib/push.functions";
 type PermState = "default" | "granted" | "denied" | "unsupported";
 
 export function NotificationSettings() {
+  // No app nativo (Capacitor), usamos FCM nativo — esse card é só para Web Push do navegador.
+  const isNativeApp =
+    typeof window !== "undefined" &&
+    !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+  if (isNativeApp) return null;
+
   const [perm, setPerm] = useState<PermState>("default");
   const [busy, setBusy] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
