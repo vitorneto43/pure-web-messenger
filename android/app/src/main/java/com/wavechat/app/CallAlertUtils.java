@@ -12,7 +12,7 @@ import android.os.Vibrator;
 import android.os.VibratorManager;
 
 public final class CallAlertUtils {
-    public static final String CHANNEL_ID = "wavechat_calls_native_v3";
+    public static final String CHANNEL_ID = "wavechat_calls_native_v4";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
 
     private CallAlertUtils() {}
@@ -30,6 +30,7 @@ public final class CallAlertUtils {
         manager.deleteNotificationChannel("wavechat_incoming_calls");
         manager.deleteNotificationChannel("wavechat_incoming_calls_v2");
         manager.deleteNotificationChannel("wavechat_call_channel");
+        manager.deleteNotificationChannel("wavechat_calls_native_v3");
 
         NotificationChannel channel = new NotificationChannel(
             CHANNEL_ID,
