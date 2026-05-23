@@ -64,7 +64,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("callId", callId);
-        intent.putExtra("action", "accept");
+        intent.putExtra("action", "open");
         PendingIntent pendingIntent = PendingIntent.getActivity(
             this, callId.hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
