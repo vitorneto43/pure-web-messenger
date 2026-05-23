@@ -22,7 +22,7 @@ import {
   initNativeCallListeners,
   registerNativePush,
 } from "@/integrations/native-call";
-import { saveNativeToken, sendNativeCallPush } from "@/lib/native-push.functions";
+import { saveNativeToken, sendNativeCallCancelPush, sendNativeCallPush } from "@/lib/native-push.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 type Kind = "audio" | "video";
@@ -92,7 +92,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const callMsgInsertedRef = useRef<Set<string>>(new Set());
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeTokenSavedRef = useRef(false);
+  const processedNativeActionsRef = useRef<Set<string>>(new Set());
   const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
+  const sendNativeCallCancelPushFn = useServerFn(sendNativeCallCancelPush);
 
   async function insertCallMessage(
     callId: string,
@@ -342,10 +344,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: { ideal: true },
-          noiseSuppression: { ideal: true },
-          autoGainControl: { ideal: false },
-          channelCount: { ideal: 1 },
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
           sampleRate: { ideal: 48000 },
           sampleSize: { ideal: 16 },
         },
@@ -409,6 +411,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
           .eq("id", current.id)
           .in("status", ["ringing", "accepted"]);
 
+        if (current.isCaller && current.status === "ringing") {
+          void sendNativeCallCancelPushFn({
+            data: { callId: current.id, calleeId: current.calleeId },
+          }).catch((e) => console.error("sendNativeCallCancelPush failed", e));
+        }
+
         if (current.isCaller) {
           const duration = startedAt ? (Date.now() - startedAt) / 1000 : 0;
           const outcome: "missed" | "cancelled" | "completed" =
@@ -428,7 +436,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [cleanup]
+    [cleanup, sendNativeCallCancelPushFn]
   );
 
   const startCall = useCallback<CallContextValue["startCall"]>(
@@ -511,10 +519,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setActive(null);
       }
     },
-    [user, createPeerConnection, setupSignaling, endCallInternal, cleanup]
+    [user, createPeerConnection, setupSignaling, endCallInternal, cleanup, sendNativeCallPushFn]
   );
 
   const acceptIncomingCall = useCallback(async (call: CallInfo) => {
+    if (activeRef.current?.id === call.id) return;
     stopRingtone();
     stopRingback();
     if (isNativeApp()) await stopNativeRinging(call.id);
@@ -562,7 +571,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [declineIncomingCall]);
 
   const endCall = useCallback(async () => {
-    await endCallInternal("ended");
+    const current = activeRef.current;
+    await endCallInternal(current?.isCaller && current.status === "ringing" ? "cancelled" : "ended");
   }, [endCallInternal]);
 
   const toggleMic = useCallback(() => {
@@ -718,6 +728,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (!isNativeApp()) return;
     const runAction = async (detail: { action?: string; callId?: string }) => {
       if (!detail.callId) return;
+      const actionKey = `${detail.action ?? 'open'}:${detail.callId}`;
+      if (processedNativeActionsRef.current.has(actionKey)) return;
+      processedNativeActionsRef.current.add(actionKey);
       if (isNativeApp()) {
         if (detail.action === 'accept') void stopNativeRinging(detail.callId);
         else void endNativeCall(detail.callId);

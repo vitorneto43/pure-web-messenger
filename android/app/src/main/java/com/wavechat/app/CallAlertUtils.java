@@ -101,9 +101,15 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
         cancelCallNotification(context, callId);
         WaveChatTelecomManager.endIncomingCall(context, callId);
+        IncomingCallActivity.finishCallScreen(callId);
         stopCallRingtone(context);
         stopNotificationEffects(context);
         stopVibration(context);
+        try {
+            Intent endedIntent = new Intent("com.wavechat.app.CALL_ALERT_ENDED");
+            endedIntent.putExtra("callId", callId);
+            context.sendBroadcast(endedIntent);
+        } catch (Exception ignored) {}
     }
 
     public static void cancelCallNotification(Context context, String callId) {
@@ -153,11 +159,23 @@ public final class CallAlertUtils {
                     AudioManager.AUDIOFOCUS_GAIN
                 );
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                audioManager.setCommunicationDevice(null);
-            }
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             audioManager.setSpeakerphoneOn(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                java.util.List<android.media.AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
+                android.media.AudioDeviceInfo target = null;
+                for (android.media.AudioDeviceInfo device : devices) {
+                    int type = device.getType();
+                    if (type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO || type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
+                        target = device;
+                        break;
+                    }
+                    if (target == null && type == android.media.AudioDeviceInfo.TYPE_BUILTIN_EARPIECE) {
+                        target = device;
+                    }
+                }
+                if (target != null) audioManager.setCommunicationDevice(target);
+            }
         } catch (Exception ignored) {}
     }
 

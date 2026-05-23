@@ -1,6 +1,10 @@
 package com.wavechat.app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -10,29 +14,69 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
+
 public class IncomingCallActivity extends Activity {
+    private static WeakReference<IncomingCallActivity> currentActivity;
     private String callId;
     private String callerName;
     private String kind;
+    private final BroadcastReceiver callEndedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String endedCallId = intent.getStringExtra("callId");
+            if (callId == null || callId.equals(endedCallId)) finish();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        currentActivity = new WeakReference<>(this);
         configureWindow();
         readExtras();
         CallAlertUtils.createSilentCallChannel(this);
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
         setContentView(buildLayout());
+        registerCallEndedReceiver();
     }
 
     @Override
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
+        currentActivity = new WeakReference<>(this);
         setIntent(intent);
         readExtras();
         CallAlertUtils.startCallRingtone(this);
         CallAlertUtils.startCallVibration(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            unregisterReceiver(callEndedReceiver);
+        } catch (Exception ignored) {}
+        IncomingCallActivity current = currentActivity == null ? null : currentActivity.get();
+        if (current == this) currentActivity = null;
+        super.onDestroy();
+    }
+
+    public static void finishCallScreen(String endedCallId) {
+        IncomingCallActivity activity = currentActivity == null ? null : currentActivity.get();
+        if (activity == null) return;
+        if (activity.callId == null || activity.callId.equals(endedCallId)) {
+            activity.runOnUiThread(activity::finish);
+        }
+    }
+
+    private void registerCallEndedReceiver() {
+        IntentFilter filter = new IntentFilter("com.wavechat.app.CALL_ALERT_ENDED");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(callEndedReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(callEndedReceiver, filter);
+        }
     }
 
     private void configureWindow() {

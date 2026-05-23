@@ -28,11 +28,13 @@ export function CallScreen() {
   }, [localStream]);
 
   useEffect(() => {
-    if (active?.kind === "video" && remoteVideoRef.current && remoteStream) {
+    if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.muted = active?.kind !== "video";
     }
-    if (remoteAudioRef.current && remoteStream) {
-      remoteAudioRef.current.srcObject = remoteStream;
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = active?.kind === "video" ? null : remoteStream;
+      remoteAudioRef.current.volume = 1;
     }
   }, [remoteStream, active?.kind]);
 
@@ -58,6 +60,7 @@ export function CallScreen() {
             ref={remoteVideoRef}
             autoPlay
             playsInline
+            muted={false}
             className="absolute inset-0 w-full h-full object-cover bg-zinc-900"
           />
         ) : (
@@ -98,7 +101,7 @@ export function CallScreen() {
         )}
 
         {/* Hidden audio element when video is off (audio still plays via video element if present) */}
-        {!isVideo && <audio ref={remoteAudioRef} autoPlay />}
+        <audio ref={remoteAudioRef} autoPlay />
       </div>
 
       {/* Controls */}

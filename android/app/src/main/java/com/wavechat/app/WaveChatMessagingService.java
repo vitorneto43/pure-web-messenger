@@ -21,7 +21,10 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
         ensureFirebaseReady();
 
-        if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
+        if (remoteMessage.getData() != null && "call_cancel".equals(remoteMessage.getData().get("type"))) {
+            String callId = remoteMessage.getData().getOrDefault("callId", "");
+            CallAlertUtils.stopAllCallAlerts(this, callId);
+        } else if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
             showIncomingCallNotification(remoteMessage.getData());
         } else {
             PushNotificationsPlugin.sendRemoteMessage(remoteMessage);
@@ -98,8 +101,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             .setAutoCancel(true)
             .setOngoing(false)
             .setOnlyAlertOnce(false)
-            .setSound(CallAlertUtils.callRingtoneUri(this))
-            .setVibrate(new long[] { 0L, 900L, 350L, 900L, 1200L })
+            .setSilent(true)
             .setTimeoutAfter(45_000)
             .setFullScreenIntent(pendingIntent, true)
             .setContentIntent(pendingIntent);
