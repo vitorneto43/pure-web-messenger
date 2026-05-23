@@ -100,9 +100,7 @@ public final class CallAlertUtils {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
                 if (vm != null) {
-                    for (Vibrator vibrator : vm.getVibrators()) {
-                        vibrate(vibrator, pattern);
-                    }
+                    vibrate(vm.getDefaultVibrator(), pattern);
                 }
             } else {
                 Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
