@@ -21,7 +21,7 @@ public final class WaveChatTelecomManager {
     private WaveChatTelecomManager() {}
 
     public static boolean showIncomingCall(Context context, String callId, String callerName, String kind, String conversationId) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || callId == null || callId.trim().isEmpty()) return false;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || callId == null || callId.trim().isEmpty()) return false;
 
         try {
             TelecomManager telecom = (TelecomManager) context.getSystemService(Context.TELECOM_SERVICE);
