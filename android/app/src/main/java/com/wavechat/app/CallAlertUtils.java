@@ -93,6 +93,7 @@ public final class CallAlertUtils {
     }
 
     public static void stopAllCallAlerts(Context context, String callId) {
+        CallStatusPoller.stop(callId);
         try {
             Intent stopIntent = new Intent(context, NativeCallForegroundService.class);
             stopIntent.setAction(NativeCallForegroundService.ACTION_STOP);
@@ -110,6 +111,10 @@ public final class CallAlertUtils {
             endedIntent.putExtra("callId", callId);
             context.sendBroadcast(endedIntent);
         } catch (Exception ignored) {}
+    }
+
+    public static void watchCallStatus(Context context, String callId) {
+        CallStatusPoller.start(context, callId);
     }
 
     public static void cancelCallNotification(Context context, String callId) {
