@@ -129,10 +129,5 @@ public class WaveChatConnectionService extends ConnectionService {
             destroy();
         }
 
-        @Override
-        public void destroy() {
-            WaveChatTelecomManager.unregisterConnection(callId);
-            super.destroy();
-        }
     }
 }
