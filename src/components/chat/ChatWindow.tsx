@@ -560,7 +560,39 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 </div>
               )}
               <div
-                className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm animate-in-up ${
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setForwardMsg({
+                    content: m.content,
+                    attachment_url: m.attachment_url,
+                    attachment_type: m.attachment_type,
+                    attachment_name: m.attachment_name,
+                  });
+                }}
+                onTouchStart={() => {
+                  if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                  longPressTimerRef.current = setTimeout(() => {
+                    setForwardMsg({
+                      content: m.content,
+                      attachment_url: m.attachment_url,
+                      attachment_type: m.attachment_type,
+                      attachment_name: m.attachment_name,
+                    });
+                  }, 500);
+                }}
+                onTouchEnd={() => {
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                  }
+                }}
+                onTouchMove={() => {
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                  }
+                }}
+                className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm animate-in-up select-none cursor-pointer ${
                   isMine
                     ? "bg-bubble-out text-bubble-out-foreground rounded-br-md"
                     : "bg-bubble-in text-bubble-in-foreground rounded-bl-md"
