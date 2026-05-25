@@ -436,26 +436,37 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
         if (state === "connected") {
-          // FIX: Clear connection timeout when connected
           if (connectionTimeoutRef.current) {
             clearTimeout(connectionTimeoutRef.current);
             connectionTimeoutRef.current = null;
           }
-          
           stopRingback();
           stopRingtone();
           setConnecting(false);
-          
-          // Re-apply MODE_IN_COMMUNICATION + earpiece routing now that the
-          // WebView audio output is live. Without this, the OS often resets
-          // to MODE_NORMAL when playback begins, disabling hardware AEC →
-          // the remote mic captures the speaker and the caller hears themselves.
           if (isNativeApp()) {
             void configureNativeCallAudio();
             setTimeout(() => { void configureNativeCallAudio(); }, 600);
           }
         }
-        if (state === "failed" || state === "disconnected") {
+        if (state === "disconnected") {
+          // STABILITY: try to recover instead of ending immediately.
+          // ICE restart re-negotiates a new path (useful on cell↔wifi switch).
+          if (isCaller && pcRef.current) {
+            try {
+              pcRef.current.restartIce?.();
+            } catch { /* ignore */ }
+          }
+          // If still down after 8s, end the call.
+          setTimeout(() => {
+            const s = pcRef.current?.connectionState;
+            if (s === "disconnected" || s === "failed") {
+              toast.error("Chamada desconectada");
+              void endCallInternal("ended");
+            }
+          }, 8000);
+          return;
+        }
+        if (state === "failed") {
           toast.error("Chamada desconectada");
           void endCallInternal("ended");
         }
