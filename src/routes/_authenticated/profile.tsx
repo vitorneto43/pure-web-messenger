@@ -293,6 +293,10 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6">
+        <RingtoneSettings />
+      </div>
+
+      <div className="mt-6">
         <BoostHistory />
       </div>
 
