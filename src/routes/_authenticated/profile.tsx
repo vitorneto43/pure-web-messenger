@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { BANKS } from "@/lib/banks";
 import { useServerFn } from "@tanstack/react-start";
