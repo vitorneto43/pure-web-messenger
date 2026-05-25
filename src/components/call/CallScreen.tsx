@@ -64,8 +64,15 @@ export function CallScreen() {
       const audioOnly = new MediaStream(remoteStream.getAudioTracks());
       remoteAudioRef.current.srcObject = audioOnly;
       remoteAudioRef.current.volume = 1;
+      // Force playback to start (Android WebView sometimes pauses on attach).
+      remoteAudioRef.current.play?.().catch(() => {});
     }
   }, [remoteStream, active?.kind]);
+
+  // Apply speaker toggle to native audio routing.
+  useEffect(() => {
+    void setNativeSpeakerphone(speakerOn);
+  }, [speakerOn]);
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
