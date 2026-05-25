@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Phone, Video, VideoOff, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { useCall } from "@/hooks/use-call";
+import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
