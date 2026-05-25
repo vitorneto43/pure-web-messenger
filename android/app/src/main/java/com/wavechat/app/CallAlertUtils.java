@@ -250,7 +250,19 @@ public final class CallAlertUtils {
         } catch (Exception ignored) {}
     }
 
+    public static final String PREFS_NAME = "wavechat_prefs";
+    public static final String PREF_RINGTONE_URI = "custom_ringtone_uri";
+    public static final String PREF_RINGTONE_NAME = "custom_ringtone_name";
+
     public static Uri callRingtoneUri(Context context) {
+        try {
+            SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String custom = prefs.getString(PREF_RINGTONE_URI, null);
+            if (custom != null && !custom.isEmpty()) {
+                return Uri.parse(custom);
+            }
+        } catch (Exception ignored) {}
         Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(
             context.getApplicationContext(),
             RingtoneManager.TYPE_RINGTONE
@@ -262,6 +274,52 @@ public final class CallAlertUtils {
             );
         }
         return ringtoneUri == null ? Settings.System.DEFAULT_RINGTONE_URI : ringtoneUri;
+    }
+
+    private static MediaPlayer previewPlayer;
+
+    public static synchronized void previewRingtone(Context context) {
+        stopPreviewRingtone();
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                try {
+                    int maxAlarm = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+                } catch (Exception ignored) {}
+            }
+            Uri uri = callRingtoneUri(context);
+            MediaPlayer mp = new MediaPlayer();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mp.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build());
+            } else {
+                mp.setAudioStreamType(AudioManager.STREAM_ALARM);
+            }
+            mp.setDataSource(context.getApplicationContext(), uri);
+            mp.setLooping(false);
+            try { mp.setVolume(1.0f, 1.0f); } catch (Exception ignored) {}
+            mp.prepare();
+            mp.start();
+            previewPlayer = mp;
+            new Handler(Looper.getMainLooper()).postDelayed(
+                CallAlertUtils::stopPreviewRingtone, 5000L);
+        } catch (Exception ignored) {}
+    }
+
+    public static synchronized void stopPreviewRingtone() {
+        try {
+            if (previewPlayer != null) {
+                try { if (previewPlayer.isPlaying()) previewPlayer.stop(); } catch (Exception ignored) {}
+                try { previewPlayer.reset(); } catch (Exception ignored) {}
+                try { previewPlayer.release(); } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {
+        } finally {
+            previewPlayer = null;
+        }
     }
 
     public static synchronized void startCallRingtone(Context context) {
