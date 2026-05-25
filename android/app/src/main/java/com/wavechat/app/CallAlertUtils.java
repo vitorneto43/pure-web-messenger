@@ -283,6 +283,24 @@ public final class CallAlertUtils {
                     AudioManager.STREAM_RING,
                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
                 );
+                // VOLUME BOOST: force ringer + notification streams to MAX so the
+                // incoming-call ringtone is clearly audible even on devices where
+                // the user lowered the ringer volume (POCO/MIUI, Samsung One UI).
+                try {
+                    int maxRing = audioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
+                    audioManager.setStreamVolume(AudioManager.STREAM_RING, maxRing, 0);
+                    int maxNotif = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+                    audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxNotif, 0);
+                    int maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+                } catch (Exception ignored) {}
+                // Make sure the device is not in silent/vibrate mode so the
+                // ringtone actually plays out loud.
+                try {
+                    if (audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
+                        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    }
+                } catch (Exception ignored) {}
             }
 
             Uri uri = callRingtoneUri(context);
