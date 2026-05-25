@@ -315,6 +315,7 @@ public final class CallAlertUtils {
             }
             mp.setDataSource(context.getApplicationContext(), uri);
             mp.setLooping(true);
+            try { mp.setVolume(1.0f, 1.0f); } catch (Exception ignored) {}
             mp.prepare();
             mp.start();
             mediaPlayer = mp;
