@@ -66,23 +66,20 @@ interface CallContextValue {
 
 const CallContext = createContext<CallContextValue | null>(null);
 
-// Enhanced ICE servers with TURN servers for better connectivity
-// TURN servers help with NAT traversal and improve connection reliability
+// Enhanced ICE servers — STUN + free public TURN (openrelay.metered.ca).
+// TURN is REQUIRED for calls between users on symmetric NATs (most mobile
+// carriers in Brazil). Without TURN, the WebRTC PeerConnection silently
+// stalls in "checking"/"disconnected" and audio never flows.
 const ICE_SERVERS: RTCIceServer[] = [
-  // Google STUN servers (free, reliable)
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
   { urls: "stun:stun2.l.google.com:19302" },
   { urls: "stun:stun3.l.google.com:19302" },
   { urls: "stun:stun4.l.google.com:19302" },
-  
-  // Note: Add your own TURN servers for production
-  // Example:
-  // {
-  //   urls: ["turn:your-turn-server.com:3478"],
-  //   username: "username",
-  //   credential: "password"
-  // }
+  // Free public TURN — Open Relay Project (metered.ca)
+  { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
 ];
 
 // Call timeout constants
