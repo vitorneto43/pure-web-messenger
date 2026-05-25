@@ -337,24 +337,24 @@ public final class CallAlertUtils {
         try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
+                // Use ALARM stream for the ringtone so it plays at the highest
+                // possible volume, bypasses silent/vibrate mode, and is hard to
+                // miss even when the user lowered the regular ringer volume.
                 audioManager.requestAudioFocus(
                     audioFocusListener,
-                    AudioManager.STREAM_RING,
+                    AudioManager.STREAM_ALARM,
                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
                 );
-                // VOLUME BOOST: force ringer + notification streams to MAX so the
-                // incoming-call ringtone is clearly audible even on devices where
-                // the user lowered the ringer volume (POCO/MIUI, Samsung One UI).
                 try {
+                    int maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
                     int maxRing = audioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
                     audioManager.setStreamVolume(AudioManager.STREAM_RING, maxRing, 0);
                     int maxNotif = audioManager.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
                     audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, maxNotif, 0);
-                    int maxAlarm = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+                    int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
                 } catch (Exception ignored) {}
-                // Make sure the device is not in silent/vibrate mode so the
-                // ringtone actually plays out loud.
                 try {
                     if (audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
                         audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
@@ -365,12 +365,15 @@ public final class CallAlertUtils {
             Uri uri = callRingtoneUri(context);
             MediaPlayer mp = new MediaPlayer();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                // USAGE_ALARM + CONTENT_TYPE_MUSIC makes the system route this
+                // to the alarm stream (max-volume capable) and treat custom
+                // music files as full audio (no notification ducking).
                 mp.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build());
             } else {
-                mp.setAudioStreamType(AudioManager.STREAM_RING);
+                mp.setAudioStreamType(AudioManager.STREAM_ALARM);
             }
             mp.setDataSource(context.getApplicationContext(), uri);
             mp.setLooping(true);
