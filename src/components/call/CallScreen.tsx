@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Phone, Video, VideoOff, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { useCall } from "@/hooks/use-call";
+import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -63,8 +64,15 @@ export function CallScreen() {
       const audioOnly = new MediaStream(remoteStream.getAudioTracks());
       remoteAudioRef.current.srcObject = audioOnly;
       remoteAudioRef.current.volume = 1;
+      // Force playback to start (Android WebView sometimes pauses on attach).
+      remoteAudioRef.current.play?.().catch(() => {});
     }
   }, [remoteStream, active?.kind]);
+
+  // Apply speaker toggle to native audio routing.
+  useEffect(() => {
+    void setNativeSpeakerphone(speakerOn);
+  }, [speakerOn]);
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

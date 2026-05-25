@@ -245,10 +245,26 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     };
   }, [conversationId, user?.id]);
 
-  // Auto-scroll
+  // Auto-scroll — jump instantly to the bottom on first load (so the chat
+  // opens at the latest message), then smooth-scroll for new messages.
+  const didInitialScrollRef = useRef(false);
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, typingUsers.length]);
+    if (loading) return;
+    if (!didInitialScrollRef.current) {
+      // Wait one frame so the message list has its final height.
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+        didInitialScrollRef.current = true;
+      });
+    } else {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [loading, messages.length, typingUsers.length]);
+
+  // Reset the initial-scroll flag when switching conversations.
+  useEffect(() => {
+    didInitialScrollRef.current = false;
+  }, [conversationId]);
 
   const otherUser = useMemo(
     () => (conv && !conv.is_group ? members.find((m) => m.id !== user?.id) : null),

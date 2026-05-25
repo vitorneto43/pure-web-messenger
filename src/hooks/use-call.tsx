@@ -66,23 +66,20 @@ interface CallContextValue {
 
 const CallContext = createContext<CallContextValue | null>(null);
 
-// Enhanced ICE servers with TURN servers for better connectivity
-// TURN servers help with NAT traversal and improve connection reliability
+// Enhanced ICE servers — STUN + free public TURN (openrelay.metered.ca).
+// TURN is REQUIRED for calls between users on symmetric NATs (most mobile
+// carriers in Brazil). Without TURN, the WebRTC PeerConnection silently
+// stalls in "checking"/"disconnected" and audio never flows.
 const ICE_SERVERS: RTCIceServer[] = [
-  // Google STUN servers (free, reliable)
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
   { urls: "stun:stun2.l.google.com:19302" },
   { urls: "stun:stun3.l.google.com:19302" },
   { urls: "stun:stun4.l.google.com:19302" },
-  
-  // Note: Add your own TURN servers for production
-  // Example:
-  // {
-  //   urls: ["turn:your-turn-server.com:3478"],
-  //   username: "username",
-  //   credential: "password"
-  // }
+  // Free public TURN — Open Relay Project (metered.ca)
+  { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
 ];
 
 // Call timeout constants
@@ -380,7 +377,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const createPeerConnection = useCallback(
     async (kind: Kind, isCaller: boolean) => {
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const pc = new RTCPeerConnection({
+        iceServers: ICE_SERVERS,
+        iceCandidatePoolSize: 4,
+        bundlePolicy: "max-bundle",
+        rtcpMuxPolicy: "require",
+      });
       pcRef.current = pc;
 
       if (isNativeApp()) await configureNativeCallAudio();
@@ -434,26 +436,37 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pc.onconnectionstatechange = () => {
         const state = pc.connectionState;
         if (state === "connected") {
-          // FIX: Clear connection timeout when connected
           if (connectionTimeoutRef.current) {
             clearTimeout(connectionTimeoutRef.current);
             connectionTimeoutRef.current = null;
           }
-          
           stopRingback();
           stopRingtone();
           setConnecting(false);
-          
-          // Re-apply MODE_IN_COMMUNICATION + earpiece routing now that the
-          // WebView audio output is live. Without this, the OS often resets
-          // to MODE_NORMAL when playback begins, disabling hardware AEC →
-          // the remote mic captures the speaker and the caller hears themselves.
           if (isNativeApp()) {
             void configureNativeCallAudio();
             setTimeout(() => { void configureNativeCallAudio(); }, 600);
           }
         }
-        if (state === "failed" || state === "disconnected") {
+        if (state === "disconnected") {
+          // STABILITY: try to recover instead of ending immediately.
+          // ICE restart re-negotiates a new path (useful on cell↔wifi switch).
+          if (isCaller && pcRef.current) {
+            try {
+              pcRef.current.restartIce?.();
+            } catch { /* ignore */ }
+          }
+          // If still down after 8s, end the call.
+          setTimeout(() => {
+            const s = pcRef.current?.connectionState;
+            if (s === "disconnected" || s === "failed") {
+              toast.error("Chamada desconectada");
+              void endCallInternal("ended");
+            }
+          }, 8000);
+          return;
+        }
+        if (state === "failed") {
           toast.error("Chamada desconectada");
           void endCallInternal("ended");
         }

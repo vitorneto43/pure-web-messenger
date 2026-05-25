@@ -13,7 +13,19 @@ const WaveChatCall = registerPlugin<{
   stopRinging(options: { callId?: string }): Promise<{ ok: boolean }>;
   configureAudio(): Promise<{ ok: boolean }>;
   resetAudio(): Promise<{ ok: boolean }>;
+  setSpeaker(options: { on: boolean }): Promise<{ ok: boolean }>;
+  setBadge(options: { count: number }): Promise<{ ok: boolean }>;
 }>('WaveChatCall');
+
+export async function setNativeSpeakerphone(on: boolean): Promise<void> {
+  if (!isNativeApp()) return;
+  try { await WaveChatCall.setSpeaker({ on }); } catch (e) { console.error(e); }
+}
+
+export async function setNativeBadge(count: number): Promise<void> {
+  if (!isNativeApp()) return;
+  try { await WaveChatCall.setBadge({ count: Math.max(0, count | 0) }); } catch (e) { console.error(e); }
+}
 
 let registered = false;
 

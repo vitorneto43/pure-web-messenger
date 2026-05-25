@@ -182,6 +182,15 @@ public final class CallAlertUtils {
             }
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             audioManager.setSpeakerphoneOn(false);
+            // VOLUME BOOST: raise call + media streams to MAX so remote audio
+            // is audible even on devices with conservative defaults (POCO/MIUI,
+            // Samsung One UI). FLAG_PLAY_SOUND=0 keeps it silent.
+            try {
+                int maxVoice = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVoice, 0);
+                int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+            } catch (Exception ignored) {}
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 java.util.List<android.media.AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
                 android.media.AudioDeviceInfo target = null;
@@ -197,6 +206,32 @@ public final class CallAlertUtils {
                 }
                 if (target != null) audioManager.setCommunicationDevice(target);
             }
+        } catch (Exception ignored) {}
+    }
+
+    public static void setSpeakerphone(Context context, boolean on) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager == null) return;
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                java.util.List<android.media.AudioDeviceInfo> devices = audioManager.getAvailableCommunicationDevices();
+                android.media.AudioDeviceInfo target = null;
+                int wanted = on
+                    ? android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                    : android.media.AudioDeviceInfo.TYPE_BUILTIN_EARPIECE;
+                for (android.media.AudioDeviceInfo device : devices) {
+                    if (device.getType() == wanted) { target = device; break; }
+                }
+                if (target != null) audioManager.setCommunicationDevice(target);
+            }
+            audioManager.setSpeakerphoneOn(on);
+            try {
+                int maxVoice = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVoice, 0);
+                int maxMusic = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
