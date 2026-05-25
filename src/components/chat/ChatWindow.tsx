@@ -36,6 +36,7 @@ import { playNotification } from "@/lib/notification-sound";
 import { sendMessagePush } from "@/lib/push.functions";
 import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
+import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
@@ -80,10 +81,12 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
   const [pixOpen, setPixOpen] = useState(false);
+  const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingPing = useRef<number>(0);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Audio recording
   const [recording, setRecording] = useState(false);
@@ -557,7 +560,39 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 </div>
               )}
               <div
-                className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm animate-in-up ${
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setForwardMsg({
+                    content: m.content,
+                    attachment_url: m.attachment_url,
+                    attachment_type: m.attachment_type,
+                    attachment_name: m.attachment_name,
+                  });
+                }}
+                onTouchStart={() => {
+                  if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                  longPressTimerRef.current = setTimeout(() => {
+                    setForwardMsg({
+                      content: m.content,
+                      attachment_url: m.attachment_url,
+                      attachment_type: m.attachment_type,
+                      attachment_name: m.attachment_name,
+                    });
+                  }, 500);
+                }}
+                onTouchEnd={() => {
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                  }
+                }}
+                onTouchMove={() => {
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                  }
+                }}
+                className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm animate-in-up select-none cursor-pointer ${
                   isMine
                     ? "bg-bubble-out text-bubble-out-foreground rounded-br-md"
                     : "bg-bubble-in text-bubble-in-foreground rounded-bl-md"
@@ -840,6 +875,12 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         open={pixOpen}
         onOpenChange={setPixOpen}
         onSend={(marker) => sendMessage(marker)}
+      />
+      <ForwardMessageDialog
+        open={forwardMsg !== null}
+        onOpenChange={(v) => !v && setForwardMsg(null)}
+        message={forwardMsg}
+        excludeConversationId={conversationId}
       />
     </div>
   );

@@ -321,7 +321,9 @@ public final class CallAlertUtils {
             stopRingtoneSafetyStop();
             stopFallbackTone();
             if (ringtonePlayer != null) {
-                if (ringtonePlayer.isPlaying()) ringtonePlayer.stop();
+                // Always call stop() — on some MIUI/HyperOS builds isPlaying()
+                // returns false while the ringtone keeps playing.
+                try { ringtonePlayer.stop(); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {
         } finally {
