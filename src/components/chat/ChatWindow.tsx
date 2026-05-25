@@ -876,6 +876,12 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         onOpenChange={setPixOpen}
         onSend={(marker) => sendMessage(marker)}
       />
+      <ForwardMessageDialog
+        open={forwardMsg !== null}
+        onOpenChange={(v) => !v && setForwardMsg(null)}
+        message={forwardMsg}
+        excludeConversationId={conversationId}
+      />
     </div>
   );
 }
