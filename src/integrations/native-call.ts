@@ -15,6 +15,11 @@ const WaveChatCall = registerPlugin<{
   resetAudio(): Promise<{ ok: boolean }>;
   setSpeaker(options: { on: boolean }): Promise<{ ok: boolean }>;
   setBadge(options: { count: number }): Promise<{ ok: boolean }>;
+  getRingtone(): Promise<{ uri: string | null; name: string | null; isDefault: boolean }>;
+  clearRingtone(): Promise<{ ok: boolean }>;
+  pickRingtone(): Promise<{ ok: boolean; cancelled?: boolean; uri?: string; name?: string }>;
+  previewRingtone(): Promise<{ ok: boolean }>;
+  stopPreviewRingtone(): Promise<{ ok: boolean }>;
 }>('WaveChatCall');
 
 export async function setNativeSpeakerphone(on: boolean): Promise<void> {
@@ -25,6 +30,31 @@ export async function setNativeSpeakerphone(on: boolean): Promise<void> {
 export async function setNativeBadge(count: number): Promise<void> {
   if (!isNativeApp()) return;
   try { await WaveChatCall.setBadge({ count: Math.max(0, count | 0) }); } catch (e) { console.error(e); }
+}
+
+export async function getNativeRingtone(): Promise<{ uri: string | null; name: string | null; isDefault: boolean } | null> {
+  if (!isNativeApp()) return null;
+  try { return await WaveChatCall.getRingtone(); } catch (e) { console.error(e); return null; }
+}
+
+export async function pickNativeRingtone(): Promise<{ ok: boolean; uri?: string; name?: string; cancelled?: boolean } | null> {
+  if (!isNativeApp()) return null;
+  try { return await WaveChatCall.pickRingtone(); } catch (e) { console.error(e); return null; }
+}
+
+export async function clearNativeRingtone(): Promise<void> {
+  if (!isNativeApp()) return;
+  try { await WaveChatCall.clearRingtone(); } catch (e) { console.error(e); }
+}
+
+export async function previewNativeRingtone(): Promise<void> {
+  if (!isNativeApp()) return;
+  try { await WaveChatCall.previewRingtone(); } catch (e) { console.error(e); }
+}
+
+export async function stopPreviewNativeRingtone(): Promise<void> {
+  if (!isNativeApp()) return;
+  try { await WaveChatCall.stopPreviewRingtone(); } catch (e) { console.error(e); }
 }
 
 let registered = false;
