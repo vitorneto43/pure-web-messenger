@@ -58,18 +58,7 @@ public class WaveChatCallPlugin extends Plugin {
     @PluginMethod
     public void setBadge(PluginCall call) {
         int count = call.getInt("count", 0);
-        try {
-            me.leolin.shortcutbadger.ShortcutBadger.applyCount(getContext(), count);
-        } catch (Exception ignored) {}
-        // Also dismiss any delivered push notifications so launchers that count
-        // active notifications (stock Android, Pixel) drop the dot as well.
-        if (count <= 0) {
-            try {
-                android.app.NotificationManager nm = (android.app.NotificationManager)
-                    getContext().getSystemService(android.content.Context.NOTIFICATION_SERVICE);
-                if (nm != null) nm.cancelAll();
-            } catch (Exception ignored) {}
-        }
+        BadgeUtils.setBadgeCount(getContext(), count);
         JSObject result = new JSObject();
         result.put("ok", true);
         call.resolve(result);
