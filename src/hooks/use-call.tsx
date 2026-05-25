@@ -377,7 +377,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const createPeerConnection = useCallback(
     async (kind: Kind, isCaller: boolean) => {
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      const pc = new RTCPeerConnection({
+        iceServers: ICE_SERVERS,
+        iceCandidatePoolSize: 4,
+        bundlePolicy: "max-bundle",
+        rtcpMuxPolicy: "require",
+      });
       pcRef.current = pc;
 
       if (isNativeApp()) await configureNativeCallAudio();
