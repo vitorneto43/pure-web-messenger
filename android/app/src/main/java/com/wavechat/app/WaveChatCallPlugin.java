@@ -20,9 +20,11 @@ public class WaveChatCallPlugin extends Plugin {
     @PluginMethod
     public void stopRinging(PluginCall call) {
         String callId = call.getString("callId", null);
-        CallAlertUtils.stopCallRingtone(getContext());
-        CallAlertUtils.stopVibration(getContext());
-        CallAlertUtils.cancelCallNotification(getContext(), callId);
+        // Hard stop: tear down the foreground service AND all alert sources
+        // (ringtone, vibration, notification, telecom, incoming-call activity).
+        // Without this, on MIUI / HyperOS (POCO X6) the foreground service may
+        // keep the Ringtone alive after the user taps "Recusar".
+        CallAlertUtils.stopAllCallAlerts(getContext(), callId);
         JSObject result = new JSObject();
         result.put("ok", true);
         call.resolve(result);
