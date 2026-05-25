@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.media.Ringtone;
 import android.media.ToneGenerator;
@@ -24,6 +25,9 @@ public final class CallAlertUtils {
     public static final String ALERT_CHANNEL_ID = "wavechat_calls_alert_v11";
     public static final String CHANNEL_NAME = "Chamadas WaveChat";
     private static Ringtone ringtonePlayer;
+    private static MediaPlayer mediaPlayer;
+    private static final java.util.List<MediaPlayer> leakedPlayers = new java.util.ArrayList<>();
+    private static final java.util.List<Ringtone> leakedRingtones = new java.util.ArrayList<>();
     private static ToneGenerator fallbackTone;
     private static Handler fallbackHandler;
     private static Runnable fallbackRunnable;
@@ -225,10 +229,18 @@ public final class CallAlertUtils {
     }
 
     public static synchronized void startCallRingtone(Context context) {
-        try {
-            if (ringtonePlayer != null && ringtonePlayer.isPlaying()) return;
-            stopCallRingtone(context);
+        // CRITICAL: Single-instance guard. Many code paths (FCM service, foreground
+        // service, IncomingCallActivity, ConnectionService) all call this method.
+        // If we ever start a second player we leak the first one and it rings
+        // forever on MIUI/HyperOS because Ringtone.stop() is unreliable there.
+        if (mediaPlayer != null) {
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
+            return;
+        }
+        // Make sure any stale player from a previous call is fully torn down.
+        stopCallRingtone(context);
 
+        try {
             AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null) {
                 audioManager.requestAudioFocus(
@@ -238,32 +250,28 @@ public final class CallAlertUtils {
                 );
             }
 
-            Ringtone player = RingtoneManager.getRingtone(context.getApplicationContext(), callRingtoneUri(context));
-            if (player == null) {
-                scheduleRingtoneSafetyStop(context.getApplicationContext());
-                startFallbackTone();
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) player.setLooping(true);
+            Uri uri = callRingtoneUri(context);
+            MediaPlayer mp = new MediaPlayer();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                player.setAudioAttributes(new AudioAttributes.Builder()
+                mp.setAudioAttributes(new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build());
             } else {
-                player.setStreamType(AudioManager.STREAM_RING);
+                mp.setAudioStreamType(AudioManager.STREAM_RING);
             }
-            player.play();
-            if (!player.isPlaying()) {
-                scheduleRingtoneSafetyStop(context.getApplicationContext());
-                startFallbackTone();
-                return;
-            }
-            ringtonePlayer = player;
+            mp.setDataSource(context.getApplicationContext(), uri);
+            mp.setLooping(true);
+            mp.prepare();
+            mp.start();
+            mediaPlayer = mp;
+            leakedPlayers.add(mp);
             scheduleRingtoneSafetyStop(context.getApplicationContext());
         } catch (Exception ignored) {
-            scheduleRingtoneSafetyStop(context.getApplicationContext());
+            // MediaPlayer failed (corrupted ringtone, no permission, etc.) — fall
+            // back to a generated tone so the user still hears something.
             startFallbackTone();
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
         }
     }
 
@@ -320,13 +328,32 @@ public final class CallAlertUtils {
         try {
             stopRingtoneSafetyStop();
             stopFallbackTone();
+            // Tear down EVERY MediaPlayer we ever started for this call session.
+            // On some ROMs the FCM + foreground-service + activity start paths can
+            // race and create more than one player; the leakedPlayers list lets us
+            // kill all of them, not just the most recent one tracked in mediaPlayer.
+            for (MediaPlayer mp : leakedPlayers) {
+                try { if (mp.isPlaying()) mp.stop(); } catch (Exception ignored) {}
+                try { mp.reset(); } catch (Exception ignored) {}
+                try { mp.release(); } catch (Exception ignored) {}
+            }
+            leakedPlayers.clear();
+            if (mediaPlayer != null) {
+                try { mediaPlayer.stop(); } catch (Exception ignored) {}
+                try { mediaPlayer.reset(); } catch (Exception ignored) {}
+                try { mediaPlayer.release(); } catch (Exception ignored) {}
+            }
+            // Also clean up any legacy Ringtone instances from older code paths.
+            for (Ringtone r : leakedRingtones) {
+                try { r.stop(); } catch (Exception ignored) {}
+            }
+            leakedRingtones.clear();
             if (ringtonePlayer != null) {
-                // Always call stop() — on some MIUI/HyperOS builds isPlaying()
-                // returns false while the ringtone keeps playing.
                 try { ringtonePlayer.stop(); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {
         } finally {
+            mediaPlayer = null;
             ringtonePlayer = null;
             try {
                 AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
