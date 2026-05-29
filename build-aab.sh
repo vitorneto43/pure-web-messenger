@@ -27,17 +27,27 @@ fi
 
 echo "✓ Android SDK: $ANDROID_SDK_ROOT"
 
-# Check if keystore environment variables are set
+EXPECTED_UPLOAD_SHA1="3F:47:E2:1A:78:C2:FB:C6:E5:4D:6C:50:3D:43:18:90:43:40:EF:DB"
+EXPECTED_APPLICATION_ID="com.wavechat.app"
+
 if [ -z "$ANDROID_KEYSTORE_FILE" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
-    echo ""
-    echo "⚠️  Warning: Signing credentials not found in environment variables."
-    echo "   Set the following to use a production keystore:"
-    echo "   - ANDROID_KEYSTORE_FILE"
-    echo "   - ANDROID_KEYSTORE_PASSWORD"
-    echo "   - ANDROID_KEY_ALIAS"
-    echo "   - ANDROID_KEY_PASSWORD"
-    echo ""
-    echo "   Using development keystore for now..."
+    echo "❌ Signing credentials missing."
+    echo "   Required: ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
+    echo "   The AAB must use the existing Play Console Upload Key SHA-1: $EXPECTED_UPLOAD_SHA1"
+    exit 1
+fi
+
+ACTUAL_SHA1=$(keytool -list -v -keystore "$ANDROID_KEYSTORE_FILE" \
+    -alias "$ANDROID_KEY_ALIAS" \
+    -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+    | awk -F': ' '/SHA1:/{print $2; exit}')
+
+echo "📋 Expected Play Console Upload SHA-1: $EXPECTED_UPLOAD_SHA1"
+echo "📋 Local keystore SHA-1: $ACTUAL_SHA1"
+
+if [ "$ACTUAL_SHA1" != "$EXPECTED_UPLOAD_SHA1" ]; then
+    echo "❌ Wrong keystore. This AAB would be rejected by Google Play."
+    exit 1
 fi
 
 # Build the AAB
@@ -51,6 +61,8 @@ if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
     echo ""
     echo "✅ AAB build successful!"
     echo "📍 Location: android/app/build/outputs/bundle/release/app-release.aab"
+    echo "✅ Package name kept as: $EXPECTED_APPLICATION_ID"
+    echo "✅ Upload Key SHA-1 validated: $EXPECTED_UPLOAD_SHA1"
     echo ""
     echo "Next steps:"
     echo "1. Upload to Google Play Console"
