@@ -32,6 +32,12 @@ android {
             signingConfig signingConfigs.release
         }
     }
+
+    tasks.register("printReleaseApplicationId") {
+        doLast {
+            println android.defaultConfig.applicationId
+        }
+    }
 }
 
 repositories {
