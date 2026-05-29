@@ -624,7 +624,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     try {
       await supabase
         .from("calls")
-        .update({ status: "accepted", started_at: new Date().toISOString() })
+        .update({
+          status: "accepted",
+          started_at: new Date().toISOString(),
+          seen_at: new Date().toISOString(),
+        })
         .eq("id", call.id);
 
       const info: CallInfo = { ...call, status: "accepted" };
