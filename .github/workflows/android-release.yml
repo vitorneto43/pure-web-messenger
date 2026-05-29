@@ -83,30 +83,40 @@ jobs:
       - name: Configure release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'WaveChat2026' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'WaveChat2026' }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_UPLOAD_SHA1: 3F:47:E2:1A:78:C2:FB:C6:E5:4D:6C:50:3D:43:18:90:43:40:EF:DB
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-            echo "✅ Keystore fixo carregado do GitHub Secret ANDROID_KEYSTORE_BASE64"
-          else
-            echo "⚠️ ATENÇÃO: ANDROID_KEYSTORE_BASE64 não está configurado."
-            echo "⚠️ Vou gerar uma keystore NOVA — esta build terá uma assinatura DIFERENTE de builds anteriores."
-            echo "⚠️ Se você JÁ enviou um AAB para a Play Console, esta build será REJEITADA."
-            echo "⚠️ Baixe o artifact 'wavechat-upload-keystore-backup' e salve em ANDROID_KEYSTORE_BASE64 nos GitHub Secrets para reutilizar."
-            keytool -genkeypair -v \
-              -keystore android/app/keystore.jks \
-              -alias "$ANDROID_KEY_ALIAS" \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-              -keypass "$ANDROID_KEY_PASSWORD" \
-              -dname "CN=WaveChat, OU=WaveChat, O=WaveChat, L=Sao Paulo, ST=SP, C=BR"
-            base64 -w 0 android/app/keystore.jks > android/app/generated-keystore-base64.txt
-            echo "✅ Keystore de upload gerado (salve o artifact!)"
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 não está configurado."
+            echo "❌ Não vou gerar keystore nova, porque isso muda o SHA-1 e a Play Console rejeita o AAB."
+            exit 1
           fi
+
+          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "❌ ANDROID_KEYSTORE_PASSWORD e ANDROID_KEY_PASSWORD precisam estar configurados."
+            exit 1
+          fi
+
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          echo "✅ Keystore de release carregada"
+
+          ACTUAL_SHA1=$(keytool -list -v -keystore android/app/keystore.jks \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            | awk -F': ' '/SHA1:/{print $2; exit}')
+
           echo ""
-          echo "📋 Fingerprint da keystore usada nesta build (compare com a Play Console):"
+          echo "📋 SHA-1 esperado pela Play Console: $EXPECTED_UPLOAD_SHA1"
+          echo "📋 SHA-1 da keystore usada nesta build: $ACTUAL_SHA1"
+
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_UPLOAD_SHA1" ]; then
+            echo "❌ Keystore errada: o AAB precisa ser assinado com o SHA-1 $EXPECTED_UPLOAD_SHA1."
+            exit 1
+          fi
+
+          echo "✅ SHA-1 correto para lançar nova versão"
           keytool -list -v -keystore android/app/keystore.jks \
             -alias "$ANDROID_KEY_ALIAS" \
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
