@@ -27,8 +27,8 @@ fi
 
 echo "✓ Android SDK: $ANDROID_SDK_ROOT"
 
-EXPECTED_UPLOAD_SHA1="01:BF:7A:44:83:5F:ED:83:52:1B:DD:A8:60:AF:DD:FA:F3:70:D0:36"
 EXPECTED_APPLICATION_ID="com.wavechat.app"
+
 
 if [ -z "$ANDROID_KEYSTORE_FILE" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
     echo "❌ Signing credentials missing."
