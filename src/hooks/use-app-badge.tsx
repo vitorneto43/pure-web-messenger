@@ -75,6 +75,11 @@ export function useAppBadgeSync() {
         { event: "*", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
         () => recompute(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "calls", filter: `callee_id=eq.${user.id}` },
+        () => recompute(),
+      )
       .subscribe();
 
     const onVisible = () => {
