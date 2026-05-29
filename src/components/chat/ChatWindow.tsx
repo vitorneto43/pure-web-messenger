@@ -448,10 +448,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
 
   const filteredMessages = useMemo(() => {
-    if (!searchTerm.trim()) return messages;
+    const myId = user?.id;
+    const visible = messages.filter(
+      (m) => !myId || !(m.deleted_for ?? []).includes(myId)
+    );
+    if (!searchTerm.trim()) return visible;
     const q = searchTerm.toLowerCase();
-    return messages.filter((m) => m.content?.toLowerCase().includes(q));
-  }, [messages, searchTerm]);
+    return visible.filter((m) => m.content?.toLowerCase().includes(q));
+  }, [messages, searchTerm, user?.id]);
 
   if (loading) {
     return (
