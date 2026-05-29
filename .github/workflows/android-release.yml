@@ -86,7 +86,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          EXPECTED_UPLOAD_SHA1: 3F:47:E2:1A:78:C2:FB:C6:E5:4D:6C:50:3D:43:18:90:43:40:EF:DB
+          EXPECTED_UPLOAD_SHA1: 01:BF:7A:44:83:5F:ED:83:52:1B:DD:A8:60:AF:DD:FA:F3:70:D0:36
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "❌ ANDROID_KEYSTORE_BASE64 não está configurado."
@@ -153,7 +153,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
           EXPECTED_APPLICATION_ID: com.wavechat.app
-          EXPECTED_UPLOAD_SHA1: 3F:47:E2:1A:78:C2:FB:C6:E5:4D:6C:50:3D:43:18:90:43:40:EF:DB
+          EXPECTED_UPLOAD_SHA1: 01:BF:7A:44:83:5F:ED:83:52:1B:DD:A8:60:AF:DD:FA:F3:70:D0:36
         run: |
           jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
           ACTUAL_APPLICATION_ID=$(./gradlew -q :app:printReleaseApplicationId)
