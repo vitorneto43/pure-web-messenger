@@ -23,6 +23,7 @@ export type Database = {
           ended_at: string | null
           id: string
           kind: string
+          seen_at: string | null
           started_at: string | null
           status: string
           updated_at: string
@@ -35,6 +36,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           kind: string
+          seen_at?: string | null
           started_at?: string | null
           status?: string
           updated_at?: string
@@ -47,6 +49,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           kind?: string
+          seen_at?: string | null
           started_at?: string | null
           status?: string
           updated_at?: string
@@ -131,6 +134,8 @@ export type Database = {
           content: string | null
           conversation_id: string
           created_at: string
+          deleted_for: string[]
+          deleted_for_everyone_at: string | null
           edited_at: string | null
           id: string
           sender_id: string
@@ -142,6 +147,8 @@ export type Database = {
           content?: string | null
           conversation_id: string
           created_at?: string
+          deleted_for?: string[]
+          deleted_for_everyone_at?: string | null
           edited_at?: string | null
           id?: string
           sender_id: string
@@ -153,6 +160,8 @@ export type Database = {
           content?: string | null
           conversation_id?: string
           created_at?: string
+          deleted_for?: string[]
+          deleted_for_everyone_at?: string | null
           edited_at?: string | null
           id?: string
           sender_id?: string

@@ -37,6 +37,7 @@ import { sendMessagePush } from "@/lib/push.functions";
 import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
+import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
@@ -54,6 +55,8 @@ interface Message {
   attachment_type: string | null;
   attachment_name: string | null;
   created_at: string;
+  deleted_for_everyone_at: string | null;
+  deleted_for: string[] | null;
 }
 
 interface Profile {
@@ -82,6 +85,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
   const [pixOpen, setPixOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
+  const [actionMsg, setActionMsg] = useState<ActionableMessage | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -199,6 +203,19 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         (payload) => {
           const old = payload.old as Message;
           setMessages((prev) => prev.filter((x) => x.id !== old.id));
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => prev.map((x) => (x.id === m.id ? m : x)));
         }
       )
       .on(
@@ -431,10 +448,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
 
   const filteredMessages = useMemo(() => {
-    if (!searchTerm.trim()) return messages;
+    const myId = user?.id;
+    const visible = messages.filter(
+      (m) => !myId || !(m.deleted_for ?? []).includes(myId)
+    );
+    if (!searchTerm.trim()) return visible;
     const q = searchTerm.toLowerCase();
-    return messages.filter((m) => m.content?.toLowerCase().includes(q));
-  }, [messages, searchTerm]);
+    return visible.filter((m) => m.content?.toLowerCase().includes(q));
+  }, [messages, searchTerm, user?.id]);
 
   if (loading) {
     return (
@@ -578,21 +599,29 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               <div
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  setForwardMsg({
+                  setActionMsg({
+                    id: m.id,
+                    sender_id: m.sender_id,
+                    created_at: m.created_at,
                     content: m.content,
                     attachment_url: m.attachment_url,
                     attachment_type: m.attachment_type,
                     attachment_name: m.attachment_name,
+                    deleted_for_everyone_at: m.deleted_for_everyone_at,
                   });
                 }}
                 onTouchStart={() => {
                   if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
                   longPressTimerRef.current = setTimeout(() => {
-                    setForwardMsg({
+                    setActionMsg({
+                      id: m.id,
+                      sender_id: m.sender_id,
+                      created_at: m.created_at,
                       content: m.content,
                       attachment_url: m.attachment_url,
                       attachment_type: m.attachment_type,
                       attachment_name: m.attachment_name,
+                      deleted_for_everyone_at: m.deleted_for_everyone_at,
                     });
                   }, 500);
                 }}
@@ -618,6 +647,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   <div className="text-[11px] font-semibold text-primary mb-0.5">
                     {sender?.display_name}
                   </div>
+                )}
+                {m.deleted_for_everyone_at ? (
+                  <div className="text-sm italic opacity-70">
+                    Esta mensagem foi apagada
+                  </div>
+                ) : (
+                  <></>
                 )}
                 {m.attachment_url && m.attachment_type?.startsWith("image/") && (
                   <div className="relative group mb-1">
@@ -897,6 +933,21 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         onOpenChange={(v) => !v && setForwardMsg(null)}
         message={forwardMsg}
         excludeConversationId={conversationId}
+      />
+      <MessageActionsDialog
+        open={actionMsg !== null}
+        onOpenChange={(v) => !v && setActionMsg(null)}
+        message={actionMsg}
+        onForward={() => {
+          if (!actionMsg) return;
+          setForwardMsg({
+            content: actionMsg.content,
+            attachment_url: actionMsg.attachment_url,
+            attachment_type: actionMsg.attachment_type,
+            attachment_name: actionMsg.attachment_name,
+          });
+          setActionMsg(null);
+        }}
       />
     </div>
   );

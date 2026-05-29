@@ -45,8 +45,16 @@ export function useAppBadgeSync() {
           .eq("user_id", user.id)
           .is("read_at", null);
 
+        // Chamadas recebidas/perdidas ainda não vistas (callee = eu)
+        const { count: unseenCalls } = await supabase
+          .from("calls")
+          .select("id", { count: "exact", head: true })
+          .eq("callee_id", user.id)
+          .in("status", ["ringing", "missed"])
+          .is("seen_at", null);
+
         if (cancelled) return;
-        setAppBadge(unreadMsgs + (notifUnread ?? 0));
+        setAppBadge(unreadMsgs + (notifUnread ?? 0) + (unseenCalls ?? 0));
       } catch {
         /* ignore */
       }
@@ -65,6 +73,11 @@ export function useAppBadgeSync() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
+        () => recompute(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "calls", filter: `callee_id=eq.${user.id}` },
         () => recompute(),
       )
       .subscribe();
