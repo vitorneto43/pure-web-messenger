@@ -122,14 +122,6 @@ jobs:
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             | grep -E "SHA1|SHA-256|MD5" || true
 
-      - name: Upload generated keystore backup
-        if: hashFiles('android/app/generated-keystore-base64.txt') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: wavechat-upload-keystore-backup
-          path: android/app/generated-keystore-base64.txt
-          retention-days: 90
-
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -157,9 +149,35 @@ jobs:
       - name: Verify AAB signature
         if: github.event.inputs.build_type == 'aab'
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
+          EXPECTED_APPLICATION_ID: com.wavechat.app
+          EXPECTED_UPLOAD_SHA1: 3F:47:E2:1A:78:C2:FB:C6:E5:4D:6C:50:3D:43:18:90:43:40:EF:DB
         run: |
           jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
-          echo "✅ AAB verificado: pacote está assinado"
+          ACTUAL_APPLICATION_ID=$(./gradlew -q :app:printReleaseApplicationId)
+          ACTUAL_SHA1=$(keytool -list -v -keystore app/keystore.jks \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            | awk -F': ' '/SHA1:/{print $2; exit}')
+
+          echo "📋 Package name esperado: $EXPECTED_APPLICATION_ID"
+          echo "📋 Package name configurado: $ACTUAL_APPLICATION_ID"
+          echo "📋 SHA-1 esperado pela Play Console: $EXPECTED_UPLOAD_SHA1"
+          echo "📋 SHA-1 usado para assinar: $ACTUAL_SHA1"
+
+          if [ "$ACTUAL_APPLICATION_ID" != "$EXPECTED_APPLICATION_ID" ]; then
+            echo "❌ Package name incorreto. Não publique este AAB."
+            exit 1
+          fi
+
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_UPLOAD_SHA1" ]; then
+            echo "❌ Assinatura incorreta. Não publique este AAB."
+            exit 1
+          fi
+
+          echo "✅ AAB verificado: package name e assinatura compatíveis com a Play Console"
 
       - name: Upload Release APK
         if: github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == ''
