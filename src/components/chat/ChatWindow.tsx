@@ -55,6 +55,8 @@ interface Message {
   attachment_type: string | null;
   attachment_name: string | null;
   created_at: string;
+  deleted_for_everyone_at: string | null;
+  deleted_for: string[] | null;
 }
 
 interface Profile {
