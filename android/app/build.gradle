@@ -33,10 +33,11 @@ android {
         }
     }
 
-    tasks.register("printReleaseApplicationId") {
-        doLast {
-            println android.defaultConfig.applicationId
-        }
+}
+
+tasks.register("printReleaseApplicationId") {
+    doLast {
+        println android.defaultConfig.applicationId
     }
 }
 
