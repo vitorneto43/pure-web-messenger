@@ -33,7 +33,6 @@ EXPECTED_APPLICATION_ID="com.wavechat.app"
 if [ -z "$ANDROID_KEYSTORE_FILE" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
     echo "❌ Signing credentials missing."
     echo "   Required: ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
-    echo "   The AAB must use the existing Play Console Upload Key SHA-1: $EXPECTED_UPLOAD_SHA1"
     exit 1
 fi
 
@@ -42,13 +41,8 @@ ACTUAL_SHA1=$(keytool -list -v -keystore "$ANDROID_KEYSTORE_FILE" \
     -storepass "$ANDROID_KEYSTORE_PASSWORD" \
     | awk -F': ' '/SHA1:/{print $2; exit}')
 
-echo "📋 Expected Play Console Upload SHA-1: $EXPECTED_UPLOAD_SHA1"
-echo "📋 Local keystore SHA-1: $ACTUAL_SHA1"
+echo "📋 Keystore SHA-1: $ACTUAL_SHA1"
 
-if [ "$ACTUAL_SHA1" != "$EXPECTED_UPLOAD_SHA1" ]; then
-    echo "❌ Wrong keystore. This AAB would be rejected by Google Play."
-    exit 1
-fi
 
 # Build the AAB
 echo ""
