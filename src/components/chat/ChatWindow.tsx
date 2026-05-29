@@ -599,21 +599,29 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               <div
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  setForwardMsg({
+                  setActionMsg({
+                    id: m.id,
+                    sender_id: m.sender_id,
+                    created_at: m.created_at,
                     content: m.content,
                     attachment_url: m.attachment_url,
                     attachment_type: m.attachment_type,
                     attachment_name: m.attachment_name,
+                    deleted_for_everyone_at: m.deleted_for_everyone_at,
                   });
                 }}
                 onTouchStart={() => {
                   if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
                   longPressTimerRef.current = setTimeout(() => {
-                    setForwardMsg({
+                    setActionMsg({
+                      id: m.id,
+                      sender_id: m.sender_id,
+                      created_at: m.created_at,
                       content: m.content,
                       attachment_url: m.attachment_url,
                       attachment_type: m.attachment_type,
                       attachment_name: m.attachment_name,
+                      deleted_for_everyone_at: m.deleted_for_everyone_at,
                     });
                   }, 500);
                 }}
@@ -639,6 +647,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   <div className="text-[11px] font-semibold text-primary mb-0.5">
                     {sender?.display_name}
                   </div>
+                )}
+                {m.deleted_for_everyone_at ? (
+                  <div className="text-sm italic opacity-70">
+                    Esta mensagem foi apagada
+                  </div>
+                ) : (
+                  <></>
                 )}
                 {m.attachment_url && m.attachment_type?.startsWith("image/") && (
                   <div className="relative group mb-1">
