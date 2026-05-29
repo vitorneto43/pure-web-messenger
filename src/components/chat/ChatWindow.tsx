@@ -934,6 +934,21 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         message={forwardMsg}
         excludeConversationId={conversationId}
       />
+      <MessageActionsDialog
+        open={actionMsg !== null}
+        onOpenChange={(v) => !v && setActionMsg(null)}
+        message={actionMsg}
+        onForward={() => {
+          if (!actionMsg) return;
+          setForwardMsg({
+            content: actionMsg.content,
+            attachment_url: actionMsg.attachment_url,
+            attachment_type: actionMsg.attachment_type,
+            attachment_name: actionMsg.attachment_name,
+          });
+          setActionMsg(null);
+        }}
+      />
     </div>
   );
 }
