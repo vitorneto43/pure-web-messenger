@@ -85,6 +85,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
   const [pixOpen, setPixOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
+  const [actionMsg, setActionMsg] = useState<ActionableMessage | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
