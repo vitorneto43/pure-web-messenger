@@ -56,7 +56,7 @@ if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
     echo "✅ AAB build successful!"
     echo "📍 Location: android/app/build/outputs/bundle/release/app-release.aab"
     echo "✅ Package name kept as: $EXPECTED_APPLICATION_ID"
-    echo "✅ Upload Key SHA-1 validated: $EXPECTED_UPLOAD_SHA1"
+    echo "✅ Signed with SHA-1: $ACTUAL_SHA1"
     echo ""
     echo "Next steps:"
     echo "1. Upload to Google Play Console"
