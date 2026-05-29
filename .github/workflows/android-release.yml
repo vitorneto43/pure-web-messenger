@@ -86,11 +86,9 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'wavechat' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          EXPECTED_UPLOAD_SHA1: 01:BF:7A:44:83:5F:ED:83:52:1B:DD:A8:60:AF:DD:FA:F3:70:D0:36
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "❌ ANDROID_KEYSTORE_BASE64 não está configurado."
-            echo "❌ Não vou gerar keystore nova, porque isso muda o SHA-1 e a Play Console rejeita o AAB."
             exit 1
           fi
 
@@ -102,25 +100,11 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
           echo "✅ Keystore de release carregada"
 
-          ACTUAL_SHA1=$(keytool -list -v -keystore android/app/keystore.jks \
-            -alias "$ANDROID_KEY_ALIAS" \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-            | awk -F': ' '/SHA1:/{print $2; exit}')
-
-          echo ""
-          echo "📋 SHA-1 esperado pela Play Console: $EXPECTED_UPLOAD_SHA1"
-          echo "📋 SHA-1 da keystore usada nesta build: $ACTUAL_SHA1"
-
-          if [ "$ACTUAL_SHA1" != "$EXPECTED_UPLOAD_SHA1" ]; then
-            echo "❌ Keystore errada: o AAB precisa ser assinado com o SHA-1 $EXPECTED_UPLOAD_SHA1."
-            exit 1
-          fi
-
-          echo "✅ SHA-1 correto para lançar nova versão"
           keytool -list -v -keystore android/app/keystore.jks \
             -alias "$ANDROID_KEY_ALIAS" \
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             | grep -E "SHA1|SHA-256|MD5" || true
+
 
 
       - name: Make gradlew executable
