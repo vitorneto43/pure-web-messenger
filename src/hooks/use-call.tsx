@@ -657,7 +657,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (isNativeApp()) await endNativeCall(call.id);
     await supabase
       .from("calls")
-      .update({ status: "declined", ended_at: new Date().toISOString() })
+      .update({
+        status: "declined",
+        ended_at: new Date().toISOString(),
+        seen_at: new Date().toISOString(),
+      })
       .eq("id", call.id);
     setIncoming(null);
   }, []);
