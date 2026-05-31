@@ -373,10 +373,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const fetchIce = useServerFn(getIceServers);
+
   const createPeerConnection = useCallback(
     async (kind: Kind, isCaller: boolean) => {
+      // Fetch dynamic TURN credentials (cached 1h), fallback if it fails.
+      let iceServers: RTCIceServer[] = FALLBACK_ICE_SERVERS;
+      try {
+        if (cachedIceServers && cachedIceServers.expiresAt > Date.now()) {
+          iceServers = cachedIceServers.servers;
+        } else {
+          const res = await fetchIce();
+          if (res?.iceServers?.length) {
+            iceServers = res.iceServers;
+            cachedIceServers = { servers: iceServers, expiresAt: Date.now() + 60 * 60 * 1000 };
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch ICE servers, using fallback:", e);
+      }
+
       const pc = new RTCPeerConnection({
-        iceServers: ICE_SERVERS,
+        iceServers,
         iceCandidatePoolSize: 4,
         bundlePolicy: "max-bundle",
         rtcpMuxPolicy: "require",
