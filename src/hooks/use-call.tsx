@@ -67,21 +67,18 @@ interface CallContextValue {
 
 const CallContext = createContext<CallContextValue | null>(null);
 
-// Enhanced ICE servers — STUN + free public TURN (openrelay.metered.ca).
-// TURN is REQUIRED for calls between users on symmetric NATs (most mobile
-// carriers in Brazil). Without TURN, the WebRTC PeerConnection silently
-// stalls in "checking"/"disconnected" and audio never flows.
-const ICE_SERVERS: RTCIceServer[] = [
+// Fallback ICE servers used if the Metered TURN fetch fails.
+// On call setup we fetch fresh dynamic credentials from Metered (see
+// getIceServers serverFn) and cache them for 1h.
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:stun2.l.google.com:19302" },
-  { urls: "stun:stun3.l.google.com:19302" },
-  { urls: "stun:stun4.l.google.com:19302" },
-  // Free public TURN — Open Relay Project (metered.ca)
   { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
   { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
   { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
 ];
+
+let cachedIceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
 
 // Call timeout constants
 const CALL_RING_TIMEOUT = 45_000; // 45 seconds
