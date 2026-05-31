@@ -24,6 +24,7 @@ import {
 } from "@/integrations/native-call";
 import { saveNativeToken, sendNativeCallCancelPush, sendNativeCallPush } from "@/lib/native-push.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { getIceServers } from "@/lib/ice-servers.functions";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
