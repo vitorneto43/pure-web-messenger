@@ -24,6 +24,7 @@ import {
 } from "@/integrations/native-call";
 import { saveNativeToken, sendNativeCallCancelPush, sendNativeCallPush } from "@/lib/native-push.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { getIceServers } from "@/lib/ice-servers.functions";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
@@ -66,21 +67,18 @@ interface CallContextValue {
 
 const CallContext = createContext<CallContextValue | null>(null);
 
-// Enhanced ICE servers — STUN + free public TURN (openrelay.metered.ca).
-// TURN is REQUIRED for calls between users on symmetric NATs (most mobile
-// carriers in Brazil). Without TURN, the WebRTC PeerConnection silently
-// stalls in "checking"/"disconnected" and audio never flows.
-const ICE_SERVERS: RTCIceServer[] = [
+// Fallback ICE servers used if the Metered TURN fetch fails.
+// On call setup we fetch fresh dynamic credentials from Metered (see
+// getIceServers serverFn) and cache them for 1h.
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:stun2.l.google.com:19302" },
-  { urls: "stun:stun3.l.google.com:19302" },
-  { urls: "stun:stun4.l.google.com:19302" },
-  // Free public TURN — Open Relay Project (metered.ca)
   { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
   { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
   { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
 ];
+
+let cachedIceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
 
 // Call timeout constants
 const CALL_RING_TIMEOUT = 45_000; // 45 seconds
@@ -375,10 +373,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const fetchIce = useServerFn(getIceServers);
+
   const createPeerConnection = useCallback(
     async (kind: Kind, isCaller: boolean) => {
+      // Fetch dynamic TURN credentials (cached 1h), fallback if it fails.
+      let iceServers: RTCIceServer[] = FALLBACK_ICE_SERVERS;
+      try {
+        if (cachedIceServers && cachedIceServers.expiresAt > Date.now()) {
+          iceServers = cachedIceServers.servers;
+        } else {
+          const res = await fetchIce();
+          if (res?.iceServers?.length) {
+            iceServers = res.iceServers;
+            cachedIceServers = { servers: iceServers, expiresAt: Date.now() + 60 * 60 * 1000 };
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch ICE servers, using fallback:", e);
+      }
+
       const pc = new RTCPeerConnection({
-        iceServers: ICE_SERVERS,
+        iceServers,
         iceCandidatePoolSize: 4,
         bundlePolicy: "max-bundle",
         rtcpMuxPolicy: "require",
