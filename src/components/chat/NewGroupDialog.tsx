@@ -57,7 +57,7 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
       if (error) throw error;
       const members = [
         { conversation_id: conv.id, user_id: user.id, role: "admin" },
-        ...selected.map((s) => ({ conversation_id: conv.id, user_id: s.id })),
+        ...selected.map((s) => ({ conversation_id: conv.id, user_id: s.id, role: "member" })),
       ];
       const { error: memErr } = await supabase.from("conversation_members").insert(members);
       if (memErr) throw memErr;
