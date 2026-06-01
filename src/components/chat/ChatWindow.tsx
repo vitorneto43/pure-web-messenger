@@ -14,6 +14,7 @@ import {
   Search,
   Send,
   Smile,
+  Sparkles,
   Trash2,
   Video,
   X,
@@ -39,6 +40,14 @@ import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
 import { GroupSettingsDialog } from "./GroupSettingsDialog";
+import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
+
+interface AIRequest {
+  action: AIAction;
+  text?: string;
+  context?: string;
+  tone?: "neutral" | "formal" | "friendly" | "short" | "funny";
+}
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
@@ -88,6 +97,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [pixOpen, setPixOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
   const [actionMsg, setActionMsg] = useState<ActionableMessage | null>(null);
+  const [aiRequest, setAiRequest] = useState<AIRequest | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -459,6 +469,20 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     return visible.filter((m) => m.content?.toLowerCase().includes(q));
   }, [messages, searchTerm, user?.id]);
 
+  function buildConversationContext(lastN = 15): string {
+    const recent = messages.slice(-lastN);
+    return recent
+      .filter((m) => m.content && !m.deleted_for_everyone_at && !m.content.startsWith("[["))
+      .map((m) => {
+        const who =
+          m.sender_id === user?.id
+            ? "Eu"
+            : members.find((p) => p.id === m.sender_id)?.display_name ?? "Contato";
+        return `${who}: ${m.content}`;
+      })
+      .join("\n");
+  }
+
   if (loading) {
     return (
       <div className="h-full grid place-items-center">
@@ -466,6 +490,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
       </div>
     );
   }
+
 
   return (
     <div className="h-full flex flex-col">
@@ -894,6 +919,104 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               }}
             />
 
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="rounded-full shrink-0 text-primary"
+                  title="Assistente de IA"
+                >
+                  <Sparkles className="size-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-56 p-1">
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "neutral" })
+                  }
+                >
+                  ✨ Melhorar meu texto
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "formal" })
+                  }
+                >
+                  👔 Deixar mais formal
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "friendly" })
+                  }
+                >
+                  😊 Deixar mais amigável
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "short" })
+                  }
+                >
+                  ✂️ Deixar mais curto
+                </button>
+                <div className="h-px bg-border my-1" />
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm"
+                  onClick={() => {
+                    const lastIncoming = [...messages]
+                      .reverse()
+                      .find(
+                        (m) =>
+                          m.sender_id !== user?.id &&
+                          m.content &&
+                          !m.deleted_for_everyone_at &&
+                          !m.content.startsWith("[["),
+                      );
+                    if (!lastIncoming?.content) {
+                      toast.info("Nenhuma mensagem recebida para responder");
+                      return;
+                    }
+                    setAiRequest({
+                      action: "suggest_reply",
+                      text: lastIncoming.content,
+                      context: buildConversationContext(),
+                    });
+                  }}
+                >
+                  💬 Sugerir resposta
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={messages.length < 2}
+                  onClick={() =>
+                    setAiRequest({
+                      action: "summarize",
+                      context: buildConversationContext(40),
+                    })
+                  }
+                >
+                  📝 Resumir conversa
+                </button>
+              </PopoverContent>
+            </Popover>
+
+
+
             <Input
               value={text}
               onChange={(e) => {
@@ -958,7 +1081,40 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           });
           setActionMsg(null);
         }}
+        onTranslate={(t) => {
+          setActionMsg(null);
+          setAiRequest({ action: "translate", text: t });
+        }}
+        onSuggestReply={(t) => {
+          setActionMsg(null);
+          setAiRequest({
+            action: "suggest_reply",
+            text: t,
+            context: buildConversationContext(),
+          });
+        }}
       />
+      {aiRequest && (
+        <AIAssistantDialog
+          open={aiRequest !== null}
+          onOpenChange={(v) => !v && setAiRequest(null)}
+          action={aiRequest.action}
+          text={aiRequest.text}
+          context={aiRequest.context}
+          tone={aiRequest.tone}
+          onUseInComposer={
+            aiRequest.action === "summarize"
+              ? undefined
+              : (r) => setText(r)
+          }
+          onSendDirect={
+            aiRequest.action === "summarize"
+              ? undefined
+              : (r) => sendMessage(r)
+          }
+        />
+      )}
+
       {conv?.is_group && (
         <GroupSettingsDialog
           conversationId={conversationId}
