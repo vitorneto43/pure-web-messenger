@@ -14,6 +14,7 @@ import {
   Search,
   Send,
   Smile,
+  Sparkles,
   Trash2,
   Video,
   X,
@@ -39,6 +40,14 @@ import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
 import { GroupSettingsDialog } from "./GroupSettingsDialog";
+import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
+
+interface AIRequest {
+  action: AIAction;
+  text?: string;
+  context?: string;
+  tone?: "neutral" | "formal" | "friendly" | "short" | "funny";
+}
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
