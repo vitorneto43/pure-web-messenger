@@ -4,6 +4,7 @@ import { Eye, EyeOff, MessageCircle, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -239,6 +240,39 @@ function AuthPage() {
               {mode === "forgot" && "Enviar link"}
             </Button>
           </form>
+
+          {mode !== "forgot" && (
+            <>
+              <div className="my-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">ou</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const result = await lovable.auth.signInWithOAuth("google", {
+                      redirect_uri: `${window.location.origin}/chat`,
+                    });
+                    if (result.error) throw result.error;
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Falha no login com Google");
+                    setBusy(false);
+                  }
+                }}
+              >
+                <svg className="size-4 mr-2" viewBox="0 0 24 24" aria-hidden>
+                  <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.32 0-6.02-2.74-6.02-6.12S8.68 5.96 12 5.96c1.88 0 3.14.8 3.86 1.48l2.64-2.54C16.86 3.36 14.66 2.4 12 2.4 6.76 2.4 2.52 6.64 2.52 11.88S6.76 21.36 12 21.36c6.92 0 11.5-4.86 11.5-11.7 0-.78-.08-1.38-.2-1.96H12z"/>
+                </svg>
+                Continuar com Google
+              </Button>
+            </>
+          )}
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "login" ? (
