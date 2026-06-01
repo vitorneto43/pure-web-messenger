@@ -38,6 +38,7 @@ import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
+import { GroupSettingsDialog } from "./GroupSettingsDialog";
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
@@ -80,6 +81,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
@@ -475,14 +477,22 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         >
           <ArrowLeft className="size-5" />
         </button>
-        <Avatar className="size-10">
-          <AvatarImage src={headerAvatar ?? undefined} />
-          <AvatarFallback>{headerTitle?.[0]?.toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{headerTitle}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{headerSub}</div>
-        </div>
+        <button
+          type="button"
+          onClick={() => conv?.is_group && setGroupSettingsOpen(true)}
+          disabled={!conv?.is_group}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left -mx-1 px-1 rounded-lg hover:bg-accent/20 disabled:hover:bg-transparent disabled:cursor-default transition-colors"
+          title={conv?.is_group ? "Ver detalhes do grupo" : undefined}
+        >
+          <Avatar className="size-10">
+            <AvatarImage src={headerAvatar ?? undefined} />
+            <AvatarFallback>{headerTitle?.[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm truncate">{headerTitle}</div>
+            <div className="text-[11px] text-muted-foreground truncate">{headerSub}</div>
+          </div>
+        </button>
         {!conv?.is_group && otherUser && (
           <>
             <Button
@@ -949,6 +959,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           setActionMsg(null);
         }}
       />
+      {conv?.is_group && (
+        <GroupSettingsDialog
+          conversationId={conversationId}
+          open={groupSettingsOpen}
+          onOpenChange={setGroupSettingsOpen}
+          groupName={conv.name ?? "Grupo"}
+        />
+      )}
     </div>
   );
 }

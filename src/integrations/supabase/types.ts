@@ -514,6 +514,10 @@ export type Database = {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
+      is_group_admin: {
+        Args: { _conv_id: string; _user_id: string }
+        Returns: boolean
+      }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
       search_users: {
         Args: { q: string }
