@@ -919,6 +919,104 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               }}
             />
 
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="rounded-full shrink-0 text-primary"
+                  title="Assistente de IA"
+                >
+                  <Sparkles className="size-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-56 p-1">
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "neutral" })
+                  }
+                >
+                  ✨ Melhorar meu texto
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "formal" })
+                  }
+                >
+                  👔 Deixar mais formal
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "friendly" })
+                  }
+                >
+                  😊 Deixar mais amigável
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={!text.trim()}
+                  onClick={() =>
+                    setAiRequest({ action: "improve", text, tone: "short" })
+                  }
+                >
+                  ✂️ Deixar mais curto
+                </button>
+                <div className="h-px bg-border my-1" />
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm"
+                  onClick={() => {
+                    const lastIncoming = [...messages]
+                      .reverse()
+                      .find(
+                        (m) =>
+                          m.sender_id !== user?.id &&
+                          m.content &&
+                          !m.deleted_for_everyone_at &&
+                          !m.content.startsWith("[["),
+                      );
+                    if (!lastIncoming?.content) {
+                      toast.info("Nenhuma mensagem recebida para responder");
+                      return;
+                    }
+                    setAiRequest({
+                      action: "suggest_reply",
+                      text: lastIncoming.content,
+                      context: buildConversationContext(),
+                    });
+                  }}
+                >
+                  💬 Sugerir resposta
+                </button>
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent/40 text-sm disabled:opacity-50"
+                  disabled={messages.length < 2}
+                  onClick={() =>
+                    setAiRequest({
+                      action: "summarize",
+                      context: buildConversationContext(40),
+                    })
+                  }
+                >
+                  📝 Resumir conversa
+                </button>
+              </PopoverContent>
+            </Popover>
+
+
+
             <Input
               value={text}
               onChange={(e) => {
