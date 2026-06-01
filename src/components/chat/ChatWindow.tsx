@@ -1081,7 +1081,40 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           });
           setActionMsg(null);
         }}
+        onTranslate={(t) => {
+          setActionMsg(null);
+          setAiRequest({ action: "translate", text: t });
+        }}
+        onSuggestReply={(t) => {
+          setActionMsg(null);
+          setAiRequest({
+            action: "suggest_reply",
+            text: t,
+            context: buildConversationContext(),
+          });
+        }}
       />
+      {aiRequest && (
+        <AIAssistantDialog
+          open={aiRequest !== null}
+          onOpenChange={(v) => !v && setAiRequest(null)}
+          action={aiRequest.action}
+          text={aiRequest.text}
+          context={aiRequest.context}
+          tone={aiRequest.tone}
+          onUseInComposer={
+            aiRequest.action === "summarize"
+              ? undefined
+              : (r) => setText(r)
+          }
+          onSendDirect={
+            aiRequest.action === "summarize"
+              ? undefined
+              : (r) => sendMessage(r)
+          }
+        />
+      )}
+
       {conv?.is_group && (
         <GroupSettingsDialog
           conversationId={conversationId}
