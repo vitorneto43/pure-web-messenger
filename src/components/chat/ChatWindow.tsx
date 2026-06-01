@@ -38,6 +38,7 @@ import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
+import { GroupSettingsDialog } from "./GroupSettingsDialog";
 
 const EMOJIS = [
   "😀","😂","🤣","😊","😍","😘","😎","🤔","🙃","😴",
