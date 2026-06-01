@@ -469,6 +469,20 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     return visible.filter((m) => m.content?.toLowerCase().includes(q));
   }, [messages, searchTerm, user?.id]);
 
+  function buildConversationContext(lastN = 15): string {
+    const recent = messages.slice(-lastN);
+    return recent
+      .filter((m) => m.content && !m.deleted_for_everyone_at && !m.content.startsWith("[["))
+      .map((m) => {
+        const who =
+          m.sender_id === user?.id
+            ? "Eu"
+            : members.find((p) => p.id === m.sender_id)?.display_name ?? "Contato";
+        return `${who}: ${m.content}`;
+      })
+      .join("\n");
+  }
+
   if (loading) {
     return (
       <div className="h-full grid place-items-center">
@@ -476,6 +490,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
       </div>
     );
   }
+
 
   return (
     <div className="h-full flex flex-col">
