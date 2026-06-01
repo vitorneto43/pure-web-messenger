@@ -81,6 +81,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
