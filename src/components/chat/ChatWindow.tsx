@@ -959,6 +959,14 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           setActionMsg(null);
         }}
       />
+      {conv?.is_group && (
+        <GroupSettingsDialog
+          conversationId={conversationId}
+          open={groupSettingsOpen}
+          onOpenChange={setGroupSettingsOpen}
+          groupName={conv.name ?? "Grupo"}
+        />
+      )}
     </div>
   );
 }
