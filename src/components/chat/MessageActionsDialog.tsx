@@ -1,4 +1,4 @@
-import { Forward, Trash2, Users } from "lucide-react";
+import { Forward, Languages, MessageSquareReply, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,20 +29,29 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   message: ActionableMessage | null;
   onForward: () => void;
+  onTranslate?: (text: string) => void;
+  onSuggestReply?: (text: string) => void;
 }
 
-export function MessageActionsDialog({ open, onOpenChange, message, onForward }: Props) {
+export function MessageActionsDialog({
+  open,
+  onOpenChange,
+  message,
+  onForward,
+  onTranslate,
+  onSuggestReply,
+}: Props) {
   const { user } = useAuth();
   if (!message || !user) return null;
 
   const isMine = message.sender_id === user.id;
   const isAlreadyDeletedForAll = !!message.deleted_for_everyone_at;
+  const hasText = !!message.content && !message.content.startsWith("[[");
   const withinWindow =
     Date.now() - new Date(message.created_at).getTime() < DELETE_FOR_EVERYONE_WINDOW_MS;
 
   async function deleteForMe() {
     try {
-      // Atomic append usando array_append via rpc-like: lemos depois atualizamos.
       const { data: row, error: readErr } = await supabase
         .from("messages")
         .select("deleted_for")
@@ -91,6 +100,24 @@ export function MessageActionsDialog({ open, onOpenChange, message, onForward }:
           <DialogTitle>Mensagem</DialogTitle>
         </DialogHeader>
         <div className="grid gap-2 pt-2">
+          {!isAlreadyDeletedForAll && hasText && onTranslate && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12"
+              onClick={() => onTranslate(message!.content!)}
+            >
+              <Languages className="size-4 mr-3 text-primary" /> Traduzir com IA
+            </Button>
+          )}
+          {!isAlreadyDeletedForAll && hasText && !isMine && onSuggestReply && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12"
+              onClick={() => onSuggestReply(message!.content!)}
+            >
+              <MessageSquareReply className="size-4 mr-3 text-primary" /> Responder com IA
+            </Button>
+          )}
           {!isAlreadyDeletedForAll && (
             <Button variant="ghost" className="justify-start h-12" onClick={onForward}>
               <Forward className="size-4 mr-3" /> Encaminhar
