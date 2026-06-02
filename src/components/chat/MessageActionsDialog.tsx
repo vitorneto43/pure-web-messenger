@@ -124,6 +124,23 @@ export function MessageActionsDialog({
               <Forward className="size-4 mr-3" /> Encaminhar
             </Button>
           )}
+          {!isAlreadyDeletedForAll && (message!.content || message!.attachment_url) && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12"
+              onClick={async () => {
+                await shareMessageExternally({
+                  content: message!.content,
+                  attachment_url: message!.attachment_url,
+                  attachment_type: message!.attachment_type,
+                  attachment_name: message!.attachment_name,
+                });
+                onOpenChange(false);
+              }}
+            >
+              <Share2 className="size-4 mr-3 text-primary" /> Compartilhar fora do WaveChat
+            </Button>
+          )}
           <Button variant="ghost" className="justify-start h-12" onClick={deleteForMe}>
             <Trash2 className="size-4 mr-3" /> Apagar para mim
           </Button>
