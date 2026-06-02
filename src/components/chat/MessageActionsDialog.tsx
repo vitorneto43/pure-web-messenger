@@ -1,4 +1,4 @@
-import { Forward, Languages, MessageSquareReply, Trash2, Users } from "lucide-react";
+import { Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { shareMessageExternally } from "@/lib/share-message";
 
 export interface ActionableMessage {
   id: string;
@@ -121,6 +122,23 @@ export function MessageActionsDialog({
           {!isAlreadyDeletedForAll && (
             <Button variant="ghost" className="justify-start h-12" onClick={onForward}>
               <Forward className="size-4 mr-3" /> Encaminhar
+            </Button>
+          )}
+          {!isAlreadyDeletedForAll && (message!.content || message!.attachment_url) && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12"
+              onClick={async () => {
+                await shareMessageExternally({
+                  content: message!.content,
+                  attachment_url: message!.attachment_url,
+                  attachment_type: message!.attachment_type,
+                  attachment_name: message!.attachment_name,
+                });
+                onOpenChange(false);
+              }}
+            >
+              <Share2 className="size-4 mr-3 text-primary" /> Compartilhar fora do WaveChat
             </Button>
           )}
           <Button variant="ghost" className="justify-start h-12" onClick={deleteForMe}>
