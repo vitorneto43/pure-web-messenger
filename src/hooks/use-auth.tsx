@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .update({ last_seen: new Date().toISOString() })
         .eq("id", session.user.id);
     ping();
+    void recordDeviceInfo(session.user.id);
     const id = setInterval(ping, 60_000);
     return () => clearInterval(id);
   }, [session?.user?.id]);
