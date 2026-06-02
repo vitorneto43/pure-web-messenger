@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { recordDeviceInfo } from "@/lib/device-tracking";
 
 interface AuthContextValue {
   session: Session | null;
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .update({ last_seen: new Date().toISOString() })
         .eq("id", session.user.id);
     ping();
+    void recordDeviceInfo(session.user.id);
     const id = setInterval(ping, 60_000);
     return () => clearInterval(id);
   }, [session?.user?.id]);
