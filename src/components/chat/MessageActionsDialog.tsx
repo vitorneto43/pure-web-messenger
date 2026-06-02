@@ -1,4 +1,4 @@
-import { Forward, Languages, MessageSquareReply, Trash2, Users } from "lucide-react";
+import { Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { shareMessageExternally } from "@/lib/share-message";
 
 export interface ActionableMessage {
   id: string;
