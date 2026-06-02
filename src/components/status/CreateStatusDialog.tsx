@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Loader2, ImagePlus, Type, Video } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const BG_OPTIONS = [
