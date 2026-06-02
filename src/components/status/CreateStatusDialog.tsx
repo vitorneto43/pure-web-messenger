@@ -111,6 +111,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
+          is_official: isAdmin && isOfficial,
         });
         if (error) throw error;
       }
