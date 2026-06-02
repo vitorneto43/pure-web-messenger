@@ -68,7 +68,7 @@ async function logAdmin(
           return null;
         }
       })(),
-      metadata,
+      metadata: metadata as never,
     });
   } catch (e) {
     console.error("logAdmin failed", e);
