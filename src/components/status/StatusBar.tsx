@@ -15,6 +15,7 @@ export interface StatusRow {
   media_url: string | null;
   caption: string | null;
   background: string | null;
+  is_official: boolean | null;
   created_at: string;
   expires_at: string;
 }
@@ -23,6 +24,7 @@ interface UserGroup {
   user: { id: string; display_name: string; avatar_url: string | null };
   statuses: StatusRow[];
   hasUnseen: boolean;
+  isOfficial: boolean;
 }
 
 export function StatusBar() {
