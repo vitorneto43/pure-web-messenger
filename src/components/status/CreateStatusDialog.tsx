@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Loader2, ImagePlus, Type, Video } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const BG_OPTIONS = [
@@ -38,7 +39,20 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isOfficial, setIsOfficial] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user?.id]);
 
   function reset() {
     setText("");
@@ -69,6 +83,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind: "text",
           content: text.trim().slice(0, 500),
           background: bg,
+          is_official: isAdmin && isOfficial,
         });
         if (error) throw error;
       } else {
@@ -96,6 +111,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
+          is_official: isAdmin && isOfficial,
         });
         if (error) throw error;
       }
@@ -206,9 +222,22 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </TabsContent>
         </Tabs>
 
+        {isAdmin && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <BadgeCheck className="size-4 text-primary" />
+              <div>
+                <p className="font-medium leading-tight">Status oficial WaveChat</p>
+                <p className="text-[11px] text-muted-foreground">Visível para todos os usuários</p>
+              </div>
+            </div>
+            <Switch checked={isOfficial} onCheckedChange={setIsOfficial} />
+          </div>
+        )}
+
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
-          Publicar status
+          {isAdmin && isOfficial ? "Publicar status oficial" : "Publicar status"}
         </Button>
       </DialogContent>
     </Dialog>

@@ -15,6 +15,7 @@ export interface StatusRow {
   media_url: string | null;
   caption: string | null;
   background: string | null;
+  is_official: boolean | null;
   created_at: string;
   expires_at: string;
 }
@@ -23,6 +24,7 @@ interface UserGroup {
   user: { id: string; display_name: string; avatar_url: string | null };
   statuses: StatusRow[];
   hasUnseen: boolean;
+  isOfficial: boolean;
 }
 
 export function StatusBar() {
@@ -82,9 +84,14 @@ export function StatusBar() {
         user: prof,
         statuses: list,
         hasUnseen: list.some((s) => !seenSet.has(s.id)),
+        isOfficial: list.some((s) => s.is_official === true),
       });
     }
-    grouped.sort((a, b) => (a.hasUnseen === b.hasUnseen ? 0 : a.hasUnseen ? -1 : 1));
+    grouped.sort((a, b) => {
+      if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
+      if (a.hasUnseen !== b.hasUnseen) return a.hasUnseen ? -1 : 1;
+      return 0;
+    });
     setGroups(grouped);
     setLoading(false);
   }
@@ -153,17 +160,28 @@ export function StatusBar() {
             onClick={() => setViewing({ statuses: g.statuses, index: 0 })}
             className="flex flex-col items-center gap-1 shrink-0"
           >
-            <Avatar
-              className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${
-                g.hasUnseen ? "ring-primary" : "ring-muted"
-              }`}
-            >
-              <AvatarImage src={g.user.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-secondary text-sm">
-                {g.user.display_name[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[10px] max-w-[64px] truncate">{g.user.display_name}</span>
+            <div className="relative">
+              <Avatar
+                className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${
+                  g.isOfficial ? "ring-sky-500" : g.hasUnseen ? "ring-primary" : "ring-muted"
+                }`}
+              >
+                <AvatarImage src={g.user.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-secondary text-sm">
+                  {g.user.display_name[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {g.isOfficial && (
+                <span className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full bg-sky-500 text-white grid place-items-center ring-2 ring-sidebar">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-2.5">
+                    <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                  </svg>
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] max-w-[64px] truncate flex items-center gap-0.5 justify-center">
+              {g.user.display_name}
+            </span>
           </button>
         ))}
 
