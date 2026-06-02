@@ -580,6 +580,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          is_official: boolean
           kind: string
           media_url: string | null
           user_id: string
@@ -591,6 +592,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          is_official?: boolean
           kind: string
           media_url?: string | null
           user_id: string
@@ -602,6 +604,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          is_official?: boolean
           kind?: string
           media_url?: string | null
           user_id?: string
