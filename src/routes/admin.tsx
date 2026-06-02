@@ -334,15 +334,15 @@ function UsersTab() {
   );
 }
 
-function TopList({ title, items, icon: Icon }: { title: string; items: { key: string; count: number }[]; icon?: React.ComponentType<{ className?: string }> }) {
+function TopList({ title, items, icon: Icon }: { title: string; items: { name: string; count: number }[]; icon?: React.ComponentType<{ className?: string }> }) {
   return (
     <Card>
       <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2">{Icon && <Icon className="size-4 text-muted-foreground" />}{title}</CardTitle></CardHeader>
       <CardContent className="space-y-1.5 max-h-64 overflow-auto">
         {items.length === 0 && <p className="text-xs text-muted-foreground">Sem dados ainda.</p>}
         {items.map((i) => (
-          <div key={i.key} className="flex items-center justify-between text-sm">
-            <span className="truncate">{i.key}</span>
+          <div key={i.name} className="flex items-center justify-between text-sm">
+            <span className="truncate">{i.name}</span>
             <Badge variant="secondary">{i.count}</Badge>
           </div>
         ))}
