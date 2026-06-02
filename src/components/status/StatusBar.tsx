@@ -84,9 +84,14 @@ export function StatusBar() {
         user: prof,
         statuses: list,
         hasUnseen: list.some((s) => !seenSet.has(s.id)),
+        isOfficial: list.some((s) => s.is_official === true),
       });
     }
-    grouped.sort((a, b) => (a.hasUnseen === b.hasUnseen ? 0 : a.hasUnseen ? -1 : 1));
+    grouped.sort((a, b) => {
+      if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
+      if (a.hasUnseen !== b.hasUnseen) return a.hasUnseen ? -1 : 1;
+      return 0;
+    });
     setGroups(grouped);
     setLoading(false);
   }
