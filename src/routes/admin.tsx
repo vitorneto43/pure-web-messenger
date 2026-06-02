@@ -430,7 +430,7 @@ function CallsTab() {
         <ChartCard title="Status das chamadas">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data.statusCounts} dataKey="count" nameKey="key" innerRadius={50} outerRadius={80}>
+              <Pie data={data.statusCounts} dataKey="count" nameKey="name" innerRadius={50} outerRadius={80}>
                 {data.statusCounts.map((_: any, i: number) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
               <Legend />
