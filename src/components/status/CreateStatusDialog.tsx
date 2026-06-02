@@ -83,6 +83,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind: "text",
           content: text.trim().slice(0, 500),
           background: bg,
+          is_official: isAdmin && isOfficial,
         });
         if (error) throw error;
       } else {
