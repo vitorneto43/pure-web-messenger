@@ -112,16 +112,7 @@ export const setAdminPin = createServerFn({ method: "POST" })
 
     if (existing) {
       if (!data.currentPin) throw new Error("PIN atual obrigatório");
-      const { data: ok } = await supabaseAdmin.rpc("crypt" as never, {} as never).then(() => ({ data: null })).catch(() => ({ data: null }));
-      // Use SQL crypt verification via a raw query
-      const { data: verifyRow, error: verr } = await supabaseAdmin
-        .from("admin_pins")
-        .select("user_id")
-        .eq("user_id", userId)
-        .filter("pin_hash", "eq", await sqlCrypt(data.currentPin, existing.pin_hash))
-        .maybeSingle();
-      void ok;
-      if (verr || !verifyRow) {
+      if (!verifyPin(data.currentPin, existing.pin_hash)) {
         await logAdmin(userId, "pin_change_fail", false);
         throw new Error("PIN atual incorreto");
       }
