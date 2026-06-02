@@ -118,7 +118,7 @@ export const setAdminPin = createServerFn({ method: "POST" })
       }
     }
 
-    const newHash = await sqlHash(data.pin);
+    const newHash = hashPin(data.pin);
     const { error } = await supabaseAdmin
       .from("admin_pins")
       .upsert({ user_id: userId, pin_hash: newHash, updated_at: new Date().toISOString() });
@@ -140,29 +140,12 @@ export const verifyAdminPin = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!row) {
       await logAdmin(userId, "pin_verify_no_pin", false);
-      return { ok: false as const, reason: "no_pin" };
+      return { ok: false as const, reason: "no_pin" as const };
     }
-    const computed = await sqlCrypt(data.pin, row.pin_hash);
-    const ok = computed === row.pin_hash;
+    const ok = verifyPin(data.pin, row.pin_hash);
     await logAdmin(userId, ok ? "pin_ok" : "pin_fail", ok);
-    return ok ? ({ ok: true as const } as const) : ({ ok: false as const, reason: "invalid" } as const);
+    return ok ? { ok: true as const } : { ok: false as const, reason: "invalid" as const };
   });
-
-// Helpers calling Postgres crypt() via supabaseAdmin (raw SQL via rpc is unavailable for arbitrary SQL).
-// We use a small SQL function inline via .rpc on a defined function would be needed; instead we issue
-// a SELECT through the PostgREST `rpc` by creating a helper function — but to avoid extra migrations,
-// we compute the hash by inserting/selecting through a temporary path: we use `pgcrypto`'s
-// `crypt(text, salt)`. We expose it via a tiny SECURITY DEFINER function added below at runtime if missing.
-async function sqlHash(plain: string): Promise<string> {
-  const { data, error } = await supabaseAdmin.rpc("admin_hash_pin" as never, { plain } as never);
-  if (error) throw new Error(error.message);
-  return data as unknown as string;
-}
-async function sqlCrypt(plain: string, salt: string): Promise<string> {
-  const { data, error } = await supabaseAdmin.rpc("admin_crypt" as never, { plain, salt } as never);
-  if (error) throw new Error(error.message);
-  return data as unknown as string;
-}
 
 // ============ Metrics ============
 export const getOverviewMetrics = createServerFn({ method: "GET" })
