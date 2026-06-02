@@ -140,6 +140,21 @@ function AuthPage() {
           <span className="text-xl font-bold tracking-tight">Wavechat</span>
         </div>
 
+        <div className="mb-6 rounded-2xl border border-border overflow-hidden glass shadow-lg">
+          <video
+            src={promoVideo.url}
+            className="w-full h-auto block bg-black"
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls
+          />
+          <p className="px-4 py-3 text-center text-sm font-medium">
+            Convide seus amigos 💬
+          </p>
+        </div>
+
         <div className="glass rounded-2xl border border-border p-6 sm:p-8 shadow-xl">
           <h1 className="text-2xl font-semibold tracking-tight">
             {mode === "login" && "Entrar na sua conta"}
