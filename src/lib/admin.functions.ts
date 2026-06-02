@@ -3,6 +3,26 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getRequest, getRequestHeader } from "@tanstack/react-start/server";
+import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
+
+// PIN hashing via scrypt (Node built-in).
+function hashPin(pin: string): string {
+  const salt = randomBytes(16);
+  const key = scryptSync(pin, salt, 32);
+  return `s1$${salt.toString("hex")}$${key.toString("hex")}`;
+}
+function verifyPin(pin: string, stored: string): boolean {
+  const parts = stored.split("$");
+  if (parts.length !== 3 || parts[0] !== "s1") return false;
+  try {
+    const salt = Buffer.from(parts[1], "hex");
+    const expected = Buffer.from(parts[2], "hex");
+    const actual = scryptSync(pin, salt, expected.length);
+    return actual.length === expected.length && timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
+}
 
 // ============ Helpers ============
 async function assertAdmin(userId: string) {
