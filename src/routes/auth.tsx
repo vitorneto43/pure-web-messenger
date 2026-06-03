@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -44,6 +44,7 @@ function AuthPage() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
+  const [showConfirmEmail, setShowConfirmEmail] = useState(false);
   const [form, setForm] = useState({
     username: "",
     displayName: "",
@@ -97,6 +98,7 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu email para confirmar.");
+        setShowConfirmEmail(true);
         setMode("login");
       } else if (mode === "login") {
         const parsed = loginSchema.safeParse(form);
@@ -151,6 +153,25 @@ function AuthPage() {
             {mode === "signup" && "Sem celular, sem SMS. Só seu email."}
             {mode === "forgot" && "Enviaremos um link para redefinir sua senha."}
           </p>
+
+          {mode === "login" && showConfirmEmail && (
+            <div className="mt-4 rounded-xl border-2 border-yellow-500/50 bg-yellow-500/10 px-4 py-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Mail className="size-5 text-yellow-600" />
+                <span className="font-bold text-yellow-600 text-lg tracking-wide">CONFIRME SEU E-MAIL</span>
+              </div>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                Enviamos um link de confirmação para o seu e-mail. Acesse sua caixa de entrada e clique no link para ativar sua conta.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowConfirmEmail(false)}
+                className="mt-3 text-xs font-medium text-yellow-700 dark:text-yellow-300 hover:underline"
+              >
+                Entendi
+              </button>
+            </div>
+          )}
 
           {mode === "signup" && inviteUsername && (
             <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
