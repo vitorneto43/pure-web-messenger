@@ -204,8 +204,8 @@ function AdminPanel() {
 
       <main className="max-w-7xl mx-auto p-4 md:p-6">
         <Tabs defaultValue="overview" className="w-full">
-          <ScrollArea className="w-full">
-            <TabsList className="w-max">
+          <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin -mx-1 px-1">
+            <TabsList className="w-max flex">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
@@ -217,7 +217,7 @@ function AdminPanel() {
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
-          </ScrollArea>
+          </div>
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
