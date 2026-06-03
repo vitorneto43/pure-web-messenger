@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { z } from "zod";
 import { toast } from "sonner";
