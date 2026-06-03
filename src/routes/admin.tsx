@@ -15,6 +15,7 @@ import {
   getSystemStatus,
   getAdminAccessLogs,
   getUserConfirmationStats,
+  getSignupSources,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -208,6 +209,7 @@ function AdminPanel() {
             <TabsList className="w-max flex">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
+              <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
               <TabsTrigger value="engagement"><MessageSquare className="size-4 mr-1.5" />Engajamento</TabsTrigger>
               <TabsTrigger value="calls"><Phone className="size-4 mr-1.5" />Chamadas</TabsTrigger>
@@ -221,6 +223,7 @@ function AdminPanel() {
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
+          <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
           <TabsContent value="engagement" className="mt-4"><EngagementTab /></TabsContent>
           <TabsContent value="calls" className="mt-4"><CallsTab /></TabsContent>
@@ -382,7 +385,108 @@ function SignupsTab() {
   );
 }
 
-// ============ Users ============
+// ============ Sources / Ad attribution ============
+function SourcesTab() {
+  const fn = useServerFn(getSignupSources);
+  const { data, isLoading } = useFn(() => fn(), ["admin", "sources"], 30000);
+  if (isLoading || !data) return <LoadingBlock />;
+
+  const colors = ["hsl(var(--primary))", "#22c55e", "#f59e0b", "#3b82f6", "#a855f7", "#ef4444", "#14b8a6"];
+  const meta = data.bySource.find((s) => /meta/i.test(s.source))?.count ?? 0;
+  const google = data.bySource.find((s) => /google ads/i.test(s.source))?.count ?? 0;
+  const tiktok = data.bySource.find((s) => /tiktok/i.test(s.source))?.count ?? 0;
+  const direct = data.bySource.find((s) => /direto|desconhecido/i.test(s.source))?.count ?? 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Meta Ads" value={meta} icon={Megaphone} hint="Facebook / Instagram" />
+        <Stat label="Google Ads" value={google} icon={Megaphone} hint="Pesquisa / Display" />
+        <Stat label="TikTok Ads" value={tiktok} icon={Megaphone} />
+        <Stat label="Direto / Sem origem" value={direct} icon={Users} hint="Antes do rastreamento" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ChartCard title="Cadastros por origem">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data.bySource} dataKey="count" nameKey="source" outerRadius={90} label={(e) => `${e.source} (${e.count})`}>
+                {data.bySource.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Top origens (30d)">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.bySource.slice(0, 8)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="source" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Campanhas (origem + utm_campaign)</CardTitle>
+          <CardDescription>Use parâmetros <code>utm_source</code>, <code>utm_medium</code> e <code>utm_campaign</code> nos seus anúncios para ver detalhes aqui.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.byCampaign.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Sem dados de campanhas ainda.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.byCampaign.map((c, i) => (
+                <div key={i} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{c.source}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      campanha: {c.campaign} · meio: {c.medium}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0">{c.count}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Últimos cadastros por origem</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum cadastro ainda.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.recent.map((u) => (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name ?? u.username ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {u.username ? `@${u.username} · ` : ""}{new Date(u.created_at).toLocaleString("pt-BR")}
+                    </p>
+                    {u.signup_campaign && (
+                      <p className="text-[11px] text-muted-foreground truncate">campanha: {u.signup_campaign}</p>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="shrink-0">{u.source}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function UsersTab() {
   const fn = useServerFn(getUserAnalytics);
   const { data, isLoading } = useFn(() => fn(), ["admin", "users"], 60000);

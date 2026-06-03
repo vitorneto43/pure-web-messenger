@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
+import { getSignupAttributionForSignup } from "@/lib/utm-capture";
 
 
 type Mode = "login" | "signup" | "forgot";
@@ -84,6 +85,7 @@ function AuthPage() {
           );
           return;
         }
+        const attribution = getSignupAttributionForSignup();
         const { error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
@@ -93,6 +95,7 @@ function AuthPage() {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
               ...(inviteUsername ? { invite: inviteUsername } : {}),
+              ...attribution,
             },
           },
         });

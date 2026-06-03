@@ -338,6 +338,11 @@ export type Database = {
           last_ip: string | null
           last_seen: string
           region: string | null
+          signup_campaign: string | null
+          signup_landing: string | null
+          signup_medium: string | null
+          signup_referrer: string | null
+          signup_source: string | null
           updated_at: string
           username: string
         }
@@ -355,6 +360,11 @@ export type Database = {
           last_ip?: string | null
           last_seen?: string
           region?: string | null
+          signup_campaign?: string | null
+          signup_landing?: string | null
+          signup_medium?: string | null
+          signup_referrer?: string | null
+          signup_source?: string | null
           updated_at?: string
           username: string
         }
@@ -372,6 +382,11 @@ export type Database = {
           last_ip?: string | null
           last_seen?: string
           region?: string | null
+          signup_campaign?: string | null
+          signup_landing?: string | null
+          signup_medium?: string | null
+          signup_referrer?: string | null
+          signup_source?: string | null
           updated_at?: string
           username?: string
         }
@@ -663,6 +678,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_signup_sources: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }

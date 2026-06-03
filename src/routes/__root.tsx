@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
+import { captureUtmFromUrl } from "@/lib/utm-capture";
 
 
 import appCss from "../styles.css?url";
@@ -136,6 +137,13 @@ function SplashScreenHider() {
   return null;
 }
 
+function UtmCapture() {
+  useEffect(() => {
+    captureUtmFromUrl();
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
@@ -143,6 +151,7 @@ function RootComponent() {
       <AuthProvider>
         <AuthInvalidator />
         <SplashScreenHider />
+        <UtmCapture />
         <Outlet />
         
         <Toaster richColors position="top-right" />
