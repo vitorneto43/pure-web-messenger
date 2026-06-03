@@ -79,7 +79,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind: "text",
           content: text.trim().slice(0, 500),
           background: bg,
-          is_official: isAdmin && isOfficial,
+          is_official: isOfficialAccount && isOfficial,
         });
         if (error) throw error;
       } else {
@@ -107,7 +107,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
-          is_official: isAdmin && isOfficial,
+          is_official: isOfficialAccount && isOfficial,
         });
         if (error) throw error;
       }
@@ -218,7 +218,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </TabsContent>
         </Tabs>
 
-        {isAdmin && (
+        {isOfficialAccount && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
             <div className="flex items-center gap-2 text-sm">
               <BadgeCheck className="size-4 text-primary" />
@@ -233,7 +233,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
-          {isAdmin && isOfficial ? "Publicar status oficial" : "Publicar status"}
+          {isOfficialAccount && isOfficial ? "Publicar status oficial" : "Publicar status"}
         </Button>
       </DialogContent>
     </Dialog>
