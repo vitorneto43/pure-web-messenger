@@ -25,6 +25,7 @@ export interface UserGroup {
   statuses: StatusRow[];
   hasUnseen: boolean;
   isOfficial: boolean;
+  firstUnseenIndex: number;
 }
 
 export function StatusBar() {
@@ -84,6 +85,7 @@ export function StatusBar() {
         statuses: list,
         hasUnseen: list.some((s) => !seenSet.has(s.id)),
         isOfficial: list.some((s) => s.is_official === true),
+        firstUnseenIndex: Math.max(list.findIndex((s) => !seenSet.has(s.id)), 0),
       });
     }
     grouped.sort((a, b) => {
@@ -127,6 +129,7 @@ export function StatusBar() {
             statuses: mine,
             hasUnseen: false,
             isOfficial: mine.some((s) => s.is_official === true),
+            firstUnseenIndex: 0,
           },
         ]
       : []),
@@ -135,7 +138,10 @@ export function StatusBar() {
 
   function openViewer(userId: string, statusIndex = 0) {
     const groupIndex = viewerGroups.findIndex((g) => g.user.id === userId);
-    if (groupIndex >= 0) setViewing({ groups: viewerGroups, groupIndex, statusIndex });
+    if (groupIndex >= 0) {
+      const group = viewerGroups[groupIndex];
+      setViewing({ groups: viewerGroups, groupIndex, statusIndex: statusIndex || group.firstUnseenIndex });
+    }
   }
 
   return (
