@@ -8,6 +8,7 @@ import {
   UsersRound,
   Loader2,
   UserPlus,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -262,6 +263,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
                 <UsersRound className="size-4 mr-2" /> Novo grupo
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/guide">
+                  <HelpCircle className="size-4 mr-2" /> Dúvidas
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout} className="text-destructive">
                 <LogOut className="size-4 mr-2" /> Sair
