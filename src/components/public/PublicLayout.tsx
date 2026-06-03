@@ -62,6 +62,11 @@ export function PublicFooter() {
               </Link>
             </li>
             <li>
+              <Link to="/guide" className="hover:text-foreground">
+                Como funciona
+              </Link>
+            </li>
+            <li>
               <Link to="/privacy" className="hover:text-foreground">
                 Política de Privacidade
               </Link>
