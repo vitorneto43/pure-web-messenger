@@ -44,6 +44,7 @@ function AuthPage() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
+  const [showConfirmEmail, setShowConfirmEmail] = useState(false);
   const [form, setForm] = useState({
     username: "",
     displayName: "",
