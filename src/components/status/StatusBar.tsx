@@ -20,7 +20,7 @@ export interface StatusRow {
   expires_at: string;
 }
 
-interface UserGroup {
+export interface UserGroup {
   user: { id: string; display_name: string; avatar_url: string | null };
   statuses: StatusRow[];
   hasUnseen: boolean;
@@ -33,7 +33,7 @@ export function StatusBar() {
   const [mine, setMine] = useState<StatusRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [viewing, setViewing] = useState<{ statuses: StatusRow[]; index: number } | null>(null);
+  const [viewing, setViewing] = useState<{ groups: UserGroup[]; groupIndex: number; statusIndex: number } | null>(null);
 
   async function load() {
     if (!user) return;
@@ -51,10 +51,9 @@ export function StatusBar() {
     const otherIds = Array.from(new Set(rows.filter((r) => r.user_id !== user.id).map((r) => r.user_id)));
     let profilesMap = new Map<string, any>();
     if (otherIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", otherIds);
+      const { data: profs } = await (supabase as any).rpc("get_status_profile_cards", {
+        _user_ids: otherIds,
+      });
       profilesMap = new Map((profs ?? []).map((p) => [p.id, p]));
     }
 
@@ -116,6 +115,29 @@ export function StatusBar() {
 
   if (!user) return null;
 
+  const viewerGroups: UserGroup[] = [
+    ...(mine.length
+      ? [
+          {
+            user: {
+              id: user.id,
+              display_name: "Meu status",
+              avatar_url: (user.user_metadata as any)?.avatar_url ?? null,
+            },
+            statuses: mine,
+            hasUnseen: false,
+            isOfficial: mine.some((s) => s.is_official === true),
+          },
+        ]
+      : []),
+    ...groups,
+  ];
+
+  function openViewer(userId: string, statusIndex = 0) {
+    const groupIndex = viewerGroups.findIndex((g) => g.user.id === userId);
+    if (groupIndex >= 0) setViewing({ groups: viewerGroups, groupIndex, statusIndex });
+  }
+
   return (
     <div className="border-b border-border px-3 py-3 bg-sidebar">
       <div className="flex items-center justify-between mb-2">
@@ -127,7 +149,7 @@ export function StatusBar() {
       <div className="flex gap-3 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1">
         {/* My status */}
         <button
-          onClick={() => (mine.length ? setViewing({ statuses: mine, index: 0 }) : setCreateOpen(true))}
+          onClick={() => (mine.length ? openViewer(user.id) : setCreateOpen(true))}
           className="flex flex-col items-center gap-1 shrink-0 group"
         >
           <div className="relative">
@@ -157,7 +179,7 @@ export function StatusBar() {
         {groups.map((g) => (
           <button
             key={g.user.id}
-            onClick={() => setViewing({ statuses: g.statuses, index: 0 })}
+            onClick={() => openViewer(g.user.id)}
             className="flex flex-col items-center gap-1 shrink-0"
           >
             <div className="relative">
@@ -195,8 +217,9 @@ export function StatusBar() {
       <CreateStatusDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
       {viewing && (
         <StatusViewer
-          statuses={viewing.statuses}
-          startIndex={viewing.index}
+          groups={viewing.groups}
+          startGroupIndex={viewing.groupIndex}
+          startStatusIndex={viewing.statusIndex}
           onClose={() => {
             setViewing(null);
             load();
