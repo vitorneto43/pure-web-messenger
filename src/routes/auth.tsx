@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, MessageCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,9 +135,7 @@ function AuthPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="size-10 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow-lg">
-            <MessageCircle className="size-5 text-primary-foreground" />
-          </div>
+          <img src={wavechatLogo.url} alt="WaveChat" className="size-10 rounded-xl shadow-lg object-cover" />
           <span className="text-xl font-bold tracking-tight">Wavechat</span>
         </div>
 
