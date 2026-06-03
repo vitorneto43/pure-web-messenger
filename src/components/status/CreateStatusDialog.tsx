@@ -45,6 +45,9 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
   useEffect(() => {
     if (!user) return;
+    if (user.email?.toLowerCase() === "wavechataplicativo@gmail.com") {
+      setIsOfficial(true);
+    }
     supabase
       .from("user_roles")
       .select("role")

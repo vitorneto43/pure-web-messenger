@@ -663,6 +663,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_status_profile_cards: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -676,6 +684,10 @@ export type Database = {
       }
       is_group_admin: {
         Args: { _conv_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_wavechat_official_account: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
