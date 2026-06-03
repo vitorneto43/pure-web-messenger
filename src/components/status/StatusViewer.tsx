@@ -152,13 +152,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       </div>
 
       {/* content */}
-      <div
-        className="flex-1 relative grid place-items-center overflow-hidden"
-        onMouseDown={() => setPaused(true)}
-        onMouseUp={() => setPaused(false)}
-        onTouchStart={() => setPaused(true)}
-        onTouchEnd={() => setPaused(false)}
-      >
+      <div className="flex-1 relative grid place-items-center overflow-hidden select-none">
         {current.kind === "text" && (
           <div
             className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold"
@@ -168,7 +162,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </div>
         )}
         {current.kind === "image" && current.media_url && (
-          <img src={current.media_url} className="max-h-full max-w-full object-contain" alt="" />
+          <img src={current.media_url} className="max-h-full max-w-full object-contain pointer-events-none" alt="" />
         )}
         {current.kind === "video" && current.media_url && (
           <video
@@ -182,30 +176,22 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               if (boostOpen) el.pause();
               else el.play().catch(() => {});
             }}
-            className="max-h-full max-w-full"
+            className="max-h-full max-w-full pointer-events-none"
           />
         )}
         {current.caption && (
-          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm">
+          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm pointer-events-none">
             {current.caption}
           </p>
         )}
 
-        {/* nav zones */}
-        <button
-          onClick={prev}
-          className="absolute left-0 top-0 bottom-0 w-1/4 grid place-items-start pt-20 pl-2 text-white/0 hover:text-white/40"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="size-6" />
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-0 top-0 bottom-0 w-1/4 grid place-items-start pt-20 pr-2 justify-self-end text-white/0 hover:text-white/40"
-          aria-label="Próximo"
-        >
-          <ChevronRight className="size-6 ml-auto" />
-        </button>
+        {/* tap/hold zones — tap navigates, hold pauses (WhatsApp/Instagram behavior) */}
+        <TapZone side="left" onTap={prev} onHoldChange={setPaused} ariaLabel="Anterior">
+          <ChevronLeft className="size-6 text-white/0" />
+        </TapZone>
+        <TapZone side="right" onTap={next} onHoldChange={setPaused} ariaLabel="Próximo">
+          <ChevronRight className="size-6 text-white/0 ml-auto" />
+        </TapZone>
       </div>
 
       {/* footer */}
