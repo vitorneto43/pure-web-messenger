@@ -45,13 +45,11 @@ export function PublicFooter() {
       <div className="max-w-5xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-md bg-gradient-to-br from-primary to-accent grid place-items-center">
-              <MessageCircle className="size-4 text-primary-foreground" />
-            </div>
+            <img src={wavechatLogo.url} alt="WaveChat" className="size-7 rounded-md object-cover" />
             <span className="font-bold">WaveChat</span>
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Plataforma de mensagens, chamadas e Pix direto do navegador. Sem app, sem SMS.
+            Grupos, mensagens, chamadas de áudio e vídeo e IA — tudo em um só lugar.
           </p>
         </div>
 
