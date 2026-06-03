@@ -250,6 +250,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+            <Link to="/guide" title="Dúvidas">
+              <HelpCircle className="size-4" />
+            </Link>
+          </Button>
           <NotificationsBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -263,11 +268,6 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
                 <UsersRound className="size-4 mr-2" /> Novo grupo
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/guide">
-                  <HelpCircle className="size-4 mr-2" /> Dúvidas
-                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout} className="text-destructive">
                 <LogOut className="size-4 mr-2" /> Sair
