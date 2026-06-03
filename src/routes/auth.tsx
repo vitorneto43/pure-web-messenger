@@ -85,6 +85,7 @@ function AuthPage() {
           );
           return;
         }
+        const attribution = getSignupAttributionForSignup();
         const { error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
@@ -94,6 +95,7 @@ function AuthPage() {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
               ...(inviteUsername ? { invite: inviteUsername } : {}),
+              ...attribution,
             },
           },
         });
