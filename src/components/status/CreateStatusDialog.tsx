@@ -39,22 +39,15 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isOfficialAccount, setIsOfficialAccount] = useState(false);
   const [isOfficial, setIsOfficial] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    if (user.email?.toLowerCase() === "wavechataplicativo@gmail.com") {
-      setIsOfficial(true);
-    }
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
+    const official = user.email?.toLowerCase() === "wavechataplicativo@gmail.com";
+    setIsOfficialAccount(official);
+    if (official) setIsOfficial(true);
   }, [user?.id]);
 
   function reset() {
@@ -86,7 +79,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind: "text",
           content: text.trim().slice(0, 500),
           background: bg,
-          is_official: isAdmin && isOfficial,
+          is_official: isOfficialAccount && isOfficial,
         });
         if (error) throw error;
       } else {
@@ -114,7 +107,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
-          is_official: isAdmin && isOfficial,
+          is_official: isOfficialAccount && isOfficial,
         });
         if (error) throw error;
       }
@@ -225,7 +218,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </TabsContent>
         </Tabs>
 
-        {isAdmin && (
+        {isOfficialAccount && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
             <div className="flex items-center gap-2 text-sm">
               <BadgeCheck className="size-4 text-primary" />
@@ -240,7 +233,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
-          {isAdmin && isOfficial ? "Publicar status oficial" : "Publicar status"}
+          {isOfficialAccount && isOfficial ? "Publicar status oficial" : "Publicar status"}
         </Button>
       </DialogContent>
     </Dialog>
