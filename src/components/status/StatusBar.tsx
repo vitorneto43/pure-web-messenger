@@ -54,7 +54,7 @@ export function StatusBar() {
       const { data: profs } = await (supabase as any).rpc("get_status_profile_cards", {
         _user_ids: otherIds,
       });
-      profilesMap = new Map((profs ?? []).map((p) => [p.id, p]));
+      profilesMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
     }
 
     // load my view records to mark unseen

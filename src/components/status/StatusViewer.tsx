@@ -6,40 +6,37 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/format-time";
-import type { StatusRow } from "./StatusBar";
+import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 
 interface Props {
-  statuses: StatusRow[];
-  startIndex: number;
+  groups: UserGroup[];
+  startGroupIndex: number;
+  startStatusIndex: number;
   onClose: () => void;
 }
 
 const DURATION_MS = 6000;
 
-export function StatusViewer({ statuses, startIndex, onClose }: Props) {
+export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClose }: Props) {
   const { user } = useAuth();
-  const [index, setIndex] = useState(startIndex);
+  const [groupIndex, setGroupIndex] = useState(startGroupIndex);
+  const [index, setIndex] = useState(startStatusIndex);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [author, setAuthor] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [boostOpen, setBoostOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number | null>(null);
   const startedRef = useRef<number>(Date.now());
+  const currentGroup = groups[groupIndex];
+  const statuses = currentGroup?.statuses ?? [];
   const current = statuses[index];
   const isOwner = !!user && current?.user_id === user.id;
 
   useEffect(() => {
     let mounted = true;
     if (!current) return;
-    (async () => {
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url")
-        .eq("id", current.user_id)
-        .maybeSingle();
-      if (mounted) setAuthor(p as any);
-    })();
+    setAuthor(currentGroup?.user ?? null);
     // register the view
     supabase.rpc("register_status_view", { _status_id: current.id }).then(({ error }) => {
       if (error) console.warn("register view:", error.message);
@@ -59,7 +56,7 @@ export function StatusViewer({ statuses, startIndex, onClose }: Props) {
     return () => {
       mounted = false;
     };
-  }, [current?.id, user?.id]);
+  }, [current?.id, currentGroup?.user, user?.id]);
 
   // progress timer (skip for video which we let play out)
   useEffect(() => {
@@ -87,11 +84,27 @@ export function StatusViewer({ statuses, startIndex, onClose }: Props) {
   }, [index, paused, boostOpen]);
 
   function next() {
-    if (index >= statuses.length - 1) onClose();
-    else setIndex(index + 1);
+    if (index < statuses.length - 1) {
+      setIndex(index + 1);
+      return;
+    }
+    if (groupIndex < groups.length - 1) {
+      setGroupIndex(groupIndex + 1);
+      setIndex(0);
+      return;
+    }
+    onClose();
   }
   function prev() {
-    if (index > 0) setIndex(index - 1);
+    if (index > 0) {
+      setIndex(index - 1);
+      return;
+    }
+    if (groupIndex > 0) {
+      const previousStatuses = groups[groupIndex - 1]?.statuses ?? [];
+      setGroupIndex(groupIndex - 1);
+      setIndex(Math.max(previousStatuses.length - 1, 0));
+    }
   }
 
   async function remove() {
