@@ -8,6 +8,7 @@ import {
   UsersRound,
   Loader2,
   UserPlus,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
