@@ -17,6 +17,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <Link to="/about" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Sobre
             </Link>
+            <Link to="/guide" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
+              Como funciona
+            </Link>
             <Link to="/support" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Suporte
             </Link>
