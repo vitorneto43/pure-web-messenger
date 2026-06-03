@@ -98,6 +98,7 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu email para confirmar.");
+        setShowConfirmEmail(true);
         setMode("login");
       } else if (mode === "login") {
         const parsed = loginSchema.safeParse(form);
