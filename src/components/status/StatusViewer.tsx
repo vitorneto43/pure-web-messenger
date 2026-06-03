@@ -234,3 +234,66 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     </div>
   );
 }
+
+function TapZone({
+  side,
+  onTap,
+  onHoldChange,
+  ariaLabel,
+  children,
+}: {
+  side: "left" | "right";
+  onTap: () => void;
+  onHoldChange: (paused: boolean) => void;
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heldRef = useRef(false);
+
+  function onPointerDown(e: React.PointerEvent) {
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch {}
+    heldRef.current = false;
+    holdTimer.current = setTimeout(() => {
+      heldRef.current = true;
+      onHoldChange(true);
+    }, 220);
+  }
+  function clearHold() {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  }
+  function onPointerUp() {
+    clearHold();
+    if (heldRef.current) {
+      onHoldChange(false);
+      heldRef.current = false;
+      return;
+    }
+    onTap();
+  }
+  function onPointerCancel() {
+    clearHold();
+    if (heldRef.current) {
+      onHoldChange(false);
+      heldRef.current = false;
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onPointerLeave={onPointerCancel}
+      onContextMenu={(e) => e.preventDefault()}
+      className={`absolute top-0 bottom-0 ${side === "left" ? "left-0" : "right-0"} w-1/3 grid place-items-start pt-20 ${side === "left" ? "pl-2" : "pr-2 justify-self-end"} touch-none`}
+    >
+      {children}
+    </button>
+  );
+}
