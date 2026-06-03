@@ -137,6 +137,13 @@ function SplashScreenHider() {
   return null;
 }
 
+function UtmCapture() {
+  useEffect(() => {
+    captureUtmFromUrl();
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
