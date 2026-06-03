@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, Phone, MessageCircle } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import { Button } from "@/components/ui/button";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
