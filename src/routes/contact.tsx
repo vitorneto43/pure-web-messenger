@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, Phone, MessageCircle } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import { Button } from "@/components/ui/button";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -44,16 +45,14 @@ function ContactPage() {
             icon={<Phone className="size-6" />}
             title="Telefone"
             description="Atendimento de seg. a sex., 9h–18h."
-            value="(81) 92001-6070"
-            href="tel:+5581920016070"
+            value="(81) 92001-3218"
+            href="tel:+5581920013218"
             cta="Ligar agora"
           />
         </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-gradient-to-br from-primary/15 to-accent/10 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
-          <div className="size-14 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-lg">
-            <MessageCircle className="size-7" />
-          </div>
+          <img src={wavechatLogo.url} alt="WaveChat" className="size-14 rounded-2xl shadow-lg object-cover" />
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-xl font-semibold">Contato rápido pelo WhatsApp</h3>
             <p className="text-sm text-muted-foreground mt-1">
@@ -62,7 +61,7 @@ function ContactPage() {
           </div>
           <Button asChild size="lg">
             <a
-              href="https://wa.me/5581920016070"
+              href="https://wa.me/5581920013218"
               target="_blank"
               rel="noopener noreferrer"
             >
