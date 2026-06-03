@@ -223,6 +223,7 @@ function AdminPanel() {
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
+          <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
           <TabsContent value="engagement" className="mt-4"><EngagementTab /></TabsContent>
           <TabsContent value="calls" className="mt-4"><CallsTab /></TabsContent>
