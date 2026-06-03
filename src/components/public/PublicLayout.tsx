@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Mail, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import type { ReactNode } from "react";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -8,9 +9,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       <header className="border-b border-border/60 backdrop-blur-md bg-background/70 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
-              <MessageCircle className="size-4 text-primary-foreground" />
-            </div>
+            <img src={wavechatLogo.url} alt="WaveChat" className="size-8 rounded-lg shadow object-cover" />
             <span className="font-bold tracking-tight">WaveChat</span>
           </Link>
           <nav className="flex items-center gap-1 text-sm">
@@ -46,13 +45,11 @@ export function PublicFooter() {
       <div className="max-w-5xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-sm">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-md bg-gradient-to-br from-primary to-accent grid place-items-center">
-              <MessageCircle className="size-4 text-primary-foreground" />
-            </div>
+            <img src={wavechatLogo.url} alt="WaveChat" className="size-7 rounded-md object-cover" />
             <span className="font-bold">WaveChat</span>
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Plataforma de mensagens, chamadas e Pix direto do navegador. Sem app, sem SMS.
+            Grupos, mensagens, chamadas de áudio e vídeo e IA — tudo em um só lugar.
           </p>
         </div>
 
