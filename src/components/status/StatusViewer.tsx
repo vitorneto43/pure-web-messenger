@@ -81,7 +81,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, paused, boostOpen]);
+  }, [current?.id, index, paused, boostOpen]);
 
   function next() {
     if (index < statuses.length - 1) {
