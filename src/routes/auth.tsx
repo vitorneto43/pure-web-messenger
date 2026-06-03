@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
-import promoVideo from "@/assets/wavechat-promo.mp4.asset.json";
+
 
 type Mode = "login" | "signup" | "forgot";
 
