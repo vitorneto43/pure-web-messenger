@@ -151,6 +151,7 @@ function RootComponent() {
       <AuthProvider>
         <AuthInvalidator />
         <SplashScreenHider />
+        <UtmCapture />
         <Outlet />
         
         <Toaster richColors position="top-right" />
