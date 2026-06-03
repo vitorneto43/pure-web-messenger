@@ -125,8 +125,8 @@ function SupportPage() {
             <ContactCard
               icon={<Phone className="size-5" />}
               title="Telefone / WhatsApp"
-              value="(81) 92001-6070"
-              href="tel:+5581920016070"
+              value="(81) 92001-3218"
+              href="tel:+5581920013218"
             />
             <div className="rounded-2xl border border-border bg-card/60 p-5">
               <h3 className="font-semibold">Antes de abrir um chamado</h3>
