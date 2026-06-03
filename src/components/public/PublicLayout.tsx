@@ -17,6 +17,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <Link to="/about" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Sobre
             </Link>
+            <Link to="/guide" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
+              Como funciona
+            </Link>
             <Link to="/support" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Suporte
             </Link>
@@ -59,6 +62,11 @@ export function PublicFooter() {
             <li>
               <Link to="/about" className="hover:text-foreground">
                 Sobre o WaveChat
+              </Link>
+            </li>
+            <li>
+              <Link to="/guide" className="hover:text-foreground">
+                Como funciona
               </Link>
             </li>
             <li>
