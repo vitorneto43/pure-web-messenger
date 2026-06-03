@@ -471,6 +471,30 @@ export const getUserConfirmationStats = createServerFn({ method: "GET" })
     };
   });
 
+export const getSignupSources = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin.rpc("admin_signup_sources" as never);
+    if (error) throw new Error(error.message);
+    return data as {
+      total: number;
+      bySource: Array<{ source: string; count: number }>;
+      byCampaign: Array<{ source: string; campaign: string; medium: string; count: number }>;
+      recent: Array<{
+        id: string;
+        username: string | null;
+        display_name: string | null;
+        created_at: string;
+        source: string;
+        signup_medium: string | null;
+        signup_campaign: string | null;
+        signup_referrer: string | null;
+      }>;
+      series: Array<{ date: string; source: string; count: number }>;
+    };
+  });
+
 // ============ Utils ============
 function bucketByDay(rows: { [k: string]: unknown }[], days: number, key: string) {
   const map = new Map<string, number>();
