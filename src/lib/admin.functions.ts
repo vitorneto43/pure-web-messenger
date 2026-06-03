@@ -444,6 +444,33 @@ export const getAdminAccessLogs = createServerFn({ method: "GET" })
     return { logs: data ?? [] };
   });
 
+export const getUserConfirmationStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin.rpc("admin_user_confirmation_stats" as never);
+    if (error) throw new Error(error.message);
+    return data as {
+      confirmed: number;
+      unconfirmed: number;
+      unconfirmedList: Array<{
+        id: string;
+        email: string | null;
+        created_at: string;
+        username: string | null;
+        display_name: string | null;
+      }>;
+      confirmedRecent: Array<{
+        id: string;
+        email: string | null;
+        created_at: string;
+        email_confirmed_at: string | null;
+        username: string | null;
+        display_name: string | null;
+      }>;
+    };
+  });
+
 // ============ Utils ============
 function bucketByDay(rows: { [k: string]: unknown }[], days: number, key: string) {
   const map = new Map<string, number>();

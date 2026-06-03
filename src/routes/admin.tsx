@@ -14,6 +14,7 @@ import {
   getShareMetrics,
   getSystemStatus,
   getAdminAccessLogs,
+  getUserConfirmationStats,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -206,6 +207,7 @@ function AdminPanel() {
           <ScrollArea className="w-full">
             <TabsList className="w-max">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
+              <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
               <TabsTrigger value="engagement"><MessageSquare className="size-4 mr-1.5" />Engajamento</TabsTrigger>
               <TabsTrigger value="calls"><Phone className="size-4 mr-1.5" />Chamadas</TabsTrigger>
@@ -218,6 +220,7 @@ function AdminPanel() {
           </ScrollArea>
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
+          <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
           <TabsContent value="engagement" className="mt-4"><EngagementTab /></TabsContent>
           <TabsContent value="calls" className="mt-4"><CallsTab /></TabsContent>
@@ -293,6 +296,88 @@ function Overview() {
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
+    </div>
+  );
+}
+
+// ============ Cadastros (Email confirmation) ============
+function SignupsTab() {
+  const fn = useServerFn(getUserConfirmationStats);
+  const { data, isLoading } = useFn(() => fn(), ["admin", "signups"], 30000);
+  if (isLoading || !data) return <LoadingBlock />;
+  const total = data.confirmed + data.unconfirmed;
+  const pct = total > 0 ? (data.confirmed / total) * 100 : 0;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Total de contas" value={total} icon={Users} />
+        <Stat label="E-mail confirmado" value={data.confirmed} icon={MailCheck} hint={`${pct.toFixed(1)}% finalizaram`} />
+        <Stat label="Pendentes" value={data.unconfirmed} icon={MailWarning} hint="Não confirmaram o e-mail" />
+        <Stat label="Taxa de conclusão" value={`${pct.toFixed(1)}%`} icon={TrendingUp} />
+      </div>
+
+      <Card className="border-yellow-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <MailWarning className="size-4 text-yellow-600" />
+            Cadastros não finalizados ({data.unconfirmedList.length})
+          </CardTitle>
+          <CardDescription>Usuários que ainda não confirmaram o e-mail. Eles não aparecem na busca para iniciar conversas.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.unconfirmedList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum cadastro pendente. 🎉</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.unconfirmedList.map((u) => (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name ?? u.email ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {u.username ? `@${u.username} · ` : ""}{u.email ?? "sem email"}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
+                    <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">Pendente</Badge>
+                    <p className="mt-1">{new Date(u.created_at).toLocaleString("pt-BR")}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-emerald-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <MailCheck className="size-4 text-emerald-600" />
+            Últimos cadastros confirmados
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.confirmedRecent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum cadastro confirmado ainda.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.confirmedRecent.map((u) => (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name ?? u.email ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {u.username ? `@${u.username} · ` : ""}{u.email ?? "sem email"}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
+                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">Confirmado</Badge>
+                    <p className="mt-1">{u.email_confirmed_at ? new Date(u.email_confirmed_at).toLocaleString("pt-BR") : "—"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

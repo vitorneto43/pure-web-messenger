@@ -663,6 +663,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_user_confirmation_stats: { Args: never; Returns: Json }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }
         Returns: {
