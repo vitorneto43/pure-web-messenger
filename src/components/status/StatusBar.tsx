@@ -136,11 +136,11 @@ export function StatusBar() {
     ...groups,
   ];
 
-  function openViewer(userId: string, statusIndex = 0) {
+  function openViewer(userId: string, statusIndex?: number) {
     const groupIndex = viewerGroups.findIndex((g) => g.user.id === userId);
     if (groupIndex >= 0) {
       const group = viewerGroups[groupIndex];
-      setViewing({ groups: viewerGroups, groupIndex, statusIndex: statusIndex || group.firstUnseenIndex });
+      setViewing({ groups: viewerGroups, groupIndex, statusIndex: statusIndex ?? group.firstUnseenIndex });
     }
   }
 
