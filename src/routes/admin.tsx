@@ -300,6 +300,88 @@ function Overview() {
   );
 }
 
+// ============ Cadastros (Email confirmation) ============
+function SignupsTab() {
+  const fn = useServerFn(getUserConfirmationStats);
+  const { data, isLoading } = useFn(() => fn(), ["admin", "signups"], 30000);
+  if (isLoading || !data) return <LoadingBlock />;
+  const total = data.confirmed + data.unconfirmed;
+  const pct = total > 0 ? (data.confirmed / total) * 100 : 0;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Total de contas" value={total} icon={Users} />
+        <Stat label="E-mail confirmado" value={data.confirmed} icon={MailCheck} hint={`${pct.toFixed(1)}% finalizaram`} />
+        <Stat label="Pendentes" value={data.unconfirmed} icon={MailWarning} hint="Não confirmaram o e-mail" />
+        <Stat label="Taxa de conclusão" value={`${pct.toFixed(1)}%`} icon={TrendingUp} />
+      </div>
+
+      <Card className="border-yellow-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <MailWarning className="size-4 text-yellow-600" />
+            Cadastros não finalizados ({data.unconfirmedList.length})
+          </CardTitle>
+          <CardDescription>Usuários que ainda não confirmaram o e-mail. Eles não aparecem na busca para iniciar conversas.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.unconfirmedList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum cadastro pendente. 🎉</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.unconfirmedList.map((u) => (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name ?? u.email ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {u.username ? `@${u.username} · ` : ""}{u.email ?? "sem email"}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
+                    <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">Pendente</Badge>
+                    <p className="mt-1">{new Date(u.created_at).toLocaleString("pt-BR")}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-emerald-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <MailCheck className="size-4 text-emerald-600" />
+            Últimos cadastros confirmados
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.confirmedRecent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum cadastro confirmado ainda.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.confirmedRecent.map((u) => (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name ?? u.email ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {u.username ? `@${u.username} · ` : ""}{u.email ?? "sem email"}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
+                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">Confirmado</Badge>
+                    <p className="mt-1">{u.email_confirmed_at ? new Date(u.email_confirmed_at).toLocaleString("pt-BR") : "—"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ============ Users ============
 function UsersTab() {
   const fn = useServerFn(getUserAnalytics);
