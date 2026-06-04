@@ -221,6 +221,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="system"><Server className="size-4 mr-1.5" />Sistema</TabsTrigger>
               <TabsTrigger value="push"><Bell className="size-4 mr-1.5" />Push</TabsTrigger>
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
+              <TabsTrigger value="admins"><Shield className="size-4 mr-1.5" />Admins</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
