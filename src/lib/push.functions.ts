@@ -258,7 +258,6 @@ export const sendMessagePush = createServerFn({ method: "POST" })
 
     // Fan out to native (Android FCM) tokens as well so closed app receives push.
     try {
-      const { sendNativeMessage } = await import("./native-push.functions");
       await Promise.all(
         recipientIds.map((rid) =>
           sendNativeMessage({
@@ -273,6 +272,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("native message push failed", e);
     }
+
 
     return { sent };
   });
