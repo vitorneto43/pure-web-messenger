@@ -233,6 +233,11 @@ export async function sendNativeMessage(args: {
   title: string;
   body: string;
 }) {
+  // Data-only payload: forces FCM to invoke WaveChatMessagingService even when the
+  // app is in background/closed, which then hands off to Capacitor's
+  // PushNotificationsPlugin to display on the plugin's pre-created channel.
+  // Adding a `notification` field would make Android render it directly using
+  // channel_id "messages", which doesn't exist on already-installed APKs.
   return sendNativePayloadToUser(
     args.recipientId,
     {
@@ -243,7 +248,7 @@ export async function sendNativeMessage(args: {
       timestamp: String(Date.now()),
     },
     "120s",
-    { title: args.title, body: args.body },
+    undefined,
     { senderId: args.senderId, conversationId: args.conversationId, kind: "message" },
   );
 }
