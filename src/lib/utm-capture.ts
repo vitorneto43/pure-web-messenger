@@ -105,6 +105,23 @@ export function readAttribution(): SignupAttribution | null {
   }
 }
 
+/**
+ * Re-captures and persists attribution right before an OAuth redirect.
+ * localStorage survives the round-trip to Google and back, so this guarantees
+ * the data is available when the user returns and SIGNED_IN fires.
+ */
+export function snapshotAttributionForOAuth(provider: string) {
+  if (typeof window === "undefined") return;
+  try {
+    // Ensure latest UTM params (in case user came directly to /auth with utms)
+    captureUtmFromUrl();
+    const attr = readAttribution();
+    console.log("[utm] OAuth snapshot before redirect", { provider, attr });
+  } catch (e) {
+    console.warn("[utm] snapshot failed", e);
+  }
+}
+
 export function getSignupAttributionForSignup() {
   const a = readAttribution();
   if (!a) return { signup_source: "direto" };
