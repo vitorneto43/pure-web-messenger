@@ -298,6 +298,7 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6">
+        <InviteRewardsCard />
         <BoostHistory />
       </div>
 
