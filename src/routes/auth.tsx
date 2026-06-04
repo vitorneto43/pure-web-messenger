@@ -201,6 +201,9 @@ function AuthPage() {
                     autoCapitalize="none"
                     spellCheck={false}
                   />
+                  <p className="text-sm font-semibold text-primary mt-1">
+                    Use apenas letras e números (sem acentos ou símbolos)
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="displayName">Nome de exibição</Label>
