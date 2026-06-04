@@ -99,8 +99,9 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Chamar amigos</DialogTitle>
           <DialogDescription>
-            Quanto mais amigos no WaveChat, melhor a experiência. A cada 3 amigos que entrarem pelo
-            seu convite, você ganha <strong>100 visualizações grátis</strong> para impulsionar status.
+            Quanto mais amigos no WaveChat, melhor a experiência. A recompensa só é liberada quando
+            seus amigos <strong>criarem a conta</strong> pelo seu link — a cada 3 cadastros confirmados,
+            você ganha <strong>100 visualizações grátis</strong> para impulsionar status.
           </DialogDescription>
         </DialogHeader>
 

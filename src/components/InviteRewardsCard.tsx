@@ -64,8 +64,9 @@ export function InviteRewardsCard() {
           <h2 className="text-lg font-semibold">Convide e ganhe</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          A cada <strong>3 amigos</strong> que entrarem com seu convite, você ganha{" "}
-          <strong>100 visualizações grátis</strong> para impulsionar seu status.
+          A cada <strong>3 amigos que criarem conta</strong> pelo seu link, você ganha{" "}
+          <strong>100 visualizações grátis</strong> para impulsionar seu status. O contador só sobe
+          após o cadastro confirmado — convites enviados não contam sozinhos.
         </p>
 
         <div className="grid grid-cols-3 gap-2 mb-4">
