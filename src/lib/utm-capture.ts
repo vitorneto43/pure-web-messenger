@@ -27,7 +27,7 @@ function classify(params: URLSearchParams, referrer: string): string {
   if (msclkid || /bing|microsoft/.test(utm)) return "Microsoft Ads";
   if (utm) return utm;
 
-  if (referrer) {
+  if (referrer && !isOAuthReferrer(referrer)) {
     try {
       const host = new URL(referrer).hostname.toLowerCase();
       if (host.includes("google")) return "Google (orgânico)";
@@ -45,6 +45,27 @@ function classify(params: URLSearchParams, referrer: string): string {
   return "direto";
 }
 
+const OAUTH_REFERRER_HOSTS = [
+  "accounts.google.com",
+  "oauth.lovable.app",
+  "appleid.apple.com",
+  "facebook.com",
+  "login.microsoftonline.com",
+  "github.com",
+  "api.twitter.com",
+  "x.com",
+];
+
+function isOAuthReferrer(referrer: string): boolean {
+  if (!referrer) return false;
+  try {
+    const host = new URL(referrer).hostname.toLowerCase();
+    return OAUTH_REFERRER_HOSTS.some((h) => host === h || host.endsWith("." + h));
+  } catch {
+    return false;
+  }
+}
+
 export function captureUtmFromUrl() {
   if (typeof window === "undefined") return;
   try {
@@ -60,6 +81,10 @@ export function captureUtmFromUrl() {
       params.has("msclkid");
 
     const existing = readAttribution();
+    const fromOAuth = isOAuthReferrer(referrer);
+
+    // Never let an OAuth provider redirect overwrite/create attribution.
+    if (fromOAuth && !hasUtm) return;
 
     // Only overwrite when fresh ad params arrive; keep first-touch otherwise.
     if (!hasUtm && existing) return;
@@ -74,15 +99,19 @@ export function captureUtmFromUrl() {
       return;
     }
 
+    const effectiveReferrer = fromOAuth ? "" : referrer;
     const data: SignupAttribution = {
-      source: classify(params, referrer),
-      medium: params.get("utm_medium") || (hasUtm ? "cpc" : referrer ? "referral" : "direct"),
+      source: classify(params, effectiveReferrer),
+      medium:
+        params.get("utm_medium") ||
+        (hasUtm ? "cpc" : effectiveReferrer ? "referral" : "direct"),
       campaign: params.get("utm_campaign") || undefined,
-      referrer: referrer || undefined,
+      referrer: effectiveReferrer || undefined,
       landing: window.location.pathname + window.location.search,
       ts: Date.now(),
     };
     localStorage.setItem(KEY, JSON.stringify(data));
+
   } catch {
     // ignore
   }
@@ -115,12 +144,25 @@ export function snapshotAttributionForOAuth(provider: string) {
   try {
     // Ensure latest UTM params (in case user came directly to /auth with utms)
     captureUtmFromUrl();
-    const attr = readAttribution();
+    let attr = readAttribution();
+    // Guarantee a baseline so the return trip from the OAuth provider can't
+    // be misclassified as "Google (orgânico)" via document.referrer.
+    if (!attr) {
+      const baseline: SignupAttribution = {
+        source: "direto",
+        medium: "direct",
+        landing: window.location.pathname + window.location.search,
+        ts: Date.now(),
+      };
+      localStorage.setItem(KEY, JSON.stringify(baseline));
+      attr = baseline;
+    }
     console.log("[utm] OAuth snapshot before redirect", { provider, attr });
   } catch (e) {
     console.warn("[utm] snapshot failed", e);
   }
 }
+
 
 export function getSignupAttributionForSignup() {
   const a = readAttribution();
