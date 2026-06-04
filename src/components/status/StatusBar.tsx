@@ -72,6 +72,17 @@ export function StatusBar() {
       seenSet = new Set((views ?? []).map((v) => v.status_id));
     }
 
+    // Fetch which statuses are sponsored (boosted) FOR ME (non-contact owners)
+    let sponsoredSet = new Set<string>();
+    try {
+      const { data: spon } = await (supabase as any).rpc("get_my_sponsored_status_ids");
+      sponsoredSet = new Set(((spon ?? []) as Array<string | { get_my_sponsored_status_ids: string }>).map(
+        (v) => (typeof v === "string" ? v : v.get_my_sponsored_status_ids),
+      ));
+    } catch (e) {
+      console.warn("sponsored fetch failed", e);
+    }
+
     const byUser = new Map<string, StatusRow[]>();
     for (const r of rows) {
       if (r.user_id === user.id) continue;
@@ -82,16 +93,20 @@ export function StatusBar() {
     for (const [uid, list] of byUser) {
       const prof = profilesMap.get(uid);
       if (!prof) continue;
+      const sponsoredIds = list.filter((s) => sponsoredSet.has(s.id)).map((s) => s.id);
       grouped.push({
         user: prof,
         statuses: list,
         hasUnseen: list.some((s) => !seenSet.has(s.id)),
         isOfficial: list.some((s) => s.is_official === true),
+        isSponsored: sponsoredIds.length > 0,
+        sponsoredStatusIds: sponsoredIds,
         firstUnseenIndex: Math.max(list.findIndex((s) => !seenSet.has(s.id)), 0),
       });
     }
     grouped.sort((a, b) => {
       if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
+      if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
       if (a.hasUnseen !== b.hasUnseen) return a.hasUnseen ? -1 : 1;
       return 0;
     });
