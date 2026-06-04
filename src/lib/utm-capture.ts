@@ -144,12 +144,25 @@ export function snapshotAttributionForOAuth(provider: string) {
   try {
     // Ensure latest UTM params (in case user came directly to /auth with utms)
     captureUtmFromUrl();
-    const attr = readAttribution();
+    let attr = readAttribution();
+    // Guarantee a baseline so the return trip from the OAuth provider can't
+    // be misclassified as "Google (orgânico)" via document.referrer.
+    if (!attr) {
+      const baseline: SignupAttribution = {
+        source: "direto",
+        medium: "direct",
+        landing: window.location.pathname + window.location.search,
+        ts: Date.now(),
+      };
+      localStorage.setItem(KEY, JSON.stringify(baseline));
+      attr = baseline;
+    }
     console.log("[utm] OAuth snapshot before redirect", { provider, attr });
   } catch (e) {
     console.warn("[utm] snapshot failed", e);
   }
 }
+
 
 export function getSignupAttributionForSignup() {
   const a = readAttribution();
