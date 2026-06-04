@@ -92,7 +92,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     window.open(url, "_blank", "noopener");
   }
 
-  async function downloadQR() {
+  async function shareQR() {
     if (!qrUrl) {
       toast.error("Aguarde o QR Code carregar");
       return;
@@ -100,60 +100,44 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     void logInviteAction(user?.id, "qr");
 
-    const isCapacitor =
-      typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
-
-    if (isCapacitor) {
-      // No WebView do Capacitor o anchor[download] e o long-press para
-      // salvar imagem ficam bloqueados. Estratégia: 1) tentar share sheet
-      // com arquivo (WhatsApp/Drive/Arquivos salvam direto). 2) Se não
-      // rolar, abrir a imagem no navegador EXTERNO via window.open —
-      // o Capacitor encaminha pro Chrome, onde o usuário usa o menu
-      // "Baixar imagem" do próprio navegador.
-      try {
-        const blob = await fetch(qrUrl).then((r) => r.blob());
-        const file = new File([blob], fileName, { type: "image/png" });
-        const nav = navigator as any;
-        if (nav.share) {
-          try {
-            await nav.share({ files: [file], title: "QR Code WaveChat" });
-            return;
-          } catch (e: any) {
-            if (e?.name === "AbortError") return;
-            // segue pro fallback
-          }
-        }
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, "_blank");
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-        toast.success("Abri no navegador — use o menu para salvar a imagem");
-      } catch {
-        setShowFullQR(true);
-      }
-      return;
-    }
-
-    const blob = await fetch(qrUrl).then((res) => res.blob());
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-
-  async function openQRInBrowser() {
-    if (!qrUrl) return;
     try {
       const blob = await fetch(qrUrl).then((r) => r.blob());
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, "_blank");
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-      setShowFullQR(false);
+      const file = new File([blob], fileName, { type: "image/png" });
+      const nav = navigator as any;
+
+      if (nav.share && nav.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({
+            files: [file],
+            title: "QR Code WaveChat",
+            text: shareText,
+          });
+          return;
+        } catch (e: any) {
+          if (e?.name === "AbortError") return;
+        }
+      }
+
+      // Fallback web: tenta share só com texto/link, senão baixa
+      if (nav.share) {
+        try {
+          await nav.share({ title: "WaveChat", text: shareText, url: link });
+          return;
+        } catch (e: any) {
+          if (e?.name === "AbortError") return;
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch {
-      toast.error("Não foi possível abrir no navegador");
+      toast.error("Não foi possível compartilhar o QR Code");
     }
   }
 
