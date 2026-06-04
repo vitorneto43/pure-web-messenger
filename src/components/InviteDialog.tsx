@@ -27,20 +27,25 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
 
+  const canvasEl = useRef<HTMLCanvasElement | null>(null);
   const [qrReady, setQrReady] = useState(false);
-  const canvasRef = (node: HTMLCanvasElement | null) => {
-    canvasEl.current = node;
-    if (!node || !open) return;
+  const [tab, setTab] = useState("link");
+
+  useEffect(() => {
+    if (!open || tab !== "qr") return;
+    const canvas = canvasEl.current;
+    if (!canvas) return;
     setQrReady(false);
-    QRCode.toCanvas(node, link, {
+    QRCode.toCanvas(canvas, link, {
       width: 260,
       margin: 1,
       color: { dark: "#000000", light: "#ffffff" },
     })
       .then(() => setQrReady(true))
       .catch(() => toast.error("Falha ao gerar QR Code"));
-  };
-  const canvasEl = useRef<HTMLCanvasElement | null>(null);
+  }, [open, tab, link]);
+
+
 
 
   async function copyLink() {
@@ -87,7 +92,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="link" className="mt-2">
+        <Tabs value={tab} onValueChange={setTab} className="mt-2">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="link"><Link2 className="size-4 mr-1.5" /> Link</TabsTrigger>
             <TabsTrigger value="qr"><QrCode className="size-4 mr-1.5" /> QR Code</TabsTrigger>
@@ -117,7 +122,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
           <TabsContent value="qr" className="space-y-3 mt-4">
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-2xl bg-white p-4 shadow-md relative">
-                <canvas ref={canvasRef} className="block" />
+                <canvas ref={canvasEl} className="block" />
                 {!qrReady && (
                   <div className="absolute inset-0 grid place-items-center">
                     <Loader2 className="size-5 animate-spin text-muted-foreground" />
