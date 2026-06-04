@@ -81,6 +81,11 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
+        <!-- Default channel used by FCM when the payload omits one -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="messages" />
+
         <!-- Firebase Messaging Service for call push notifications -->
         <service
             android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
