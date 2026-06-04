@@ -157,6 +157,27 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     loadConversations();
   }, [user?.id]);
 
+  // When the user opens a conversation, immediately clear its unread badge
+  // locally so the number disappears as soon as they tap the message —
+  // don't wait for the background mark-as-read + reload round trip.
+  useEffect(() => {
+    if (!activeConversationId) return;
+    setConversations((prev) => {
+      let changed = false;
+      const next = prev.map((c) => {
+        if (c.id === activeConversationId && c.unread > 0) {
+          changed = true;
+          return { ...c, unread: 0 };
+        }
+        return c;
+      });
+      if (!changed) return prev;
+      const totalUnread = next.reduce((sum, it) => sum + (it.unread ?? 0), 0);
+      setAppBadge(totalUnread);
+      return next;
+    });
+  }, [activeConversationId]);
+
   // Realtime: refresh list on any new message
   useEffect(() => {
     if (!user) return;
