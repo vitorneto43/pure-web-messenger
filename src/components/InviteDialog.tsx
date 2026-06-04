@@ -122,7 +122,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
           <TabsContent value="qr" className="space-y-3 mt-4">
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-2xl bg-white p-4 shadow-md relative">
-                <canvas ref={canvasRef} className="block" />
+                <canvas ref={canvasEl} className="block" />
                 {!qrReady && (
                   <div className="absolute inset-0 grid place-items-center">
                     <Loader2 className="size-5 animate-spin text-muted-foreground" />
