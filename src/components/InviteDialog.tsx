@@ -103,38 +103,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
 
     if (isCapacitor) {
-      // Native app: save the PNG directly to the device's Documents folder
-      // using @capacitor/filesystem. The anchor[download] trick is blocked
-      // inside the WebView, and Web Share doesn't always work for files.
-      try {
-        const base64 = qrUrl.split(",")[1]; // strip "data:image/png;base64,"
-        const { Filesystem, Directory } = await import("@capacitor/filesystem");
-        const res = await Filesystem.writeFile({
-          path: fileName,
-          data: base64,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-        toast.success("QR salvo em Documentos", {
-          description: "Abra o app Arquivos para encontrá-lo.",
-        });
-        // Bonus: also offer the share sheet so the user can send to WhatsApp.
-        try {
-          const blob = await fetch(qrUrl).then((r) => r.blob());
-          const file = new File([blob], fileName, { type: "image/png" });
-          const nav = navigator as any;
-          if (nav.canShare?.({ files: [file] }) && nav.share) {
-            await nav.share({ files: [file], title: "QR Code WaveChat" });
-          }
-        } catch {
-          /* ignore — file is already saved */
-        }
-        return;
-      } catch (e) {
-        console.error("Filesystem save failed", e);
-      }
-
-      // Fallback 1: try Web Share with the file
+      // No app o anchor[download] é bloqueado pelo WebView. Tenta o share
+      // sheet (WhatsApp, Drive, Arquivos). Se o usuário cancelar ou o
+      // dispositivo não suportar, mostra a imagem em tela cheia com a
+      // instrução de tocar e segurar — gesto nativo do Android que sempre
+      // permite salvar na galeria.
       try {
         const blob = await fetch(qrUrl).then((r) => r.blob());
         const file = new File([blob], fileName, { type: "image/png" });
@@ -146,10 +119,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       } catch (e: any) {
         if (e?.name === "AbortError") return;
       }
-
-      // Fallback 2: open image so the user can long-press to save
-      window.open(qrUrl, "_blank", "noopener");
-      toast.message("Toque e segure na imagem para salvar");
+      setShowFullQR(true);
       return;
     }
 
