@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
 import { getSignupAttributionForSignup } from "@/lib/utm-capture";
+import { track } from "@/lib/track";
 
 
 type Mode = "login" | "signup" | "forgot";
@@ -74,6 +75,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
+        void track("signup_click", { email: form.email });
         const parsed = signupSchema.safeParse({
           ...form,
           username: normalizeUsername(form.username),
@@ -100,10 +102,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        void track("signup_completed", { email: parsed.data.email });
         toast.success("Conta criada! Verifique seu email para confirmar.");
         setShowConfirmEmail(true);
         setMode("login");
       } else if (mode === "login") {
+        void track("login_click");
         const parsed = loginSchema.safeParse(form);
         if (!parsed.success) {
           toast.error(parsed.error.issues[0].message);

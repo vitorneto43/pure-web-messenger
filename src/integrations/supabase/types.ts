@@ -101,6 +101,42 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          metadata: Json
+          path: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          metadata?: Json
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          metadata?: Json
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           callee_id: string
@@ -679,6 +715,7 @@ export type Database = {
     }
     Functions: {
       admin_signup_sources: { Args: never; Returns: Json }
+      admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }

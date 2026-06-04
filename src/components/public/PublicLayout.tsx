@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Mail, Phone } from "lucide-react";
 import type { ReactNode } from "react";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+import { track } from "@/lib/track";
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,11 +20,12 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <Link to="/guide" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Como funciona
             </Link>
-            <Link to="/support" className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
+            <Link to="/support" onClick={() => void track("help_click", { from: "header" })} className="px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               Suporte
             </Link>
             <Link
               to="/auth"
+              onClick={() => void track("auth_cta_click", { from: "header" })}
               className="ml-2 px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
             >
               Entrar

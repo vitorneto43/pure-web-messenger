@@ -495,6 +495,34 @@ export const getSignupSources = createServerFn({ method: "GET" })
     };
   });
 
+export const getUsageAnalytics = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ days: z.number().int().min(1).max(180).default(30) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { data: out, error } = await supabaseAdmin.rpc("admin_usage_analytics" as never, { _days: data.days } as never);
+    if (error) throw new Error(error.message);
+    return out as {
+      totalEvents: number;
+      uniqueSessions: number;
+      pageViews: number;
+      days: number;
+      byEvent: Array<{ name: string; count: number }>;
+      byPath: Array<{ path: string; views: number; unique_sessions: number }>;
+      funnel: {
+        visits: number;
+        signup_clicks: number;
+        signup_completed: number;
+        login_clicks: number;
+        help_clicks: number;
+        abandon_after_click: number;
+        click_through_rate: number;
+        conversion_rate: number;
+      };
+      series: Array<{ date: string; views: number; visits: number; signup_clicks: number; signups: number }>;
+    };
+  });
+
 // ============ Utils ============
 function bucketByDay(rows: { [k: string]: unknown }[], days: number, key: string) {
   const map = new Map<string, number>();

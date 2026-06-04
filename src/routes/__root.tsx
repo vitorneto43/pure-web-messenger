@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
 import { captureUtmFromUrl } from "@/lib/utm-capture";
+import { trackPageView } from "@/lib/track";
 
 
 import appCss from "../styles.css?url";
@@ -144,6 +145,18 @@ function UtmCapture() {
   return null;
 }
 
+function PageViewTracker() {
+  const router = useRouter();
+  useEffect(() => {
+    trackPageView();
+    const unsub = router.subscribe("onResolved", () => {
+      trackPageView();
+    });
+    return () => unsub();
+  }, [router]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
@@ -152,6 +165,7 @@ function RootComponent() {
         <AuthInvalidator />
         <SplashScreenHider />
         <UtmCapture />
+        <PageViewTracker />
         <Outlet />
         
         <Toaster richColors position="top-right" />
