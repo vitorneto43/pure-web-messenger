@@ -26,6 +26,7 @@ import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
+import { InviteDialog } from "@/components/InviteDialog";
 import { formatTime } from "@/lib/format-time";
 import { setAppBadge } from "@/lib/app-badge";
 import {
@@ -59,6 +60,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [loading, setLoading] = useState(true);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     requestBrowserNotificationPermission();
@@ -219,25 +221,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     };
   }, [user?.id, activeConversationId]);
 
-  async function inviteFriend() {
-    const username = user?.user_metadata?.username;
-    const base = window.location.origin;
-    const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
-    const shareText = `Vamos conversar no Wavechat! Crie sua conta aqui: ${link}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Wavechat", text: shareText, url: link });
-        return;
-      }
-    } catch {
-      // user cancelled share — fall through to clipboard
-    }
-    try {
-      await navigator.clipboard.writeText(link);
-      toast.success("Link de convite copiado!");
-    } catch {
-      toast.error("Não foi possível copiar. Link: " + link);
-    }
+  function inviteFriend() {
+    setInviteOpen(true);
   }
 
   async function logout() {
@@ -376,6 +361,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
         }}
       />
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </>
   );
 }

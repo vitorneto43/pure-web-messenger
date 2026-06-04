@@ -249,6 +249,36 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_rewards: {
+        Row: {
+          created_at: string
+          granted_for_count: number
+          id: string
+          redeemed: boolean
+          redeemed_at: string | null
+          user_id: string
+          views_amount: number
+        }
+        Insert: {
+          created_at?: string
+          granted_for_count?: number
+          id?: string
+          redeemed?: boolean
+          redeemed_at?: string | null
+          user_id: string
+          views_amount?: number
+        }
+        Update: {
+          created_at?: string
+          granted_for_count?: number
+          id?: string
+          redeemed?: boolean
+          redeemed_at?: string | null
+          user_id?: string
+          views_amount?: number
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment_name: string | null
@@ -577,6 +607,7 @@ export type Database = {
           currency: string
           environment: string
           id: string
+          is_free_reward: boolean
           package: string
           refund_reason: string | null
           refunded_amount_cents: number | null
@@ -597,6 +628,7 @@ export type Database = {
           currency?: string
           environment?: string
           id?: string
+          is_free_reward?: boolean
           package: string
           refund_reason?: string | null
           refunded_amount_cents?: number | null
@@ -617,6 +649,7 @@ export type Database = {
           currency?: string
           environment?: string
           id?: string
+          is_free_reward?: boolean
           package?: string
           refund_reason?: string | null
           refunded_amount_cents?: number | null
@@ -764,7 +797,20 @@ export type Database = {
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
+      claim_invite_reward: { Args: never; Returns: Json }
+      get_invite_stats: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
+      get_people_you_may_know: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          mutual_count: number
+          reason: string
+          username: string
+        }[]
+      }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }
         Returns: {

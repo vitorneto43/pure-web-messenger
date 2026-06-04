@@ -19,6 +19,7 @@ import {
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
+import { InviteRewardsCard } from "@/components/InviteRewardsCard";
 import { BANKS } from "@/lib/banks";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
@@ -297,6 +298,7 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6">
+        <InviteRewardsCard />
         <BoostHistory />
       </div>
 
