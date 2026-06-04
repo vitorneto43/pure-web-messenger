@@ -118,6 +118,11 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
               Nenhum usuário encontrado
             </p>
           )}
+          {!query && (
+            <div className="py-2">
+              <PeopleYouMayKnow onPick={(id) => startChat(id)} />
+            </div>
+          )}
           {results.map((r) => (
             <button
               key={r.id}
