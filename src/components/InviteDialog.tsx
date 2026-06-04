@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Copy, Share2, QrCode, Link2, Download, MessageCircle, Loader2 } from "lucide-react";
+import { Copy, Share2, QrCode, Link2, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -41,7 +41,6 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
-  const [showFullQR, setShowFullQR] = useState(false);
 
   useEffect(() => {
     if (!open || tab !== "qr") return;
@@ -92,7 +91,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     window.open(url, "_blank", "noopener");
   }
 
-  async function downloadQR() {
+  async function shareQR() {
     if (!qrUrl) {
       toast.error("Aguarde o QR Code carregar");
       return;
@@ -100,60 +99,44 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     void logInviteAction(user?.id, "qr");
 
-    const isCapacitor =
-      typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
-
-    if (isCapacitor) {
-      // No WebView do Capacitor o anchor[download] e o long-press para
-      // salvar imagem ficam bloqueados. Estratégia: 1) tentar share sheet
-      // com arquivo (WhatsApp/Drive/Arquivos salvam direto). 2) Se não
-      // rolar, abrir a imagem no navegador EXTERNO via window.open —
-      // o Capacitor encaminha pro Chrome, onde o usuário usa o menu
-      // "Baixar imagem" do próprio navegador.
-      try {
-        const blob = await fetch(qrUrl).then((r) => r.blob());
-        const file = new File([blob], fileName, { type: "image/png" });
-        const nav = navigator as any;
-        if (nav.share) {
-          try {
-            await nav.share({ files: [file], title: "QR Code WaveChat" });
-            return;
-          } catch (e: any) {
-            if (e?.name === "AbortError") return;
-            // segue pro fallback
-          }
-        }
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, "_blank");
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-        toast.success("Abri no navegador — use o menu para salvar a imagem");
-      } catch {
-        setShowFullQR(true);
-      }
-      return;
-    }
-
-    const blob = await fetch(qrUrl).then((res) => res.blob());
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-
-  async function openQRInBrowser() {
-    if (!qrUrl) return;
     try {
       const blob = await fetch(qrUrl).then((r) => r.blob());
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, "_blank");
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-      setShowFullQR(false);
+      const file = new File([blob], fileName, { type: "image/png" });
+      const nav = navigator as any;
+
+      if (nav.share && nav.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({
+            files: [file],
+            title: "QR Code WaveChat",
+            text: shareText,
+          });
+          return;
+        } catch (e: any) {
+          if (e?.name === "AbortError") return;
+        }
+      }
+
+      // Fallback web: tenta share só com texto/link, senão baixa
+      if (nav.share) {
+        try {
+          await nav.share({ title: "WaveChat", text: shareText, url: link });
+          return;
+        } catch (e: any) {
+          if (e?.name === "AbortError") return;
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch {
-      toast.error("Não foi possível abrir no navegador");
+      toast.error("Não foi possível compartilhar o QR Code");
     }
   }
 
@@ -211,37 +194,12 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
                 conversa com você.
               </p>
-              <Button onClick={downloadQR} variant="outline" size="sm" disabled={!qrUrl}>
-                <Download className="size-4 mr-1.5" /> Baixar QR
+              <Button onClick={shareQR} size="sm" disabled={!qrUrl}>
+                <Share2 className="size-4 mr-1.5" /> Compartilhar QR
               </Button>
             </div>
           </TabsContent>
         </Tabs>
-
-        {showFullQR && qrUrl && (
-          <div
-            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center gap-4 p-6"
-            onClick={() => setShowFullQR(false)}
-          >
-            <p className="text-white text-center text-sm max-w-[300px]">
-              O download direto não funciona dentro do app. Toque em <strong>"Abrir no navegador"</strong> e use o menu do Chrome para salvar a imagem.
-            </p>
-            <img
-              src={qrUrl}
-              alt="QR Code WaveChat"
-              className="bg-white p-4 rounded-2xl max-w-[80vw] max-h-[50vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" onClick={openQRInBrowser}>
-                Abrir no navegador
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => setShowFullQR(false)}>
-                Fechar
-              </Button>
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
