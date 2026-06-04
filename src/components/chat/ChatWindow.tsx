@@ -152,22 +152,21 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         setOthersLastRead(new Date(Math.min(...otherReads.map((d) => d.getTime()))));
       }
 
-      // mark as read
-      await supabase
+      setLoading(false);
+
+      // Non-critical: mark as read in the background so the UI doesn't wait
+      void supabase
         .from("conversation_members")
         .update({ last_read_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
 
-      // mark related notifications as read
-      await supabase
+      void supabase
         .from("notifications")
         .update({ read_at: new Date().toISOString() })
         .eq("user_id", user.id)
         .is("read_at", null)
         .filter("data->>conversation_id", "eq", conversationId);
-
-      setLoading(false);
     })();
 
     return () => {
