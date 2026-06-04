@@ -83,6 +83,10 @@ export function captureUtmFromUrl() {
       params.has("utm_medium") ||
       params.has("utm_campaign") ||
       params.has("gclid") ||
+      params.has("gbraid") ||
+      params.has("wbraid") ||
+      params.has("gad_source") ||
+      params.has("gad_campaignid") ||
       params.has("fbclid") ||
       params.has("ttclid") ||
       params.has("msclkid");
