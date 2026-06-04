@@ -1115,3 +1115,157 @@ function AdminsTab({ canEdit }: { canEdit: boolean }) {
     </div>
   );
 }
+
+// ============ Invites Tab ============
+function InvitesTab() {
+  const fn = useServerFn(getInvitesOverview);
+  const { data, isLoading } = useFn(() => fn(), ["admin", "invites"], 30000);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  if (isLoading || !data) return <LoadingBlock />;
+
+  const totals = data.totals ?? { total_invites: 0, confirmed: 0, pending: 0, unique_inviters: 0 };
+  const pct = totals.total_invites > 0 ? (totals.confirmed / totals.total_invites) * 100 : 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Quem convidou" value={totals.unique_inviters} icon={Users} hint="Usuários que trouxeram alguém" />
+        <Stat label="Convites aceitos" value={totals.total_invites} icon={Gift} hint="Cadastros via link de convite" />
+        <Stat label="Deram certo" value={totals.confirmed} icon={MailCheck} hint={`${pct.toFixed(1)}% confirmaram e-mail`} />
+        <Stat label="Não finalizaram" value={totals.pending} icon={MailWarning} hint="Cadastraram mas não confirmaram e-mail" />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Users className="size-4" /> Ranking de quem mais convidou
+          </CardTitle>
+          <CardDescription>
+            Clique em um nome para ver quem foi convidado por ele. "Pendente" = criou conta mas não confirmou e-mail.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.inviters.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Ninguém convidou alguém ainda.</p>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {data.inviters.map((inv) => {
+                const open = expanded === inv.inviter_id;
+                return (
+                  <div key={inv.inviter_id} className="py-2">
+                    <button
+                      onClick={() => setExpanded(open ? null : inv.inviter_id)}
+                      className="w-full flex items-center gap-3 text-left hover:bg-accent/30 rounded-md p-2"
+                    >
+                      {open ? <ChevronDown className="size-4 shrink-0" /> : <ChevronRight className="size-4 shrink-0" />}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate text-sm">
+                          {inv.inviter_name ?? inv.inviter_username ?? "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {inv.inviter_username ? `@${inv.inviter_username}` : ""}
+                          {inv.inviter_email ? ` · ${inv.inviter_email}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 text-xs">
+                        <Badge variant="outline">{inv.total} total</Badge>
+                        <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                          {inv.confirmed} ✓
+                        </Badge>
+                        {inv.pending > 0 && (
+                          <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">
+                            {inv.pending} pend.
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                    {open && (
+                      <div className="mt-2 ml-7 border-l border-border/50 pl-3 space-y-1.5">
+                        {inv.invitees.map((g) => (
+                          <div key={g.id} className="flex items-center justify-between gap-3 text-xs py-1">
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{g.display_name ?? g.email ?? "—"}</p>
+                              <p className="text-muted-foreground truncate">
+                                {g.username ? `@${g.username}` : ""}
+                                {g.email ? ` · ${g.email}` : ""}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {g.status === "confirmed" ? (
+                                <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                                  Confirmado
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">
+                                  Pendente
+                                </Badge>
+                              )}
+                              <p className="mt-0.5 text-muted-foreground">
+                                {new Date(g.created_at).toLocaleDateString("pt-BR")}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity className="size-4" /> Últimos 100 convites aceitos
+          </CardTitle>
+          <CardDescription>
+            Use isto para conferir uma alegação específica de "fulano disse que aceitou meu convite".
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum convite aceito ainda.</p>
+          ) : (
+            <ScrollArea className="h-[420px]">
+              <div className="divide-y divide-border/50 pr-2">
+                {data.recent.map((r) => (
+                  <div key={r.id} className="py-2 flex items-center justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">
+                        {r.display_name ?? r.email ?? "—"}
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {" "}← convidado por {r.inviter_name ?? r.inviter_username ?? "—"}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {r.username ? `@${r.username}` : ""}
+                        {r.email ? ` · ${r.email}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs shrink-0">
+                      {r.status === "confirmed" ? (
+                        <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                          Confirmado
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">
+                          Pendente
+                        </Badge>
+                      )}
+                      <p className="mt-1 text-muted-foreground">
+                        {new Date(r.created_at).toLocaleString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
