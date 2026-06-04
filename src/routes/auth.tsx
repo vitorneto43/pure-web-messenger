@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
-import { getSignupAttributionForSignup } from "@/lib/utm-capture";
+import { getSignupAttributionForSignup, snapshotAttributionForOAuth, readAttribution } from "@/lib/utm-capture";
 import { track } from "@/lib/track";
 
 
