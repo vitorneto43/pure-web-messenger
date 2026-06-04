@@ -238,6 +238,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="system" className="mt-4"><SystemTab /></TabsContent>
           <TabsContent value="push" className="mt-4"><PushTab /></TabsContent>
           <TabsContent value="logs" className="mt-4"><LogsTab /></TabsContent>
+          <TabsContent value="admins" className="mt-4"><AdminsTab canEdit={isSuperadmin} /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
       </main>
