@@ -178,7 +178,7 @@ function PinScreen({ hasPin, onOk }: { hasPin: boolean; onOk: () => void }) {
   );
 }
 
-function AdminPanel() {
+function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolean }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background text-foreground">
