@@ -122,7 +122,71 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }
   }
 
+  const [reply, setReply] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (!current?.media_url) return;
+    setDownloading(true);
+    setPaused(true);
+    try {
+      const ext = current.kind === "video" ? "mp4" : "jpg";
+      const name = `wavechat-status-${current.id}.${ext}`;
+      await downloadFile(current.media_url, name);
+      toast.success("Download iniciado");
+    } catch (e: any) {
+      toast.error("Não foi possível baixar");
+    } finally {
+      setDownloading(false);
+      setPaused(false);
+    }
+  }
+
+  async function handleShare() {
+    setPaused(true);
+    try {
+      await shareMessageExternally({
+        content: current.caption ?? current.content ?? null,
+        attachment_url: current.media_url,
+        attachment_type: current.kind === "video" ? "video/mp4" : current.kind === "image" ? "image/jpeg" : null,
+        attachment_name: current.media_url ? `wavechat-status-${current.id}` : null,
+      });
+    } finally {
+      setPaused(false);
+    }
+  }
+
+  async function sendReply() {
+    if (!user || !current) return;
+    const text = reply.trim();
+    if (!text) return;
+    setSendingReply(true);
+    try {
+      const convId = await getOrCreateDirectConversation(user.id, current.user_id);
+      const preview =
+        current.kind === "text"
+          ? (current.content ?? "").slice(0, 80)
+          : current.caption?.slice(0, 80) || (current.kind === "video" ? "🎬 Vídeo" : "📷 Imagem");
+      const quoted = `↪️ Resposta ao status: "${preview}"\n\n${text}`;
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: convId,
+        sender_id: user.id,
+        content: quoted,
+      });
+      if (error) throw error;
+      setReply("");
+      toast.success("Resposta enviada");
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao enviar");
+    } finally {
+      setSendingReply(false);
+    }
+  }
+
   if (!current) return null;
+
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={(e) => e.stopPropagation()}>
