@@ -606,3 +606,78 @@ function countTop<T extends Record<string, unknown>>(rows: T[], key: keyof T) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 15);
 }
+
+// ============ Admin Management (SuperAdmin only) ============
+export const listAdmins = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMinRole(context.userId, "moderator");
+    const { data, error } = await supabaseAdmin.rpc("admin_list_admins" as never);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{
+      user_id: string;
+      role: RoleName;
+      rank: number;
+      created_at: string;
+      username: string | null;
+      display_name: string | null;
+      avatar_url: string | null;
+      email: string | null;
+      protected: boolean;
+    }>;
+  });
+
+export const grantAdminRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      email: z.string().email().max(255),
+      role: z.enum(["moderator", "admin", "superadmin"]),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperadmin(context.userId);
+
+    // Find user by email
+    const { data: priv, error: privErr } = await supabaseAdmin
+      .from("profiles_private")
+      .select("user_id")
+      .ilike("email", data.email.trim())
+      .maybeSingle();
+    if (privErr) throw new Error(privErr.message);
+    if (!priv) throw new Error("Usuário com este e-mail não foi encontrado");
+
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: priv.user_id, role: data.role }, { onConflict: "user_id,role" });
+    if (error) throw new Error(error.message);
+
+    await logAdmin(context.userId, "grant_role", true, { target: priv.user_id, role: data.role });
+    return { ok: true, user_id: priv.user_id };
+  });
+
+export const revokeAdminRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      role: z.enum(["moderator", "admin", "superadmin"]),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperadmin(context.userId);
+
+    if (data.user_id === context.userId && data.role === "superadmin") {
+      throw new Error("Você não pode remover seu próprio SuperAdmin");
+    }
+
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", data.user_id)
+      .eq("role", data.role);
+    if (error) throw new Error(error.message);
+
+    await logAdmin(context.userId, "revoke_role", true, { target: data.user_id, role: data.role });
+    return { ok: true };
+  });
