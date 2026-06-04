@@ -211,7 +211,14 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           <AvatarFallback>{author?.display_name?.[0] ?? "?"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{author?.display_name ?? "..."}</p>
+          <p className="text-sm font-medium truncate flex items-center gap-1.5">
+            {author?.display_name ?? "..."}
+            {currentGroup?.sponsoredStatusIds?.includes(current.id) && (
+              <span className="text-[9px] font-semibold uppercase tracking-wider bg-pink-500/90 text-white px-1.5 py-0.5 rounded">
+                Patrocinado
+              </span>
+            )}
+          </p>
           <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
         </div>
         <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={onClose}>
