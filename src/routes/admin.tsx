@@ -1124,16 +1124,66 @@ function InvitesTab() {
   if (isLoading || !data) return <LoadingBlock />;
 
   const totals = data.totals ?? { total_invites: 0, confirmed: 0, pending: 0, unique_inviters: 0 };
+  const attemptTotals = (data as any).attempt_totals ?? { unique_attempters: 0, total_attempts: 0, with_signup: 0, without_signup: 0 };
+  const attempters = ((data as any).attempters ?? []) as Array<any>;
   const pct = totals.total_invites > 0 ? (totals.confirmed / totals.total_invites) * 100 : 0;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Stat label="Quem convidou" value={totals.unique_inviters} icon={Users} hint="Usuários que trouxeram alguém" />
-        <Stat label="Convites aceitos" value={totals.total_invites} icon={Gift} hint="Cadastros via link de convite" />
+        <Stat label="Tentaram convidar" value={attemptTotals.unique_attempters} icon={Share2} hint={`${attemptTotals.total_attempts} cliques de compartilhar/copiar/QR`} />
+        <Stat label="Convites aceitos" value={totals.total_invites} icon={Gift} hint="Amigo criou conta pelo link" />
         <Stat label="Deram certo" value={totals.confirmed} icon={MailCheck} hint={`${pct.toFixed(1)}% confirmaram e-mail`} />
-        <Stat label="Não finalizaram" value={totals.pending} icon={MailWarning} hint="Cadastraram mas não confirmaram e-mail" />
+        <Stat label="Sem nenhum cadastro" value={attemptTotals.without_signup} icon={MailWarning} hint="Compartilhou mas ninguém criou conta" />
       </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Share2 className="size-4" /> Quem tentou convidar (todos)
+          </CardTitle>
+          <CardDescription>
+            Cada usuário que clicou em WhatsApp, Copiar link, Compartilhar ou baixou o QR. Inclui quem ainda não trouxe ninguém.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {attempters.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Ninguém clicou em compartilhar ainda.</p>
+          ) : (
+            <ScrollArea className="h-[360px]">
+              <div className="divide-y divide-border/50 pr-2">
+                {attempters.map((a) => (
+                  <div key={a.user_id} className="py-2 flex items-center justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{a.display_name ?? a.email ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {a.username ? `@${a.username}` : ""}
+                        {a.email ? ` · ${a.email}` : ""}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        WhatsApp {a.attempts_whatsapp} · Copiar {a.attempts_copy} · Compartilhar {a.attempts_native} · QR {a.attempts_qr}
+                        {a.last_attempt ? ` · último: ${new Date(a.last_attempt).toLocaleString("pt-BR")}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0 text-xs">
+                      <Badge variant="outline">{a.attempts} cliques</Badge>
+                      {a.accepted > 0 ? (
+                        <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                          {a.accepted} cadastro{a.accepted > 1 ? "s" : ""} ({a.accepted_confirmed} ✓)
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-yellow-500/40 text-yellow-700 dark:text-yellow-400">
+                          0 cadastros
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">
