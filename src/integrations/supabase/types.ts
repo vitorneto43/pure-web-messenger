@@ -849,6 +849,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
       role_rank: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
