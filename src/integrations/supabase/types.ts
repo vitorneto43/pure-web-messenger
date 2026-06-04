@@ -764,6 +764,7 @@ export type Database = {
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
+      get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }
         Returns: {
