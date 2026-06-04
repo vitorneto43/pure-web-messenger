@@ -146,6 +146,7 @@ export function StatusBar() {
             statuses: mine,
             hasUnseen: false,
             isOfficial: mine.some((s) => s.is_official === true),
+            isSponsored: false,
             firstUnseenIndex: 0,
           },
         ]
