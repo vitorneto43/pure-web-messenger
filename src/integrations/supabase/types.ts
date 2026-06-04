@@ -759,6 +759,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_admins: { Args: never; Returns: Json }
       admin_push_logs: { Args: { _days?: number }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
@@ -770,6 +771,13 @@ export type Database = {
           display_name: string
           id: string
         }[]
+      }
+      has_min_role: {
+        Args: {
+          _min: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -786,11 +794,19 @@ export type Database = {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
+      is_protected_superadmin_email: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_wavechat_official_account: {
         Args: { _user_id: string }
         Returns: boolean
       }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
+      role_rank: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: number
+      }
       search_users: {
         Args: { q: string }
         Returns: {
