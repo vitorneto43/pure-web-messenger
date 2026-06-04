@@ -97,7 +97,32 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       return;
     }
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
+    void logInviteAction(user?.id, "qr");
+
     const blob = await fetch(qrUrl).then((res) => res.blob());
+    const isCapacitor =
+      typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+
+    // Inside the Android app the anchor[download] trick is blocked by the
+    // WebView. Use Web Share with a file so the user can save it via the
+    // system sheet (Files, Drive, WhatsApp, etc.).
+    if (isCapacitor) {
+      try {
+        const file = new File([blob], fileName, { type: "image/png" });
+        const nav = navigator as any;
+        if (nav.canShare?.({ files: [file] }) && nav.share) {
+          await nav.share({ files: [file], title: "QR Code WaveChat" });
+          return;
+        }
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+      }
+      // Fallback: open image in the system browser so the user can long-press to save.
+      window.open(qrUrl, "_blank", "noopener");
+      toast.message("Toque e segure na imagem para salvar");
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -105,7 +130,6 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    void logInviteAction(user?.id, "qr");
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
