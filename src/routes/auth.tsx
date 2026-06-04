@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
-import { getSignupAttributionForSignup } from "@/lib/utm-capture";
+import { getSignupAttributionForSignup, snapshotAttributionForOAuth, readAttribution } from "@/lib/utm-capture";
 import { track } from "@/lib/track";
 
 
@@ -288,6 +288,15 @@ function AuthPage() {
                 onClick={async () => {
                   setBusy(true);
                   try {
+                    // Persist attribution to localStorage before OAuth redirect
+                    // so it survives the round-trip to Google and back.
+                    snapshotAttributionForOAuth("google");
+                    const attr = readAttribution();
+                    void track("google_signin_click", {
+                      source: attr?.source ?? "direto",
+                      medium: attr?.medium,
+                      campaign: attr?.campaign,
+                    });
                     const result = await lovable.auth.signInWithOAuth("google", {
                       redirect_uri: `${window.location.origin}/chat`,
                     });

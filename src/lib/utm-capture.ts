@@ -105,6 +105,23 @@ export function readAttribution(): SignupAttribution | null {
   }
 }
 
+/**
+ * Re-captures and persists attribution right before an OAuth redirect.
+ * localStorage survives the round-trip to Google and back, so this guarantees
+ * the data is available when the user returns and SIGNED_IN fires.
+ */
+export function snapshotAttributionForOAuth(provider: string) {
+  if (typeof window === "undefined") return;
+  try {
+    // Ensure latest UTM params (in case user came directly to /auth with utms)
+    captureUtmFromUrl();
+    const attr = readAttribution();
+    console.log("[utm] OAuth snapshot before redirect", { provider, attr });
+  } catch (e) {
+    console.warn("[utm] snapshot failed", e);
+  }
+}
+
 export function getSignupAttributionForSignup() {
   const a = readAttribution();
   if (!a) return { signup_source: "direto" };
@@ -151,7 +168,8 @@ export async function backfillSignupAttribution(userId: string) {
     if (ageMs > 7 * 86400_000) return; // só perfis recentes
     if (prof.signup_source && prof.signup_source !== "desconhecido") return;
     const attr = getSignupAttributionForSignup();
-    await supabase
+    console.log("[utm] Backfilling attribution for user", userId, attr);
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         signup_source: attr.signup_source,
@@ -161,7 +179,13 @@ export async function backfillSignupAttribution(userId: string) {
         signup_landing: attr.signup_landing || null,
       })
       .eq("id", userId);
-  } catch {
-    // ignore
+    if (updateError) {
+      console.warn("[utm] backfill update failed", updateError);
+    } else {
+      console.log("[utm] backfill OK", { userId, source: attr.signup_source });
+    }
+  } catch (e) {
+    console.warn("[utm] backfill error", e);
   }
 }
+
