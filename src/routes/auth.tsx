@@ -123,6 +123,7 @@ function AuthPage() {
         });
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email });
+        try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success("Conta criada! Verifique seu email para confirmar.");
         setShowConfirmEmail(true);
         setMode("login");
