@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Loader2, Check, Rocket } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Check, Rocket, Gift } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBoostCheckout } from "@/lib/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { supabase } from "@/integrations/supabase/client";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 
@@ -32,7 +33,33 @@ interface Props {
 export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [loading, setLoading] = useState<PackKey | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [freeViews, setFreeViews] = useState<number>(0);
+  const [redeemingFree, setRedeemingFree] = useState(false);
   const startCheckout = useServerFn(createBoostCheckout);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data } = await (supabase as any).rpc("get_invite_stats");
+      setFreeViews((data as any)?.pending_views ?? 0);
+    })();
+  }, [open]);
+
+  async function redeemFree() {
+    setRedeemingFree(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("redeem_free_boost", {
+        _status_id: statusId,
+      });
+      if (error) throw error;
+      toast.success(`🎁 +${(data as any)?.views ?? 100} visualizações grátis ativadas!`);
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao resgatar");
+    } finally {
+      setRedeemingFree(false);
+    }
+  }
 
   async function pick(key: PackKey) {
     setLoading(key);
