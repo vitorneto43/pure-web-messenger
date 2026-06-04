@@ -48,7 +48,7 @@ export function EmptyChat({ onNewChat }: Props) {
         </div>
 
         <p className="mt-5 text-[11px] text-muted-foreground">
-          🎁 Ganhe <strong>100 visualizações grátis</strong> a cada 3 amigos que entrarem.
+          🎁 Ganhe <strong>100 visualizações grátis</strong> a cada 3 amigos que <strong>criarem conta</strong> pelo seu link.
         </p>
       </div>
 
