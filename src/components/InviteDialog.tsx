@@ -166,6 +166,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const nav = navigator;
     const capacitor = getCapacitor();
     const isCapacitor = !!capacitor?.isNativePlatform?.();
+    if (isCapacitor) {
+      openWhatsAppFallback(qrShareText);
+      return;
+    }
+
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
 
@@ -200,11 +205,6 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       } catch (error: unknown) {
         if (isAbortError(error)) return;
       }
-    }
-
-    if (isCapacitor) {
-      openAndroidShareFallback(qrShareText);
-      return;
     }
 
     // Web/desktop: tenta compartilhar o PNG do QR
