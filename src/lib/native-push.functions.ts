@@ -114,6 +114,8 @@ async function sendNativePayloadToUser(
   userId: string,
   dataPayload: Record<string, string>,
   ttl = "45s",
+  notification?: { title: string; body: string },
+  logMeta?: { senderId?: string | null; conversationId?: string | null; kind?: string },
 ) {
   const sa = loadServiceAccount();
   const accessToken = await getAccessToken(sa);
@@ -128,43 +130,56 @@ async function sendNativePayloadToUser(
 
   let sent = 0;
   const toRemove: string[] = [];
+  const logs: Array<Record<string, unknown>> = [];
   await Promise.all(
     tokens.map(async (t: { token: string }) => {
+      let status = 0;
+      let ok = false;
+      let errText: string | null = null;
       try {
+        const message: Record<string, unknown> = {
+          token: t.token,
+          data: dataPayload,
+          android: {
+            priority: "HIGH",
+            ttl,
+            direct_boot_ok: true,
+            ...(notification
+              ? { notification: { channel_id: "default", click_action: "FLUTTER_NOTIFICATION_CLICK" } }
+              : {}),
+          },
+          apns: {
+            headers: {
+              "apns-priority": "10",
+              "apns-push-type": "alert",
+            },
+            payload: {
+              aps: {
+                "content-available": 1,
+                sound: dataPayload.type === "call" ? "default" : undefined,
+                ...(notification
+                  ? { alert: { title: notification.title, body: notification.body } }
+                  : {}),
+              },
+            },
+          },
+          ...(notification ? { notification } : {}),
+        };
         const res = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({
-            message: {
-              token: t.token,
-              data: dataPayload,
-              android: {
-                priority: "HIGH",
-                ttl,
-                direct_boot_ok: true,
-              },
-              apns: {
-                headers: {
-                  "apns-priority": "10",
-                  "apns-push-type": "alert",
-                },
-                payload: {
-                  aps: {
-                    "content-available": 1,
-                    sound: dataPayload.type === "call" ? "default" : undefined,
-                  },
-                },
-              },
-            },
-          }),
+          body: JSON.stringify({ message }),
         });
+        status = res.status;
         if (res.ok) {
           sent++;
+          ok = true;
         } else {
           const body = await res.text().catch(() => "");
+          errText = body.slice(0, 500);
           if (
             res.status === 404 ||
             res.status === 410 ||
@@ -177,17 +192,55 @@ async function sendNativePayloadToUser(
           }
         }
       } catch (e) {
+        errText = e instanceof Error ? e.message : String(e);
         console.error("FCM v1 send exception", e);
       }
+      logs.push({
+        channel: "native",
+        kind: logMeta?.kind ?? dataPayload.type ?? "message",
+        recipient_id: userId,
+        sender_id: logMeta?.senderId ?? null,
+        conversation_id: logMeta?.conversationId ?? null,
+        success: ok,
+        status_code: status || null,
+        error: errText,
+        endpoint: t.token.slice(0, 32),
+      });
     }),
   );
 
   if (toRemove.length) {
     await (supabaseAdmin as any).from("native_push_tokens").delete().in("token", toRemove);
   }
+  if (logs.length) {
+    try { await (supabaseAdmin as any).from("push_logs").insert(logs); } catch {}
+  }
 
   return { sent };
 }
+
+export async function sendNativeMessage(args: {
+  recipientId: string;
+  senderId: string;
+  conversationId: string;
+  title: string;
+  body: string;
+}) {
+  return sendNativePayloadToUser(
+    args.recipientId,
+    {
+      type: "message",
+      conversationId: args.conversationId,
+      title: args.title,
+      body: args.body,
+      timestamp: String(Date.now()),
+    },
+    "120s",
+    { title: args.title, body: args.body },
+    { senderId: args.senderId, conversationId: args.conversationId, kind: "message" },
+  );
+}
+
 
 export const saveNativeToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

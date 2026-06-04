@@ -3,6 +3,7 @@ import { z } from "zod";
 import webpush from "web-push";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendNativeMessage } from "./native-push.functions";
 
 function configureWebPush() {
   webpush.setVapidDetails(
@@ -90,30 +91,44 @@ export const sendCallPush = createServerFn({ method: "POST" })
 
     let sent = 0;
     const toRemove: string[] = [];
+    const logs: Array<Record<string, unknown>> = [];
     await Promise.all(
       subs.map(async (s) => {
+        let ok = false; let status = 0; let errText: string | null = null;
         try {
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
             payload,
             { TTL: 45, urgency: "high" },
           );
-          sent++;
+          sent++; ok = true;
         } catch (e: unknown) {
           const err = e as { statusCode?: number; body?: string; message?: string };
-          const status = err.statusCode;
+          status = err.statusCode ?? 0;
+          errText = (err.body || err.message || "").slice(0, 500);
           if (status === 404 || status === 410) toRemove.push(s.id);
           else console.error("push send failed", status, err.body || err.message);
         }
+        logs.push({
+          channel: "web", kind: "call",
+          recipient_id: data.calleeId, sender_id: userId,
+          conversation_id: data.conversationId,
+          success: ok, status_code: status || null, error: errText,
+          endpoint: s.endpoint.slice(0, 200),
+        });
       }),
     );
 
     if (toRemove.length) {
       await supabaseAdmin.from("push_subscriptions").delete().in("id", toRemove);
     }
+    if (logs.length) {
+      try { await supabaseAdmin.from("push_logs" as never).insert(logs as never); } catch {}
+    }
 
     return { sent };
   });
+
 
 export const sendMessagePush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -197,6 +212,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
 
     let sent = 0;
     const toRemove: string[] = [];
+    const logs: Array<Record<string, unknown>> = [];
     await Promise.all(
       subs.map(async (s) => {
         const badge = badgeByUser.get(s.user_id) ?? 0;
@@ -207,6 +223,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
           conversationId: data.conversationId,
           badge,
         });
+        let ok = false; let status = 0; let errText: string | null = null;
         try {
           await webpush.sendNotification(
             { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
@@ -214,18 +231,49 @@ export const sendMessagePush = createServerFn({ method: "POST" })
             { TTL: 60, urgency: "normal" },
           );
           sent++;
+          ok = true;
         } catch (e: unknown) {
           const err = e as { statusCode?: number; body?: string; message?: string };
-          const status = err.statusCode;
+          status = err.statusCode ?? 0;
+          errText = (err.body || err.message || "").slice(0, 500);
           if (status === 404 || status === 410) toRemove.push(s.id);
           else console.error("push send failed", status, err.body || err.message);
         }
+        logs.push({
+          channel: "web", kind: "message",
+          recipient_id: s.user_id, sender_id: userId,
+          conversation_id: data.conversationId,
+          success: ok, status_code: status || null, error: errText,
+          endpoint: s.endpoint.slice(0, 200),
+        });
       }),
     );
 
     if (toRemove.length) {
       await supabaseAdmin.from("push_subscriptions").delete().in("id", toRemove);
     }
+    if (logs.length) {
+      try { await supabaseAdmin.from("push_logs" as never).insert(logs as never); } catch {}
+    }
+
+    // Fan out to native (Android FCM) tokens as well so closed app receives push.
+    try {
+      await Promise.all(
+        recipientIds.map((rid) =>
+          sendNativeMessage({
+            recipientId: rid,
+            senderId: userId,
+            conversationId: data.conversationId,
+            title,
+            body,
+          }).catch(() => {}),
+        ),
+      );
+    } catch (e) {
+      console.error("native message push failed", e);
+    }
+
 
     return { sent };
   });
+

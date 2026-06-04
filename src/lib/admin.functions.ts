@@ -523,6 +523,28 @@ export const getUsageAnalytics = createServerFn({ method: "POST" })
     };
   });
 
+export const getPushLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ days: z.number().int().min(1).max(60).default(7) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { data: out, error } = await supabaseAdmin.rpc("admin_push_logs" as never, { _days: data.days } as never);
+    if (error) throw new Error(error.message);
+    return out as {
+      total: number; success: number; failed: number; days: number;
+      byChannel: Array<{ channel: string; kind: string; success: number; failed: number }>;
+      recent: Array<{
+        id: string; created_at: string; channel: string; kind: string;
+        success: boolean; status_code: number | null; error: string | null;
+        recipient_id: string; sender_id: string | null; conversation_id: string | null;
+        recipient_username: string | null; recipient_name: string | null;
+        sender_username: string | null; sender_name: string | null;
+      }>;
+      series: Array<{ date: string; success: number; failed: number }>;
+    };
+  });
+
+
 // ============ Utils ============
 function bucketByDay(rows: { [k: string]: unknown }[], days: number, key: string) {
   const map = new Map<string, number>();

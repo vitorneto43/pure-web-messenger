@@ -17,6 +17,7 @@ import {
   getUserConfirmationStats,
   getSignupSources,
   getUsageAnalytics,
+  getPushLogs,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -218,6 +219,7 @@ function AdminPanel() {
               <TabsTrigger value="ai"><Sparkles className="size-4 mr-1.5" />IA</TabsTrigger>
               <TabsTrigger value="shares"><Share2 className="size-4 mr-1.5" />Compart.</TabsTrigger>
               <TabsTrigger value="system"><Server className="size-4 mr-1.5" />Sistema</TabsTrigger>
+              <TabsTrigger value="push"><Bell className="size-4 mr-1.5" />Push</TabsTrigger>
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
@@ -233,6 +235,7 @@ function AdminPanel() {
           <TabsContent value="ai" className="mt-4"><AITab /></TabsContent>
           <TabsContent value="shares" className="mt-4"><SharesTab /></TabsContent>
           <TabsContent value="system" className="mt-4"><SystemTab /></TabsContent>
+          <TabsContent value="push" className="mt-4"><PushTab /></TabsContent>
           <TabsContent value="logs" className="mt-4"><LogsTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
@@ -901,3 +904,96 @@ function UsageTab() {
     </div>
   );
 }
+
+function PushTab() {
+  const fn = useServerFn(getPushLogs);
+  const [days, setDays] = useState(7);
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["admin", "push-logs", days],
+    queryFn: () => fn({ data: { days } }),
+  });
+  if (isLoading) return <Loader2 className="size-5 animate-spin" />;
+  if (!data) return null;
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {[1,7,30].map((d)=>(
+          <Button key={d} size="sm" variant={days===d?"default":"secondary"} onClick={()=>setDays(d)}>
+            {d}d
+          </Button>
+        ))}
+        <Button size="sm" variant="outline" onClick={()=>refetch()} disabled={isFetching}>
+          {isFetching && <Loader2 className="size-3.5 mr-1.5 animate-spin" />}Atualizar
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Stat label="Envios" value={data.total} />
+        <Stat label="Sucesso" value={data.success} />
+        <Stat label="Falhas" value={data.failed} />
+      </div>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Por canal</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {data.byChannel.length === 0 && <p className="text-sm text-muted-foreground">Sem envios no período.</p>}
+            {data.byChannel.map((c, i) => (
+              <Badge key={i} variant="secondary" className="text-xs">
+                {c.channel}/{c.kind}: ✅ {c.success} · ❌ {c.failed}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Linha do tempo</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={data.series}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <Tooltip />
+              <Line type="monotone" dataKey="success" stroke="#22c55e" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Últimos envios</CardTitle></CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[420px]">
+            <div className="space-y-2">
+              {data.recent.length === 0 && <p className="text-sm text-muted-foreground">Sem registros.</p>}
+              {data.recent.map((r) => (
+                <div key={r.id} className="text-xs rounded-md border border-border p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={r.success ? "default" : "destructive"} className="text-[10px]">
+                        {r.success ? "OK" : "FALHA"}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px]">{r.channel}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{r.kind}</Badge>
+                      {r.status_code != null && (
+                        <span className="text-muted-foreground">HTTP {r.status_code}</span>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
+                  </div>
+                  <div className="mt-1 text-muted-foreground">
+                    Para: <strong className="text-foreground">{r.recipient_name || r.recipient_username || r.recipient_id.slice(0,8)}</strong>
+                    {r.sender_id && (
+                      <> · De: <strong className="text-foreground">{r.sender_name || r.sender_username || r.sender_id.slice(0,8)}</strong></>
+                    )}
+                  </div>
+                  {r.error && <div className="mt-1 text-destructive truncate">{r.error}</div>}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+

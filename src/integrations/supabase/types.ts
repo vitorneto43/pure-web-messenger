@@ -466,6 +466,51 @@ export type Database = {
           },
         ]
       }
+      push_logs: {
+        Row: {
+          channel: string
+          conversation_id: string | null
+          created_at: string
+          endpoint: string | null
+          error: string | null
+          id: string
+          kind: string
+          recipient_id: string
+          sender_id: string | null
+          status_code: number | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          channel: string
+          conversation_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          recipient_id: string
+          sender_id?: string | null
+          status_code?: number | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          channel?: string
+          conversation_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          recipient_id?: string
+          sender_id?: string | null
+          status_code?: number | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -714,6 +759,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_push_logs: { Args: { _days?: number }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
