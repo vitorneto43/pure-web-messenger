@@ -118,9 +118,15 @@ function AuthInvalidator() {
   const router = useRouter();
   const qc = useQueryClient();
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(() => {
-      router.invalidate();
-      qc.invalidateQueries();
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      // Only invalidate on real sign-in / sign-out transitions.
+      // INITIAL_SESSION and TOKEN_REFRESHED fire on every page load and would
+      // re-run every loader + refetch every query right after first paint,
+      // making refresh feel "infinitely slow".
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        router.invalidate();
+        qc.invalidateQueries();
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [router, qc]);
