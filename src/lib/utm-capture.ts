@@ -168,7 +168,8 @@ export async function backfillSignupAttribution(userId: string) {
     if (ageMs > 7 * 86400_000) return; // só perfis recentes
     if (prof.signup_source && prof.signup_source !== "desconhecido") return;
     const attr = getSignupAttributionForSignup();
-    await supabase
+    console.log("[utm] Backfilling attribution for user", userId, attr);
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         signup_source: attr.signup_source,
@@ -178,7 +179,13 @@ export async function backfillSignupAttribution(userId: string) {
         signup_landing: attr.signup_landing || null,
       })
       .eq("id", userId);
-  } catch {
-    // ignore
+    if (updateError) {
+      console.warn("[utm] backfill update failed", updateError);
+    } else {
+      console.log("[utm] backfill OK", { userId, source: attr.signup_source });
+    }
+  } catch (e) {
+    console.warn("[utm] backfill error", e);
   }
 }
+
