@@ -1,11 +1,15 @@
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/format-time";
+import { downloadFile } from "@/lib/download";
+import { shareMessageExternally } from "@/lib/share-message";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 
@@ -118,7 +122,71 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }
   }
 
+  const [reply, setReply] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (!current?.media_url) return;
+    setDownloading(true);
+    setPaused(true);
+    try {
+      const ext = current.kind === "video" ? "mp4" : "jpg";
+      const name = `wavechat-status-${current.id}.${ext}`;
+      await downloadFile(current.media_url, name);
+      toast.success("Download iniciado");
+    } catch (e: any) {
+      toast.error("Não foi possível baixar");
+    } finally {
+      setDownloading(false);
+      setPaused(false);
+    }
+  }
+
+  async function handleShare() {
+    setPaused(true);
+    try {
+      await shareMessageExternally({
+        content: current.caption ?? current.content ?? null,
+        attachment_url: current.media_url,
+        attachment_type: current.kind === "video" ? "video/mp4" : current.kind === "image" ? "image/jpeg" : null,
+        attachment_name: current.media_url ? `wavechat-status-${current.id}` : null,
+      });
+    } finally {
+      setPaused(false);
+    }
+  }
+
+  async function sendReply() {
+    if (!user || !current) return;
+    const text = reply.trim();
+    if (!text) return;
+    setSendingReply(true);
+    try {
+      const convId = await getOrCreateDirectConversation(user.id, current.user_id);
+      const preview =
+        current.kind === "text"
+          ? (current.content ?? "").slice(0, 80)
+          : current.caption?.slice(0, 80) || (current.kind === "video" ? "🎬 Vídeo" : "📷 Imagem");
+      const quoted = `↪️ Resposta ao status: "${preview}"\n\n${text}`;
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: convId,
+        sender_id: user.id,
+        content: quoted,
+      });
+      if (error) throw error;
+      setReply("");
+      toast.success("Resposta enviada");
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao enviar");
+    } finally {
+      setSendingReply(false);
+    }
+  }
+
   if (!current) return null;
+
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -220,7 +288,54 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             </Button>
           </>
         ) : (
-          <p className="text-xs text-white/50">Mantenha pressionado para pausar</p>
+          <div className="flex items-center gap-2 w-full">
+            <Input
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              onFocus={() => setPaused(true)}
+              onBlur={() => setPaused(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendReply();
+                }
+              }}
+              placeholder={`Responder para ${author?.display_name ?? "..."}`}
+              className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/30"
+              disabled={sendingReply}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              onClick={sendReply}
+              disabled={sendingReply || !reply.trim()}
+              aria-label="Enviar resposta"
+            >
+              <Send className="size-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              onClick={handleShare}
+              aria-label="Compartilhar"
+            >
+              <Share2 className="size-5" />
+            </Button>
+            {current.media_url && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/10 shrink-0"
+                onClick={handleDownload}
+                disabled={downloading}
+                aria-label="Baixar"
+              >
+                <Download className="size-5" />
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
