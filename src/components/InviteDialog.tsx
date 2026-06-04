@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Copy, Share2, QrCode, Link2, Download, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,22 +27,26 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
 
-  const canvasEl = useRef<HTMLCanvasElement | null>(null);
-  const [qrReady, setQrReady] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
 
   useEffect(() => {
     if (!open || tab !== "qr") return;
-    const canvas = canvasEl.current;
-    if (!canvas) return;
-    setQrReady(false);
-    QRCode.toCanvas(canvas, link, {
-      width: 260,
-      margin: 1,
+    let cancelled = false;
+    setQrUrl(null);
+    QRCode.toDataURL(link, {
+      width: 320,
+      margin: 2,
+      errorCorrectionLevel: "M",
       color: { dark: "#000000", light: "#ffffff" },
     })
-      .then(() => setQrReady(true))
+      .then((url) => {
+        if (!cancelled) setQrUrl(url);
+      })
       .catch(() => toast.error("Falha ao gerar QR Code"));
+    return () => {
+      cancelled = true;
+    };
   }, [open, tab, link]);
 
 
@@ -72,13 +76,21 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     window.open(url, "_blank", "noopener");
   }
 
-  function downloadQR() {
-    if (!canvasEl.current) return;
-    const url = canvasEl.current.toDataURL("image/png");
+  async function downloadQR() {
+    if (!qrUrl) {
+      toast.error("Aguarde o QR Code carregar");
+      return;
+    }
+    const fileName = `wavechat-qr-${username ?? "convite"}.png`;
+    const blob = await fetch(qrUrl).then((res) => res.blob());
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `wavechat-qr-${username ?? "convite"}.png`;
+    a.download = fileName;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
   return (
@@ -121,10 +133,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
           <TabsContent value="qr" className="space-y-3 mt-4">
             <div className="flex flex-col items-center gap-3">
-              <div className="rounded-2xl bg-white p-4 shadow-md relative">
-                <canvas ref={canvasEl} className="block" />
-                {!qrReady && (
-                  <div className="absolute inset-0 grid place-items-center">
+              <div className="rounded-2xl bg-white p-4 shadow-md relative min-h-[292px] min-w-[292px] grid place-items-center">
+                {qrUrl ? (
+                  <img src={qrUrl} alt="QR Code do convite WaveChat" className="size-[260px] max-w-full object-contain" />
+                ) : (
+                  <div className="grid place-items-center">
                     <Loader2 className="size-5 animate-spin text-muted-foreground" />
                   </div>
                 )}
@@ -133,7 +146,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
                 conversa com você.
               </p>
-              <Button onClick={downloadQR} variant="outline" size="sm">
+              <Button onClick={downloadQR} variant="outline" size="sm" disabled={!qrUrl}>
                 <Download className="size-4 mr-1.5" /> Baixar QR
               </Button>
             </div>
