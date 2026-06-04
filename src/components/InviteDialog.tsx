@@ -14,6 +14,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
+type NativeSharePlugin = {
+  share?: (data: {
+    title?: string;
+    text?: string;
+    url?: string;
+    dialogTitle?: string;
+  }) => Promise<void>;
+};
+
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+    Plugins?: { Share?: NativeSharePlugin };
+  };
+};
+
+type UserMetadata = { username?: string };
+
+function isAbortError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: unknown }).name === "AbortError"
+  );
+}
+
+function getCapacitor() {
+  if (typeof window === "undefined") return undefined;
+  return (window as CapacitorWindow).Capacitor;
+}
+
+function dataUrlToFile(dataUrl: string, fileName: string) {
+  const [meta, data] = dataUrl.split(",");
+  const mime = meta.match(/data:(.*?);base64/)?.[1] ?? "image/png";
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new File([bytes], fileName, { type: mime });
+}
+
 async function logInviteAction(userId: string | undefined, target: string) {
   if (!userId) return;
   try {
@@ -22,7 +67,9 @@ async function logInviteAction(userId: string | undefined, target: string) {
       content_type: "invite",
       target,
     });
-  } catch {}
+  } catch {
+    return;
+  }
 }
 
 interface Props {
@@ -32,11 +79,9 @@ interface Props {
 
 export function InviteDialog({ open, onOpenChange }: Props) {
   const { user } = useAuth();
-  const username = (user?.user_metadata as any)?.username as string | undefined;
+  const username = (user?.user_metadata as UserMetadata | undefined)?.username;
   const base = typeof window !== "undefined" ? window.location.origin : "";
-  const link = username
-    ? `${base}/auth?invite=${encodeURIComponent(username)}`
-    : `${base}/auth`;
+  const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
   const qrShareText = `Meu QR Code do WaveChat abre por este convite: ${link}`;
 
@@ -78,9 +123,14 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   async function nativeShare() {
     void logInviteAction(user?.id, "native");
     try {
-      const nativeSharePlugin = (window as any).Capacitor?.Plugins?.Share;
+      const nativeSharePlugin = getCapacitor()?.Plugins?.Share;
       if (nativeSharePlugin?.share) {
-        await nativeSharePlugin.share({ title: "WaveChat", text: shareText, url: link, dialogTitle: "Compartilhar" });
+        await nativeSharePlugin.share({
+          title: "WaveChat",
+          text: shareText,
+          url: link,
+          dialogTitle: "Compartilhar",
+        });
         return;
       }
 
@@ -88,7 +138,10 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         await navigator.share({ title: "WaveChat", text: shareText, url: link });
         return;
       }
-    } catch {}
+    } catch {
+      openAndroidShareFallback(shareText);
+      return;
+    }
     openAndroidShareFallback(shareText);
   }
 
@@ -117,31 +170,42 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     }
     void logInviteAction(user?.id, "qr");
 
-    const nav = navigator as any;
-    const isCapacitor =
-      typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+    const nav = navigator;
+    const capacitor = getCapacitor();
+    const isCapacitor = !!capacitor?.isNativePlatform?.();
+    const fileName = `wavechat-qr-${username ?? "convite"}.png`;
+    const qrFile = dataUrlToFile(qrUrl, fileName);
 
-    const nativeSharePlugin = (window as any).Capacitor?.Plugins?.Share;
-    if (isCapacitor && nativeSharePlugin?.share) {
-      try {
-        await nativeSharePlugin.share({ title: "QR Code WaveChat", text: qrShareText, url: link, dialogTitle: "Compartilhar QR" });
-        return;
-      } catch (e: any) {
-        if (e?.name === "AbortError") return;
-      }
-    }
-
-    // No app (WebView), o await em fetch() antes de nav.share consome a
-    // "user activation" e o share sheet não abre. Chamamos nav.share
-    // SÍNCRONO no clique, só com texto+link (o link É o conteúdo do QR).
     if (isCapacitor && nav.share) {
+      try {
+        if (!nav.canShare || nav.canShare({ files: [qrFile] })) {
+          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: qrShareText });
+          return;
+        }
+      } catch (error: unknown) {
+        if (isAbortError(error)) return;
+      }
+
       try {
         await nav.share({ title: "QR Code WaveChat", text: qrShareText, url: link });
         return;
-      } catch (e: any) {
-        if (e?.name === "AbortError") return;
-        openAndroidShareFallback(qrShareText);
+      } catch (error: unknown) {
+        if (isAbortError(error)) return;
+      }
+    }
+
+    const nativeSharePlugin = capacitor?.Plugins?.Share;
+    if (isCapacitor && nativeSharePlugin?.share) {
+      try {
+        await nativeSharePlugin.share({
+          title: "QR Code WaveChat",
+          text: qrShareText,
+          url: link,
+          dialogTitle: "Compartilhar QR",
+        });
         return;
+      } catch (error: unknown) {
+        if (isAbortError(error)) return;
       }
     }
 
@@ -152,16 +216,12 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
     // Web/desktop: tenta compartilhar o PNG do QR
     try {
-      const fileName = `wavechat-qr-${username ?? "convite"}.png`;
-      const blob = await fetch(qrUrl).then((r) => r.blob());
-      const file = new File([blob], fileName, { type: "image/png" });
-
-      if (nav.share && nav.canShare?.({ files: [file] })) {
+      if (nav.share && nav.canShare?.({ files: [qrFile] })) {
         try {
-          await nav.share({ files: [file], title: "QR Code WaveChat", text: shareText });
+          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: shareText });
           return;
-        } catch (e: any) {
-          if (e?.name === "AbortError") return;
+        } catch (error: unknown) {
+          if (isAbortError(error)) return;
         }
       }
 
@@ -169,13 +229,13 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         try {
           await nav.share({ title: "WaveChat", text: shareText, url: link });
           return;
-        } catch (e: any) {
-          if (e?.name === "AbortError") return;
+        } catch (error: unknown) {
+          if (isAbortError(error)) return;
         }
       }
 
       // Último recurso (desktop): baixa o PNG
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(qrFile);
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
