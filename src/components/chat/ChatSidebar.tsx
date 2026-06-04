@@ -360,6 +360,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           setNewGroupOpen(false);
           navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
         }}
+      />
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </>
   );
