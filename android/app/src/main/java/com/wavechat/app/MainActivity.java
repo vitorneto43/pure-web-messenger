@@ -48,14 +48,18 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void dispatchCallIntent(android.content.Intent intent) {
-        if (intent == null || intent.getStringExtra("callId") == null) return;
+        if (intent == null) return;
+        String callId = intent.getStringExtra("callId");
+        String conversationId = intent.getStringExtra("conversationId");
+        if (callId == null && conversationId == null) return;
         if (bridge == null) {
             handler.postDelayed(() -> dispatchCallIntent(intent), 350);
             return;
         }
         try {
             JSONObject data = new JSONObject();
-            data.put("callId", intent.getStringExtra("callId"));
+            if (callId != null) data.put("callId", callId);
+            if (conversationId != null) data.put("conversationId", conversationId);
             data.put("action", intent.getStringExtra("action"));
             bridge.triggerWindowJSEvent("wavechat-android-intent", data.toString());
             bridge.eval("localStorage.setItem('wavechat_pending_call_intent', " + JSONObject.quote(data.toString()) + ")", null);
