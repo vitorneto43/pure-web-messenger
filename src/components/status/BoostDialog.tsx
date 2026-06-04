@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Loader2, Check, Rocket } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, Check, Rocket, Gift } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBoostCheckout } from "@/lib/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { supabase } from "@/integrations/supabase/client";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 
@@ -32,7 +33,33 @@ interface Props {
 export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [loading, setLoading] = useState<PackKey | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [freeViews, setFreeViews] = useState<number>(0);
+  const [redeemingFree, setRedeemingFree] = useState(false);
   const startCheckout = useServerFn(createBoostCheckout);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data } = await (supabase as any).rpc("get_invite_stats");
+      setFreeViews((data as any)?.pending_views ?? 0);
+    })();
+  }, [open]);
+
+  async function redeemFree() {
+    setRedeemingFree(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("redeem_free_boost", {
+        _status_id: statusId,
+      });
+      if (error) throw error;
+      toast.success(`🎁 +${(data as any)?.views ?? 100} visualizações grátis ativadas!`);
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Falha ao resgatar");
+    } finally {
+      setRedeemingFree(false);
+    }
+  }
 
   async function pick(key: PackKey) {
     setLoading(key);
@@ -78,6 +105,29 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
           {!clientSecret ? (
             <div className="space-y-2.5 mt-4">
+              {freeViews >= 100 && (
+                <div className="rounded-xl border border-pink-500/40 bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold flex items-center gap-2">
+                        <Gift className="size-4 text-pink-500" />
+                        100 visualizações grátis
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Recompensa por convidar amigos · você tem {freeViews} disponíveis
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={redeemFree}
+                      disabled={redeemingFree}
+                      className="bg-pink-500 hover:bg-pink-600 text-white shrink-0"
+                    >
+                      {redeemingFree ? <Loader2 className="size-4 animate-spin" /> : "Usar grátis"}
+                    </Button>
+                  </div>
+                </div>
+              )}
               {PACKAGES.map((p) => (
                 <button
                   key={p.key}
