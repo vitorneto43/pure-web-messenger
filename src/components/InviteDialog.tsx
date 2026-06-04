@@ -224,17 +224,22 @@ export function InviteDialog({ open, onOpenChange }: Props) {
             onClick={() => setShowFullQR(false)}
           >
             <p className="text-white text-center text-sm max-w-[300px]">
-              <strong>Toque e segure</strong> na imagem abaixo e escolha <strong>"Salvar imagem"</strong> ou <strong>"Baixar"</strong>.
+              O download direto não funciona dentro do app. Toque em <strong>"Abrir no navegador"</strong> e use o menu do Chrome para salvar a imagem.
             </p>
             <img
               src={qrUrl}
               alt="QR Code WaveChat"
-              className="bg-white p-4 rounded-2xl max-w-[80vw] max-h-[60vh] object-contain"
+              className="bg-white p-4 rounded-2xl max-w-[80vw] max-h-[50vh] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
-            <Button variant="secondary" size="sm" onClick={() => setShowFullQR(false)}>
-              Fechar
-            </Button>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button size="sm" onClick={openQRInBrowser}>
+                Abrir no navegador
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setShowFullQR(false)}>
+                Fechar
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
