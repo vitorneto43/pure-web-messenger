@@ -68,8 +68,8 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   }
 
   function downloadQR() {
-    if (!canvasRef.current) return;
-    const url = canvasRef.current.toDataURL("image/png");
+    if (!canvasEl.current) return;
+    const url = canvasEl.current.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = url;
     a.download = `wavechat-qr-${username ?? "convite"}.png`;
