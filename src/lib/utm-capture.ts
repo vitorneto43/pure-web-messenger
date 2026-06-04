@@ -81,6 +81,10 @@ export function captureUtmFromUrl() {
       params.has("msclkid");
 
     const existing = readAttribution();
+    const fromOAuth = isOAuthReferrer(referrer);
+
+    // Never let an OAuth provider redirect overwrite/create attribution.
+    if (fromOAuth && !hasUtm) return;
 
     // Only overwrite when fresh ad params arrive; keep first-touch otherwise.
     if (!hasUtm && existing) return;
@@ -95,15 +99,19 @@ export function captureUtmFromUrl() {
       return;
     }
 
+    const effectiveReferrer = fromOAuth ? "" : referrer;
     const data: SignupAttribution = {
-      source: classify(params, referrer),
-      medium: params.get("utm_medium") || (hasUtm ? "cpc" : referrer ? "referral" : "direct"),
+      source: classify(params, effectiveReferrer),
+      medium:
+        params.get("utm_medium") ||
+        (hasUtm ? "cpc" : effectiveReferrer ? "referral" : "direct"),
       campaign: params.get("utm_campaign") || undefined,
-      referrer: referrer || undefined,
+      referrer: effectiveReferrer || undefined,
       landing: window.location.pathname + window.location.search,
       ts: Date.now(),
     };
     localStorage.setItem(KEY, JSON.stringify(data));
+
   } catch {
     // ignore
   }
