@@ -96,28 +96,40 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       toast.error("Aguarde o QR Code carregar");
       return;
     }
-    const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     void logInviteAction(user?.id, "qr");
 
+    const nav = navigator as any;
+    const isCapacitor =
+      typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+
+    // No app (WebView), o await em fetch() antes de nav.share consome a
+    // "user activation" e o share sheet não abre. Chamamos nav.share
+    // SÍNCRONO no clique, só com texto+link (o link É o conteúdo do QR).
+    if (isCapacitor && nav.share) {
+      try {
+        await nav.share({ title: "WaveChat", text: shareText, url: link });
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+        // segue pro fallback
+      }
+    }
+
+    // Web/desktop: tenta compartilhar o PNG do QR
     try {
+      const fileName = `wavechat-qr-${username ?? "convite"}.png`;
       const blob = await fetch(qrUrl).then((r) => r.blob());
       const file = new File([blob], fileName, { type: "image/png" });
-      const nav = navigator as any;
 
       if (nav.share && nav.canShare?.({ files: [file] })) {
         try {
-          await nav.share({
-            files: [file],
-            title: "QR Code WaveChat",
-            text: shareText,
-          });
+          await nav.share({ files: [file], title: "QR Code WaveChat", text: shareText });
           return;
         } catch (e: any) {
           if (e?.name === "AbortError") return;
         }
       }
 
-      // Fallback web: tenta share só com texto/link, senão baixa
       if (nav.share) {
         try {
           await nav.share({ title: "WaveChat", text: shareText, url: link });
@@ -127,6 +139,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         }
       }
 
+      // Último recurso (desktop): baixa o PNG
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -136,7 +149,13 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch {
-      toast.error("Não foi possível compartilhar o QR Code");
+      // Fallback final: copia o link
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Link copiado — cole onde quiser compartilhar");
+      } catch {
+        toast.error("Não foi possível compartilhar");
+      }
     }
   }
 
