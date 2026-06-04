@@ -12,7 +12,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
-import { captureUtmFromUrl } from "@/lib/utm-capture";
+import { captureUtmFromUrl, backfillSignupAttribution } from "@/lib/utm-capture";
 import { trackPageView } from "@/lib/track";
 
 
