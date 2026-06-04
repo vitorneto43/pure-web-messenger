@@ -221,25 +221,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     };
   }, [user?.id, activeConversationId]);
 
-  async function inviteFriend() {
-    const username = user?.user_metadata?.username;
-    const base = window.location.origin;
-    const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
-    const shareText = `Vamos conversar no Wavechat! Crie sua conta aqui: ${link}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Wavechat", text: shareText, url: link });
-        return;
-      }
-    } catch {
-      // user cancelled share — fall through to clipboard
-    }
-    try {
-      await navigator.clipboard.writeText(link);
-      toast.success("Link de convite copiado!");
-    } catch {
-      toast.error("Não foi possível copiar. Link: " + link);
-    }
+  function inviteFriend() {
+    setInviteOpen(true);
   }
 
   async function logout() {
