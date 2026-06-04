@@ -187,7 +187,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <div className="flex items-center gap-2">
             <Shield className="size-5 text-primary" />
             <span className="font-semibold">WaveChat Admin</span>
-            <Badge variant="outline" className="ml-2 text-[10px]">PROTEGIDO</Badge>
+            <Badge variant="outline" className="ml-2 text-[10px] uppercase">{role}</Badge>
           </div>
           <div className="flex items-center gap-2">
             <Button
