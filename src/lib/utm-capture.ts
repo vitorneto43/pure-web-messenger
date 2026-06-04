@@ -16,15 +16,22 @@ export type SignupAttribution = {
 
 function classify(params: URLSearchParams, referrer: string): string {
   const utm = (params.get("utm_source") || "").toLowerCase();
+  const utmMedium = (params.get("utm_medium") || "").toLowerCase();
   const gclid = params.get("gclid");
+  const gbraid = params.get("gbraid");
+  const wbraid = params.get("wbraid");
+  const gadSource = params.get("gad_source") || params.get("gad_campaignid");
   const fbclid = params.get("fbclid");
   const ttclid = params.get("ttclid");
   const msclkid = params.get("msclkid");
+  const isPaid = /cpc|ppc|paid|cpm|cpv|display/.test(utmMedium);
 
-  if (gclid || /google|adwords|gads/.test(utm)) return "Google Ads";
-  if (fbclid || /facebook|meta|instagram|fb|ig/.test(utm)) return "Meta Ads";
-  if (ttclid || /tiktok/.test(utm)) return "TikTok Ads";
-  if (msclkid || /bing|microsoft/.test(utm)) return "Microsoft Ads";
+  // Paid wins over organic: ad click IDs (gclid/gbraid/wbraid/gad_source) ALWAYS mean Google Ads,
+  // even when a Google redirect strips them later in the session.
+  if (gclid || gbraid || wbraid || gadSource || /google.?ads|adwords|gads/.test(utm) || (utm.includes("google") && isPaid)) return "Google Ads";
+  if (fbclid || /facebook.?ads|meta.?ads|instagram.?ads|fb.?ads|ig.?ads/.test(utm) || ((utm.includes("facebook") || utm.includes("instagram") || utm === "fb" || utm === "ig" || utm === "meta") && isPaid)) return "Meta Ads";
+  if (ttclid || /tiktok.?ads/.test(utm) || (utm.includes("tiktok") && isPaid)) return "TikTok Ads";
+  if (msclkid || /bing.?ads|microsoft.?ads/.test(utm) || ((utm.includes("bing") || utm.includes("microsoft")) && isPaid)) return "Microsoft Ads";
   if (utm) return utm;
 
   if (referrer && !isOAuthReferrer(referrer)) {
@@ -76,6 +83,10 @@ export function captureUtmFromUrl() {
       params.has("utm_medium") ||
       params.has("utm_campaign") ||
       params.has("gclid") ||
+      params.has("gbraid") ||
+      params.has("wbraid") ||
+      params.has("gad_source") ||
+      params.has("gad_campaignid") ||
       params.has("fbclid") ||
       params.has("ttclid") ||
       params.has("msclkid");
