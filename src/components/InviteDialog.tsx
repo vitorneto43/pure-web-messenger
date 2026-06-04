@@ -195,6 +195,26 @@ export function InviteDialog({ open, onOpenChange }: Props) {
             </div>
           </TabsContent>
         </Tabs>
+
+        {showFullQR && qrUrl && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center gap-4 p-6"
+            onClick={() => setShowFullQR(false)}
+          >
+            <p className="text-white text-center text-sm max-w-[300px]">
+              <strong>Toque e segure</strong> na imagem abaixo e escolha <strong>"Salvar imagem"</strong> ou <strong>"Baixar"</strong>.
+            </p>
+            <img
+              src={qrUrl}
+              alt="QR Code WaveChat"
+              className="bg-white p-4 rounded-2xl max-w-[80vw] max-h-[60vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <Button variant="secondary" size="sm" onClick={() => setShowFullQR(false)}>
+              Fechar
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
