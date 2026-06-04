@@ -131,6 +131,23 @@ export async function backfillSignupAttribution(userId: string) {
       .maybeSingle();
     if (!prof) return;
     const ageMs = Date.now() - new Date(prof.created_at).getTime();
+
+    // If this is the user's first sign-in (profile created in last 5 min) and
+    // we haven't tracked it yet this session, fire signup_completed so OAuth
+    // (Google) signups also show up in funnel analytics.
+    if (ageMs < 5 * 60_000) {
+      const flagKey = `wc_signup_tracked_${userId}`;
+      if (!sessionStorage.getItem(flagKey)) {
+        sessionStorage.setItem(flagKey, "1");
+        try {
+          const { track } = await import("@/lib/track");
+          void track("signup_completed", { via: "oauth_or_first_signin" });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     if (ageMs > 7 * 86400_000) return; // só perfis recentes
     if (prof.signup_source && prof.signup_source !== "desconhecido") return;
     const attr = getSignupAttributionForSignup();

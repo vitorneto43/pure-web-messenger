@@ -310,7 +310,13 @@ function AuthPage() {
             {mode === "login" ? (
               <>
                 Não tem conta?{" "}
-                <button onClick={() => setMode("signup")} className="text-primary hover:underline">
+                <button
+                  onClick={() => {
+                    void track("signup_click", { from: "auth_toggle" });
+                    setMode("signup");
+                  }}
+                  className="text-primary hover:underline"
+                >
                   Criar agora
                 </button>
               </>
