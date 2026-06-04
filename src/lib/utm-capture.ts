@@ -116,3 +116,35 @@ export function getSignupAttributionForSignup() {
     signup_landing: a.landing ?? "",
   };
 }
+
+// For OAuth signups (Google) that bypass our custom signUp() data flow:
+// backfill the attribution onto the profile right after the first sign-in
+// if it's still "desconhecido".
+export async function backfillSignupAttribution(userId: string) {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("signup_source, created_at")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!prof) return;
+    const ageMs = Date.now() - new Date(prof.created_at).getTime();
+    if (ageMs > 7 * 86400_000) return; // só perfis recentes
+    if (prof.signup_source && prof.signup_source !== "desconhecido") return;
+    const attr = getSignupAttributionForSignup();
+    await supabase
+      .from("profiles")
+      .update({
+        signup_source: attr.signup_source,
+        signup_medium: attr.signup_medium || null,
+        signup_campaign: attr.signup_campaign || null,
+        signup_referrer: attr.signup_referrer || null,
+        signup_landing: attr.signup_landing || null,
+      })
+      .eq("id", userId);
+  } catch {
+    // ignore
+  }
+}
