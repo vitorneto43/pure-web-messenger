@@ -1,11 +1,15 @@
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatTime } from "@/lib/format-time";
+import { downloadFile } from "@/lib/download";
+import { shareMessageExternally } from "@/lib/share-message";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 
