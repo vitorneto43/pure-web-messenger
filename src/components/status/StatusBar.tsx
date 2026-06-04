@@ -25,7 +25,9 @@ export interface UserGroup {
   statuses: StatusRow[];
   hasUnseen: boolean;
   isOfficial: boolean;
+  isSponsored: boolean;
   firstUnseenIndex: number;
+  sponsoredStatusIds?: string[];
 }
 
 export function StatusBar() {
