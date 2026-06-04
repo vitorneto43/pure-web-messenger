@@ -195,37 +195,12 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
                 conversa com você.
               </p>
-              <Button onClick={downloadQR} variant="outline" size="sm" disabled={!qrUrl}>
-                <Download className="size-4 mr-1.5" /> Baixar QR
+              <Button onClick={shareQR} size="sm" disabled={!qrUrl}>
+                <Share2 className="size-4 mr-1.5" /> Compartilhar QR
               </Button>
             </div>
           </TabsContent>
         </Tabs>
-
-        {showFullQR && qrUrl && (
-          <div
-            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center gap-4 p-6"
-            onClick={() => setShowFullQR(false)}
-          >
-            <p className="text-white text-center text-sm max-w-[300px]">
-              O download direto não funciona dentro do app. Toque em <strong>"Abrir no navegador"</strong> e use o menu do Chrome para salvar a imagem.
-            </p>
-            <img
-              src={qrUrl}
-              alt="QR Code WaveChat"
-              className="bg-white p-4 rounded-2xl max-w-[80vw] max-h-[50vh] object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" onClick={openQRInBrowser}>
-                Abrir no navegador
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => setShowFullQR(false)}>
-                Fechar
-              </Button>
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
