@@ -83,7 +83,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
-  const qrShareText = `Meu QR Code do WaveChat está aqui: ${link}`;
+  const qrShareText = "Convite WaveChat";
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
@@ -165,16 +165,12 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
     const nav = navigator;
     const capacitor = getCapacitor();
-    const isCapacitor = !!capacitor?.isNativePlatform?.();
-    if (isCapacitor) {
-      openWhatsAppFallback(qrShareText);
-      return;
-    }
-
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
 
-    if (isCapacitor && nav.share) {
+    // Primeiro tenta compartilhar o ARQUIVO PNG do QR Code. No app isso precisa
+    // acontecer direto no clique, antes de qualquer fallback de texto/link.
+    if (nav.share) {
       try {
         if (!nav.canShare || nav.canShare({ files: [qrFile] })) {
           await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: qrShareText });
@@ -183,21 +179,14 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       } catch (error: unknown) {
         if (isAbortError(error)) return;
       }
-
-      try {
-        await nav.share({ title: "QR Code WaveChat", text: qrShareText, url: link });
-        return;
-      } catch (error: unknown) {
-        if (isAbortError(error)) return;
-      }
     }
 
     const nativeSharePlugin = capacitor?.Plugins?.Share;
-    if (isCapacitor && nativeSharePlugin?.share) {
+    if (nativeSharePlugin?.share) {
       try {
         await nativeSharePlugin.share({
           title: "QR Code WaveChat",
-          text: qrShareText,
+          text: shareText,
           url: link,
           dialogTitle: "Compartilhar QR",
         });
@@ -211,16 +200,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     try {
       if (nav.share && nav.canShare?.({ files: [qrFile] })) {
         try {
-          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: shareText });
-          return;
-        } catch (error: unknown) {
-          if (isAbortError(error)) return;
-        }
-      }
-
-      if (nav.share) {
-        try {
-          await nav.share({ title: "WaveChat", text: shareText, url: link });
+          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: qrShareText });
           return;
         } catch (error: unknown) {
           if (isAbortError(error)) return;
