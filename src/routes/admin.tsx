@@ -795,3 +795,109 @@ function PinSettings() {
 function LoadingBlock() {
   return <div className="h-64 grid place-items-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>;
 }
+
+// ============ Usage / Funnel ============
+function UsageTab() {
+  const fn = useServerFn(getUsageAnalytics);
+  const [days, setDays] = useState(30);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "usage", days],
+    queryFn: () => fn({ data: { days } }),
+    refetchInterval: 60000,
+  });
+  if (isLoading || !data) return <LoadingBlock />;
+  const f = data.funnel;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Período:</span>
+        {[7, 30, 90].map((d) => (
+          <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
+            {d}d
+          </Button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Visitas únicas" value={f.visits} icon={Users} />
+        <Stat label="Visualizações" value={data.pageViews} icon={Activity} />
+        <Stat label="Cliques em Cadastrar" value={f.signup_clicks} icon={MousePointerClick} />
+        <Stat label="Cadastros iniciados" value={f.signup_completed} hint={`Conversão: ${f.conversion_rate}%`} icon={MailCheck} />
+        <Stat label="Cliques em Entrar" value={f.login_clicks} />
+        <Stat label="Cliques em Ajuda/Suporte" value={f.help_clicks} />
+        <Stat label="Desistiram após clicar" value={f.abandon_after_click} hint="Clicou em Cadastrar mas não concluiu" />
+        <Stat label="CTR Cadastro" value={`${f.click_through_rate}%`} hint="Visitas → clique" />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Funil de conversão">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={[
+              { name: "Visitas", v: f.visits },
+              { name: "Clique Cadastrar", v: f.signup_clicks },
+              { name: "Cadastro feito", v: f.signup_completed },
+            ]}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="name" fontSize={12} />
+              <YAxis fontSize={12} />
+              <Tooltip />
+              <Bar dataKey="v" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Visitas e cadastros por dia">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data.series}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="date" fontSize={11} />
+              <YAxis fontSize={11} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="visits" name="Visitas" stroke="hsl(var(--primary))" strokeWidth={2} />
+              <Line type="monotone" dataKey="signup_clicks" name="Cliques Cadastrar" stroke="#f59e0b" strokeWidth={2} />
+              <Line type="monotone" dataKey="signups" name="Cadastros" stroke="#22c55e" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Telas mais navegadas</CardTitle>
+        <CardDescription>Onde os usuários estão passando o tempo — gargalos costumam ser saltos nesta lista.</CardDescription></CardHeader>
+        <CardContent>
+          <ScrollArea className="h-80">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground uppercase">
+                <tr><th className="py-2">Caminho</th><th className="py-2 text-right">Visualizações</th><th className="py-2 text-right">Sessões únicas</th></tr>
+              </thead>
+              <tbody>
+                {data.byPath.map((p) => (
+                  <tr key={p.path} className="border-t border-border/40">
+                    <td className="py-2 font-mono text-xs">{p.path}</td>
+                    <td className="py-2 text-right">{p.views}</td>
+                    <td className="py-2 text-right">{p.unique_sessions}</td>
+                  </tr>
+                ))}
+                {data.byPath.length === 0 && (
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Sem dados ainda. Aguarde algumas visitas.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Eventos registrados</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {data.byEvent.map((e) => (
+              <Badge key={e.name} variant="secondary" className="text-xs">{e.name}: {e.count}</Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
