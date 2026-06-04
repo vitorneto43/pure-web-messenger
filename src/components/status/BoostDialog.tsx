@@ -105,6 +105,29 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
           {!clientSecret ? (
             <div className="space-y-2.5 mt-4">
+              {freeViews >= 100 && (
+                <div className="rounded-xl border border-pink-500/40 bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold flex items-center gap-2">
+                        <Gift className="size-4 text-pink-500" />
+                        100 visualizações grátis
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Recompensa por convidar amigos · você tem {freeViews} disponíveis
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={redeemFree}
+                      disabled={redeemingFree}
+                      className="bg-pink-500 hover:bg-pink-600 text-white shrink-0"
+                    >
+                      {redeemingFree ? <Loader2 className="size-4 animate-spin" /> : "Usar grátis"}
+                    </Button>
+                  </div>
+                </div>
+              )}
               {PACKAGES.map((p) => (
                 <button
                   key={p.key}
