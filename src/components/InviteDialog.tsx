@@ -107,9 +107,6 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     };
   }, [open, tab, link]);
 
-
-
-
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(link);
@@ -261,15 +258,20 @@ export function InviteDialog({ open, onOpenChange }: Props) {
           <DialogTitle>Chamar amigos</DialogTitle>
           <DialogDescription>
             Quanto mais amigos no WaveChat, melhor a experiência. A recompensa só é liberada quando
-            seus amigos <strong>criarem a conta</strong> pelo seu link — a cada 3 cadastros confirmados,
-            você ganha <strong>100 visualizações grátis</strong> para impulsionar status.
+            seus amigos <strong>criarem a conta</strong> pelo seu link — a cada 3 cadastros
+            confirmados, você ganha <strong>100 visualizações grátis</strong> para impulsionar
+            status.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-2">
           <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="link"><Link2 className="size-4 mr-1.5" /> Link</TabsTrigger>
-            <TabsTrigger value="qr"><QrCode className="size-4 mr-1.5" /> QR Code</TabsTrigger>
+            <TabsTrigger value="link">
+              <Link2 className="size-4 mr-1.5" /> Link
+            </TabsTrigger>
+            <TabsTrigger value="qr">
+              <QrCode className="size-4 mr-1.5" /> QR Code
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="link" className="space-y-3 mt-4">
@@ -277,7 +279,10 @@ export function InviteDialog({ open, onOpenChange }: Props) {
               {link}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button onClick={shareWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
+              <Button
+                onClick={shareWhatsApp}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
                 <MessageCircle className="size-4 mr-1.5" /> WhatsApp
               </Button>
               <Button onClick={nativeShare} variant="secondary">
@@ -288,8 +293,8 @@ export function InviteDialog({ open, onOpenChange }: Props) {
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground text-center">
-              Seu @{username ?? "usuário"} é o seu nome aqui dentro — quem clicar no link vai cair direto
-              numa tela para conversar com você.
+              Seu @{username ?? "usuário"} é o seu nome aqui dentro — quem clicar no link vai cair
+              direto numa tela para conversar com você.
             </p>
           </TabsContent>
 
