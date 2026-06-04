@@ -18,6 +18,9 @@ import {
   getSignupSources,
   getUsageAnalytics,
   getPushLogs,
+  listAdmins,
+  grantAdminRole,
+  revokeAdminRole,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -96,7 +99,7 @@ function AdminGate() {
     );
   }
 
-  return <AdminPanel />;
+  return <AdminPanel role={access.data.role} isSuperadmin={access.data.isSuperadmin} />;
 }
 
 function PinScreen({ hasPin, onOk }: { hasPin: boolean; onOk: () => void }) {
@@ -178,7 +181,7 @@ function PinScreen({ hasPin, onOk }: { hasPin: boolean; onOk: () => void }) {
   );
 }
 
-function AdminPanel() {
+function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolean }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -187,7 +190,7 @@ function AdminPanel() {
           <div className="flex items-center gap-2">
             <Shield className="size-5 text-primary" />
             <span className="font-semibold">WaveChat Admin</span>
-            <Badge variant="outline" className="ml-2 text-[10px]">PROTEGIDO</Badge>
+            <Badge variant="outline" className="ml-2 text-[10px] uppercase">{role}</Badge>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -221,6 +224,7 @@ function AdminPanel() {
               <TabsTrigger value="system"><Server className="size-4 mr-1.5" />Sistema</TabsTrigger>
               <TabsTrigger value="push"><Bell className="size-4 mr-1.5" />Push</TabsTrigger>
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
+              <TabsTrigger value="admins"><Shield className="size-4 mr-1.5" />Admins</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
@@ -237,6 +241,7 @@ function AdminPanel() {
           <TabsContent value="system" className="mt-4"><SystemTab /></TabsContent>
           <TabsContent value="push" className="mt-4"><PushTab /></TabsContent>
           <TabsContent value="logs" className="mt-4"><LogsTab /></TabsContent>
+          <TabsContent value="admins" className="mt-4"><AdminsTab canEdit={isSuperadmin} /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
       </main>
@@ -997,3 +1002,113 @@ function PushTab() {
   );
 }
 
+
+function AdminsTab({ canEdit }: { canEdit: boolean }) {
+  const listFn = useServerFn(listAdmins);
+  const grantFn = useServerFn(grantAdminRole);
+  const revokeFn = useServerFn(revokeAdminRole);
+  const q = useQuery({ queryKey: ["admin", "admins"], queryFn: () => listFn() });
+
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"moderator" | "admin" | "superadmin">("admin");
+
+  const grant = useMutation({
+    mutationFn: () => grantFn({ data: { email: email.trim(), role } }),
+    onSuccess: () => {
+      toast.success("Permissão concedida");
+      setEmail("");
+      q.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const revoke = useMutation({
+    mutationFn: (v: { user_id: string; role: "moderator" | "admin" | "superadmin" }) =>
+      revokeFn({ data: v }),
+    onSuccess: () => {
+      toast.success("Permissão removida");
+      q.refetch();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Shield className="size-5" /> Administradores</CardTitle>
+          <CardDescription>
+            Permissões salvas no banco — independentes do login. Sair da conta não remove o acesso administrativo.
+            {!canEdit && " Apenas o SuperAdmin pode adicionar ou remover."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {canEdit && (
+            <div className="flex flex-col md:flex-row gap-2 p-3 rounded-lg bg-muted/40 border border-border/50">
+              <Input
+                placeholder="e-mail do usuário"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as typeof role)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="moderator">Moderator</option>
+                <option value="admin">Admin</option>
+                <option value="superadmin">SuperAdmin</option>
+              </select>
+              <Button onClick={() => grant.mutate()} disabled={!email || grant.isPending}>
+                {grant.isPending ? <Loader2 className="size-4 animate-spin" /> : "Conceder"}
+              </Button>
+            </div>
+          )}
+
+          {q.isLoading ? (
+            <div className="grid place-items-center py-8"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+          ) : (
+            <ScrollArea className="max-h-[480px]">
+              <div className="space-y-2">
+                {(q.data ?? []).map((a) => (
+                  <div key={`${a.user_id}-${a.role}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border/50">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{a.display_name ?? a.username ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground truncate">{a.email ?? a.user_id}</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={a.role === "superadmin" ? "default" : "outline"} className="uppercase text-[10px]">
+                        {a.role}
+                      </Badge>
+                      {a.protected && <Badge variant="secondary" className="text-[10px]">PROTEGIDO</Badge>}
+                      {canEdit && !a.protected && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            if (confirm(`Remover ${a.role} de ${a.email ?? a.user_id}?`)) {
+                              revoke.mutate({ user_id: a.user_id, role: a.role as "moderator" | "admin" | "superadmin" });
+                            }
+                          }}
+                          disabled={revoke.isPending}
+                        >
+                          Remover
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(q.data ?? []).length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhum administrador cadastrado.</p>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
