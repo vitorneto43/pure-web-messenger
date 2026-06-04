@@ -60,6 +60,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [loading, setLoading] = useState(true);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     requestBrowserNotificationPermission();
