@@ -681,3 +681,44 @@ export const revokeAdminRole = createServerFn({ method: "POST" })
     await logAdmin(context.userId, "revoke_role", true, { target: data.user_id, role: data.role });
     return { ok: true };
   });
+
+export const getInvitesOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin.rpc("admin_invites_overview" as never);
+    if (error) throw new Error(error.message);
+    return data as {
+      totals: { total_invites: number; confirmed: number; pending: number; unique_inviters: number };
+      inviters: Array<{
+        inviter_id: string;
+        inviter_username: string | null;
+        inviter_name: string | null;
+        inviter_email: string | null;
+        total: number;
+        confirmed: number;
+        pending: number;
+        invitees: Array<{
+          id: string;
+          username: string | null;
+          display_name: string | null;
+          email: string | null;
+          created_at: string;
+          confirmed_at: string | null;
+          status: "confirmed" | "pending";
+        }>;
+      }>;
+      recent: Array<{
+        id: string;
+        username: string | null;
+        display_name: string | null;
+        email: string | null;
+        created_at: string;
+        email_confirmed_at: string | null;
+        status: "confirmed" | "pending";
+        inviter_id: string;
+        inviter_username: string | null;
+        inviter_name: string | null;
+      }>;
+    };
+  });
