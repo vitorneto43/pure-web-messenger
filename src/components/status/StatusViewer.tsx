@@ -288,7 +288,54 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             </Button>
           </>
         ) : (
-          <p className="text-xs text-white/50">Mantenha pressionado para pausar</p>
+          <div className="flex items-center gap-2 w-full">
+            <Input
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              onFocus={() => setPaused(true)}
+              onBlur={() => setPaused(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendReply();
+                }
+              }}
+              placeholder={`Responder para ${author?.display_name ?? "..."}`}
+              className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/30"
+              disabled={sendingReply}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              onClick={sendReply}
+              disabled={sendingReply || !reply.trim()}
+              aria-label="Enviar resposta"
+            >
+              <Send className="size-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              onClick={handleShare}
+              aria-label="Compartilhar"
+            >
+              <Share2 className="size-5" />
+            </Button>
+            {current.media_url && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/10 shrink-0"
+                onClick={handleDownload}
+                disabled={downloading}
+                aria-label="Baixar"
+              >
+                <Download className="size-5" />
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
