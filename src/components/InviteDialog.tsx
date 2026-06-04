@@ -38,6 +38,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     ? `${base}/auth?invite=${encodeURIComponent(username)}`
     : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
+  const qrShareText = `Meu QR Code do WaveChat abre por este convite: ${link}`;
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
@@ -75,14 +76,32 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   }
 
   async function nativeShare() {
+    void logInviteAction(user?.id, "native");
     try {
+      const nativeSharePlugin = (window as any).Capacitor?.Plugins?.Share;
+      if (nativeSharePlugin?.share) {
+        await nativeSharePlugin.share({ title: "WaveChat", text: shareText, url: link, dialogTitle: "Compartilhar" });
+        return;
+      }
+
       if (navigator.share) {
         await navigator.share({ title: "WaveChat", text: shareText, url: link });
-        void logInviteAction(user?.id, "native");
         return;
       }
     } catch {}
-    copyLink();
+    openAndroidShareFallback(shareText);
+  }
+
+  function openAndroidShareFallback(text: string) {
+    const encodedText = encodeURIComponent(text);
+    const encodedSubject = encodeURIComponent("WaveChat");
+
+    if (/Android/i.test(navigator.userAgent)) {
+      window.location.href = `intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=${encodedText};S.android.intent.extra.SUBJECT=${encodedSubject};end`;
+      return;
+    }
+
+    window.open(`https://wa.me/?text=${encodedText}`, "_blank", "noopener");
   }
 
   function shareWhatsApp() {
@@ -102,17 +121,33 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const isCapacitor =
       typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
 
+    const nativeSharePlugin = (window as any).Capacitor?.Plugins?.Share;
+    if (isCapacitor && nativeSharePlugin?.share) {
+      try {
+        await nativeSharePlugin.share({ title: "QR Code WaveChat", text: qrShareText, url: link, dialogTitle: "Compartilhar QR" });
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+      }
+    }
+
     // No app (WebView), o await em fetch() antes de nav.share consome a
     // "user activation" e o share sheet não abre. Chamamos nav.share
     // SÍNCRONO no clique, só com texto+link (o link É o conteúdo do QR).
     if (isCapacitor && nav.share) {
       try {
-        await nav.share({ title: "WaveChat", text: shareText, url: link });
+        await nav.share({ title: "QR Code WaveChat", text: qrShareText, url: link });
         return;
       } catch (e: any) {
         if (e?.name === "AbortError") return;
-        // segue pro fallback
+        openAndroidShareFallback(qrShareText);
+        return;
       }
+    }
+
+    if (isCapacitor) {
+      openAndroidShareFallback(qrShareText);
+      return;
     }
 
     // Web/desktop: tenta compartilhar o PNG do QR
