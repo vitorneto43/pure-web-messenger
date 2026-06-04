@@ -25,15 +25,33 @@ function verifyPin(pin: string, stored: string): boolean {
 }
 
 // ============ Helpers ============
-async function assertAdmin(userId: string) {
+type RoleName = "user" | "moderator" | "admin" | "superadmin";
+const ROLE_RANK: Record<RoleName, number> = { user: 10, moderator: 20, admin: 30, superadmin: 40 };
+
+async function getUserRoles(userId: string): Promise<RoleName[]> {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
+    .eq("user_id", userId);
   if (error) throw new Error("Falha ao verificar permissão");
-  if (!data) throw new Error("Acesso negado");
+  return (data ?? []).map((r) => r.role as RoleName);
+}
+
+function maxRank(roles: RoleName[]): number {
+  return roles.reduce((m, r) => Math.max(m, ROLE_RANK[r] ?? 0), 0);
+}
+
+async function assertMinRole(userId: string, min: RoleName) {
+  const roles = await getUserRoles(userId);
+  if (maxRank(roles) < ROLE_RANK[min]) throw new Error("Acesso negado");
+}
+
+async function assertAdmin(userId: string) {
+  await assertMinRole(userId, "moderator");
+}
+
+async function assertSuperadmin(userId: string) {
+  await assertMinRole(userId, "superadmin");
 }
 
 function getClientIP() {
