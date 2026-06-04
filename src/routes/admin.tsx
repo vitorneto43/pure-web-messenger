@@ -235,6 +235,7 @@ function AdminPanel() {
           <TabsContent value="ai" className="mt-4"><AITab /></TabsContent>
           <TabsContent value="shares" className="mt-4"><SharesTab /></TabsContent>
           <TabsContent value="system" className="mt-4"><SystemTab /></TabsContent>
+          <TabsContent value="push" className="mt-4"><PushTab /></TabsContent>
           <TabsContent value="logs" className="mt-4"><LogsTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
