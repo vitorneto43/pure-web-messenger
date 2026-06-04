@@ -83,7 +83,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
-  const qrShareText = `Meu QR Code do WaveChat abre por este convite: ${link}`;
+  const qrShareText = `Meu QR Code do WaveChat está aqui: ${link}`;
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
@@ -136,22 +136,18 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         return;
       }
     } catch {
-      openAndroidShareFallback(shareText);
+      openWhatsAppFallback(shareText);
       return;
     }
-    openAndroidShareFallback(shareText);
+    openWhatsAppFallback(shareText);
   }
 
-  function openAndroidShareFallback(text: string) {
+  function openWhatsAppFallback(text: string) {
     const encodedText = encodeURIComponent(text);
-    const encodedSubject = encodeURIComponent("WaveChat");
+    const url = `https://api.whatsapp.com/send?text=${encodedText}`;
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
 
-    if (/Android/i.test(navigator.userAgent)) {
-      window.location.href = `intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=${encodedText};S.android.intent.extra.SUBJECT=${encodedSubject};end`;
-      return;
-    }
-
-    window.open(`https://wa.me/?text=${encodedText}`, "_blank", "noopener");
+    if (!opened) window.location.href = url;
   }
 
   function shareWhatsApp() {
@@ -170,6 +166,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const nav = navigator;
     const capacitor = getCapacitor();
     const isCapacitor = !!capacitor?.isNativePlatform?.();
+    if (isCapacitor) {
+      openWhatsAppFallback(qrShareText);
+      return;
+    }
+
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
 
@@ -204,11 +205,6 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       } catch (error: unknown) {
         if (isAbortError(error)) return;
       }
-    }
-
-    if (isCapacitor) {
-      openAndroidShareFallback(qrShareText);
-      return;
     }
 
     // Web/desktop: tenta compartilhar o PNG do QR
