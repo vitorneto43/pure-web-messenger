@@ -219,6 +219,7 @@ function AdminPanel() {
               <TabsTrigger value="ai"><Sparkles className="size-4 mr-1.5" />IA</TabsTrigger>
               <TabsTrigger value="shares"><Share2 className="size-4 mr-1.5" />Compart.</TabsTrigger>
               <TabsTrigger value="system"><Server className="size-4 mr-1.5" />Sistema</TabsTrigger>
+              <TabsTrigger value="push"><Bell className="size-4 mr-1.5" />Push</TabsTrigger>
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
