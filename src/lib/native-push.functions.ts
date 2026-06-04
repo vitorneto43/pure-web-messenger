@@ -145,7 +145,14 @@ async function sendNativePayloadToUser(
             ttl,
             direct_boot_ok: true,
             ...(notification
-              ? { notification: { channel_id: "default", click_action: "FLUTTER_NOTIFICATION_CLICK" } }
+              ? {
+                  notification: {
+                    channel_id: "messages",
+                    default_sound: true,
+                    default_vibrate_timings: true,
+                    notification_priority: "PRIORITY_HIGH",
+                  },
+                }
               : {}),
           },
           apns: {
