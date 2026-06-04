@@ -792,6 +792,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_invites_overview: { Args: never; Returns: Json }
       admin_list_admins: { Args: never; Returns: Json }
       admin_push_logs: { Args: { _days?: number }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
