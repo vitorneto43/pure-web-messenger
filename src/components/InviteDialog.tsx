@@ -12,6 +12,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+
+async function logInviteAction(userId: string | undefined, target: string) {
+  if (!userId) return;
+  try {
+    await supabase.from("share_logs").insert({
+      user_id: userId,
+      content_type: "invite",
+      target,
+    });
+  } catch {}
+}
 
 interface Props {
   open: boolean;
