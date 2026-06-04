@@ -98,19 +98,22 @@ export const checkAdminAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId } = context;
-    const { data: roleRow } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    const isAdmin = !!roleRow;
+    const roles = await getUserRoles(userId);
+    const rank = maxRank(roles);
+    const isAdmin = rank >= ROLE_RANK.moderator; // moderator+ can access painel
+    const isSuperadmin = rank >= ROLE_RANK.superadmin;
+    const canEdit = rank >= ROLE_RANK.admin;
+    const topRole: RoleName =
+      rank >= ROLE_RANK.superadmin ? "superadmin"
+      : rank >= ROLE_RANK.admin ? "admin"
+      : rank >= ROLE_RANK.moderator ? "moderator"
+      : "user";
     const { data: pinRow } = await supabaseAdmin
       .from("admin_pins")
       .select("user_id")
       .eq("user_id", userId)
       .maybeSingle();
-    return { isAdmin, hasPin: !!pinRow };
+    return { isAdmin, isSuperadmin, canEdit, role: topRole, hasPin: !!pinRow };
   });
 
 export const setAdminPin = createServerFn({ method: "POST" })
