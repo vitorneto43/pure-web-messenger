@@ -302,7 +302,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-2xl bg-white p-4 shadow-md relative min-h-[292px] min-w-[292px] grid place-items-center">
                 {qrUrl ? (
-                  <img src={qrUrl} alt="QR Code do convite WaveChat" className="size-[260px] max-w-full object-contain" />
+                  <img
+                    src={qrUrl}
+                    alt="QR Code do convite WaveChat"
+                    className="size-[260px] max-w-full object-contain"
+                  />
                 ) : (
                   <div className="grid place-items-center">
                     <Loader2 className="size-5 animate-spin text-muted-foreground" />
