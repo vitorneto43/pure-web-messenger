@@ -67,6 +67,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(link);
+      void logInviteAction(user?.id, "copy");
       toast.success("Link copiado!");
     } catch {
       toast.error("Falha ao copiar");
@@ -77,6 +78,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     try {
       if (navigator.share) {
         await navigator.share({ title: "WaveChat", text: shareText, url: link });
+        void logInviteAction(user?.id, "native");
         return;
       }
     } catch {}
@@ -85,6 +87,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
   function shareWhatsApp() {
     const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    void logInviteAction(user?.id, "whatsapp");
     window.open(url, "_blank", "noopener");
   }
 
@@ -102,6 +105,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     document.body.appendChild(a);
     a.click();
     a.remove();
+    void logInviteAction(user?.id, "qr");
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
