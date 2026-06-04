@@ -41,6 +41,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
+  const [showFullQR, setShowFullQR] = useState(false);
 
   useEffect(() => {
     if (!open || tab !== "qr") return;
