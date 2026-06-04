@@ -27,7 +27,7 @@ function classify(params: URLSearchParams, referrer: string): string {
   if (msclkid || /bing|microsoft/.test(utm)) return "Microsoft Ads";
   if (utm) return utm;
 
-  if (referrer) {
+  if (referrer && !isOAuthReferrer(referrer)) {
     try {
       const host = new URL(referrer).hostname.toLowerCase();
       if (host.includes("google")) return "Google (orgânico)";
@@ -43,6 +43,27 @@ function classify(params: URLSearchParams, referrer: string): string {
     }
   }
   return "direto";
+}
+
+const OAUTH_REFERRER_HOSTS = [
+  "accounts.google.com",
+  "oauth.lovable.app",
+  "appleid.apple.com",
+  "facebook.com",
+  "login.microsoftonline.com",
+  "github.com",
+  "api.twitter.com",
+  "x.com",
+];
+
+function isOAuthReferrer(referrer: string): boolean {
+  if (!referrer) return false;
+  try {
+    const host = new URL(referrer).hostname.toLowerCase();
+    return OAUTH_REFERRER_HOSTS.some((h) => host === h || host.endsWith("." + h));
+  } catch {
+    return false;
+  }
 }
 
 export function captureUtmFromUrl() {
