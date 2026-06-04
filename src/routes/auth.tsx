@@ -58,10 +58,30 @@ function AuthPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const inv = params.get("invite");
+    const KEY = "wavechat:pending_invite";
     if (inv) {
+      try {
+        localStorage.setItem(
+          KEY,
+          JSON.stringify({ username: inv, ts: Date.now() }),
+        );
+      } catch {}
       setInviteUsername(inv);
       setMode("signup");
+      return;
     }
+    // Recupera convite persistido (válido por 30 dias)
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { username?: string; ts?: number };
+      const age = Date.now() - (parsed.ts ?? 0);
+      if (parsed.username && age < 30 * 24 * 60 * 60 * 1000) {
+        setInviteUsername(parsed.username);
+      } else {
+        localStorage.removeItem(KEY);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
