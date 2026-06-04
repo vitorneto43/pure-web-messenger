@@ -92,7 +92,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="link" className="mt-2">
+        <Tabs value={tab} onValueChange={setTab} className="mt-2">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="link"><Link2 className="size-4 mr-1.5" /> Link</TabsTrigger>
             <TabsTrigger value="qr"><QrCode className="size-4 mr-1.5" /> QR Code</TabsTrigger>
