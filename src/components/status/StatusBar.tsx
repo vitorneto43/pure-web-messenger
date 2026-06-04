@@ -209,7 +209,13 @@ export function StatusBar() {
             <div className="relative">
               <Avatar
                 className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${
-                  g.isOfficial ? "ring-sky-500" : g.hasUnseen ? "ring-primary" : "ring-muted"
+                  g.isOfficial
+                    ? "ring-sky-500"
+                    : g.isSponsored
+                      ? "ring-pink-500"
+                      : g.hasUnseen
+                        ? "ring-primary"
+                        : "ring-muted"
                 }`}
               >
                 <AvatarImage src={g.user.avatar_url ?? undefined} />
@@ -226,7 +232,11 @@ export function StatusBar() {
               )}
             </div>
             <span className="text-[10px] max-w-[64px] truncate flex items-center gap-0.5 justify-center">
-              {g.user.display_name}
+              {g.isSponsored && !g.isOfficial ? (
+                <span className="text-pink-500 font-semibold">Patrocinado</span>
+              ) : (
+                g.user.display_name
+              )}
             </span>
           </button>
         ))}
