@@ -27,18 +27,21 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     : `${base}/auth`;
   const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [qrReady, setQrReady] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
+  const canvasRef = (node: HTMLCanvasElement | null) => {
+    canvasEl.current = node;
+    if (!node || !open) return;
     setQrReady(false);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    QRCode.toCanvas(canvas, link, { width: 260, margin: 1, color: { dark: "#000000", light: "#ffffff" } })
+    QRCode.toCanvas(node, link, {
+      width: 260,
+      margin: 1,
+      color: { dark: "#000000", light: "#ffffff" },
+    })
       .then(() => setQrReady(true))
       .catch(() => toast.error("Falha ao gerar QR Code"));
-  }, [open, link]);
+  };
+  const canvasEl = useRef<HTMLCanvasElement | null>(null);
+
 
   async function copyLink() {
     try {
