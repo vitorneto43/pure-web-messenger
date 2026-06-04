@@ -16,6 +16,7 @@ import {
   getAdminAccessLogs,
   getUserConfirmationStats,
   getSignupSources,
+  getUsageAnalytics,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -210,6 +211,7 @@ function AdminPanel() {
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
+              <TabsTrigger value="usage"><MousePointerClick className="size-4 mr-1.5" />Uso</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
               <TabsTrigger value="engagement"><MessageSquare className="size-4 mr-1.5" />Engajamento</TabsTrigger>
               <TabsTrigger value="calls"><Phone className="size-4 mr-1.5" />Chamadas</TabsTrigger>
@@ -224,6 +226,7 @@ function AdminPanel() {
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>
+          <TabsContent value="usage" className="mt-4"><UsageTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
           <TabsContent value="engagement" className="mt-4"><EngagementTab /></TabsContent>
           <TabsContent value="calls" className="mt-4"><CallsTab /></TabsContent>
