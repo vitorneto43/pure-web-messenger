@@ -3,6 +3,7 @@ import { z } from "zod";
 import webpush from "web-push";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendNativeMessage } from "./native-push.functions";
 
 function configureWebPush() {
   webpush.setVapidDetails(
