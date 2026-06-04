@@ -96,7 +96,7 @@ function AdminGate() {
     );
   }
 
-  return <AdminPanel />;
+  return <AdminPanel role={access.data.role} isSuperadmin={access.data.isSuperadmin} />;
 }
 
 function PinScreen({ hasPin, onOk }: { hasPin: boolean; onOk: () => void }) {
