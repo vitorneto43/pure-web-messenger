@@ -20,7 +20,6 @@ if (!i18n.isInitialized) {
       supportedLngs: SUPPORTED_LOCALES,
       load: "languageOnly",
       nonExplicitSupportedLngs: true,
-      initImmediate: false,
       interpolation: { escapeValue: false },
       detection: {
         order: [],
@@ -28,7 +27,8 @@ if (!i18n.isInitialized) {
         lookupLocalStorage: I18N_STORAGE_KEY,
       },
       react: { useSuspense: false },
-    });
+      initAsync: false,
+    } as Parameters<typeof i18n.init>[0]);
 }
 
 export function applyHtmlLang(locale: string) {
