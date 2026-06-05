@@ -264,9 +264,17 @@ export function NewsletterTab() {
                   onChange={(e) => setEditing((s) => ({ ...s, content: e.target.value }))}
                   maxLength={20000}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Título: 2–200 caracteres · Resumo: até 400 · Conteúdo: 2–20.000 caracteres.
+                </p>
                 <div className="space-y-2 rounded-md border border-dashed p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">Mídia (opcional)</p>
+                    <div>
+                      <p className="text-sm font-medium">Mídia (opcional)</p>
+                      <p className="text-xs text-muted-foreground">
+                        Imagem JPG/PNG/WebP até 8MB · Vídeo MP4 até 25MB
+                      </p>
+                    </div>
                     <div className="flex gap-2">
                       <input
                         ref={fileRef}
