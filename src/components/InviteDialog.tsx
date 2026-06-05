@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { saveNativeImageToGallery } from "@/integrations/native-call";
 
 type NativeSharePlugin = {
   share?: (data: {
@@ -185,10 +186,16 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       return;
     }
     void logInviteAction(user?.id, "qr-download");
+    const fileName = `wavechat-qr-${username ?? "convite"}.png`;
+    const savedNative = await saveNativeImageToGallery(qrUrl, fileName);
+    if (savedNative) {
+      toast.success("QR salvo na galeria");
+      return;
+    }
+
     try {
       const res = await fetch(qrUrl);
       const blob = await res.blob();
-      const fileName = `wavechat-qr-${username ?? "convite"}.png`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

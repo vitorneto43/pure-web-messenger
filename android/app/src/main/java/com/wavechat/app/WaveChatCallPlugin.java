@@ -1,24 +1,41 @@
 package com.wavechat.app;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.util.Base64;
 
 import androidx.activity.result.ActivityResult;
 
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
-@CapacitorPlugin(name = "WaveChatCall")
+import java.io.OutputStream;
+
+@CapacitorPlugin(
+    name = "WaveChatCall",
+    permissions = @Permission(strings = { Manifest.permission.WRITE_EXTERNAL_STORAGE }, alias = WaveChatCallPlugin.GALLERY_PERMISSION)
+)
 public class WaveChatCallPlugin extends Plugin {
+    static final String GALLERY_PERMISSION = "gallery";
+
     @PluginMethod
     public void stopAlerts(PluginCall call) {
         String callId = call.getString("callId", null);
@@ -69,6 +86,79 @@ public class WaveChatCallPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("ok", true);
         call.resolve(result);
+    }
+
+    @PluginMethod
+    public void saveImageToGallery(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && getPermissionState(GALLERY_PERMISSION) != PermissionState.GRANTED) {
+            requestPermissionForAlias(GALLERY_PERMISSION, call, "saveImagePermissionCallback");
+            return;
+        }
+        doSaveImageToGallery(call);
+    }
+
+    @PermissionCallback
+    private void saveImagePermissionCallback(PluginCall call) {
+        if (getPermissionState(GALLERY_PERMISSION) == PermissionState.GRANTED) {
+            doSaveImageToGallery(call);
+        } else {
+            call.reject("Permissão da galeria negada");
+        }
+    }
+
+    private void doSaveImageToGallery(PluginCall call) {
+        String dataUrl = call.getString("dataUrl", null);
+        String fileName = call.getString("fileName", "wavechat-qr-convite.png");
+        if (dataUrl == null || !dataUrl.startsWith("data:image/")) {
+            call.reject("Imagem inválida");
+            return;
+        }
+
+        try {
+            int commaIndex = dataUrl.indexOf(',');
+            if (commaIndex < 0) {
+                call.reject("Imagem inválida");
+                return;
+            }
+
+            String mimeType = dataUrl.substring(5, dataUrl.indexOf(';'));
+            byte[] imageBytes = Base64.decode(dataUrl.substring(commaIndex + 1), Base64.DEFAULT);
+            ContentResolver resolver = getContext().getContentResolver();
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Images.Media.MIME_TYPE, mimeType);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/WaveChat");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
+            }
+
+            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) {
+                call.reject("Não foi possível criar a imagem na galeria");
+                return;
+            }
+
+            try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                if (outputStream == null) {
+                    call.reject("Não foi possível abrir a galeria");
+                    return;
+                }
+                outputStream.write(imageBytes);
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues doneValues = new ContentValues();
+                doneValues.put(MediaStore.Images.Media.IS_PENDING, 0);
+                resolver.update(uri, doneValues, null, null);
+            }
+
+            JSObject result = new JSObject();
+            result.put("ok", true);
+            result.put("uri", uri.toString());
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Falha ao salvar na galeria", e);
+        }
     }
 
     @PluginMethod

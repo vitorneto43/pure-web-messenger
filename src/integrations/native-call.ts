@@ -15,6 +15,7 @@ const WaveChatCall = registerPlugin<{
   resetAudio(): Promise<{ ok: boolean }>;
   setSpeaker(options: { on: boolean }): Promise<{ ok: boolean }>;
   setBadge(options: { count: number }): Promise<{ ok: boolean }>;
+  saveImageToGallery(options: { dataUrl: string; fileName: string }): Promise<{ ok: boolean; uri?: string }>;
   getRingtone(): Promise<{ uri: string | null; name: string | null; isDefault: boolean }>;
   clearRingtone(): Promise<{ ok: boolean }>;
   pickRingtone(): Promise<{ ok: boolean; cancelled?: boolean; uri?: string; name?: string }>;
@@ -30,6 +31,17 @@ export async function setNativeSpeakerphone(on: boolean): Promise<void> {
 export async function setNativeBadge(count: number): Promise<void> {
   if (!isNativeApp()) return;
   try { await WaveChatCall.setBadge({ count: Math.max(0, count | 0) }); } catch (e) { console.error(e); }
+}
+
+export async function saveNativeImageToGallery(dataUrl: string, fileName: string): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const result = await WaveChatCall.saveImageToGallery({ dataUrl, fileName });
+    return result.ok === true;
+  } catch (e) {
+    console.error('Failed to save native image to gallery', e);
+    return false;
+  }
 }
 
 export async function getNativeRingtone(): Promise<{ uri: string | null; name: string | null; isDefault: boolean } | null> {
