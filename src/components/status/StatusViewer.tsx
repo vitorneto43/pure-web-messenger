@@ -235,7 +235,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold"
             style={{ background: current.background ?? "linear-gradient(135deg,#7c3aed,#ec4899)" }}
           >
-            {current.content}
+            <div className="relative z-20 break-words">{renderWithLinks(current.content ?? "")}</div>
           </div>
         )}
         {current.kind === "image" && current.media_url && (
@@ -257,8 +257,8 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           />
         )}
         {current.caption && (
-          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm pointer-events-none">
-            {current.caption}
+          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm z-20">
+            {renderWithLinks(current.caption)}
           </p>
         )}
 
