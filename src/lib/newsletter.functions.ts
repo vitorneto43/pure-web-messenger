@@ -4,13 +4,17 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const emailSchema = z.string().trim().email().max(255);
 
-async function assertAdmin(supabaseAdmin: any, userId: string) {
+type AdminClient = { from: (table: string) => any };
+type RoleRow = { role: string };
+type NewsletterSubscriberRow = { user_id: string | null };
+
+async function assertAdmin(supabaseAdmin: AdminClient, userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
   if (error) throw new Error("Falha ao verificar permissão");
-  const ok = (data ?? []).some((r) =>
+  const ok = ((data ?? []) as RoleRow[]).some((r) =>
     ["moderator", "admin", "superadmin"].includes(r.role as string),
   );
   if (!ok) throw new Error("Acesso negado");
@@ -97,8 +101,8 @@ export const listSentNewsletters = createServerFn({ method: "GET" })
 export const adminListNewsletters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const supabaseAdmin = await getAdminClient();
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_posts")
       .select("*")
@@ -124,8 +128,8 @@ export const adminUpsertNewsletter = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await getAdminClient();
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     if (data.id) {
       const { error } = await supabaseAdmin
         .from("newsletter_posts")
@@ -167,8 +171,8 @@ export const adminDeleteNewsletter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await getAdminClient();
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { error } = await supabaseAdmin
       .from("newsletter_posts")
       .delete()
