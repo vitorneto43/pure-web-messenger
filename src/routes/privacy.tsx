@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/public/PublicLayout";
+import { LegalLocaleNotice } from "@/components/public/LegalLocaleNotice";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
