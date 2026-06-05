@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2, Upload, X, Rocket, UserPlus } from "lucide-react";
+import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2, Upload, X, Rocket, UserPlus, Reply } from "lucide-react";
 
 type Post = {
   id: string;
