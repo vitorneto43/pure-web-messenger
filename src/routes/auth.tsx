@@ -126,7 +126,7 @@ function AuthPage() {
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email });
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
-        toast.success("Conta criada! Verifique seu email para confirmar.");
+        toast.success(t("auth.toast.signupOk"));
         setShowConfirmEmail(true);
         setMode("login");
       } else if (mode === "login") {
@@ -141,22 +141,22 @@ function AuthPage() {
           password: parsed.data.password,
         });
         if (error) throw error;
-        toast.success("Bem-vindo de volta!");
+        toast.success(t("auth.toast.welcome"));
       } else {
         const email = form.email.trim();
         if (!email) {
-          toast.error("Informe seu email");
+          toast.error(t("auth.toast.emailRequired"));
           return;
         }
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        toast.success("Enviamos um link de recuperação para seu email.");
+        toast.success(t("auth.toast.resetSent"));
         setMode("login");
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro inesperado");
+      toast.error(err instanceof Error ? err.message : t("auth.toast.unexpected"));
     } finally {
       setBusy(false);
     }
