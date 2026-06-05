@@ -222,6 +222,19 @@ export function NewsletterTab() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["nl", "fb"] }),
   });
 
+  const replyFb = useMutation({
+    mutationFn: ({ id, reply }: { id: string; reply: string }) =>
+      replyFbFn({ data: { id, reply } }),
+    onSuccess: (r, vars) => {
+      toast.success(r.notified ? "Resposta enviada ao usuário" : "Resposta salva (usuário sem conta vinculada)");
+      setReplyDrafts((s) => ({ ...s, [vars.id]: "" }));
+      setReplyOpen((s) => ({ ...s, [vars.id]: false }));
+      qc.invalidateQueries({ queryKey: ["nl", "fb"] });
+      qc.invalidateQueries({ queryKey: ["nl", "stats"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Falha ao responder"),
+  });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
