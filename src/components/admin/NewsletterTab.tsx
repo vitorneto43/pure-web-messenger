@@ -131,34 +131,48 @@ export function NewsletterTab() {
     const isImage = file.type.startsWith("image/");
     const isVideo = file.type.startsWith("video/");
     if (!isImage && !isVideo) {
-      toast.error("Selecione uma imagem ou vídeo");
+      toast.error("Selecione uma imagem (JPG/PNG/WebP) ou vídeo (MP4)");
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Arquivo muito grande (máx 50MB)");
+    const maxBytes = isImage ? 8 * 1024 * 1024 : 25 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error(
+        isImage
+          ? `Imagem muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máx 8MB.`
+          : `Vídeo muito grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Máx 25MB.`,
+      );
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Faça login novamente para enviar mídia");
       return;
     }
     setUploading(true);
+    const toastId = toast.loading(`Enviando ${(file.size / 1024 / 1024).toFixed(1)}MB...`);
     try {
-      const ext = file.name.split(".").pop() || (isImage ? "jpg" : "mp4");
-      if (!user?.id) throw new Error("Faça login novamente para enviar mídia");
+      const ext = (file.name.split(".").pop() || (isImage ? "jpg" : "mp4")).toLowerCase();
       const path = `${user.id}/newsletter/${Date.now()}-${Math.random()
         .toString(36)
         .slice(2, 8)}.${ext}`;
+      console.log("[newsletter upload] start", { path, size: file.size, type: file.type });
       const { error } = await supabase.storage
         .from("chat-uploads")
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (error) throw error;
+        .upload(path, file, { contentType: file.type, upsert: false, cacheControl: "3600" });
+      if (error) {
+        console.error("[newsletter upload] storage error", error);
+        throw error;
+      }
       const { data } = supabase.storage.from("chat-uploads").getPublicUrl(path);
+      console.log("[newsletter upload] success", data.publicUrl);
       setEditing((s) => ({
         ...s,
         media_url: data.publicUrl,
         media_type: isImage ? "image" : "video",
       }));
-      toast.success("Mídia enviada");
+      toast.success("Mídia enviada", { id: toastId });
     } catch (e) {
-      console.error("[newsletter upload]", e);
-      toast.error((e as Error).message || "Falha no upload");
+      console.error("[newsletter upload] failed", e);
+      toast.error((e as Error).message || "Falha no upload", { id: toastId });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
