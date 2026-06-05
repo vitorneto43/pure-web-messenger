@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, X, Send, MessageSquare, Sparkles, Loader2 } from "lucide-react";
+import { Mail, X, Send, MessageSquare, Sparkles, Loader2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,26 @@ const DISMISS_KEY = "wc_newsletter_dismissed_v1";
 const SUB_KEY = "wc_newsletter_subscribed";
 const CONSENT_KEY = "wc_newsletter_consent_v1"; // "accepted" | "declined" | null
 const CONSENT_PROMPT_AT_KEY = "wc_newsletter_consent_prompt_at";
+const POS_KEY = "wc_newsletter_pos_v1";
 const DECLINE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
+
+const WIDGET_W = 56; // button width in px (approx)
+const WIDGET_H = 56; // button height in px (approx)
+const MARGIN = 20;   // 20px margin (Tailwind bottom-5 right-5)
 
 // Hide on routes where the widget would obscure UI.
 const HIDDEN_PATH_PREFIXES = ["/admin", "/auth", "/reset-password"];
 
 function shouldHideOnPath(path: string) {
   return HIDDEN_PATH_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+}
+
+function getDefaultPos() {
+  if (typeof window === "undefined") return { x: 0, y: 0 };
+  return {
+    x: window.innerWidth - WIDGET_W - MARGIN,
+    y: window.innerHeight - WIDGET_H - MARGIN,
+  };
 }
 
 export function NewsletterWidget() {
@@ -37,6 +50,19 @@ export function NewsletterWidget() {
 
   const subscribeFn = useServerFn(subscribeNewsletter);
   const feedbackFn = useServerFn(submitNewsletterFeedback);
+
+  const [pos, setPos] = useState<{ x: number; y: number }>(() => {
+    if (typeof window === "undefined") return { x: 0, y: 0 };
+    try {
+      const raw = localStorage.getItem(POS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return getDefaultPos();
+  });
+
+  const draggingRef = useRef(false);
+  const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -70,6 +96,98 @@ export function NewsletterWidget() {
   useEffect(() => {
     if (user?.email) setEmail((e) => e || user.email!);
   }, [user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => {
+      setPos((prev) => ({
+        x: Math.min(prev.x, window.innerWidth - WIDGET_W - MARGIN),
+        y: Math.min(prev.y, window.innerHeight - WIDGET_H - MARGIN),
+      }));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!draggingRef.current || !dragStartRef.current) return;
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      let nx = dragStartRef.current.posX + dx;
+      let ny = dragStartRef.current.posY + dy;
+      if (typeof window !== "undefined") {
+        nx = Math.max(MARGIN, Math.min(nx, window.innerWidth - WIDGET_W - MARGIN));
+        ny = Math.max(MARGIN, Math.min(ny, window.innerHeight - WIDGET_H - MARGIN));
+      }
+      setPos({ x: nx, y: ny });
+    }
+    function onUp() {
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        dragStartRef.current = null;
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(POS_KEY, JSON.stringify(pos));
+          } catch { /* ignore */ }
+        }
+      }
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [pos]);
+
+  useEffect(() => {
+    function onTouchMove(e: TouchEvent) {
+      if (!draggingRef.current || !dragStartRef.current) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartRef.current.x;
+      const dy = touch.clientY - dragStartRef.current.y;
+      let nx = dragStartRef.current.posX + dx;
+      let ny = dragStartRef.current.posY + dy;
+      if (typeof window !== "undefined") {
+        nx = Math.max(MARGIN, Math.min(nx, window.innerWidth - WIDGET_W - MARGIN));
+        ny = Math.max(MARGIN, Math.min(ny, window.innerHeight - WIDGET_H - MARGIN));
+      }
+      setPos({ x: nx, y: ny });
+    }
+    function onTouchEnd() {
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        dragStartRef.current = null;
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(POS_KEY, JSON.stringify(pos));
+          } catch { /* ignore */ }
+        }
+      }
+    }
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [pos]);
+
+  function startDrag(clientX: number, clientY: number) {
+    draggingRef.current = true;
+    dragStartRef.current = { x: clientX, y: clientY, posX: pos.x, posY: pos.y };
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLElement>) {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    startDrag(e.clientX, e.clientY);
+  }
+
+  function handleTouchStart(e: React.TouchEvent<HTMLElement>) {
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY);
+  }
 
   if (shouldHideOnPath(path)) return null;
 
@@ -156,9 +274,23 @@ export function NewsletterWidget() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden">
+    <div
+      ref={containerRef}
+      className="fixed z-[60] flex flex-col items-end gap-3 print:hidden select-none"
+      style={{ left: pos.x, top: pos.y, width: WIDGET_W, touchAction: "none" }}
+    >
+      {/* Drag handle grip indicator */}
+      <div
+        className="absolute -top-4 left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-muted-foreground transition"
+        onPointerDown={handlePointerDown}
+        onTouchStart={handleTouchStart}
+        title="Arraste para mover"
+      >
+        <GripVertical className="size-4" />
+      </div>
+
       {showConsent && !subscribed && (
-        <div className="w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="absolute bottom-[calc(100%+12px)] right-0 w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="relative bg-gradient-to-br from-primary to-primary/70 px-5 py-4 text-primary-foreground">
             <button
               onClick={declineConsent}
@@ -203,7 +335,7 @@ export function NewsletterWidget() {
         </div>
       )}
       {open && (
-        <div className="w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="absolute bottom-[calc(100%+12px)] right-0 w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="relative bg-gradient-to-br from-primary to-primary/70 px-5 py-4 text-primary-foreground">
             <button
               onClick={() => setOpen(false)}
@@ -324,8 +456,17 @@ export function NewsletterWidget() {
       )}
 
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="relative size-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl active:scale-95 transition grid place-items-center"
+        onPointerDown={(e) => {
+          startDrag(e.clientX, e.clientY);
+        }}
+        onTouchStart={handleTouchStart}
+        onClick={() => {
+          // Only toggle if not dragging (small threshold handled by distance in move)
+          // We rely on the fact that if the user dragged far, the click won't fire naturally
+          // because pointerdown started drag and the element moved.
+          setOpen((v) => !v);
+        }}
+        className="relative size-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl active:scale-95 transition grid place-items-center cursor-grab active:cursor-grabbing"
         aria-label="Newsletter WaveChat"
       >
         {open ? <X className="size-6" /> : <Mail className="size-6" />}
