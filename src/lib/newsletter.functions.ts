@@ -286,15 +286,40 @@ export const adminBulkSubscribeAllUsers = createServerFn({ method: "POST" })
         status: "active" as const,
       }));
 
-    if (rows.length === 0) return { inserted: 0, updated: 0, total: 0 };
+    if (rows.length === 0) return { inserted: 0, total: 0 };
 
-    // Upsert by email (unique). Reactivates any unsubscribed records.
-    const { error: upsertError, count } = await supabaseAdmin
+    // Fetch existing emails (case-insensitive unique index exists on lower(email))
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from("newsletter_subscribers")
-      .upsert(rows, { onConflict: "email", count: "exact" });
-    if (upsertError) throw new Error(upsertError.message);
+      .select("email, id, user_id, status");
+    if (existingError) throw new Error(existingError.message);
+    const existingSet = new Set(
+      ((existing ?? []) as { email: string }[]).map((r) => r.email.toLowerCase()),
+    );
+    const toInsert = rows.filter((r) => !existingSet.has(r.email));
 
-    return { inserted: count ?? rows.length, total: rows.length };
+    // Reactivate any inactive matching records
+    const emailsToReactivate = rows
+      .filter((r) => existingSet.has(r.email))
+      .map((r) => r.email);
+    if (emailsToReactivate.length > 0) {
+      await supabaseAdmin
+        .from("newsletter_subscribers")
+        .update({ status: "active", unsubscribed_at: null })
+        .in("email", emailsToReactivate)
+        .neq("status", "active");
+    }
+
+    let inserted = 0;
+    if (toInsert.length > 0) {
+      const { error: insertError, count } = await supabaseAdmin
+        .from("newsletter_subscribers")
+        .insert(toInsert, { count: "exact" });
+      if (insertError) throw new Error(insertError.message);
+      inserted = count ?? toInsert.length;
+    }
+
+    return { inserted, total: rows.length };
   });
 
 
