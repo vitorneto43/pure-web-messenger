@@ -4,6 +4,8 @@ import { Copy, QrCode, ExternalLink, Loader2, Landmark, Phone, Video, PhoneMisse
 import { toast } from "sonner";
 import { PIX_REGEX, decodePixMessage, buildPixPayload, type PixMessage } from "@/lib/pix";
 import { fetchLinkPreview, type LinkPreview } from "@/lib/link-preview.functions";
+import { getEmbedInfo } from "@/lib/link-embed";
+
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { getBank, openBankApp } from "@/lib/banks";
