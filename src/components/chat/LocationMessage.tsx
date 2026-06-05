@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LocationMap } from "./LocationMap";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface StaticProps {
   kind: "static";
@@ -32,6 +33,7 @@ interface LiveRow {
 }
 
 export function LocationMessage(props: Props) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [live, setLive] = useState<LiveRow | null>(null);
 
@@ -90,15 +92,15 @@ export function LocationMessage(props: Props) {
       .from("live_locations")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", props.liveId);
-    if (error) toast.error("Não foi possível parar");
-    else toast.success("Localização ao vivo encerrada");
+    if (error) toast.error(t("chat.stopSharingError"));
+    else toast.success(t("chat.stopSharingSuccess"));
   }
 
   if (lat == null || lng == null) {
     return (
       <div className="mb-1 flex items-center gap-2 text-sm opacity-70">
         <MapPin className="size-4" />
-        {isLive ? "Carregando localização ao vivo…" : "Localização indisponível"}
+        {isLive ? t("chat.liveLocationLoading") : t("chat.locationUnavailableLabel")}
       </div>
     );
   }
@@ -129,13 +131,17 @@ export function LocationMessage(props: Props) {
               )}
               <div className="min-w-0">
                 <div className="text-xs font-medium truncate">
-                  {isLive ? (active ? "Localização ao vivo" : "Localização ao vivo (encerrada)") : "Localização"}
+                  {isLive
+                    ? active
+                      ? t("chat.liveLocationActive")
+                      : t("chat.liveLocationEnded")
+                    : t("chat.locationLabel")}
                 </div>
                 <div className="text-[10px] text-muted-foreground truncate">
                   {isLive && active
-                    ? `Atualiza ao vivo • expira em ${remainingMin} min`
+                    ? t("chat.liveLocationUpdateText", { min: remainingMin })
                     : isLive
-                      ? "Compartilhamento encerrado"
+                      ? t("chat.liveLocationEndedText")
                       : `${lat.toFixed(5)}, ${lng.toFixed(5)}`}
                 </div>
               </div>
@@ -149,7 +155,7 @@ export function LocationMessage(props: Props) {
             onClick={stopSharing}
             className="w-full px-3 py-1.5 text-xs font-medium text-destructive border-t border-border hover:bg-destructive/10 flex items-center justify-center gap-1.5"
           >
-            <Square className="size-3 fill-current" /> Parar de compartilhar
+            <Square className="size-3 fill-current" /> {t("chat.stopSharing")}
           </button>
         )}
       </div>
@@ -159,7 +165,7 @@ export function LocationMessage(props: Props) {
           <DialogHeader className="px-4 pt-4 pb-2">
             <DialogTitle className="flex items-center gap-2">
               {isLive ? <Radio className="size-4 text-emerald-500" /> : <MapPin className="size-4 text-primary" />}
-              {isLive ? "Localização ao vivo" : "Localização"}
+              {isLive ? t("chat.liveLocationDialogTitle") : t("chat.locationDialogTitle")}
             </DialogTitle>
           </DialogHeader>
           <LocationMap
@@ -173,20 +179,16 @@ export function LocationMessage(props: Props) {
           <div className="p-3 flex flex-wrap gap-2 items-center justify-between">
             <div className="text-xs text-muted-foreground">
               {lat.toFixed(6)}, {lng.toFixed(6)}
-              {accuracy ? ` • precisão ±${Math.round(accuracy)}m` : ""}
+              {accuracy ? ` • ${t("chat.accuracy", { m: Math.round(accuracy) })}` : ""}
             </div>
             <div className="flex gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="secondary"
-              >
+              <Button asChild size="sm" variant="secondary">
                 <a
                   href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Abrir no mapa
+                  {t("chat.openOnMap")}
                 </a>
               </Button>
               <Button asChild size="sm">
@@ -195,7 +197,7 @@ export function LocationMessage(props: Props) {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Como chegar
+                  {t("chat.getDirections")}
                 </a>
               </Button>
             </div>

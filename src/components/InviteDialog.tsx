@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { saveNativeImageToGallery } from "@/integrations/native-call";
+import { useTranslation } from "react-i18next";
 
 type NativeSharePlugin = {
   share?: (data: {
@@ -79,12 +80,13 @@ interface Props {
 }
 
 export function InviteDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const username = (user?.user_metadata as UserMetadata | undefined)?.username;
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const link = username ? `${base}/auth?invite=${encodeURIComponent(username)}` : `${base}/auth`;
-  const shareText = `Vamos conversar no WaveChat! Crie sua conta: ${link}`;
-  const qrShareText = "Convite WaveChat";
+  const shareText = t("app.invite.shareText", { link });
+  const qrShareText = t("app.invite.shareQrText");
 
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [tab, setTab] = useState("link");
@@ -102,19 +104,19 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       .then((url) => {
         if (!cancelled) setQrUrl(url);
       })
-      .catch(() => toast.error("Falha ao gerar QR Code"));
+      .catch(() => toast.error(t("app.invite.toastQrFail")));
     return () => {
       cancelled = true;
     };
-  }, [open, tab, link]);
+  }, [open, tab, link, t]);
 
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(link);
       void logInviteAction(user?.id, "copy");
-      toast.success("Link copiado!");
+      toast.success(t("app.invite.toastLinkCopied"));
     } catch {
-      toast.error("Falha ao copiar");
+      toast.error(t("app.invite.toastCopyFail"));
     }
   }
 
@@ -124,16 +126,16 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       const nativeSharePlugin = getCapacitor()?.Plugins?.Share;
       if (nativeSharePlugin?.share) {
         await nativeSharePlugin.share({
-          title: "WaveChat",
+          title: t("app.invite.shareTitle"),
           text: shareText,
           url: link,
-          dialogTitle: "Compartilhar",
+          dialogTitle: t("app.invite.shareDialogTitle"),
         });
         return;
       }
 
       if (navigator.share) {
-        await navigator.share({ title: "WaveChat", text: shareText, url: link });
+        await navigator.share({ title: t("app.invite.shareTitle"), text: shareText, url: link });
         return;
       }
     } catch {
@@ -153,7 +155,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
   async function copyQrImage() {
     if (!qrUrl) {
-      toast.error("Aguarde o QR Code carregar");
+      toast.error(t("app.invite.toastQrWait"));
       return;
     }
     void logInviteAction(user?.id, "qr-copy");
@@ -166,30 +168,30 @@ export function InviteDialog({ open, onOpenChange }: Props) {
         await navigator.clipboard.write([
           new ClipboardItemCtor({ [blob.type]: blob }),
         ]);
-        toast.success("QR copiado — cole em qualquer app");
+        toast.success(t("app.invite.toastQrCopied"));
         return;
       }
       throw new Error("clipboard-image-unsupported");
     } catch {
       try {
         await navigator.clipboard.writeText(link);
-        toast.success("Imagem não suportada — link copiado");
+        toast.success(t("app.invite.toastImageUnsupported"));
       } catch {
-        toast.error("Não foi possível copiar");
+        toast.error(t("app.invite.toastCantCopy"));
       }
     }
   }
 
   async function downloadQr() {
     if (!qrUrl) {
-      toast.error("Aguarde o QR Code carregar");
+      toast.error(t("app.invite.toastQrWait"));
       return;
     }
     void logInviteAction(user?.id, "qr-download");
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const savedNative = await saveNativeImageToGallery(qrUrl, fileName);
     if (savedNative) {
-      toast.success("QR salvo na galeria");
+      toast.success(t("app.invite.toastQrSavedGallery"));
       return;
     }
 
@@ -204,9 +206,9 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
-      toast.success("QR salvo — anexe da galeria");
+      toast.success(t("app.invite.toastQrSaved"));
     } catch {
-      toast.error("Falha ao salvar");
+      toast.error(t("app.invite.toastSaveFail"));
     }
   }
 
@@ -214,9 +216,9 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     try {
       await navigator.clipboard.writeText(link);
       void logInviteAction(user?.id, "qr-link-copy");
-      toast.success("Link copiado — cole onde quiser");
+      toast.success(t("app.invite.toastLinkCopiedShare"));
     } catch {
-      toast.error("Falha ao copiar");
+      toast.error(t("app.invite.toastCopyFail"));
     }
   }
 
@@ -228,7 +230,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
 
   async function shareQR() {
     if (!qrUrl) {
-      toast.error("Aguarde o QR Code carregar");
+      toast.error(t("app.invite.toastQrWait"));
       return;
     }
     void logInviteAction(user?.id, "qr");
@@ -238,12 +240,10 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
 
-    // Primeiro tenta compartilhar o ARQUIVO PNG do QR Code. No app isso precisa
-    // acontecer direto no clique, antes de qualquer fallback de texto/link.
     if (nav.share) {
       try {
         if (!nav.canShare || nav.canShare({ files: [qrFile] })) {
-          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: qrShareText });
+          await nav.share({ files: [qrFile], title: `QR Code ${t("app.invite.shareTitle")}`, text: qrShareText });
           return;
         }
       } catch (error: unknown) {
@@ -255,10 +255,10 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     if (nativeSharePlugin?.share) {
       try {
         await nativeSharePlugin.share({
-          title: "QR Code WaveChat",
+          title: `QR Code ${t("app.invite.shareTitle")}`,
           text: shareText,
           url: link,
-          dialogTitle: "Compartilhar QR",
+          dialogTitle: t("app.invite.shareQrTitle"),
         });
         return;
       } catch (error: unknown) {
@@ -266,18 +266,16 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       }
     }
 
-    // Web/desktop: tenta compartilhar o PNG do QR
     try {
       if (nav.share && nav.canShare?.({ files: [qrFile] })) {
         try {
-          await nav.share({ files: [qrFile], title: "QR Code WaveChat", text: qrShareText });
+          await nav.share({ files: [qrFile], title: `QR Code ${t("app.invite.shareTitle")}`, text: qrShareText });
           return;
         } catch (error: unknown) {
           if (isAbortError(error)) return;
         }
       }
 
-      // Último recurso (desktop): baixa o PNG
       const url = URL.createObjectURL(qrFile);
       const a = document.createElement("a");
       a.href = url;
@@ -287,12 +285,11 @@ export function InviteDialog({ open, onOpenChange }: Props) {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch {
-      // Fallback final: copia o link
       try {
         await navigator.clipboard.writeText(link);
-        toast.success("Link copiado — cole onde quiser compartilhar");
+        toast.success(t("app.invite.toastLinkCopiedFallback"));
       } catch {
-        toast.error("Não foi possível compartilhar");
+        toast.error(t("app.invite.toastCantShare"));
       }
     }
   }
@@ -301,22 +298,19 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Chamar amigos</DialogTitle>
-          <DialogDescription>
-            Quanto mais amigos no WaveChat, melhor a experiência. A recompensa só é liberada quando
-            seus amigos <strong>criarem a conta</strong> pelo seu link — a cada 3 cadastros
-            confirmados, você ganha <strong>100 visualizações grátis</strong> para impulsionar
-            status.
-          </DialogDescription>
+          <DialogTitle>{t("app.invite.dialogTitle")}</DialogTitle>
+          <DialogDescription
+            dangerouslySetInnerHTML={{ __html: t("app.invite.dialogDesc") }}
+          />
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-2">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="link">
-              <Link2 className="size-4 mr-1.5" /> Link
+              <Link2 className="size-4 mr-1.5" /> {t("app.invite.tabLink")}
             </TabsTrigger>
             <TabsTrigger value="qr">
-              <QrCode className="size-4 mr-1.5" /> QR Code
+              <QrCode className="size-4 mr-1.5" /> {t("app.invite.tabQr")}
             </TabsTrigger>
           </TabsList>
 
@@ -329,18 +323,17 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 onClick={shareWhatsApp}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                <MessageCircle className="size-4 mr-1.5" /> WhatsApp
+                <MessageCircle className="size-4 mr-1.5" /> {t("app.invite.btnWhatsapp")}
               </Button>
               <Button onClick={nativeShare} variant="secondary">
-                <Share2 className="size-4 mr-1.5" /> Compartilhar
+                <Share2 className="size-4 mr-1.5" /> {t("app.invite.btnShare")}
               </Button>
               <Button onClick={copyLink} variant="outline" className="col-span-2">
-                <Copy className="size-4 mr-1.5" /> Copiar link
+                <Copy className="size-4 mr-1.5" /> {t("app.invite.btnCopyLink")}
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground text-center">
-              Seu @{username ?? "usuário"} é o seu nome aqui dentro — quem clicar no link vai cair
-              direto numa tela para conversar com você.
+              {t("app.invite.userHint", { username: username ?? "usuário" })}
             </p>
           </TabsContent>
 
@@ -350,7 +343,7 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 {qrUrl ? (
                   <img
                     src={qrUrl}
-                    alt="QR Code do convite WaveChat"
+                    alt={t("app.invite.qrAlt")}
                     className="size-[260px] max-w-full object-contain"
                   />
                 ) : (
@@ -360,27 +353,26 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 )}
               </div>
               <p className="text-sm text-center text-muted-foreground max-w-[260px]">
-                Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
-                conversa com você.
+                {t("app.invite.qrHint")}
               </p>
               <div className="grid grid-cols-2 gap-2 w-full max-w-[280px]">
                 <Button onClick={shareQR} size="sm" disabled={!qrUrl} variant="secondary">
-                  <Share2 className="size-4 mr-1.5" /> Compartilhar
+                  <Share2 className="size-4 mr-1.5" /> {t("app.invite.btnShare")}
                 </Button>
                 <Button onClick={downloadQr} size="sm" disabled={!qrUrl}>
-                  <Download className="size-4 mr-1.5" /> Salvar imagem
+                  <Download className="size-4 mr-1.5" /> {t("app.invite.btnSaveImage")}
                 </Button>
                 <Button onClick={copyQrImage} size="sm" variant="outline" disabled={!qrUrl}>
-                  <Copy className="size-4 mr-1.5" /> Copiar imagem
+                  <Copy className="size-4 mr-1.5" /> {t("app.invite.btnCopyImage")}
                 </Button>
                 <Button onClick={copyQrLink} size="sm" variant="outline">
-                  <Link2 className="size-4 mr-1.5" /> Copiar link
+                  <Link2 className="size-4 mr-1.5" /> {t("app.invite.btnCopyLink")}
                 </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
-                Se colar não funcionar, use <strong>Salvar imagem</strong> e anexe o QR da galeria
-                no WhatsApp, Instagram ou Telegram.
-              </p>
+              <p
+                className="text-[11px] text-muted-foreground text-center max-w-[260px]"
+                dangerouslySetInnerHTML={{ __html: t("app.invite.qrFooter") }}
+              />
             </div>
           </TabsContent>
         </Tabs>

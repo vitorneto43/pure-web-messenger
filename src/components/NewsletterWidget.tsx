@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { subscribeNewsletter, submitNewsletterFeedback } from "@/lib/newsletter.functions";
+import { useTranslation } from "react-i18next";
 
 const DISMISS_KEY = "wc_newsletter_dismissed_v1";
 const SUB_KEY = "wc_newsletter_subscribed";
@@ -48,6 +49,7 @@ export function NewsletterWidget() {
   const [consent, setConsent] = useState<"accepted" | "declined" | null>(null);
   const [showConsent, setShowConsent] = useState(false);
 
+  const { t } = useTranslation();
   const subscribeFn = useServerFn(subscribeNewsletter);
   const feedbackFn = useServerFn(submitNewsletterFeedback);
 
@@ -194,7 +196,7 @@ export function NewsletterWidget() {
   async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Informe um e-mail válido");
+      toast.error(t("app.newsletter.toastInvalidEmail"));
       return;
     }
     setBusy(true);
@@ -204,10 +206,10 @@ export function NewsletterWidget() {
       });
       localStorage.setItem(SUB_KEY, "1");
       setSubscribed(true);
-      toast.success("Inscrição confirmada! Você receberá nossas novidades.");
+      toast.success(t("app.newsletter.toastSubscribed"));
       setTab("feedback");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao inscrever");
+      toast.error(err instanceof Error ? err.message : t("app.newsletter.toastSubFail"));
     } finally {
       setBusy(false);
     }
@@ -216,7 +218,7 @@ export function NewsletterWidget() {
   async function handleFeedback(e: React.FormEvent) {
     e.preventDefault();
     if (message.trim().length < 2) {
-      toast.error("Digite uma mensagem");
+      toast.error(t("app.newsletter.toastEmptyMsg"));
       return;
     }
     setBusy(true);
@@ -228,11 +230,11 @@ export function NewsletterWidget() {
           userId: user?.id ?? null,
         },
       });
-      toast.success("Mensagem enviada! Obrigado pelo retorno.");
+      toast.success(t("app.newsletter.toastFeedbackSent"));
       setMessage("");
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao enviar");
+      toast.error(err instanceof Error ? err.message : t("app.newsletter.toastSendFail"));
     } finally {
       setBusy(false);
     }
@@ -258,10 +260,10 @@ export function NewsletterWidget() {
         });
         localStorage.setItem(SUB_KEY, "1");
         setSubscribed(true);
-        toast.success("Inscrição confirmada! Você receberá nossas novidades.");
+        toast.success(t("app.newsletter.toastSubscribed"));
         setShowConsent(false);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Falha ao inscrever");
+        toast.error(err instanceof Error ? err.message : t("app.newsletter.toastSubFail"));
       } finally {
         setBusy(false);
       }
@@ -284,7 +286,7 @@ export function NewsletterWidget() {
         className="absolute -top-4 left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-muted-foreground transition"
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
-        title="Arraste para mover"
+        title={t("app.newsletter.dragTitle")}
       >
         <GripVertical className="size-4" />
       </div>
@@ -295,7 +297,7 @@ export function NewsletterWidget() {
             <button
               onClick={declineConsent}
               className="absolute right-3 top-3 rounded-full p-1 hover:bg-white/15 transition"
-              aria-label="Fechar"
+              aria-label={t("app.newsletter.ariaClose")}
             >
               <X className="size-4" />
             </button>
@@ -305,17 +307,17 @@ export function NewsletterWidget() {
               </div>
               <div>
                 <h3 className="font-semibold text-base leading-tight">
-                  Quer receber a newsletter?
+                  {t("app.newsletter.consentTitle")}
                 </h3>
                 <p className="text-xs text-white/85">
-                  Novidades, dicas e atualizações direto da nossa redação.
+                  {t("app.newsletter.consentSubtitle")}
                 </p>
               </div>
             </div>
           </div>
           <div className="p-4 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Só enviamos com o seu consentimento. Sem spam, e você pode sair quando quiser.
+              {t("app.newsletter.consentBody")}
             </p>
             <div className="flex gap-2">
               <Button
@@ -324,11 +326,11 @@ export function NewsletterWidget() {
                 onClick={declineConsent}
                 disabled={busy}
               >
-                Agora não
+{t("app.newsletter.btnDecline")}
               </Button>
               <Button className="flex-1" onClick={acceptConsent} disabled={busy}>
                 {busy ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-                Sim, quero receber
+{t("app.newsletter.btnAccept")}
               </Button>
             </div>
           </div>
@@ -340,7 +342,7 @@ export function NewsletterWidget() {
             <button
               onClick={() => setOpen(false)}
               className="absolute right-3 top-3 rounded-full p-1 hover:bg-white/15 transition"
-              aria-label="Fechar"
+              aria-label={t("app.newsletter.ariaClose")}
             >
               <X className="size-4" />
             </button>
@@ -349,9 +351,9 @@ export function NewsletterWidget() {
                 <Sparkles className="size-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-base leading-tight">WaveChat News</h3>
+                <h3 className="font-semibold text-base leading-tight">{t("app.newsletter.widgetTitle")}</h3>
                 <p className="text-xs text-white/85">
-                  Novidades, atualizações e dicas direto pra você.
+                  {t("app.newsletter.widgetSubtitle")}
                 </p>
               </div>
             </div>
@@ -366,7 +368,7 @@ export function NewsletterWidget() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Mail className="size-3.5 inline mr-1" /> Inscrever
+              <Mail className="size-3.5 inline mr-1" /> {t("app.newsletter.tabSubscribe")}
             </button>
             <button
               onClick={() => setTab("feedback")}
@@ -376,7 +378,7 @@ export function NewsletterWidget() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <MessageSquare className="size-3.5 inline mr-1" /> Fale com a gente
+              <MessageSquare className="size-3.5 inline mr-1" /> {t("app.newsletter.tabFeedback")}
             </button>
           </div>
 
@@ -386,19 +388,19 @@ export function NewsletterWidget() {
                 {subscribed ? (
                   <div className="text-sm text-muted-foreground">
                     <p className="font-medium text-foreground mb-1">
-                      Você já está inscrito 🎉
+                      {t("app.newsletter.alreadyTitle")}
                     </p>
-                    Quando publicarmos novidades, você verá aqui no app e no seu e-mail.
+                    {t("app.newsletter.alreadyBody")}
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Receba novidades, vídeos e atualizações. Sem spam.
+                      {t("app.newsletter.subscribeHint")}
                     </p>
                     <Input
                       type="email"
                       required
-                      placeholder="seu@email.com"
+                      placeholder={t("app.newsletter.emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       maxLength={255}
@@ -412,22 +414,22 @@ export function NewsletterWidget() {
                     ) : (
                       <Send className="size-4 mr-2" />
                     )}
-                    Quero receber
+                    {t("app.newsletter.btnSubscribe")}
                   </Button>
                 )}
                 <p className="text-[11px] text-muted-foreground text-center">
-                  Convide amigos: quanto mais gente, melhor a comunidade 💙
+                  {t("app.newsletter.inviteHint")}
                 </p>
               </form>
             ) : (
               <form onSubmit={handleFeedback} className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Sugestão, elogio ou bug? Conta pra gente.
+                  {t("app.newsletter.feedbackHint")}
                 </p>
                 <Textarea
                   required
                   rows={4}
-                  placeholder="Sua mensagem..."
+                  placeholder={t("app.newsletter.messagePlaceholder")}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={2000}
@@ -435,7 +437,7 @@ export function NewsletterWidget() {
                 {!user && (
                   <Input
                     type="email"
-                    placeholder="seu@email.com (opcional)"
+                    placeholder={t("app.newsletter.emailOptPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     maxLength={255}
@@ -447,7 +449,7 @@ export function NewsletterWidget() {
                   ) : (
                     <Send className="size-4 mr-2" />
                   )}
-                  Enviar mensagem
+                  {t("app.newsletter.btnSend")}
                 </Button>
               </form>
             )}
@@ -467,7 +469,7 @@ export function NewsletterWidget() {
           setOpen((v) => !v);
         }}
         className="relative size-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl active:scale-95 transition grid place-items-center cursor-grab active:cursor-grabbing"
-        aria-label="Newsletter WaveChat"
+        aria-label={t("app.newsletter.ariaLabel")}
       >
         {open ? <X className="size-6" /> : <Mail className="size-6" />}
         {!open && !subscribed && (

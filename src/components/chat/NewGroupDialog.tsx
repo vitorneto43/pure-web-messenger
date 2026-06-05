@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [query, setQuery] = useState("");
@@ -45,8 +47,8 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function create() {
     if (!user) return;
-    if (!name.trim()) return toast.error("Defina um nome para o grupo");
-    if (selected.length < 1) return toast.error("Adicione ao menos 1 participante");
+    if (!name.trim()) return toast.error(t("chat.groupNameRequired"));
+    if (selected.length < 1) return toast.error(t("chat.addAtLeastOneMember"));
     setBusy(true);
     try {
       const { data: conv, error } = await supabase
@@ -77,17 +79,17 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo grupo</DialogTitle>
-          <DialogDescription>Crie um grupo e adicione participantes.</DialogDescription>
+          <DialogTitle>{t("chat.newGroup")}</DialogTitle>
+          <DialogDescription>{t("chat.createGroupDescription")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>Nome do grupo</Label>
+            <Label>{t("chat.groupName")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={50}
-              placeholder="Família, Trabalho..."
+              placeholder={t("chat.groupNamePlaceholder")}
               className="mt-1.5"
             />
           </div>
@@ -111,7 +113,7 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
             <Input
               value={query}
               onChange={(e) => runSearch(e.target.value)}
-              placeholder="Buscar pessoas..."
+              placeholder={t("chat.searchPeople")}
               className="pl-9"
             />
           </div>
@@ -147,10 +149,10 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t("chat.cancel")}
           </Button>
           <Button onClick={create} disabled={busy}>
-            {busy && <Loader2 className="size-4 animate-spin mr-2" />} Criar grupo
+            {busy && <Loader2 className="size-4 animate-spin mr-2" />} {t("chat.createGroup")}
           </Button>
         </DialogFooter>
       </DialogContent>

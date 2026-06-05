@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 interface MemberRow {
   user_id: string;
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupName, onDeleted }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -105,7 +107,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
         .from("conversation_members")
         .insert({ conversation_id: conversationId, user_id: userId, role: "member" });
       if (error) throw error;
-      toast.success("Participante adicionado");
+      toast.success(t("chat.memberAdded"));
       setQuery("");
       setSearchResults([]);
       setAddOpen(false);
@@ -126,7 +128,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
         .eq("conversation_id", conversationId)
         .eq("user_id", userId);
       if (error) throw error;
-      toast.success("Participante removido");
+      toast.success(t("chat.memberRemoved"));
       await load();
     } catch (e: any) {
       toast.error(e.message);
@@ -145,7 +147,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
         .eq("conversation_id", conversationId)
         .eq("user_id", userId);
       if (error) throw error;
-      toast.success(newRole === "admin" ? "Promovido a admin" : "Removido de admin");
+      toast.success(newRole === "admin" ? t("chat.promotedToAdmin") : t("chat.removedFromAdmin"));
       await load();
     } catch (e: any) {
       toast.error(e.message);
@@ -164,7 +166,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
       if (error) throw error;
-      toast.success("Você saiu do grupo");
+      toast.success(t("chat.leftGroup"));
       onOpenChange(false);
       navigate({ to: "/chat" });
     } catch (e: any) {
@@ -183,7 +185,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
         .delete()
         .eq("id", conversationId);
       if (error) throw error;
-      toast.success("Grupo apagado");
+      toast.success(t("chat.groupDeleted"));
       onOpenChange(false);
       onDeleted?.();
       navigate({ to: "/chat" });
@@ -202,8 +204,8 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
           <DialogHeader>
             <DialogTitle>{groupName}</DialogTitle>
             <DialogDescription>
-              {members.length} {members.length === 1 ? "participante" : "participantes"}
-              {meIsAdmin && " · Você é admin"}
+              {t("chat.participantsCount", { count: members.length })}
+              {meIsAdmin && t("chat.youAreAdmin")}
             </DialogDescription>
           </DialogHeader>
 
@@ -220,7 +222,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                   onClick={() => setAddOpen(true)}
                   className="w-full justify-start"
                 >
-                  <UserPlus className="size-4 mr-2" /> Adicionar participante
+                  <UserPlus className="size-4 mr-2" /> {t("chat.addParticipant")}
                 </Button>
               )}
 
@@ -241,8 +243,8 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium truncate flex items-center gap-1.5">
-                          {m.profile?.display_name ?? "Usuário"}
-                          {isMe && <span className="text-xs text-muted-foreground">(você)</span>}
+                          {m.profile?.display_name ?? t("chat.user")}
+                          {isMe && <span className="text-xs text-muted-foreground">{t("chat.youBadge")}</span>}
                           {isAdmin && (
                             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                               <Crown className="size-2.5" /> admin
@@ -259,7 +261,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                             size="icon"
                             variant="ghost"
                             disabled={busy}
-                            title={isAdmin ? "Remover admin" : "Tornar admin"}
+                            title={isAdmin ? t("chat.removeAdmin") : t("chat.makeAdmin")}
                             onClick={() => toggleAdmin(m.user_id, m.role)}
                           >
                             {isAdmin ? (
@@ -272,7 +274,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                             size="icon"
                             variant="ghost"
                             disabled={busy}
-                            title="Remover do grupo"
+                            title={t("chat.removeFromGroup")}
                             onClick={() => removeMember(m.user_id)}
                             className="text-destructive hover:text-destructive"
                           >
@@ -292,7 +294,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                   onClick={() => setConfirmLeave(true)}
                   disabled={busy}
                 >
-                  <LogOut className="size-4 mr-2" /> Sair do grupo
+                  <LogOut className="size-4 mr-2" /> {t("chat.leaveGroup")}
                 </Button>
                 {meIsAdmin && (
                   <Button
@@ -301,7 +303,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                     onClick={() => setConfirmDelete(true)}
                     disabled={busy}
                   >
-                    <Trash2 className="size-4 mr-2" /> Apagar grupo
+                    <Trash2 className="size-4 mr-2" /> {t("chat.deleteGroup")}
                   </Button>
                 )}
               </DialogFooter>
@@ -314,8 +316,8 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar participante</DialogTitle>
-            <DialogDescription>Busque por nome ou usuário.</DialogDescription>
+            <DialogTitle>{t("chat.addParticipant")}</DialogTitle>
+            <DialogDescription>{t("chat.searchByNameOrUser")}</DialogDescription>
           </DialogHeader>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -323,7 +325,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
               autoFocus
               value={query}
               onChange={(e) => runSearch(e.target.value)}
-              placeholder="ex: joao_silva"
+              placeholder={t("chat.searchUserPlaceholder")}
               className="pl-9"
             />
           </div>
@@ -331,7 +333,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
             {searching && <Loader2 className="size-4 animate-spin mx-auto my-4" />}
             {!searching && query && searchResults.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-6">
-                Nenhum usuário disponível
+                {t("chat.noUsersAvailable")}
               </p>
             )}
             {searchResults.map((r) => (
@@ -359,15 +361,15 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
       <AlertDialog open={confirmLeave} onOpenChange={setConfirmLeave}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sair do grupo?</AlertDialogTitle>
+            <AlertDialogTitle>{t("chat.leaveGroupTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Você não receberá mais mensagens deste grupo. Um admin pode te adicionar de volta depois.
+              {t("chat.leaveGroupDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={busy}>{t("chat.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={leaveGroup} disabled={busy}>
-              {busy && <Loader2 className="size-4 animate-spin mr-2" />} Sair
+              {busy && <Loader2 className="size-4 animate-spin mr-2" />} {t("chat.leave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -377,19 +379,19 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Apagar grupo?</AlertDialogTitle>
+            <AlertDialogTitle>{t("chat.deleteGroupTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação é permanente. Todas as mensagens, chamadas e participantes do grupo serão removidos. Não dá pra desfazer.
+              {t("chat.deleteGroupDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={busy}>{t("chat.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={deleteGroup}
               disabled={busy}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {busy && <Loader2 className="size-4 animate-spin mr-2" />} Apagar
+              {busy && <Loader2 className="size-4 animate-spin mr-2" />} {t("chat.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

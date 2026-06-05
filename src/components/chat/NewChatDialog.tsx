@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ function maskEmail(email: string): string {
 }
 
 export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -50,7 +52,7 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
   async function startChat(otherUserId: string) {
     if (!user) return;
     if (otherUserId === user.id) {
-      toast.error("Você não pode iniciar uma conversa consigo mesmo.");
+      toast.error(t("chat.cannotChatWithSelf"));
       return;
     }
     setCreating(true);
@@ -98,8 +100,8 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nova conversa</DialogTitle>
-          <DialogDescription>Busque por nome ou usuário.</DialogDescription>
+          <DialogTitle>{t("chat.newConversation")}</DialogTitle>
+          <DialogDescription>{t("chat.searchByNameOrUser")}</DialogDescription>
         </DialogHeader>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -107,7 +109,7 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
             autoFocus
             value={query}
             onChange={(e) => runSearch(e.target.value)}
-            placeholder="ex: joao_silva"
+            placeholder={t("chat.searchUserPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -115,7 +117,7 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
           {searching && <Loader2 className="size-4 animate-spin mx-auto my-4" />}
           {!searching && query && results.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-6">
-              Nenhum usuário encontrado
+              {t("chat.noUsersFound")}
             </p>
           )}
           {!query && (

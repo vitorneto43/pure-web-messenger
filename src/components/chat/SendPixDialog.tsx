@@ -20,6 +20,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { encodePixMessage } from "@/lib/pix";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -27,20 +28,21 @@ interface Props {
   onSend: (content: string) => void;
 }
 
-const KEY_TYPES = [
-  { value: "CPF/CNPJ", label: "CPF/CNPJ" },
-  { value: "E-mail", label: "E-mail" },
-  { value: "Telefone", label: "Telefone" },
-  { value: "Aleatória", label: "Chave aleatória" },
-];
-
 export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
+  const { t } = useTranslation();
   const [loading] = useState(false);
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   const [keyType, setKeyType] = useState<string>("CPF/CNPJ");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+
+  const KEY_TYPES = [
+    { value: "CPF/CNPJ", label: "CPF/CNPJ" },
+    { value: "E-mail", label: "E-mail" },
+    { value: "Telefone", label: "Telefone" },
+    { value: "Aleatória", label: t("chat.randomKeyLabel") },
+  ];
 
   // Reset form each time the dialog opens so the user always
   // chooses the recipient key and value explicitly.
@@ -54,10 +56,10 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
   }, [open]);
 
   function send() {
-    if (!key.trim()) return toast.error("Informe a chave Pix");
-    if (!name.trim()) return toast.error("Informe o nome do recebedor");
+    if (!key.trim()) return toast.error(t("chat.pixKeyRequired"));
+    if (!name.trim()) return toast.error(t("chat.receiverNameRequired"));
     const amt = amount ? Number(amount.replace(",", ".")) : undefined;
-    if (amount && (!amt || amt <= 0)) return toast.error("Valor inválido");
+    if (amount && (!amt || amt <= 0)) return toast.error(t("chat.invalidAmount"));
     const marker = encodePixMessage({
       key: key.trim(),
       keyType,
@@ -75,25 +77,25 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enviar Pix</DialogTitle>
+          <DialogTitle>{t("chat.sendPix")}</DialogTitle>
           <DialogDescription>
-            Informe a chave de destino e o valor. A pessoa pode pagar copiando o código ou lendo o QR.
+            {t("chat.sendPixDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div>
-            <Label>Nome do recebedor</Label>
+            <Label>{t("chat.receiverName")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Quem vai receber"
+              placeholder={t("chat.receiverPlaceholder")}
               maxLength={25}
             />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-1">
-              <Label>Tipo</Label>
+              <Label>{t("chat.keyType")}</Label>
               <Select value={keyType} onValueChange={setKeyType}>
                 <SelectTrigger>
                   <SelectValue />
@@ -108,17 +110,17 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>Chave Pix de destino</Label>
+              <Label>{t("chat.pixDestinationKey")}</Label>
               <Input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="Cole a chave de quem recebe"
+                placeholder={t("chat.pixKeyPlaceholder")}
                 maxLength={120}
               />
             </div>
           </div>
           <div>
-            <Label>Valor (opcional)</Label>
+            <Label>{t("chat.amountOptional")}</Label>
             <Input
               inputMode="decimal"
               placeholder="0,00"
@@ -127,7 +129,7 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
             />
           </div>
           <div>
-            <Label>Descrição (opcional)</Label>
+            <Label>{t("chat.descriptionOptional")}</Label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -138,10 +140,10 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
 
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t("chat.cancel")}
           </Button>
           <Button onClick={send} disabled={loading}>
-            {loading && <Loader2 className="size-4 animate-spin mr-2" />} Enviar
+            {loading && <Loader2 className="size-4 animate-spin mr-2" />} {t("chat.send")}
           </Button>
         </DialogFooter>
       </DialogContent>
