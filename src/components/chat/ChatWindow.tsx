@@ -45,6 +45,7 @@ import { GroupSettingsDialog } from "./GroupSettingsDialog";
 import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
 import { ShareLocationDialog } from "./ShareLocationDialog";
 import { LocationMessage } from "./LocationMessage";
+import { useTranslation } from "react-i18next";
 
 interface AIRequest {
   action: AIAction;
@@ -82,6 +83,7 @@ interface Profile {
 }
 
 export function ChatWindow({ conversationId }: { conversationId: string }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { startCall } = useCall();
@@ -308,16 +310,16 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const headerAvatar = conv?.is_group ? conv.avatar_url : otherUser?.avatar_url;
   const headerSub = useMemo(() => {
     if (typingUsers.length) {
-      if (!conv?.is_group) return "digitando...";
+      if (!conv?.is_group) return t("chat.typing");
       const names = typingUsers
         .map((id) => members.find((m) => m.id === id)?.display_name?.split(" ")[0])
         .filter(Boolean);
-      return `${names.join(", ")} digitando...`;
+      return t("chat.typingNames", { names: names.join(", ") });
     }
-    if (conv?.is_group) return `${members.length} participantes`;
+    if (conv?.is_group) return t("chat.participantsCount", { count: members.length });
     if (otherUser) {
       const online = Date.now() - new Date(otherUser.last_seen).getTime() < 2 * 60_000;
-      return online ? "online" : `visto por último ${formatFullTime(otherUser.last_seen)}`;
+      return online ? t("chat.online") : t("chat.lastSeen", { time: formatFullTime(otherUser.last_seen) });
     }
     return "";
   }, [typingUsers, members, otherUser, conv]);
@@ -353,7 +355,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           conversationId,
           preview: content.trim().startsWith("[[PIX:")
             ? "💸 Pix"
-            : content.trim() || (attachment?.type?.startsWith("image") ? "📷 Foto" : "📎 Anexo"),
+            : content.trim() || (attachment?.type?.startsWith("image") ? t("chat.photoAttachment") : t("chat.fileAttachment")),
         },
       }).catch(() => {});
     } catch (e: any) {
@@ -380,7 +382,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
   async function uploadAndSend(file: File) {
     if (!user) return;
-    if (file.size > 15 * 1024 * 1024) return toast.error("Máximo 15MB");
+    if (file.size > 15 * 1024 * 1024) return toast.error(t("chat.maxFileSizeError"));
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() ?? "bin";
@@ -403,7 +405,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   async function startRecording() {
     if (recording) return;
     if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error("Gravação de áudio não suportada neste navegador");
+      toast.error(t("chat.audioNotSupported"));
       return;
     }
     try {
@@ -451,7 +453,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         });
       }, 1000);
     } catch {
-      toast.error("Permita o acesso ao microfone para gravar");
+      toast.error(t("chat.microphonePermissionDenied"));
     }
   }
 
@@ -512,7 +514,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           onClick={() => conv?.is_group && setGroupSettingsOpen(true)}
           disabled={!conv?.is_group}
           className="flex items-center gap-3 flex-1 min-w-0 text-left -mx-1 px-1 rounded-lg hover:bg-accent/20 disabled:hover:bg-transparent disabled:cursor-default transition-colors"
-          title={conv?.is_group ? "Ver detalhes do grupo" : undefined}
+          title={conv?.is_group ? t("chat.viewGroupDetails") : undefined}
         >
           <Avatar className="size-10">
             <AvatarImage src={headerAvatar ?? undefined} />
@@ -529,7 +531,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               size="icon"
               variant="ghost"
               className="rounded-full"
-              title="Chamada de voz"
+              title={t("chat.voiceCall")}
               onClick={() =>
                 startCall({
                   conversationId,
@@ -549,7 +551,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               size="icon"
               variant="ghost"
               className="rounded-full"
-              title="Chamada de vídeo"
+              title={t("chat.videoCall")}
               onClick={() =>
                 startCall({
                   conversationId,
@@ -583,7 +585,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
             autoFocus
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar nas mensagens..."
+            placeholder={t("chat.searchMessages")}
             className="h-9"
           />
           <Button
@@ -603,7 +605,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
       <div className="flex-1 overflow-y-auto scrollbar-thin px-3 sm:px-6 py-4 space-y-1">
         {filteredMessages.length === 0 && (
           <div className="text-center text-sm text-muted-foreground py-16">
-            {searchTerm ? "Nenhuma mensagem encontrada" : "Diga oi! 👋"}
+{searchTerm ? t("chat.noMessagesFound") : t("chat.sayHi")}
           </div>
         )}
         {filteredMessages.map((m, idx) => {
@@ -690,7 +692,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 )}
                 {m.deleted_for_everyone_at ? (
                   <div className="text-sm italic opacity-70">
-                    Esta mensagem foi apagada
+                    {t("chat.messageDeleted")}
                   </div>
                 ) : (
                   <></>
@@ -711,7 +713,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                         downloadFile(m.attachment_url!, m.attachment_name ?? undefined);
                       }}
                       className="absolute top-1.5 right-1.5 size-8 grid place-items-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
-                      title="Baixar imagem"
+                      title={t("chat.downloadImage")}
                     >
                       <Download className="size-4" />
                     </button>
@@ -734,7 +736,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                         isMine ? "text-bubble-out-foreground/80" : "text-muted-foreground"
                       }`}
                     >
-                      <Download className="size-3" /> Baixar vídeo
+                      <Download className="size-3" /> {t("chat.downloadVideo")}
                     </button>
                   </div>
                 )}
@@ -755,7 +757,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                         isMine ? "text-bubble-out-foreground/80" : "text-muted-foreground"
                       }`}
                     >
-                      <Download className="size-3" /> Baixar áudio
+                      <Download className="size-3" /> {t("chat.downloadAudio")}
                     </button>
                   </div>
                 )}
@@ -793,7 +795,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                       className="flex items-center gap-2 text-sm underline mb-1"
                     >
                       <Download className="size-4" />
-                      {m.attachment_name ?? "Baixar arquivo"}
+                      {m.attachment_name ?? t("chat.downloadFile")}
                     </button>
                   )}
                 {m.content && (
@@ -840,13 +842,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               variant="ghost"
               className="rounded-full shrink-0 text-destructive hover:text-destructive"
               onClick={() => stopRecording(true)}
-              title="Cancelar"
+              title={t("chat.cancel")}
             >
               <Trash2 className="size-5" />
             </Button>
             <div className="flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-destructive/10 border border-destructive/30">
               <span className="size-2.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-medium text-destructive">Gravando</span>
+              <span className="text-sm font-medium text-destructive">{t("chat.recording")}</span>
               <span className="ml-auto text-sm tabular-nums text-destructive">
                 {String(Math.floor(recordSeconds / 60)).padStart(2, "0")}:
                 {String(recordSeconds % 60).padStart(2, "0")}
@@ -857,7 +859,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               size="icon"
               className="rounded-full size-11 shrink-0"
               onClick={() => stopRecording(false)}
-              title="Enviar áudio"
+              title={t("chat.sendAudioTitle")}
             >
               <Send className="size-5" />
             </Button>
@@ -933,7 +935,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               variant="ghost"
               className="rounded-full shrink-0 text-emerald-500"
               onClick={() => setPixOpen(true)}
-              title="Enviar Pix"
+              title={t("chat.sendPix")}
             >
               <QrCode className="size-5" />
             </Button>
@@ -944,7 +946,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               variant="ghost"
               className="rounded-full shrink-0 text-rose-500"
               onClick={() => setLocationOpen(true)}
-              title="Compartilhar localização"
+              title={t("chat.shareLocation")}
             >
               <MapPin className="size-5" />
             </Button>
@@ -966,7 +968,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   size="icon"
                   variant="ghost"
                   className="rounded-full shrink-0 text-primary"
-                  title="Assistente de IA"
+                  title={t("chat.aiAssistant")}
                 >
                   <Sparkles className="size-5" />
                 </Button>
@@ -980,7 +982,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     setAiRequest({ action: "improve", text, tone: "neutral" })
                   }
                 >
-                  ✨ Melhorar meu texto
+                  {t("chat.aiImproveText")}
                 </button>
                 <button
                   type="button"
@@ -990,7 +992,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     setAiRequest({ action: "improve", text, tone: "formal" })
                   }
                 >
-                  👔 Deixar mais formal
+                  {t("chat.aiMakeFormal")}
                 </button>
                 <button
                   type="button"
@@ -1000,7 +1002,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     setAiRequest({ action: "improve", text, tone: "friendly" })
                   }
                 >
-                  😊 Deixar mais amigável
+                  {t("chat.aiMakeFriendly")}
                 </button>
                 <button
                   type="button"
@@ -1010,7 +1012,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     setAiRequest({ action: "improve", text, tone: "short" })
                   }
                 >
-                  ✂️ Deixar mais curto
+                  {t("chat.aiMakeShorter")}
                 </button>
                 <div className="h-px bg-border my-1" />
                 <button
@@ -1027,7 +1029,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                           !m.content.startsWith("[["),
                       );
                     if (!lastIncoming?.content) {
-                      toast.info("Nenhuma mensagem recebida para responder");
+                      toast.info(t("chat.noIncomingMessage"));
                       return;
                     }
                     setAiRequest({
@@ -1037,7 +1039,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     });
                   }}
                 >
-                  💬 Sugerir resposta
+                  {t("chat.aiSuggestReply")}
                 </button>
                 <button
                   type="button"
@@ -1050,7 +1052,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     })
                   }
                 >
-                  📝 Resumir conversa
+                  {t("chat.aiSummarize")}
                 </button>
               </PopoverContent>
             </Popover>
@@ -1080,7 +1082,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     }
                   }
                 }}
-                placeholder="Escreva uma mensagem..."
+                placeholder={t("chat.writeMessage")}
                 className="flex-1 min-w-0 rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
                 maxLength={4000}
                 rows={1}
@@ -1106,7 +1108,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   className="rounded-full size-11 shrink-0"
                   onClick={startRecording}
                   disabled={sending || uploading}
-                  title="Gravar áudio"
+                  title={t("chat.recordAudio")}
                 >
                   <Mic className="size-5" />
                 </Button>
@@ -1195,7 +1197,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           conversationId={conversationId}
           open={groupSettingsOpen}
           onOpenChange={setGroupSettingsOpen}
-          groupName={conv.name ?? "Grupo"}
+          groupName={conv.name ?? t("chat.group")}
         />
       )}
     </div>

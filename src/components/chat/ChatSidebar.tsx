@@ -28,6 +28,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
 import { InviteDialog } from "@/components/InviteDialog";
 import { formatTime } from "@/lib/format-time";
+import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
 import {
   requestBrowserNotificationPermission,
@@ -53,6 +54,7 @@ interface ConversationItem {
 }
 
 export function ChatSidebar({ activeConversationId }: { activeConversationId?: string }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -196,7 +198,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             msg.conversation_id !== activeConversationId
           ) {
             playNotification();
-            showBrowserNotification("Nova mensagem", msg.content ?? "Anexo recebido");
+            showBrowserNotification(t("chat.newMessage"), msg.content ?? t("chat.attachmentReceived"));
           }
         }
       )
@@ -227,7 +229,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
   async function logout() {
     await supabase.auth.signOut();
-    toast.success("Você saiu");
+    toast.success(t("chat.loggedOut"));
     navigate({ to: "/auth" });
   }
 
@@ -235,7 +237,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     const q = search.trim().toLowerCase();
     if (!q) return conversations;
     return conversations.filter((c) => {
-      const name = c.is_group ? c.name ?? "Grupo" : c.other_user?.display_name ?? "";
+      const name = c.is_group ? c.name ?? t("chat.group") : c.other_user?.display_name ?? "";
       const uname = c.other_user?.username ?? "";
       return name.toLowerCase().includes(q) || uname.toLowerCase().includes(q);
     });
@@ -257,7 +259,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         </div>
         <div className="flex items-center gap-1">
           <Button size="icon" variant="ghost" className="rounded-full" asChild>
-            <Link to="/guide" title="Dúvidas">
+            <Link to="/guide" title={t("chat.help")}>
               <HelpCircle className="size-4" />
             </Link>
           </Button>
@@ -270,13 +272,13 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link to="/profile">Meu perfil</Link>
+                <Link to="/profile">{t("chat.myProfile")}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
-                <UsersRound className="size-4 mr-2" /> Novo grupo
+                <UsersRound className="size-4 mr-2" /> {t("chat.newGroup")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout} className="text-destructive">
-                <LogOut className="size-4 mr-2" /> Sair
+                <LogOut className="size-4 mr-2" /> {t("chat.logout")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -292,7 +294,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar conversas..."
+            placeholder={t("chat.searchConversations")}
             className="pl-9 bg-sidebar-hover border-transparent focus-visible:bg-card"
           />
         </div>
@@ -302,7 +304,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             size="sm"
             className="flex-1 rounded-full"
           >
-            <MessageSquarePlus className="size-4 mr-1.5" /> Nova
+            <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
           </Button>
           <Button
             onClick={() => setNewGroupOpen(true)}
@@ -310,16 +312,16 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             variant="secondary"
             className="rounded-full"
           >
-            <UsersRound className="size-4 mr-1.5" /> Grupo
+            <UsersRound className="size-4 mr-1.5" /> {t("chat.group")}
           </Button>
           <Button
             onClick={inviteFriend}
             size="sm"
             variant="secondary"
             className="rounded-full"
-            title="Copiar link de convite"
+            title={t("chat.copyInviteLink")}
           >
-            <UserPlus className="size-4 mr-1.5" /> Convidar
+            <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
           </Button>
         </div>
       </div>
@@ -331,7 +333,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           </div>
         ) : filtered.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-10 px-4">
-            Nenhuma conversa ainda. Clique em <b>Nova</b> para começar.
+            {t("chat.noConversationsBefore")}<b>{t("chat.noConversationsBold")}</b>{t("chat.noConversationsAfter")}
           </p>
         ) : (
           filtered.map((c) => (
@@ -375,7 +377,8 @@ function ConversationRow({
   active: boolean;
   currentUserId: string;
 }) {
-  const name = conv.is_group ? conv.name ?? "Grupo" : conv.other_user?.display_name ?? "Usuário";
+  const { t } = useTranslation();
+  const name = conv.is_group ? conv.name ?? t("chat.group") : conv.other_user?.display_name ?? t("chat.user");
   const avatar = conv.is_group ? conv.avatar_url : conv.other_user?.avatar_url;
   const online =
     !conv.is_group &&
@@ -387,15 +390,15 @@ function ConversationRow({
   let previewBody = rawContent;
   if (callMatch) {
     const [, kind, outcome] = callMatch;
-    const kindLabel = kind === "video" ? "Chamada de vídeo" : "Chamada de voz";
-    if (outcome === "missed") previewBody = `📞 ${kindLabel} perdida`;
-    else if (outcome === "declined") previewBody = `📞 Chamada recusada`;
-    else if (outcome === "cancelled") previewBody = `📞 Chamada cancelada`;
+    const kindLabel = kind === "video" ? t("chat.videoCall") : t("chat.voiceCall");
+    if (outcome === "missed") previewBody = `📞 ${t("chat.callMissed", { kindLabel })}`;
+    else if (outcome === "declined") previewBody = `📞 ${t("chat.callDeclinedLabel")}`;
+    else if (outcome === "cancelled") previewBody = `📞 ${t("chat.callCancelledLabel")}`;
     else previewBody = `📞 ${kindLabel}`;
   }
   const preview = conv.last_message?.content
-    ? (conv.last_message.sender_id === currentUserId ? "Você: " : "") + previewBody
-    : "Nenhuma mensagem ainda";
+    ? (conv.last_message.sender_id === currentUserId ? t("chat.youPrefix") : "") + previewBody
+    : t("chat.noMessagesYet");
 
   return (
     <Link
