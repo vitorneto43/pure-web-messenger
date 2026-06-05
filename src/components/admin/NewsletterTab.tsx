@@ -55,6 +55,9 @@ type Feedback = {
   user_id: string | null;
   handled: boolean;
   created_at: string;
+  reply: string | null;
+  replied_at: string | null;
+  replied_by: string | null;
 };
 
 export function NewsletterTab() {
