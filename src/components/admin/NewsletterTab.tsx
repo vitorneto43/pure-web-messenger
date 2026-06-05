@@ -528,22 +528,92 @@ export function NewsletterTab() {
 
         <TabsContent value="feedback" className="mt-4 space-y-3">
           {fb.data?.items.map((f: Feedback) => (
-            <Card key={f.id} className={f.handled ? "opacity-60" : ""}>
-              <CardContent className="p-4 flex gap-3">
-                <div className="flex-1">
-                  <p className="text-sm whitespace-pre-wrap">{f.message}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {f.email ?? "anônimo"} · {new Date(f.created_at).toLocaleString()}
-                  </p>
+            <Card key={f.id} className={f.handled && !replyOpen[f.id] ? "opacity-80" : ""}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm whitespace-pre-wrap">{f.message}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {f.email ?? "anônimo"}
+                      {!f.user_id && " (sem conta vinculada)"} ·{" "}
+                      {new Date(f.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() =>
+                        setReplyOpen((s) => ({ ...s, [f.id]: !s[f.id] }))
+                      }
+                    >
+                      <Reply className="size-3.5 mr-1" />
+                      {f.reply ? "Responder novamente" : "Responder"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={f.handled ? "outline" : "secondary"}
+                      onClick={() => toggleFb.mutate({ id: f.id, handled: !f.handled })}
+                    >
+                      <CheckCircle2 className="size-3.5 mr-1" />
+                      {f.handled ? "Reabrir" : "Marcar lido"}
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={f.handled ? "outline" : "default"}
-                  onClick={() => toggleFb.mutate({ id: f.id, handled: !f.handled })}
-                >
-                  <CheckCircle2 className="size-3.5 mr-1" />
-                  {f.handled ? "Reabrir" : "Marcar lido"}
-                </Button>
+
+                {f.reply && (
+                  <div className="rounded-md bg-muted/50 border-l-2 border-primary px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                      Resposta da redação ·{" "}
+                      {f.replied_at && new Date(f.replied_at).toLocaleString()}
+                    </p>
+                    <p className="text-sm whitespace-pre-wrap">{f.reply}</p>
+                  </div>
+                )}
+
+                {replyOpen[f.id] && (
+                  <div className="space-y-2 pt-1 border-t">
+                    <Textarea
+                      rows={3}
+                      placeholder="Escreva sua resposta ao usuário..."
+                      value={replyDrafts[f.id] ?? ""}
+                      onChange={(e) =>
+                        setReplyDrafts((s) => ({ ...s, [f.id]: e.target.value }))
+                      }
+                      maxLength={4000}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          setReplyOpen((s) => ({ ...s, [f.id]: false }))
+                        }
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={
+                          replyFb.isPending || !(replyDrafts[f.id] ?? "").trim()
+                        }
+                        onClick={() =>
+                          replyFb.mutate({
+                            id: f.id,
+                            reply: (replyDrafts[f.id] ?? "").trim(),
+                          })
+                        }
+                      >
+                        {replyFb.isPending ? (
+                          <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                        ) : (
+                          <Send className="size-3.5 mr-1.5" />
+                        )}
+                        Enviar resposta
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
