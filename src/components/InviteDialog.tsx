@@ -360,15 +360,19 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 <Button onClick={shareQR} size="sm" disabled={!qrUrl} variant="secondary">
                   <Share2 className="size-4 mr-1.5" /> Compartilhar
                 </Button>
-                <Button onClick={copyQrImage} size="sm" disabled={!qrUrl}>
+                <Button onClick={downloadQr} size="sm" disabled={!qrUrl}>
+                  <Download className="size-4 mr-1.5" /> Salvar imagem
+                </Button>
+                <Button onClick={copyQrImage} size="sm" variant="outline" disabled={!qrUrl}>
                   <Copy className="size-4 mr-1.5" /> Copiar imagem
                 </Button>
-                <Button onClick={copyQrLink} size="sm" variant="outline" className="col-span-2">
-                  <Link2 className="size-4 mr-1.5" /> Copiar link do convite
+                <Button onClick={copyQrLink} size="sm" variant="outline">
+                  <Link2 className="size-4 mr-1.5" /> Copiar link
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
-                Copie a imagem e cole no WhatsApp, Instagram, Telegram ou onde preferir.
+                Se colar não funcionar, use <strong>Salvar imagem</strong> e anexe o QR da galeria
+                no WhatsApp, Instagram ou Telegram.
               </p>
             </div>
           </TabsContent>
