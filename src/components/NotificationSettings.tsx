@@ -1,3 +1,4 @@
+import "@/i18n";
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -9,11 +10,12 @@ import {
   subscriptionToRow,
 } from "@/lib/push-client";
 import { saveSubscription } from "@/lib/push.functions";
+import { useTranslation } from "react-i18next";
 
 type PermState = "default" | "granted" | "denied" | "unsupported";
 
 export function NotificationSettings() {
-  // No app nativo (Capacitor), usamos FCM nativo — esse card é só para Web Push do navegador.
+  const { t } = useTranslation();
   const isNativeApp =
     typeof window !== "undefined" &&
     !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
@@ -39,7 +41,7 @@ export function NotificationSettings() {
 
   async function enable() {
     if (isPreviewOrIframe()) {
-      toast.error("Abra o app publicado para ativar notificações.");
+      toast.error(t("app.notif.toastOpenPublished"));
       return;
     }
     setBusy(true);
@@ -47,7 +49,7 @@ export function NotificationSettings() {
       const perm = await Notification.requestPermission();
       setPerm(perm as PermState);
       if (perm !== "granted") {
-        toast.error("Permissão negada. Ative nas configurações do navegador.");
+        toast.error(t("app.notif.toastPermDenied"));
         return;
       }
       const reg = await registerServiceWorker();
@@ -56,7 +58,7 @@ export function NotificationSettings() {
       if (!sub) throw new Error("Falha ao se inscrever para push");
       await saveSubscription({ data: subscriptionToRow(sub) });
       setSubscribed(true);
-      toast.success("Notificações ativadas neste dispositivo");
+      toast.success(t("app.notif.toastActivated"));
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao ativar notificações");
     } finally {
@@ -69,7 +71,7 @@ export function NotificationSettings() {
     const reg = await navigator.serviceWorker.getRegistration();
     if (!reg) return toast.error("Service worker não registrado");
     await reg.showNotification("Wavechat", {
-      body: "Notificações funcionando! 🎉",
+      body: t("app.notif.testBody"),
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       tag: "test",
@@ -87,40 +89,38 @@ export function NotificationSettings() {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold">Notificações</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Receba alertas de mensagens e chamadas neste dispositivo.
-          </p>
+          <h3 className="font-semibold">{t("app.notif.title")}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("app.notif.desc")}</p>
 
           <div className="mt-3 text-xs">
             {perm === "unsupported" && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <AlertCircle className="size-3.5" />
-                Navegador não suporta notificações push.
+                {t("app.notif.unsupported")}
               </div>
             )}
             {perm === "granted" && subscribed && (
               <div className="flex items-center gap-1.5 text-green-500">
                 <CheckCircle2 className="size-3.5" />
-                Ativadas neste dispositivo
+                {t("app.notif.active")}
               </div>
             )}
             {perm === "granted" && !subscribed && (
               <div className="flex items-center gap-1.5 text-amber-500">
                 <AlertCircle className="size-3.5" />
-                Permitido, mas não inscrito — clique em ativar
+                {t("app.notif.permittedNotSub")}
               </div>
             )}
             {perm === "default" && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <AlertCircle className="size-3.5" />
-                Ainda não ativadas
+                {t("app.notif.notActive")}
               </div>
             )}
             {perm === "denied" && (
               <div className="flex items-center gap-1.5 text-destructive">
                 <AlertCircle className="size-3.5" />
-                Bloqueadas — ative manualmente no navegador
+                {t("app.notif.blocked")}
               </div>
             )}
           </div>
@@ -129,24 +129,24 @@ export function NotificationSettings() {
             {perm !== "unsupported" && perm !== "denied" && (
               <Button size="sm" onClick={enable} disabled={busy}>
                 {busy && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-                {subscribed ? "Reativar" : "Ativar notificações"}
+                {subscribed ? t("app.notif.btnReactivate") : t("app.notif.btnActivate")}
               </Button>
             )}
             {perm === "granted" && subscribed && (
               <Button size="sm" variant="secondary" onClick={testNotification}>
-                Testar
+                {t("app.notif.btnTest")}
               </Button>
             )}
           </div>
 
           {perm === "denied" && (
             <details className="mt-3 text-xs text-muted-foreground">
-              <summary className="cursor-pointer font-medium">Como desbloquear</summary>
+              <summary className="cursor-pointer font-medium">{t("app.notif.unlockTitle")}</summary>
               <ol className="list-decimal pl-4 mt-2 space-y-1">
-                <li>Toque no cadeado/ícone ao lado do endereço do site.</li>
-                <li>Vá em "Permissões" ou "Configurações do site".</li>
-                <li>Mude "Notificações" para "Permitir".</li>
-                <li>Recarregue a página e volte aqui.</li>
+                <li>{t("app.notif.unlockStep1")}</li>
+                <li>{t("app.notif.unlockStep2")}</li>
+                <li>{t("app.notif.unlockStep3")}</li>
+                <li>{t("app.notif.unlockStep4")}</li>
               </ol>
             </details>
           )}

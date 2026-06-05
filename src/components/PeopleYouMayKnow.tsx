@@ -1,8 +1,10 @@
+import "@/i18n";
 import { useEffect, useState } from "react";
 import { Loader2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 interface Suggestion {
   id: string;
@@ -19,6 +21,7 @@ interface Props {
 }
 
 export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Suggestion[] | null>(null);
 
   async function load() {
@@ -45,7 +48,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
       <div className="flex items-center gap-1.5 px-1">
         <Users className="size-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Pessoas que você pode conhecer
+          {t("app.people.sectionTitle")}
         </span>
       </div>
       <div className={variant === "compact" ? "flex gap-2 overflow-x-auto pb-1 scrollbar-thin" : "space-y-1"}>
@@ -62,7 +65,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
               </Avatar>
               <span className="text-[11px] truncate w-full text-center">{s.display_name}</span>
               {s.mutual_count > 0 && (
-                <span className="text-[9px] text-muted-foreground">{s.mutual_count} em comum</span>
+                <span className="text-[9px] text-muted-foreground">{t("app.people.mutualCompact", { count: s.mutual_count })}</span>
               )}
             </button>
           ) : (
@@ -79,7 +82,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
                 <div className="text-sm font-medium truncate">{s.display_name}</div>
                 <div className="text-xs text-muted-foreground truncate">
                   @{s.username}
-                  {s.mutual_count > 0 && <> · {s.mutual_count} {s.mutual_count === 1 ? "contato" : "contatos"} em comum</>}
+                  {s.mutual_count > 0 && <> · {s.mutual_count === 1 ? t("app.people.mutualOne", { count: s.mutual_count }) : t("app.people.mutualMany", { count: s.mutual_count })}</>}
                   {s.mutual_count === 0 && <> · {s.reason}</>}
                 </div>
               </div>

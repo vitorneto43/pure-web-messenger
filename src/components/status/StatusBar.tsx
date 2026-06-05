@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CreateStatusDialog } from "./CreateStatusDialog";
 import { StatusViewer } from "./StatusViewer";
+import { useTranslation } from "react-i18next";
 
 export interface StatusRow {
   id: string;
@@ -32,6 +33,7 @@ export interface UserGroup {
 
 export function StatusBar() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [mine, setMine] = useState<StatusRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export function StatusBar() {
           {
             user: {
               id: user.id,
-              display_name: "Meu status",
+              display_name: t("status.myStatus"),
               avatar_url: (user.user_metadata as any)?.avatar_url ?? null,
             },
             statuses: mine,
@@ -189,13 +191,13 @@ export function StatusBar() {
                 setCreateOpen(true);
               }}
               className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-primary text-primary-foreground grid place-items-center ring-2 ring-sidebar hover:scale-110 transition"
-              aria-label="Criar status"
+              aria-label={t("status.createStatus")}
             >
               <Plus className="size-3" />
             </button>
           </div>
           <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
-            {mine.length ? "Meu status" : "Adicionar"}
+            {mine.length ? t("status.myStatus") : t("status.add")}
           </span>
         </button>
 
@@ -233,7 +235,7 @@ export function StatusBar() {
             </div>
             <span className="text-[10px] max-w-[64px] truncate flex items-center gap-0.5 justify-center">
               {g.isSponsored && !g.isOfficial ? (
-                <span className="text-pink-500 font-semibold">Patrocinado</span>
+                <span className="text-pink-500 font-semibold">{t("status.sponsored")}</span>
               ) : (
                 g.user.display_name
               )}
@@ -243,7 +245,7 @@ export function StatusBar() {
 
         {groups.length === 0 && !loading && mine.length === 0 && (
           <p className="text-[11px] text-muted-foreground self-center ml-1">
-            Sem status de contatos ainda.
+            {t("status.noContactStatuses")}
           </p>
         )}
       </div>

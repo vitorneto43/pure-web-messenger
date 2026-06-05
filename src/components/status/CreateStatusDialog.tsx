@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation } from "react-i18next";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -32,6 +33,7 @@ interface Props {
 
 export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [tab, setTab] = useState("text");
   const [text, setText] = useState("");
   const [bg, setBg] = useState(BG_OPTIONS[0]);
@@ -70,7 +72,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     try {
       if (tab === "text") {
         if (!text.trim()) {
-          toast.error("Escreva algo");
+          toast.error(t("status.writeSomething"));
           setSubmitting(false);
           return;
         }
@@ -84,14 +86,14 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
         if (error) throw error;
       } else {
         if (!file) {
-          toast.error("Selecione um arquivo");
+          toast.error(t("status.selectFile"));
           setSubmitting(false);
           return;
         }
         const kind: "image" | "video" = file.type.startsWith("video") ? "video" : "image";
         const maxMB = kind === "video" ? 50 : 10;
         if (file.size > maxMB * 1024 * 1024) {
-          toast.error(`Arquivo grande demais (máx ${maxMB}MB)`);
+          toast.error(t("status.fileTooLarge", { maxMB }));
           setSubmitting(false);
           return;
         }
@@ -111,12 +113,12 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
         });
         if (error) throw error;
       }
-      toast.success("Status publicado!");
+      toast.success(t("status.published"));
       reset();
       onOpenChange(false);
       onCreated();
     } catch (e: any) {
-      toast.error("Falha", { description: e.message });
+      toast.error(t("status.failure"), { description: e.message });
     } finally {
       setSubmitting(false);
     }
@@ -126,17 +128,17 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo status</DialogTitle>
+          <DialogTitle>{t("status.newStatus")}</DialogTitle>
           <DialogDescription>
-            Visível para seus contatos por 24 horas. Quer alcançar mais gente? Impulsione depois de postar.
+            {t("status.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="text"><Type className="size-3.5 mr-1.5" /> Texto</TabsTrigger>
-            <TabsTrigger value="image"><ImagePlus className="size-3.5 mr-1.5" /> Foto</TabsTrigger>
-            <TabsTrigger value="video"><Video className="size-3.5 mr-1.5" /> Vídeo</TabsTrigger>
+            <TabsTrigger value="text"><Type className="size-3.5 mr-1.5" /> {t("status.tabText")}</TabsTrigger>
+            <TabsTrigger value="image"><ImagePlus className="size-3.5 mr-1.5" /> {t("status.tabPhoto")}</TabsTrigger>
+            <TabsTrigger value="video"><Video className="size-3.5 mr-1.5" /> {t("status.tabVideo")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="text" className="space-y-3">
@@ -144,13 +146,13 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
               className="rounded-xl p-6 min-h-[160px] grid place-items-center text-center text-white font-semibold text-lg"
               style={{ background: bg }}
             >
-              {text || "Digite sua mensagem..."}
+              {text || t("status.typeMessage")}
             </div>
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               maxLength={500}
-              placeholder="Escreva algo..."
+              placeholder={t("status.writeSomething")}
               rows={3}
             />
             <div className="flex gap-2">
@@ -160,7 +162,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
                   onClick={() => setBg(b)}
                   className={`size-7 rounded-full ring-2 ${bg === b ? "ring-primary" : "ring-transparent"}`}
                   style={{ background: b }}
-                  aria-label="Fundo"
+                  aria-label={t("status.background")}
                 />
               ))}
             </div>
@@ -175,21 +177,21 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
               onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
             />
             {preview ? (
-              <img src={preview} className="rounded-xl max-h-[280px] mx-auto" alt="Pré-visualização" />
+              <img src={preview} className="rounded-xl max-h-[280px] mx-auto" alt={t("status.preview")} />
             ) : (
               <Button variant="secondary" onClick={() => fileRef.current?.click()} className="w-full h-32">
-                <ImagePlus className="size-5 mr-2" /> Selecionar foto
+                <ImagePlus className="size-5 mr-2" /> {t("status.selectPhoto")}
               </Button>
             )}
             {preview && (
               <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
-                Trocar
+                {t("status.change")}
               </Button>
             )}
             <Input
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="Legenda (opcional)"
+              placeholder={t("status.captionOptional")}
               maxLength={200}
             />
           </TabsContent>
@@ -206,13 +208,13 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
               <video src={preview} controls className="rounded-xl max-h-[280px] w-full" />
             ) : (
               <Button variant="secondary" onClick={() => fileRef.current?.click()} className="w-full h-32">
-                <Video className="size-5 mr-2" /> Selecionar vídeo (máx 50MB)
+                <Video className="size-5 mr-2" /> {t("status.selectVideo")}
               </Button>
             )}
             <Input
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="Legenda (opcional)"
+              placeholder={t("status.captionOptional")}
               maxLength={200}
             />
           </TabsContent>
@@ -223,8 +225,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
             <div className="flex items-center gap-2 text-sm">
               <BadgeCheck className="size-4 text-primary" />
               <div>
-                <p className="font-medium leading-tight">Status oficial WaveChat</p>
-                <p className="text-[11px] text-muted-foreground">Visível para todos os usuários</p>
+                <p className="font-medium leading-tight">{t("status.officialStatus")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("status.visibleToAll")}</p>
               </div>
             </div>
             <Switch checked={isOfficial} onCheckedChange={setIsOfficial} />
@@ -233,7 +235,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
-          {isOfficialAccount && isOfficial ? "Publicar status oficial" : "Publicar status"}
+          {isOfficialAccount && isOfficial ? t("status.publishOfficial") : t("status.publish")}
         </Button>
       </DialogContent>
     </Dialog>

@@ -754,6 +754,12 @@ const ja: Dict = {
     "メッセージ、音声・ビデオ通話、ステータス、決済、AI を一か所で。アプリのインストール不要。",
 };
 
+import { APP_PT, APP_EN } from "./dicts";
+
+// App-interior keys (PT + EN); other locales fall back to EN automatically.
+Object.assign(pt, APP_PT);
+Object.assign(en, APP_EN);
+
 export const RESOURCES: Record<Locale, { translation: Dict }> = {
   pt: { translation: pt },
   en: { translation: en },

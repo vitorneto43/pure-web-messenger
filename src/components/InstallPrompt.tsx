@@ -1,7 +1,9 @@
+import "@/i18n";
 import { useEffect, useState } from "react";
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { registerServiceWorker } from "@/lib/push-client";
+import { useTranslation } from "react-i18next";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -39,6 +41,7 @@ function detectPlatform(): Platform {
 }
 
 export function InstallPrompt() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [platform, setPlatform] = useState<Platform>("desktop");
@@ -106,15 +109,15 @@ export function InstallPrompt() {
   const helpText = (() => {
     switch (platform) {
       case "ios-safari":
-        return 'No iPhone, a Apple só cria o app pela opção Compartilhar → "Adicionar à Tela de Início". Ele aparece na tela inicial, não na lista de apps.';
+        return t("app.install.helpIosSafari");
       case "ios-other":
-        return 'No iPhone, abra este site no Safari. Outros navegadores podem salvar só um atalho/offline e não criar o app correto.';
+        return t("app.install.helpIosOther");
       case "android":
-        return 'Android: abra o menu (⋮) do Chrome e toque em "Instalar app" ou "Adicionar à tela inicial". Se NENHUMA dessas opções aparecer (Android/Chrome antigo): 1) atualize o Chrome pela Play Store; 2) ou instale o navegador "Kiwi Browser" ou "Edge" da Play Store, abra este site nele e use o menu → "Adicionar à tela inicial" — vai criar o ícone do Wavechat na sua tela. Se mesmo assim não aparecer, segure um espaço vazio da tela inicial → Widgets/Atalhos → Atalho do Chrome → escolha este site.';
+        return t("app.install.helpAndroid");
       case "mobile-other":
-        return 'Abra o menu do navegador e procure "Instalar app" ou "Adicionar à tela inicial". Se não tiver essa opção, instale o Chrome ou Kiwi Browser pela loja de apps e abra este site por lá. Não use "Baixar"/"Salvar offline".';
+        return t("app.install.helpMobileOther");
       default:
-        return 'No computador, clique no ícone de instalação na barra de endereço, ou abra o site pelo celular para instalar como app.';
+        return t("app.install.helpDesktop");
     }
   })();
 
@@ -122,11 +125,11 @@ export function InstallPrompt() {
     return (
       <button
         onClick={expand}
-        aria-label="Instalar no celular"
+        aria-label={t("app.install.ariaInstall")}
         className="fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-border bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg hover:opacity-90"
       >
         <Download className="size-4" />
-        Instalar no celular
+        {t("app.install.title")}
       </button>
     );
   }
@@ -136,36 +139,36 @@ export function InstallPrompt() {
       <div className="flex items-start gap-3">
         <img
           src="/icon-192.png"
-          alt="Ícone do Wavechat"
+          alt={t("app.install.iconAlt")}
           className="size-11 shrink-0 rounded-xl shadow-sm"
           loading="lazy"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Instalar no celular</p>
+          <p className="text-sm font-semibold">{t("app.install.title")}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {showHelp
               ? helpText
               : deferred
-                ? "Toque para abrir o instalador real do celular com o ícone do Wavechat."
-                : "Não toque em Baixar/Download offline. Toque aqui para ver a opção certa de instalar o app."}
+                ? t("app.install.hintDeferred")
+                : t("app.install.hintDefault")}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" onClick={install} disabled={installing}>
               <Download className="size-4" />
-              {installing ? "Abrindo..." : "Instalar no celular"}
+              {installing ? t("app.install.installing") : t("app.install.btnInstall")}
             </Button>
             {showHelp && (
               <Button size="sm" variant="ghost" onClick={() => setShowHelp(false)}>
-                Voltar
+                {t("app.install.btnBack")}
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={collapse}>
-              Minimizar
+              {t("app.install.btnMinimize")}
             </Button>
           </div>
         </div>
         <button
-          aria-label="Minimizar"
+          aria-label={t("app.install.ariaMinimize")}
           onClick={collapse}
           className="rounded-md p-1 text-muted-foreground hover:bg-muted"
         >

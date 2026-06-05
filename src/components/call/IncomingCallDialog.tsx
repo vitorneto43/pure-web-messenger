@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Phone, PhoneOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useCall } from "@/hooks/use-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 export function IncomingCallDialog() {
+  const { t } = useTranslation();
   const { incoming, acceptIncoming, declineIncoming } = useCall();
   const [ringAnimation, setRingAnimation] = useState(true);
 
@@ -54,18 +56,18 @@ export function IncomingCallDialog() {
 
           {/* Caller name */}
           <h2 className="text-3xl font-bold text-white mb-2">
-            {peer?.display_name ?? "Alguém"}
+            {peer?.display_name ?? t("call.unknownCaller")}
           </h2>
 
           {/* Call type */}
           <p className="text-sm text-zinc-400 font-medium">
-            {isVideo ? "Chamada de vídeo recebida" : "Chamada de voz recebida"}
+            {isVideo ? t("call.incomingVideo") : t("call.incomingVoice")}
           </p>
 
           {/* Ringing animation */}
           <div className="mt-6 flex justify-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-xs text-zinc-400 font-medium">Conectando...</span>
+            <span className="text-xs text-zinc-400 font-medium">{t("call.statusConnecting")}</span>
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse animation-delay-100" />
           </div>
         </div>
@@ -76,10 +78,10 @@ export function IncomingCallDialog() {
           <Button
             onClick={declineIncoming}
             className="flex-1 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-            title="Recusar chamada"
+            title={t("call.declineTitle")}
           >
             <PhoneOff className="size-6" />
-            <span className="hidden sm:inline">Recusar</span>
+            <span className="hidden sm:inline">{t("call.decline")}</span>
           </Button>
 
           {/* Accept button - prominent with animation */}
@@ -88,16 +90,16 @@ export function IncomingCallDialog() {
             className={`flex-1 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${
               ringAnimation ? "ring-4 ring-green-400/50 ring-offset-2 ring-offset-black" : ""
             }`}
-            title="Atender chamada"
+            title={t("call.answerTitle")}
           >
             <Phone className="size-6" />
-            <span className="hidden sm:inline">Atender</span>
+            <span className="hidden sm:inline">{t("call.answer")}</span>
           </Button>
         </div>
 
         {/* Footer info */}
         <div className="px-6 pb-6 text-center text-xs text-zinc-500 border-t border-white/5 pt-4">
-          <p>Deslize para cima para atender ou para baixo para recusar</p>
+          <p>{t("call.swipeHint")}</p>
         </div>
       </div>
 
