@@ -30,12 +30,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { NewsletterTab } from "@/components/admin/NewsletterTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -227,6 +228,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="push"><Bell className="size-4 mr-1.5" />Push</TabsTrigger>
               <TabsTrigger value="logs"><ListChecks className="size-4 mr-1.5" />Logs</TabsTrigger>
               <TabsTrigger value="admins"><Shield className="size-4 mr-1.5" />Admins</TabsTrigger>
+              <TabsTrigger value="newsletter"><Mail className="size-4 mr-1.5" />Newsletter</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
@@ -245,6 +247,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="push" className="mt-4"><PushTab /></TabsContent>
           <TabsContent value="logs" className="mt-4"><LogsTab /></TabsContent>
           <TabsContent value="admins" className="mt-4"><AdminsTab canEdit={isSuperadmin} /></TabsContent>
+          <TabsContent value="newsletter" className="mt-4"><NewsletterTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
       </main>

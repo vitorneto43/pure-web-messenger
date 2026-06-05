@@ -356,6 +356,117 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_feedback: {
+        Row: {
+          created_at: string
+          email: string | null
+          handled: boolean
+          id: string
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          handled?: boolean
+          id?: string
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          handled?: boolean
+          id?: string
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_posts: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          id: string
+          media_type: string | null
+          media_url: string | null
+          recipients_count: number
+          sent_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          recipients_count?: number
+          sent_at?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          recipients_count?: number
+          sent_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string | null
+          status: string
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -794,7 +905,9 @@ export type Database = {
     Functions: {
       admin_invites_overview: { Args: never; Returns: Json }
       admin_list_admins: { Args: never; Returns: Json }
+      admin_newsletter_stats: { Args: never; Returns: Json }
       admin_push_logs: { Args: { _days?: number }; Returns: Json }
+      admin_send_newsletter: { Args: { _post_id: string }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
