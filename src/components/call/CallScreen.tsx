@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Phone, Video, VideoOff, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useCall } from "@/hooks/use-call";
 import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 export function CallScreen() {
+  const { t } = useTranslation();
   const {
     active,
     localStream,
@@ -92,13 +94,13 @@ export function CallScreen() {
   const statusLabel =
     active.status === "ringing"
       ? active.isCaller
-        ? "Chamando..."
-        : "Conectando..."
+        ? t("call.statusRinging")
+        : t("call.statusConnecting")
       : connecting
-        ? "Conectando..."
+        ? t("call.statusConnecting")
         : active.status === "accepted"
           ? formatDuration(callDuration)
-          : "Em chamada";
+          : t("call.statusInCall");
 
   return (
     <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col overflow-hidden">
@@ -126,7 +128,7 @@ export function CallScreen() {
             </Avatar>
             <div className="text-center">
               <div className="text-3xl font-bold tracking-tight">
-                {peer?.display_name ?? "Usuário"}
+                {peer?.display_name ?? t("call.unknownUser")}
               </div>
               <div className="text-sm text-zinc-300 mt-2 font-medium">{statusLabel}</div>
             </div>
@@ -139,7 +141,7 @@ export function CallScreen() {
             <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                {peer?.display_name ?? "Usuário"}
+                {peer?.display_name ?? t("call.unknownUser")}
               </div>
             </div>
             <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium">
@@ -173,7 +175,7 @@ export function CallScreen() {
         {/* Call status and duration */}
         {active.status === "accepted" && (
           <div className="text-center">
-            <div className="text-sm text-zinc-400 font-medium">Duração da chamada</div>
+            <div className="text-sm text-zinc-400 font-medium">{t("call.callDuration")}</div>
             <div className="text-2xl font-bold text-white mt-1">{formatDuration(callDuration)}</div>
           </div>
         )}
@@ -189,7 +191,7 @@ export function CallScreen() {
                 ? "bg-white/10 hover:bg-white/20 text-white"
                 : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
             }`}
-            title={micOn ? "Desligar microfone" : "Ligar microfone"}
+            title={micOn ? t("call.micOff") : t("call.micOn")}
           >
             {micOn ? <Mic className="size-7" /> : <MicOff className="size-7" />}
           </Button>
@@ -204,7 +206,7 @@ export function CallScreen() {
                   ? "bg-white/10 hover:bg-white/20 text-white"
                   : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
               }`}
-              title={camOn ? "Desligar câmera" : "Ligar câmera"}
+              title={camOn ? t("call.camOff") : t("call.camOn")}
             >
               {camOn ? <Video className="size-7" /> : <VideoOff className="size-7" />}
             </Button>
@@ -219,7 +221,7 @@ export function CallScreen() {
                 ? "bg-white/10 hover:bg-white/20 text-white"
                 : "bg-white/5 hover:bg-white/10 text-zinc-400"
             }`}
-            title={speakerOn ? "Desligar alto-falante" : "Ligar alto-falante"}
+            title={speakerOn ? t("call.speakerOff") : t("call.speakerOn")}
           >
             {speakerOn ? <Volume2 className="size-7" /> : <VolumeX className="size-7" />}
           </Button>
@@ -229,7 +231,7 @@ export function CallScreen() {
             <Button
               size="icon"
               className="size-16 sm:size-18 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 transition-all duration-200"
-              title="Trocar câmera"
+              title={t("call.flipCamera")}
             >
               <RotateCcw className="size-7" />
             </Button>
@@ -241,14 +243,14 @@ export function CallScreen() {
           size="icon"
           onClick={endCall}
           className="size-20 sm:size-24 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
-          title="Encerrar chamada"
+          title={t("call.endCall")}
         >
           <Phone className="size-9 sm:size-10 rotate-[135deg]" />
         </Button>
 
         {/* Call info text */}
         <div className="text-xs text-zinc-500 text-center">
-          {isVideo ? "Videochamada" : "Chamada de voz"} • {active.isCaller ? "Você iniciou" : "Chamada recebida"}
+          {isVideo ? t("call.videoCall") : t("call.voiceCall")} • {active.isCaller ? t("call.youStarted") : t("call.callReceived")}
         </div>
       </div>
     </div>

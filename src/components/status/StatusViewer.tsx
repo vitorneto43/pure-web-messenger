@@ -12,6 +12,7 @@ import { shareMessageExternally } from "@/lib/share-message";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   groups: UserGroup[];
@@ -24,6 +25,7 @@ const DURATION_MS = 6000;
 
 export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClose }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [groupIndex, setGroupIndex] = useState(startGroupIndex);
   const [index, setIndex] = useState(startStatusIndex);
   const [progress, setProgress] = useState(0);
@@ -113,11 +115,11 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
 
   async function remove() {
     if (!current) return;
-    if (!confirm("Apagar este status?")) return;
+    if (!confirm(t("status.confirmDelete"))) return;
     const { error } = await supabase.from("statuses").delete().eq("id", current.id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Status apagado");
+      toast.success(t("status.deleted"));
       onClose();
     }
   }
@@ -134,9 +136,9 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       const ext = current.kind === "video" ? "mp4" : "jpg";
       const name = `wavechat-status-${current.id}.${ext}`;
       await downloadFile(current.media_url, name);
-      toast.success("Download iniciado");
+      toast.success(t("status.downloadStarted"));
     } catch (e: any) {
-      toast.error("Não foi possível baixar");
+      toast.error(t("status.downloadFailed"));
     } finally {
       setDownloading(false);
       setPaused(false);
@@ -167,7 +169,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       const preview =
         current.kind === "text"
           ? (current.content ?? "").slice(0, 80)
-          : current.caption?.slice(0, 80) || (current.kind === "video" ? "🎬 Vídeo" : "📷 Imagem");
+          : current.caption?.slice(0, 80) || (current.kind === "video" ? t("status.videoEmoji") : t("status.imageEmoji"));
       const quoted = `↪️ Resposta ao status: "${preview}"\n\n${text}`;
       const { error } = await supabase.from("messages").insert({
         conversation_id: convId,
@@ -176,9 +178,9 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       });
       if (error) throw error;
       setReply("");
-      toast.success("Resposta enviada");
+      toast.success(t("status.replySent"));
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao enviar");
+      toast.error(e.message ?? t("status.failure"));
     } finally {
       setSendingReply(false);
     }
@@ -215,7 +217,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             {author?.display_name ?? "..."}
             {currentGroup?.sponsoredStatusIds?.includes(current.id) && (
               <span className="text-[9px] font-semibold uppercase tracking-wider bg-pink-500/90 text-white px-1.5 py-0.5 rounded">
-                Patrocinado
+                {t("status.sponsored")}
               </span>
             )}
           </p>
@@ -261,10 +263,10 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         )}
 
         {/* tap/hold zones — tap navigates, hold pauses (WhatsApp/Instagram behavior) */}
-        <TapZone side="left" onTap={prev} onHoldChange={setPaused} ariaLabel="Anterior">
+        <TapZone side="left" onTap={prev} onHoldChange={setPaused} ariaLabel={t("status.previous")}>
           <ChevronLeft className="size-6 text-white/0" />
         </TapZone>
-        <TapZone side="right" onTap={next} onHoldChange={setPaused} ariaLabel="Próximo">
+        <TapZone side="right" onTap={next} onHoldChange={setPaused} ariaLabel={t("status.next")}>
           <ChevronRight className="size-6 text-white/0 ml-auto" />
         </TapZone>
       </div>
@@ -275,7 +277,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           <>
             <div className="flex items-center gap-1.5 text-white/80 text-xs">
               <Eye className="size-4" />
-              {viewerCount ?? "—"} visualizações
+              {t("status.views", { count: viewerCount ?? "—" })}
             </div>
             <div className="flex-1" />
             <Button
@@ -284,14 +286,14 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               className="text-white hover:bg-white/10"
               onClick={remove}
             >
-              <Trash2 className="size-4 mr-1" /> Apagar
+              <Trash2 className="size-4 mr-1" /> {t("status.delete")}
             </Button>
             <Button
               size="sm"
               onClick={() => setBoostOpen(true)}
               className="bg-gradient-to-r from-amber-500 to-pink-500 text-white hover:opacity-90"
             >
-              <Rocket className="size-4 mr-1.5" /> Impulsionar
+              <Rocket className="size-4 mr-1.5" /> {t("status.boost")}
             </Button>
           </>
         ) : (
@@ -307,7 +309,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
                   sendReply();
                 }
               }}
-              placeholder={`Responder para ${author?.display_name ?? "..."}`}
+              placeholder={t("status.replyPlaceholder", { name: author?.display_name ?? "..." })}
               className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/30"
               disabled={sendingReply}
             />
@@ -317,7 +319,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               className="text-white hover:bg-white/10 shrink-0"
               onClick={sendReply}
               disabled={sendingReply || !reply.trim()}
-              aria-label="Enviar resposta"
+              aria-label={t("status.sendReply")}
             >
               <Send className="size-5" />
             </Button>
@@ -326,7 +328,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               variant="ghost"
               className="text-white hover:bg-white/10 shrink-0"
               onClick={handleShare}
-              aria-label="Compartilhar"
+              aria-label={t("status.share")}
             >
               <Share2 className="size-5" />
             </Button>
@@ -337,7 +339,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
                 className="text-white hover:bg-white/10 shrink-0"
                 onClick={handleDownload}
                 disabled={downloading}
-                aria-label="Baixar"
+                aria-label={t("status.download")}
               >
                 <Download className="size-5" />
               </Button>
