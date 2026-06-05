@@ -5,15 +5,19 @@ import {
   Check,
   CheckCheck,
   Download,
+  FileText,
+  Film,
   Image as ImageIcon,
   Loader2,
   MapPin,
   Mic,
+  Music,
   Paperclip,
   Phone,
   QrCode,
   Search,
   Send,
+  Share2,
   Smile,
   Sparkles,
   Trash2,
@@ -107,6 +111,8 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [aiRequest, setAiRequest] = useState<AIRequest | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingPing = useRef<number>(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -896,20 +902,81 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               </PopoverContent>
             </Popover>
 
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="rounded-full shrink-0"
-              onClick={() => imgRef.current?.click()}
-              disabled={uploading}
-            >
-              <ImageIcon className="size-5" />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="rounded-full shrink-0"
+                  disabled={uploading}
+                  title={t("chat.attach", { defaultValue: "Anexar" })}
+                >
+                  <Paperclip className="size-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-56 p-1">
+                <AttachItem
+                  icon={<ImageIcon className="size-4 text-blue-500" />}
+                  label={t("chat.attachPhoto", { defaultValue: "Foto" })}
+                  onClick={() => imgRef.current?.click()}
+                />
+                <AttachItem
+                  icon={<Film className="size-4 text-purple-500" />}
+                  label={t("chat.attachVideo", { defaultValue: "Vídeo" })}
+                  onClick={() => videoRef.current?.click()}
+                />
+                <AttachItem
+                  icon={<Music className="size-4 text-pink-500" />}
+                  label={t("chat.attachMusic", { defaultValue: "Música" })}
+                  onClick={() => audioRef.current?.click()}
+                />
+                <AttachItem
+                  icon={<FileText className="size-4 text-orange-500" />}
+                  label={t("chat.attachFile", { defaultValue: "Documento" })}
+                  onClick={() => fileRef.current?.click()}
+                />
+                <AttachItem
+                  icon={<Share2 className="size-4 text-sky-500" />}
+                  label={t("chat.shareExternal", { defaultValue: "Compartilhar" })}
+                  onClick={async () => {
+                    const nav = navigator as any;
+                    const payload = {
+                      title: "WaveChat",
+                      text: text.trim() || undefined,
+                      url: typeof window !== "undefined" ? window.location.href : undefined,
+                    };
+                    if (nav.share) {
+                      try { await nav.share(payload); } catch (e: any) {
+                        if (e?.name !== "AbortError") toast.error("Não foi possível compartilhar");
+                      }
+                    } else {
+                      try {
+                        await navigator.clipboard.writeText([payload.text, payload.url].filter(Boolean).join("\n"));
+                        toast.success("Copiado para a área de transferência");
+                      } catch {
+                        toast.error("Compartilhamento indisponível");
+                      }
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
             <input
-              ref={imgRef}
+              ref={audioRef}
               type="file"
-              accept="image/*"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={videoRef}
+              type="file"
+              accept="video/*"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -918,16 +985,6 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               }}
             />
 
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="rounded-full shrink-0"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-            >
-              <Paperclip className="size-5" />
-            </Button>
 
             <Button
               type="button"
@@ -1201,5 +1258,26 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         />
       )}
     </div>
+  );
+}
+
+function AttachItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent/40 text-sm text-left"
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
