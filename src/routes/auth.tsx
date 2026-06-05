@@ -214,7 +214,7 @@ function AuthPage() {
             {mode === "signup" && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="username">Nome de usuário</Label>
+                  <Label htmlFor="username">{t("auth.field.username")}</Label>
                   <Input
                     id="username"
                     value={form.username}
@@ -225,11 +225,11 @@ function AuthPage() {
                     spellCheck={false}
                   />
                   <p className="text-sm font-semibold text-primary mt-1">
-                    Use apenas letras e números (sem acentos ou símbolos)
+                    {t("auth.field.usernameHint")}
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="displayName">Nome de exibição</Label>
+                  <Label htmlFor="displayName">{t("auth.field.displayName")}</Label>
                   <Input
                     id="displayName"
                     value={form.displayName}
@@ -241,7 +241,7 @@ function AuthPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.field.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -255,14 +255,14 @@ function AuthPage() {
             {mode !== "forgot" && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password">{t("auth.field.password")}</Label>
                   {mode === "login" && (
                     <button
                       type="button"
                       onClick={() => setMode("forgot")}
                       className="text-xs text-primary hover:underline"
                     >
-                      Esqueci a senha
+                      {t("auth.field.forgotPassword")}
                     </button>
                   )}
                 </div>
@@ -280,7 +280,7 @@ function AuthPage() {
                     type="button"
                     onClick={() => setShow((s) => !s)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
-                    aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+                    aria-label={show ? t("auth.field.hidePassword") : t("auth.field.showPassword")}
                   >
                     {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
@@ -290,9 +290,9 @@ function AuthPage() {
 
             <Button type="submit" className="w-full" disabled={busy}>
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
-              {mode === "login" && "Entrar"}
-              {mode === "signup" && "Criar conta"}
-              {mode === "forgot" && "Enviar link"}
+              {mode === "login" && t("auth.submit.login")}
+              {mode === "signup" && t("auth.submit.signup")}
+              {mode === "forgot" && t("auth.submit.forgot")}
             </Button>
           </form>
 
