@@ -187,10 +187,7 @@ function PageViewTracker() {
 
 function LocaleBootstrap() {
   useEffect(() => {
-    // Apply current locale immediately to <html lang/dir>.
-    applyHtmlLang(currentLocale());
-
-    // ?lang=xx URL override (campaign links).
+    // 1) URL ?lang=xx wins (campaign links).
     try {
       const url = new URL(window.location.href);
       const qp = url.searchParams.get("lang");
@@ -202,24 +199,34 @@ function LocaleBootstrap() {
       // ignore
     }
 
-    // Only auto-detect when user has no stored preference yet.
+    // 2) Stored preference wins next.
     let stored: string | null = null;
     try {
       stored = window.localStorage.getItem(I18N_STORAGE_KEY);
     } catch {
       // ignore
     }
-    if (stored) return;
+    if (stored && (SUPPORTED_LOCALES as string[]).includes(stored)) {
+      setLocale(stored as Locale);
+      return;
+    }
 
+    // 3) Auto-detect from IP, fallback to browser language.
     void detectLocaleFromIp()
       .then((res) => {
         if (res?.locale && (SUPPORTED_LOCALES as string[]).includes(res.locale)) {
           setLocale(res.locale);
+          return;
         }
+        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").split("-")[0];
+        if ((SUPPORTED_LOCALES as string[]).includes(nav)) setLocale(nav as Locale);
       })
       .catch(() => {
-        // ignore — keep browser/default locale
+        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").split("-")[0];
+        if ((SUPPORTED_LOCALES as string[]).includes(nav)) setLocale(nav as Locale);
       });
+
+    applyHtmlLang(currentLocale());
   }, []);
   return null;
 }
