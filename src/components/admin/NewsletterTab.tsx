@@ -53,28 +53,95 @@ export function NewsletterTab() {
   const fb = useQuery({ queryKey: ["nl", "fb"], queryFn: () => fbFn() });
 
   const [editing, setEditing] = useState<Partial<Post> | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const buildPayload = (d: Partial<Post>) => {
+    const clean = (v: string | null | undefined) => {
+      const t = (v ?? "").trim();
+      return t.length ? t : undefined;
+    };
+    return {
+      id: d.id,
+      title: (d.title ?? "").trim(),
+      summary: clean(d.summary),
+      content: (d.content ?? "").trim(),
+      media_url: clean(d.media_url),
+      media_type: (clean(d.media_type) as "image" | "video" | undefined) || undefined,
+      cta_label: clean(d.cta_label),
+      cta_url: clean(d.cta_url),
+    };
+  };
 
   const upsert = useMutation({
-    mutationFn: (d: Partial<Post>) =>
-      upsertFn({
-        data: {
-          id: d.id,
-          title: d.title!,
-          summary: d.summary || undefined,
-          content: d.content!,
-          media_url: d.media_url || undefined,
-          media_type: (d.media_type as "image" | "video") || undefined,
-          cta_label: d.cta_label || undefined,
-          cta_url: d.cta_url || undefined,
-        },
-      }),
+    mutationFn: async (d: Partial<Post>) => {
+      const payload = buildPayload(d);
+      return await upsertFn({ data: payload });
+    },
     onSuccess: () => {
       toast.success("Rascunho salvo");
       setEditing(null);
       qc.invalidateQueries({ queryKey: ["nl"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      console.error("[newsletter upsert]", e);
+      toast.error(e.message || "Falha ao salvar rascunho");
+    },
   });
+
+  const saveAndSend = useMutation({
+    mutationFn: async (d: Partial<Post>) => {
+      const payload = buildPayload(d);
+      const r = await upsertFn({ data: payload });
+      return await sendFn({ data: { id: r.id } });
+    },
+    onSuccess: (r) => {
+      toast.success(`Enviada para ${r.recipients} usuário(s) no app`);
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["nl"] });
+    },
+    onError: (e: Error) => {
+      console.error("[newsletter saveAndSend]", e);
+      toast.error(e.message || "Falha ao enviar");
+    },
+  });
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    if (!isImage && !isVideo) {
+      toast.error("Selecione uma imagem ou vídeo");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máx 50MB)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || (isImage ? "jpg" : "mp4");
+      const path = `newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage
+        .from("chat-uploads")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("chat-uploads").getPublicUrl(path);
+      setEditing((s) => ({
+        ...s,
+        media_url: data.publicUrl,
+        media_type: isImage ? "image" : "video",
+      }));
+      toast.success("Mídia enviada");
+    } catch (e) {
+      console.error("[newsletter upload]", e);
+      toast.error((e as Error).message || "Falha no upload");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
 
   const del = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
