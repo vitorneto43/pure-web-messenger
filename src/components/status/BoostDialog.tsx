@@ -3,6 +3,7 @@ import { Loader2, Check, Rocket, Gift } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -15,13 +16,17 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBoostCheckout } from "@/lib/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { supabase } from "@/integrations/supabase/client";
+import { currentLocale } from "@/i18n";
+import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 
-const PACKAGES: { key: PackKey; views: number; price: string; popular?: boolean }[] = [
-  { key: "boost_100", views: 100, price: "R$ 5,00" },
-  { key: "boost_500", views: 500, price: "R$ 15,00", popular: true },
-  { key: "boost_2000", views: 2000, price: "R$ 50,00" },
+// Base price in BRL. Display is converted to the user's locale currency.
+// Stripe still charges in BRL — Stripe handles FX at the card level.
+const PACKAGES: { key: PackKey; views: number; priceBRL: number; popular?: boolean }[] = [
+  { key: "boost_100", views: 100, priceBRL: 5 },
+  { key: "boost_500", views: 500, priceBRL: 15, popular: true },
+  { key: "boost_2000", views: 2000, priceBRL: 50 },
 ];
 
 interface Props {
@@ -31,6 +36,10 @@ interface Props {
 }
 
 export function BoostDialog({ open, onOpenChange, statusId }: Props) {
+  const { t, i18n } = useTranslation();
+  void i18n.language;
+  const locale = currentLocale();
+  const currency = currencyForLocale(locale);
   const [loading, setLoading] = useState<PackKey | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [freeViews, setFreeViews] = useState<number>(0);
@@ -52,10 +61,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
         _status_id: statusId,
       });
       if (error) throw error;
-      toast.success(`🎁 +${(data as any)?.views ?? 100} visualizações grátis ativadas!`);
+      toast.success(t("boost.freeRedeemed", { count: (data as any)?.views ?? 100 }));
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao resgatar");
+      toast.error(e.message ?? t("boost.redeemFailed"));
     } finally {
       setRedeemingFree(false);
     }
@@ -72,10 +81,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
           environment: getStripeEnvironment(),
         },
       });
-      if (!result.clientSecret) throw new Error("Sem clientSecret");
+      if (!result.clientSecret) throw new Error("Missing clientSecret");
       setClientSecret(result.clientSecret);
     } catch (e: any) {
-      toast.error("Falha ao iniciar pagamento", { description: e.message });
+      toast.error(t("boost.checkoutFailed"), { description: e.message });
     } finally {
       setLoading(null);
     }
@@ -96,11 +105,9 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
         <div className="p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Rocket className="size-5 text-pink-500" /> Impulsionar status
+              <Rocket className="size-5 text-pink-500" /> {t("boost.title")}
             </DialogTitle>
-            <DialogDescription>
-              Faça seu status aparecer para pessoas além dos seus contatos. Pagamento único.
-            </DialogDescription>
+            <DialogDescription>{t("boost.description")}</DialogDescription>
           </DialogHeader>
 
           {!clientSecret ? (
@@ -111,10 +118,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     <div className="min-w-0">
                       <div className="font-semibold flex items-center gap-2">
                         <Gift className="size-4 text-pink-500" />
-                        100 visualizações grátis
+                        {t("boost.freeTitle", { count: 100 })}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        Recompensa por convidar amigos · você tem {freeViews} disponíveis
+                        {t("boost.freeSubtitle", { count: freeViews })}
                       </div>
                     </div>
                     <Button
@@ -123,48 +130,57 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                       disabled={redeemingFree}
                       className="bg-pink-500 hover:bg-pink-600 text-white shrink-0"
                     >
-                      {redeemingFree ? <Loader2 className="size-4 animate-spin" /> : "Usar grátis"}
+                      {redeemingFree ? <Loader2 className="size-4 animate-spin" /> : t("boost.useFree")}
                     </Button>
                   </div>
                 </div>
               )}
-              {PACKAGES.map((p) => (
-                <button
-                  key={p.key}
-                  disabled={!!loading}
-                  onClick={() => pick(p.key)}
-                  className={`w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-accent/30 ${
-                    p.popular ? "border-primary/60 bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {p.views.toLocaleString("pt-BR")} visualizações
-                        {p.popular && (
-                          <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
-                            Popular
-                          </span>
+              {PACKAGES.map((p) => {
+                const converted = convertFromBRL(p.priceBRL, currency);
+                const perView = convertFromBRL(p.priceBRL / p.views, currency);
+                return (
+                  <button
+                    key={p.key}
+                    disabled={!!loading}
+                    onClick={() => pick(p.key)}
+                    className={`w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-accent/30 ${
+                      p.popular ? "border-primary/60 bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold flex items-center gap-2">
+                          {t("boost.views", { count: p.views })}
+                          {p.popular && (
+                            <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                              {t("boost.popular")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {t("boost.perView", { price: formatMoney(perView, currency, locale) })}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">{formatMoney(converted, currency, locale)}</div>
+                        {loading === p.key ? (
+                          <Loader2 className="size-4 animate-spin ml-auto mt-1" />
+                        ) : (
+                          <Check className="size-4 text-muted-foreground ml-auto mt-1 opacity-0 group-hover:opacity-100" />
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        R$ {(p.views ? (parseInt(p.price.replace(/\D/g, "")) / 100 / p.views).toFixed(3).replace(".", ",") : "0")} por visualização
-                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">{p.price}</div>
-                      {loading === p.key ? (
-                        <Loader2 className="size-4 animate-spin ml-auto mt-1" />
-                      ) : (
-                        <Check className="size-4 text-muted-foreground ml-auto mt-1 opacity-0 group-hover:opacity-100" />
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
               <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-                O impulso fica ativo enquanto o status existir (até expirar em 24h). Quando atinge o limite de visualizações, é encerrado automaticamente.
+                {t("boost.footnote")}
               </p>
+              {currency !== "BRL" && (
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                  {t("boost.fxNotice")}
+                </p>
+              )}
             </div>
           ) : (
             <div className="mt-4 -mx-2">
@@ -174,7 +190,7 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                 onClick={() => setClientSecret(null)}
                 className="mb-2"
               >
-                ← Voltar
+                ← {t("common.back")}
               </Button>
               <EmbeddedCheckoutProvider
                 stripe={getStripe()}
