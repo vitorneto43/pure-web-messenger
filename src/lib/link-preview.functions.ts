@@ -102,6 +102,13 @@ export const fetchLinkPreview = createServerFn({ method: "POST" })
       );
       const siteName =
         pickMeta(html, ["og:site_name"]) || new URL(finalUrl).hostname;
+      const video = absUrl(
+        pickMeta(html, ["og:video:secure_url", "og:video:url", "og:video", "twitter:player"]),
+        finalUrl
+      );
+      const videoType = pickMeta(html, ["og:video:type", "twitter:player:stream:content_type"]);
+      const vw = pickMeta(html, ["og:video:width", "twitter:player:width"]);
+      const vh = pickMeta(html, ["og:video:height", "twitter:player:height"]);
 
       return {
         url: finalUrl,
@@ -109,7 +116,12 @@ export const fetchLinkPreview = createServerFn({ method: "POST" })
         description: description?.trim().slice(0, 300),
         image,
         siteName,
+        video,
+        videoType,
+        videoWidth: vw ? parseInt(vw, 10) || undefined : undefined,
+        videoHeight: vh ? parseInt(vh, 10) || undefined : undefined,
       };
+
     } catch {
       return { url: data.url };
     } finally {
