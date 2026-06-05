@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getBank, openBankApp } from "@/lib/banks";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const URL_REGEX = /\b(https?:\/\/[^\s<>"']+)/gi;
 const CALL_REGEX = /^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):(\d+)\]\]$/;
@@ -32,13 +33,11 @@ interface Segment {
 function parse(content: string): Segment[] {
   const segs: Segment[] = [];
   let lastIndex = 0;
-  // Replace pix markers first by splitting
   const markers: { start: number; end: number; pix: PixMessage }[] = [];
   for (const m of content.matchAll(PIX_REGEX)) {
     const pix = decodePixMessage(m[1]);
     if (pix) markers.push({ start: m.index!, end: m.index! + m[0].length, pix });
   }
-  // Walk content, splitting on pix markers
   const slices: { text: string; pix?: PixMessage }[] = [];
   let cursor = 0;
   for (const mk of markers) {
@@ -71,6 +70,7 @@ function parse(content: string): Segment[] {
 }
 
 export function MessageContent({ content, isMine }: { content: string; isMine: boolean }) {
+  const { t } = useTranslation();
   const callMatch = content.trim().match(CALL_REGEX);
   const segments = useMemo(() => (callMatch ? [] : parse(content)), [content, callMatch]);
   const firstUrl = segments.find((s) => s.type === "url")?.value;
@@ -79,20 +79,20 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
     const [, kind, outcome, durStr] = callMatch;
     const duration = parseInt(durStr, 10) || 0;
     const isVideo = kind === "video";
-    const kindLabel = isVideo ? "Chamada de vídeo" : "Chamada de voz";
+    const kindLabel = isVideo ? t("chat.videoCall") : t("chat.voiceCall");
     let label = kindLabel;
     let Icon: typeof Phone = isVideo ? Video : Phone;
     let danger = false;
     if (outcome === "missed") {
-      label = isVideo ? "Chamada de vídeo perdida" : "Chamada de voz perdida";
+      label = isVideo ? t("chat.videoCallMissed") : t("chat.voiceCallMissed");
       Icon = PhoneMissed;
       danger = true;
     } else if (outcome === "declined") {
-      label = "Chamada recusada";
+      label = t("chat.callDeclinedFull");
       Icon = PhoneOff;
       danger = true;
     } else if (outcome === "cancelled") {
-      label = "Chamada cancelada";
+      label = t("chat.callCancelledFull");
       Icon = PhoneOff;
     } else if (outcome === "completed") {
       label = kindLabel;
@@ -123,8 +123,6 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
       </div>
     );
   }
-
-
 
   return (
     <div className="space-y-2">
@@ -226,6 +224,7 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
 }
 
 function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
+  const { t } = useTranslation();
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const { user } = useAuth();
@@ -249,7 +248,6 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
       .catch(() => setQrUrl(null));
   }, [showQr, payload]);
 
-  // Carrega o "meu banco" do usuário logado (o pagador) — não o do remetente.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -269,9 +267,9 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(payload);
-      toast.success("Código Pix copiado");
+      toast.success(t("chat.pixCodeCopied"));
     } catch {
-      toast.error("Não foi possível copiar");
+      toast.error(t("chat.copyError"));
     }
   }
 
@@ -282,13 +280,13 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
     } catch {}
     const result = openBankApp(bank);
     if (result === "app") {
-      toast.success(`Código copiado. Abrindo ${bank.name}…`, {
-        description: "Cole o código na tela Pix Copia e Cola do app.",
+      toast.success(t("chat.copiedOpeningBank", { name: bank.name }), {
+        description: t("chat.pastePixCode"),
       });
     } else if (result === "web") {
-      toast.success(`Código copiado. Abra o app do ${bank.name} e cole em Pix Copia e Cola.`);
+      toast.success(t("chat.copiedOpenBankManual", { name: bank.name }));
     } else {
-      toast.info("Código copiado. Abra o app do seu banco e cole em Pix Copia e Cola.");
+      toast.info(t("chat.copiedOpenBankGeneric"));
     }
   }
 
@@ -304,7 +302,7 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
         <span className="inline-grid place-items-center size-6 rounded-md bg-emerald-500/20 text-emerald-400">
           ₽
         </span>
-        Pagamento Pix
+        {t("chat.pixPayment")}
       </div>
       <div className="text-sm font-medium">{pix.name}</div>
       {pix.amount ? (
@@ -313,7 +311,7 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
         </div>
       ) : null}
       <div className="text-[11px] opacity-80 mt-1">
-        <div className="opacity-70">{pix.keyType ?? "Chave"}</div>
+        <div className="opacity-70">{pix.keyType ?? t("chat.pixKey")}</div>
         <div className="font-mono break-all">{pix.key}</div>
       </div>
       {pix.description && (
@@ -321,7 +319,7 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
       )}
       <div className="flex flex-wrap gap-2 mt-3">
         <Button size="sm" variant="secondary" className="h-8" onClick={copy}>
-          <Copy className="size-3.5 mr-1.5" /> Copiar código
+          <Copy className="size-3.5 mr-1.5" /> {t("chat.copyCode")}
         </Button>
         <Button
           size="sm"
@@ -330,18 +328,18 @@ function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
           onClick={() => setShowQr((v) => !v)}
         >
           <QrCode className="size-3.5 mr-1.5" />
-          {showQr ? "Ocultar QR" : "Ver QR"}
+          {showQr ? t("chat.hideQr") : t("chat.showQr")}
         </Button>
         {bank && (
           <Button size="sm" className="h-8" onClick={copyAndOpenBank}>
             <Landmark className="size-3.5 mr-1.5" />
-            Abrir {bank.name}
+            {t("chat.openBank", { name: bank.name })}
           </Button>
         )}
       </div>
       {!bank && (
         <p className="text-[10px] opacity-60 mt-2">
-          Defina seu banco no perfil para abrir o app com 1 toque.
+          {t("chat.setBankInProfile")}
         </p>
       )}
       {showQr && (

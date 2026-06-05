@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendMessagePush } from "@/lib/push.functions";
+import { useTranslation } from "react-i18next";
 
 export interface ForwardableMessage {
   content: string | null;
@@ -41,6 +42,7 @@ export function ForwardMessageDialog({
   message,
   excludeConversationId,
 }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export function ForwardMessageDialog({
             if (!c) continue;
             const p = profMap.get(m.user_id);
             if (p) {
-              c.title = p.display_name ?? c.title ?? "Usuário";
+              c.title = p.display_name ?? c.title ?? t("chat.user");
               c.avatar_url = c.avatar_url ?? p.avatar_url;
             }
           }
@@ -157,30 +159,30 @@ export function ForwardMessageDialog({
       if (error) throw error;
 
       // Fire-and-forget push to each target
-      const preview = message.content?.trim()
+      const pushPreview = message.content?.trim()
         ? message.content.trim().slice(0, 60)
         : message.attachment_type?.startsWith("image")
-          ? "📷 Foto"
+          ? t("chat.photoAttachment")
           : message.attachment_type?.startsWith("video")
-            ? "🎬 Vídeo"
+            ? t("chat.videoAttachment")
             : message.attachment_type?.startsWith("audio")
-              ? "🎤 Áudio"
-              : "📎 Anexo";
+              ? t("chat.audioAttachment")
+              : t("chat.fileAttachment");
 
       for (const cid of selected) {
         void sendMessagePush({
-          data: { conversationId: cid, preview },
+          data: { conversationId: cid, preview: pushPreview },
         }).catch(() => {});
       }
 
       toast.success(
         selected.size === 1
-          ? "Mensagem encaminhada"
-          : `Encaminhada para ${selected.size} conversas`,
+          ? t("chat.messageForwarded")
+          : t("chat.messageForwardedMultiple", { count: selected.size }),
       );
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao encaminhar");
+      toast.error(e.message ?? t("chat.forwardError"));
     } finally {
       setSendingId(null);
     }
@@ -189,18 +191,18 @@ export function ForwardMessageDialog({
   const preview = message?.content?.trim()
     ? message.content.trim()
     : message?.attachment_type?.startsWith("image")
-      ? "📷 Foto"
+      ? t("chat.photoAttachment")
       : message?.attachment_type?.startsWith("video")
-        ? "🎬 Vídeo"
+        ? t("chat.videoAttachment")
         : message?.attachment_type?.startsWith("audio")
-          ? "🎤 Áudio"
-          : message?.attachment_name ?? "Anexo";
+          ? t("chat.audioAttachment")
+          : message?.attachment_name ?? t("chat.fileAttachment");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Encaminhar mensagem</DialogTitle>
+          <DialogTitle>{t("chat.forwardMessage")}</DialogTitle>
         </DialogHeader>
 
         <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground line-clamp-2">
@@ -212,7 +214,7 @@ export function ForwardMessageDialog({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar conversa..."
+            placeholder={t("chat.searchConversation")}
             className="pl-9"
           />
         </div>
@@ -224,7 +226,7 @@ export function ForwardMessageDialog({
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
-              Nenhuma conversa encontrada
+              {t("chat.noConversationFound")}
             </div>
           ) : (
             filtered.map((c) => {
@@ -246,10 +248,10 @@ export function ForwardMessageDialog({
                   </Avatar>
                   <div className="flex-1 text-left">
                     <div className="text-sm font-medium truncate">
-                      {c.title || "Conversa"}
+                      {c.title || t("chat.conversation")}
                     </div>
                     {c.is_group && (
-                      <div className="text-[11px] text-muted-foreground">Grupo</div>
+                      <div className="text-[11px] text-muted-foreground">{t("chat.group")}</div>
                     )}
                   </div>
                   <div
@@ -267,7 +269,7 @@ export function ForwardMessageDialog({
 
         <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t("chat.cancel")}
           </Button>
           <Button
             onClick={handleSend}
@@ -278,7 +280,7 @@ export function ForwardMessageDialog({
             ) : (
               <Send className="size-4 mr-2" />
             )}
-            Encaminhar{selected.size > 0 ? ` (${selected.size})` : ""}
+            {selected.size > 0 ? t("chat.forwardCount", { count: selected.size }) : t("chat.forward")}
           </Button>
         </div>
       </DialogContent>

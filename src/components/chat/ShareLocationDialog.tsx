@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -16,12 +17,6 @@ interface Props {
     attachment_type: string;
   }) => Promise<void> | void;
 }
-
-const DURATIONS: { label: string; minutes: number }[] = [
-  { label: "15 minutos", minutes: 15 },
-  { label: "1 hora", minutes: 60 },
-  { label: "8 horas", minutes: 480 },
-];
 
 async function getPosition(): Promise<{ coords: { latitude: number; longitude: number; accuracy: number } }> {
   // Use Capacitor Geolocation on native (handles permissions properly)
@@ -74,7 +69,14 @@ export function ShareLocationDialog({
   userId,
   onSent,
 }: Props) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<string | null>(null);
+
+  const DURATIONS: { label: string; minutes: number }[] = [
+    { label: t("chat.duration15min"), minutes: 15 },
+    { label: t("chat.duration1h"), minutes: 60 },
+    { label: t("chat.duration8h"), minutes: 480 },
+  ];
 
   async function sendStatic() {
     setLoading("static");
@@ -88,7 +90,7 @@ export function ShareLocationDialog({
       });
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao obter localização");
+      toast.error(e.message ?? t("chat.locationError"));
     } finally {
       setLoading(null);
     }
@@ -121,10 +123,10 @@ export function ShareLocationDialog({
         attachment_url: `live:${row.id}`,
         attachment_type: "live-location",
       });
-      toast.success("Compartilhando localização ao vivo");
+      toast.success(t("chat.sharingLiveLocation"));
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao iniciar compartilhamento");
+      toast.error(e.message ?? t("chat.locationError"));
     } finally {
       setLoading(null);
     }
@@ -134,9 +136,9 @@ export function ShareLocationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Compartilhar localização</DialogTitle>
+          <DialogTitle>{t("chat.shareLocation")}</DialogTitle>
           <DialogDescription>
-            Envie sua posição atual ou compartilhe ao vivo por um período.
+            {t("chat.shareLocationDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -153,14 +155,14 @@ export function ShareLocationDialog({
               <MapPin className="size-5 mr-3 text-primary" />
             )}
             <div className="text-left">
-              <div className="font-medium text-sm">Enviar localização atual</div>
-              <div className="text-xs text-muted-foreground">Apenas uma vez</div>
+              <div className="font-medium text-sm">{t("chat.sendCurrentLocation")}</div>
+              <div className="text-xs text-muted-foreground">{t("chat.onlyOnce")}</div>
             </div>
           </Button>
 
           <div className="pt-2 text-xs font-medium text-muted-foreground flex items-center gap-2">
             <Radio className="size-3.5 text-emerald-500" />
-            Compartilhar ao vivo
+            {t("chat.shareLive")}
           </div>
 
           {DURATIONS.map((d) => (
@@ -179,7 +181,7 @@ export function ShareLocationDialog({
               <div className="text-left">
                 <div className="font-medium text-sm">{d.label}</div>
                 <div className="text-xs text-muted-foreground">
-                  Sua posição é atualizada em tempo real
+                  {t("chat.liveLocationUpdate")}
                 </div>
               </div>
             </Button>

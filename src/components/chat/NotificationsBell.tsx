@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullTime } from "@/lib/format-time";
+import { useTranslation } from "react-i18next";
 
 interface ProfileMini {
   id: string;
@@ -55,6 +56,7 @@ interface NotificationRow {
 }
 
 export function NotificationsBell() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -180,10 +182,10 @@ export function NotificationsBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-          <span className="text-sm font-semibold">Notificações</span>
+          <span className="text-sm font-semibold">{t("chat.notifications")}</span>
           {items.some((n) => !n.read_at) && (
             <button onClick={markAllRead} className="text-xs text-primary hover:underline">
-              Marcar todas como lidas
+              {t("chat.markAllRead")}
             </button>
           )}
         </div>
@@ -194,7 +196,7 @@ export function NotificationsBell() {
             </div>
           ) : items.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhuma notificação ainda.
+              {t("chat.noNotifications")}
             </p>
           ) : (
             items.map((n) => {
@@ -295,7 +297,7 @@ export function NotificationsBell() {
             </Button>
           )}
           <Button variant="outline" onClick={() => setViewerPost(null)}>
-            Fechar
+            {t("chat.close")}
           </Button>
         </DialogFooter>
       </DialogContent>

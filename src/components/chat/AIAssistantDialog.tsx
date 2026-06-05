@@ -11,8 +11,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 export type AIAction = "translate" | "suggest_reply" | "improve" | "summarize";
+
+const ICONS: Record<AIAction, string> = {
+  translate: "🌍",
+  suggest_reply: "💬",
+  improve: "✨",
+  summarize: "📝",
+};
 
 interface Props {
   open: boolean;
@@ -28,20 +36,6 @@ interface Props {
   onSendDirect?: (result: string) => void;
 }
 
-const TITLES: Record<AIAction, string> = {
-  translate: "Traduzir",
-  suggest_reply: "Sugestão de resposta",
-  improve: "Melhorar texto",
-  summarize: "Resumo da conversa",
-};
-
-const ICONS: Record<AIAction, string> = {
-  translate: "🌍",
-  suggest_reply: "💬",
-  improve: "✨",
-  summarize: "📝",
-};
-
 export function AIAssistantDialog({
   open,
   onOpenChange,
@@ -53,10 +47,18 @@ export function AIAssistantDialog({
   onUseInComposer,
   onSendDirect,
 }: Props) {
+  const { t } = useTranslation();
   const run = useServerFn(runAIAssistant);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+
+  const titles: Record<AIAction, string> = {
+    translate: t("chat.aiTitleTranslate"),
+    suggest_reply: t("chat.aiTitleSuggestReply"),
+    improve: t("chat.aiTitleImprove"),
+    summarize: t("chat.aiTitleSummarize"),
+  };
 
   async function execute() {
     setLoading(true);
@@ -72,7 +74,7 @@ export function AIAssistantDialog({
         setResult(r.content);
       }
     } catch (e: any) {
-      setError(e?.message ?? "Falha");
+      setError(e?.message ?? t("chat.error"));
     } finally {
       setLoading(false);
     }
@@ -86,9 +88,9 @@ export function AIAssistantDialog({
   async function copy() {
     try {
       await navigator.clipboard.writeText(result);
-      toast.success("Copiado");
+      toast.success(t("chat.copied"));
     } catch {
-      toast.error("Não foi possível copiar");
+      toast.error(t("chat.copyError"));
     }
   }
 
@@ -98,21 +100,21 @@ export function AIAssistantDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-xl">{ICONS[action]}</span>
-            {TITLES[action]}
+            {titles[action]}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-1.5 text-xs">
-            <Sparkles className="size-3" /> Gerado por IA
+            <Sparkles className="size-3" /> {t("chat.generatedByAI")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-[100px] rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap break-words">
           {loading && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Pensando...
+              <Loader2 className="size-4 animate-spin" /> {t("chat.aiThinking")}
             </div>
           )}
           {error && <div className="text-destructive">{error}</div>}
-          {!loading && !error && (result || "Sem resposta.")}
+          {!loading && !error && (result || t("chat.noAIResponse"))}
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">
@@ -122,7 +124,7 @@ export function AIAssistantDialog({
             onClick={execute}
             disabled={loading}
           >
-            <RefreshCw className="size-3.5 mr-1.5" /> Refazer
+            <RefreshCw className="size-3.5 mr-1.5" /> {t("chat.aiRetry")}
           </Button>
           <Button
             size="sm"
@@ -130,7 +132,7 @@ export function AIAssistantDialog({
             onClick={copy}
             disabled={!result || loading}
           >
-            <Copy className="size-3.5 mr-1.5" /> Copiar
+            <Copy className="size-3.5 mr-1.5" /> {t("chat.copy")}
           </Button>
           {onUseInComposer && (
             <Button
@@ -141,7 +143,7 @@ export function AIAssistantDialog({
               }}
               disabled={!result || loading}
             >
-              Usar no campo
+              {t("chat.useInComposer")}
             </Button>
           )}
           {onSendDirect && (
@@ -153,7 +155,7 @@ export function AIAssistantDialog({
               }}
               disabled={!result || loading}
             >
-              <Send className="size-3.5 mr-1.5" /> Enviar
+              <Send className="size-3.5 mr-1.5" /> {t("chat.send")}
             </Button>
           )}
         </div>

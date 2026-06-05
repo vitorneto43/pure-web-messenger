@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { shareMessageExternally } from "@/lib/share-message";
+import { useTranslation } from "react-i18next";
 
 export interface ActionableMessage {
   id: string;
@@ -42,6 +43,7 @@ export function MessageActionsDialog({
   onTranslate,
   onSuggestReply,
 }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   if (!message || !user) return null;
 
@@ -67,10 +69,10 @@ export function MessageActionsDialog({
           .eq("id", message!.id);
         if (error) throw error;
       }
-      toast.success("Mensagem apagada para você");
+      toast.success(t("chat.messageDeletedForMe"));
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao apagar");
+      toast.error(e.message ?? t("chat.deleteError"));
     }
   }
 
@@ -87,10 +89,10 @@ export function MessageActionsDialog({
         })
         .eq("id", message!.id);
       if (error) throw error;
-      toast.success("Mensagem apagada para todos");
+      toast.success(t("chat.messageDeletedForEveryone"));
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao apagar");
+      toast.error(e.message ?? t("chat.deleteError"));
     }
   }
 
@@ -98,7 +100,7 @@ export function MessageActionsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Mensagem</DialogTitle>
+          <DialogTitle>{t("chat.message")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-2 pt-2">
           {!isAlreadyDeletedForAll && hasText && onTranslate && (
@@ -107,7 +109,7 @@ export function MessageActionsDialog({
               className="justify-start h-12"
               onClick={() => onTranslate(message!.content!)}
             >
-              <Languages className="size-4 mr-3 text-primary" /> Traduzir com IA
+              <Languages className="size-4 mr-3 text-primary" /> {t("chat.translateWithAI")}
             </Button>
           )}
           {!isAlreadyDeletedForAll && hasText && !isMine && onSuggestReply && (
@@ -116,12 +118,12 @@ export function MessageActionsDialog({
               className="justify-start h-12"
               onClick={() => onSuggestReply(message!.content!)}
             >
-              <MessageSquareReply className="size-4 mr-3 text-primary" /> Responder com IA
+              <MessageSquareReply className="size-4 mr-3 text-primary" /> {t("chat.replyWithAI")}
             </Button>
           )}
           {!isAlreadyDeletedForAll && (
             <Button variant="ghost" className="justify-start h-12" onClick={onForward}>
-              <Forward className="size-4 mr-3" /> Encaminhar
+              <Forward className="size-4 mr-3" /> {t("chat.forward")}
             </Button>
           )}
           {!isAlreadyDeletedForAll && (message!.content || message!.attachment_url) && (
@@ -138,11 +140,11 @@ export function MessageActionsDialog({
                 onOpenChange(false);
               }}
             >
-              <Share2 className="size-4 mr-3 text-primary" /> Compartilhar fora do WaveChat
+              <Share2 className="size-4 mr-3 text-primary" /> {t("chat.shareOutside")}
             </Button>
           )}
           <Button variant="ghost" className="justify-start h-12" onClick={deleteForMe}>
-            <Trash2 className="size-4 mr-3" /> Apagar para mim
+            <Trash2 className="size-4 mr-3" /> {t("chat.deleteForMe")}
           </Button>
           {isMine && !isAlreadyDeletedForAll && withinWindow && (
             <Button
@@ -150,12 +152,12 @@ export function MessageActionsDialog({
               className="justify-start h-12 text-destructive hover:text-destructive"
               onClick={deleteForEveryone}
             >
-              <Users className="size-4 mr-3" /> Apagar para todos
+              <Users className="size-4 mr-3" /> {t("chat.deleteForEveryone")}
             </Button>
           )}
           {isMine && !isAlreadyDeletedForAll && !withinWindow && (
             <p className="text-[11px] text-muted-foreground px-2">
-              Tempo limite para apagar para todos expirou (1 hora).
+              {t("chat.deleteForEveryoneExpired")}
             </p>
           )}
         </div>
