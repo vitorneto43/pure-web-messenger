@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   adminListNewsletters,
   adminUpsertNewsletter,
@@ -18,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2, Upload, X, Rocket } from "lucide-react";
 
 type Post = {
   id: string;
@@ -52,28 +53,95 @@ export function NewsletterTab() {
   const fb = useQuery({ queryKey: ["nl", "fb"], queryFn: () => fbFn() });
 
   const [editing, setEditing] = useState<Partial<Post> | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const buildPayload = (d: Partial<Post>) => {
+    const clean = (v: string | null | undefined) => {
+      const t = (v ?? "").trim();
+      return t.length ? t : undefined;
+    };
+    return {
+      id: d.id,
+      title: (d.title ?? "").trim(),
+      summary: clean(d.summary),
+      content: (d.content ?? "").trim(),
+      media_url: clean(d.media_url),
+      media_type: (clean(d.media_type) as "image" | "video" | undefined) || undefined,
+      cta_label: clean(d.cta_label),
+      cta_url: clean(d.cta_url),
+    };
+  };
 
   const upsert = useMutation({
-    mutationFn: (d: Partial<Post>) =>
-      upsertFn({
-        data: {
-          id: d.id,
-          title: d.title!,
-          summary: d.summary || undefined,
-          content: d.content!,
-          media_url: d.media_url || undefined,
-          media_type: (d.media_type as "image" | "video") || undefined,
-          cta_label: d.cta_label || undefined,
-          cta_url: d.cta_url || undefined,
-        },
-      }),
+    mutationFn: async (d: Partial<Post>) => {
+      const payload = buildPayload(d);
+      return await upsertFn({ data: payload });
+    },
     onSuccess: () => {
       toast.success("Rascunho salvo");
       setEditing(null);
       qc.invalidateQueries({ queryKey: ["nl"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      console.error("[newsletter upsert]", e);
+      toast.error(e.message || "Falha ao salvar rascunho");
+    },
   });
+
+  const saveAndSend = useMutation({
+    mutationFn: async (d: Partial<Post>) => {
+      const payload = buildPayload(d);
+      const r = await upsertFn({ data: payload });
+      return await sendFn({ data: { id: r.id } });
+    },
+    onSuccess: (r) => {
+      toast.success(`Enviada para ${r.recipients} usuário(s) no app`);
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["nl"] });
+    },
+    onError: (e: Error) => {
+      console.error("[newsletter saveAndSend]", e);
+      toast.error(e.message || "Falha ao enviar");
+    },
+  });
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    if (!isImage && !isVideo) {
+      toast.error("Selecione uma imagem ou vídeo");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máx 50MB)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || (isImage ? "jpg" : "mp4");
+      const path = `newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage
+        .from("chat-uploads")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("chat-uploads").getPublicUrl(path);
+      setEditing((s) => ({
+        ...s,
+        media_url: data.publicUrl,
+        media_type: isImage ? "image" : "video",
+      }));
+      toast.success("Mídia enviada");
+    } catch (e) {
+      console.error("[newsletter upload]", e);
+      toast.error((e as Error).message || "Falha no upload");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
 
   const del = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
@@ -159,23 +227,66 @@ export function NewsletterTab() {
                   onChange={(e) => setEditing((s) => ({ ...s, content: e.target.value }))}
                   maxLength={20000}
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2 rounded-md border border-dashed p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Mídia (opcional)</p>
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleFileUpload(f);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        {uploading ? (
+                          <Loader2 className="size-4 animate-spin mr-1.5" />
+                        ) : (
+                          <Upload className="size-4 mr-1.5" />
+                        )}
+                        Enviar arquivo
+                      </Button>
+                      {editing.media_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setEditing((s) => ({ ...s, media_url: null, media_type: null }))
+                          }
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                   <Input
-                    placeholder="URL de imagem/vídeo (opcional)"
+                    placeholder="Ou cole uma URL de imagem/vídeo"
                     value={editing.media_url ?? ""}
                     onChange={(e) => setEditing((s) => ({ ...s, media_url: e.target.value }))}
                   />
-                  <select
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                    value={editing.media_type ?? ""}
-                    onChange={(e) =>
-                      setEditing((s) => ({ ...s, media_type: e.target.value || null }))
-                    }
-                  >
-                    <option value="">Tipo de mídia</option>
-                    <option value="image">Imagem</option>
-                    <option value="video">Vídeo</option>
-                  </select>
+                  {editing.media_url && (
+                    <div className="mt-2 rounded-md overflow-hidden bg-muted">
+                      {editing.media_type === "video" ? (
+                        <video src={editing.media_url} controls className="max-h-48 w-full" />
+                      ) : (
+                        <img
+                          src={editing.media_url}
+                          alt="prévia"
+                          className="max-h-48 w-full object-contain"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
@@ -185,23 +296,49 @@ export function NewsletterTab() {
                     maxLength={60}
                   />
                   <Input
-                    placeholder="Botão CTA (URL)"
+                    placeholder="Botão CTA (URL, opcional)"
                     value={editing.cta_url ?? ""}
                     onChange={(e) => setEditing((s) => ({ ...s, cta_url: e.target.value }))}
                   />
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 justify-end flex-wrap">
                   <Button variant="outline" onClick={() => setEditing(null)}>
                     Cancelar
                   </Button>
                   <Button
+                    variant="secondary"
                     onClick={() => upsert.mutate(editing)}
-                    disabled={upsert.isPending || !editing.title || !editing.content}
+                    disabled={
+                      upsert.isPending ||
+                      saveAndSend.isPending ||
+                      !editing.title?.trim() ||
+                      !editing.content?.trim()
+                    }
                   >
                     {upsert.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
                     Salvar rascunho
                   </Button>
+                  <Button
+                    onClick={() => {
+                      if (confirm("Enviar esta newsletter a todos os inscritos agora?"))
+                        saveAndSend.mutate(editing);
+                    }}
+                    disabled={
+                      upsert.isPending ||
+                      saveAndSend.isPending ||
+                      !editing.title?.trim() ||
+                      !editing.content?.trim()
+                    }
+                  >
+                    {saveAndSend.isPending ? (
+                      <Loader2 className="size-4 animate-spin mr-2" />
+                    ) : (
+                      <Rocket className="size-4 mr-2" />
+                    )}
+                    Salvar e enviar agora
+                  </Button>
                 </div>
+
               </CardContent>
             </Card>
           )}
