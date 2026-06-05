@@ -10,22 +10,19 @@ function isLocale(v: unknown): v is Locale {
 }
 
 if (!i18n.isInitialized) {
-  void i18n
+  i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
       resources: RESOURCES,
-      // Force SSR + first client paint to render in PT so hydration matches.
-      // LocaleBootstrap switches to the detected/saved locale after mount.
       lng: "pt",
       fallbackLng: "en",
       supportedLngs: SUPPORTED_LOCALES,
       load: "languageOnly",
       nonExplicitSupportedLngs: true,
+      initImmediate: false,
       interpolation: { escapeValue: false },
       detection: {
-        // Disabled at init to avoid SSR/CSR mismatch — handled manually
-        // in LocaleBootstrap after mount.
         order: [],
         caches: ["localStorage"],
         lookupLocalStorage: I18N_STORAGE_KEY,
