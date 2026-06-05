@@ -61,10 +61,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
         _status_id: statusId,
       });
       if (error) throw error;
-      toast.success(`🎁 +${(data as any)?.views ?? 100} visualizações grátis ativadas!`);
+      toast.success(t("boost.freeRedeemed", { count: (data as any)?.views ?? 100 }));
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao resgatar");
+      toast.error(e.message ?? t("boost.redeemFailed"));
     } finally {
       setRedeemingFree(false);
     }
