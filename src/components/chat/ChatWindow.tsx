@@ -759,8 +759,32 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 )}
                 {m.attachment_url &&
                   !m.attachment_type?.startsWith("image/") &&
+                {m.attachment_url && m.attachment_type === "location" && (() => {
+                  const coords = m.attachment_url.replace(/^geo:/, "").split(",");
+                  const lat = parseFloat(coords[0]);
+                  const lng = parseFloat(coords[1]);
+                  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    return <LocationMessage kind="static" lat={lat} lng={lng} isMine={isMine} />;
+                  }
+                  return null;
+                })()}
+                {m.attachment_url && m.attachment_type === "live-location" && (() => {
+                  const liveId = m.attachment_url.replace(/^live:/, "");
+                  return (
+                    <LocationMessage
+                      kind="live"
+                      liveId={liveId}
+                      ownerId={m.sender_id}
+                      isMine={isMine}
+                    />
+                  );
+                })()}
+                {m.attachment_url &&
+                  !m.attachment_type?.startsWith("image/") &&
                   !m.attachment_type?.startsWith("video/") &&
-                  !m.attachment_type?.startsWith("audio/") && (
+                  !m.attachment_type?.startsWith("audio/") &&
+                  m.attachment_type !== "location" &&
+                  m.attachment_type !== "live-location" && (
                     <button
                       type="button"
                       onClick={() =>
@@ -772,9 +796,6 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                       {m.attachment_name ?? "Baixar arquivo"}
                     </button>
                   )}
-                {m.content && (
-                  <MessageContent content={m.content} isMine={isMine} />
-                )}
                 <div
                   className={`mt-0.5 flex items-center gap-1 text-[10px] ${
                     isMine ? "text-bubble-out-foreground/70 justify-end" : "text-muted-foreground"
