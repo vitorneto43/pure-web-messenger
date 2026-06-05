@@ -174,38 +174,38 @@ function AuthPage() {
 
         <div className="glass rounded-2xl border border-border p-6 sm:p-8 shadow-xl">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {mode === "login" && "Entrar na sua conta"}
-            {mode === "signup" && "Criar conta"}
-            {mode === "forgot" && "Recuperar senha"}
+            {mode === "login" && t("auth.login.title")}
+            {mode === "signup" && t("auth.signup.title")}
+            {mode === "forgot" && t("auth.forgot.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {mode === "login" && "Acesse suas conversas em tempo real."}
-            {mode === "signup" && "Sem celular, sem SMS. Só seu email."}
-            {mode === "forgot" && "Enviaremos um link para redefinir sua senha."}
+            {mode === "login" && t("auth.login.subtitle")}
+            {mode === "signup" && t("auth.signup.subtitle")}
+            {mode === "forgot" && t("auth.forgot.subtitle")}
           </p>
 
           {mode === "login" && showConfirmEmail && (
             <div className="mt-4 rounded-xl border-2 border-yellow-500/50 bg-yellow-500/10 px-4 py-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Mail className="size-5 text-yellow-600" />
-                <span className="font-bold text-yellow-600 text-lg tracking-wide">CONFIRME SEU E-MAIL</span>
+                <span className="font-bold text-yellow-600 text-lg tracking-wide">{t("auth.confirmEmail.title")}</span>
               </div>
               <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                Enviamos um link de confirmação para o seu e-mail. Acesse sua caixa de entrada e clique no link para ativar sua conta.
+                {t("auth.confirmEmail.body")}
               </p>
               <button
                 type="button"
                 onClick={() => setShowConfirmEmail(false)}
                 className="mt-3 text-xs font-medium text-yellow-700 dark:text-yellow-300 hover:underline"
               >
-                Entendi
+                {t("auth.confirmEmail.ok")}
               </button>
             </div>
           )}
 
           {mode === "signup" && inviteUsername && (
             <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
-              Você foi convidado por <b>@{inviteUsername}</b> — crie sua conta para começar a conversar.
+              {t("auth.invite", { username: inviteUsername })}
             </div>
           )}
 
