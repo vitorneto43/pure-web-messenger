@@ -933,6 +933,17 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
             >
               <QrCode className="size-5" />
             </Button>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0 text-rose-500"
+              onClick={() => setLocationOpen(true)}
+              title="Compartilhar localização"
+            >
+              <MapPin className="size-5" />
+            </Button>
             <input
               ref={fileRef}
               type="file"
