@@ -368,7 +368,7 @@ export function NewsletterTab() {
 
           <div className="space-y-3">
             {posts.isLoading && <Loader2 className="size-4 animate-spin" />}
-            {posts.data?.items.map((p) => (
+            {posts.data?.items.map((p: Post) => (
               <Card key={p.id}>
                 <CardContent className="p-4 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
