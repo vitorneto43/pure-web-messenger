@@ -1,4 +1,6 @@
+import "@/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import {
   MessageCircle,
   PhoneCall,
@@ -34,42 +36,41 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
 });
 
-const features = [
-  { icon: MessageCircle, title: "Mensagens", desc: "Conversas individuais e em grupo, em tempo real." },
-  { icon: PhoneCall, title: "Chamadas", desc: "Áudio e vídeo com toque mesmo com o app fechado." },
-  { icon: Sparkles, title: "Status", desc: "Compartilhe momentos que somem em 24h." },
-  { icon: LinkIcon, title: "Links clicáveis", desc: "Previews e links seguros direto no chat." },
-  { icon: Download, title: "Download de mídia", desc: "Baixe fotos, vídeos e áudios das conversas." },
-  { icon: Banknote, title: "Pix semi-automático", desc: "Envie e cobre Pix sem sair da conversa." },
-  { icon: TrendingUp, title: "Impulsionamento de status", desc: "Aumente o alcance do seu status." },
-];
-
 function AboutPage() {
+  const { t } = useTranslation();
+  const features = [
+    { icon: MessageCircle, title: t("about.f.messages.title"), desc: t("about.f.messages.desc") },
+    { icon: PhoneCall, title: t("about.f.calls.title"), desc: t("about.f.calls.desc") },
+    { icon: Sparkles, title: t("about.f.status.title"), desc: t("about.f.status.desc") },
+    { icon: LinkIcon, title: t("about.f.links.title"), desc: t("about.f.links.desc") },
+    { icon: Download, title: t("about.f.download.title"), desc: t("about.f.download.desc") },
+    { icon: Banknote, title: t("about.f.pix.title"), desc: t("about.f.pix.desc") },
+    { icon: TrendingUp, title: t("about.f.boost.title"), desc: t("about.f.boost.desc") },
+  ];
   return (
     <PublicLayout>
       <section className="max-w-5xl mx-auto px-4 pt-14 pb-10 text-center">
         <span className="inline-block text-xs font-semibold tracking-widest uppercase text-primary">
-          Sobre nós
+          {t("about.kicker")}
         </span>
         <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight">
-          O WaveChat é o seu app de conversas no navegador
+          {t("about.title")}
         </h1>
         <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-lg">
-          Mensagens, chamadas, status e Pix em um só lugar — sem precisar instalar nada da loja de
-          aplicativos. Funciona em qualquer celular ou computador.
+          {t("about.subtitle")}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button asChild size="lg">
-            <Link to="/auth">Criar conta grátis</Link>
+            <Link to="/auth">{t("about.ctaSignup")}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link to="/contact">Falar com a gente</Link>
+            <Link to="/contact">{t("about.ctaContact")}</Link>
           </Button>
         </div>
       </section>
 
       <section className="max-w-5xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold tracking-tight text-center">Tudo que você precisa</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-center">{t("about.featuresTitle")}</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
             <div
@@ -89,40 +90,31 @@ function AboutPage() {
       <section className="max-w-5xl mx-auto px-4 py-10">
         <div className="rounded-3xl border border-border bg-gradient-to-br from-primary/15 to-accent/10 p-6 sm:p-10">
           <h2 className="text-2xl font-bold tracking-tight text-center">
-            Instale o WaveChat como aplicativo
+            {t("about.install.title")}
           </h2>
           <p className="text-center text-muted-foreground mt-2 max-w-xl mx-auto">
-            Funciona como um app de verdade: ícone na tela inicial, notificações e tela cheia.
+            {t("about.install.subtitle")}
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <InstallCard
               icon={<Smartphone className="size-6" />}
-              title="No Android"
-              steps={[
-                "Abra o WaveChat no Chrome",
-                "Toque em “Instalar aplicativo” quando aparecer o aviso",
-                "Pronto! O ícone aparece na sua tela inicial",
-              ]}
+              title={t("about.install.android")}
+              steps={t("about.install.androidSteps").split("|")}
             />
             <InstallCard
               icon={<Apple className="size-6" />}
-              title="No iPhone (iOS)"
-              steps={[
-                "Abra o WaveChat no Safari",
-                "Toque no botão Compartilhar",
-                "Selecione “Adicionar à Tela de Início”",
-              ]}
+              title={t("about.install.ios")}
+              steps={t("about.install.iosSteps").split("|")}
             />
           </div>
         </div>
       </section>
 
       <section className="max-w-3xl mx-auto px-4 py-10 text-center">
-        <h2 className="text-2xl font-bold tracking-tight">Nossa missão</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{t("about.mission.title")}</h2>
         <p className="mt-3 text-muted-foreground">
-          Tornar a comunicação digital mais simples, segura e acessível para todos os brasileiros —
-          sem depender de lojas de aplicativos, sem SMS e com privacidade em primeiro lugar.
+          {t("about.mission.body")}
         </p>
       </section>
     </PublicLayout>
