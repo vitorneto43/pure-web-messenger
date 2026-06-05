@@ -37,7 +37,11 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      const patch: Record<string, unknown> = { status: "active", unsubscribed_at: null };
+      const patch: {
+        status: string;
+        unsubscribed_at: string | null;
+        user_id?: string;
+      } = { status: "active", unsubscribed_at: null };
       if (data.userId && !existing.user_id) patch.user_id = data.userId;
       await supabaseAdmin.from("newsletter_subscribers").update(patch).eq("id", existing.id);
       return { ok: true, already: true };
