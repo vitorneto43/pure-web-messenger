@@ -10,6 +10,9 @@ import { subscribeNewsletter, submitNewsletterFeedback } from "@/lib/newsletter.
 
 const DISMISS_KEY = "wc_newsletter_dismissed_v1";
 const SUB_KEY = "wc_newsletter_subscribed";
+const CONSENT_KEY = "wc_newsletter_consent_v1"; // "accepted" | "declined" | null
+const CONSENT_PROMPT_AT_KEY = "wc_newsletter_consent_prompt_at";
+const DECLINE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
 
 // Hide on routes where the widget would obscure UI.
 const HIDDEN_PATH_PREFIXES = ["/admin", "/chat", "/auth", "/reset-password"];
@@ -29,6 +32,8 @@ export function NewsletterWidget() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [consent, setConsent] = useState<"accepted" | "declined" | null>(null);
+  const [showConsent, setShowConsent] = useState(false);
 
   const subscribeFn = useServerFn(subscribeNewsletter);
   const feedbackFn = useServerFn(submitNewsletterFeedback);
@@ -36,6 +41,23 @@ export function NewsletterWidget() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSubscribed(localStorage.getItem(SUB_KEY) === "1");
+    const storedConsent = localStorage.getItem(CONSENT_KEY) as
+      | "accepted"
+      | "declined"
+      | null;
+    setConsent(storedConsent);
+
+    // Mostra o prompt inicial uma vez (ou novamente após 7 dias se recusou)
+    const lastPrompt = Number(localStorage.getItem(CONSENT_PROMPT_AT_KEY) || 0);
+    const now = Date.now();
+    const shouldPrompt =
+      storedConsent === null ||
+      (storedConsent === "declined" && now - lastPrompt > DECLINE_COOLDOWN_MS);
+    if (shouldPrompt) {
+      const t = setTimeout(() => setShowConsent(true), 1500);
+      return () => clearTimeout(t);
+    }
+
     const onPop = () => setPath(window.location.pathname);
     window.addEventListener("popstate", onPop);
     const id = setInterval(() => setPath(window.location.pathname), 800);
@@ -98,8 +120,88 @@ export function NewsletterWidget() {
     }
   }
 
+  function declineConsent() {
+    localStorage.setItem(CONSENT_KEY, "declined");
+    localStorage.setItem(CONSENT_PROMPT_AT_KEY, String(Date.now()));
+    setConsent("declined");
+    setShowConsent(false);
+  }
+
+  async function acceptConsent() {
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    localStorage.setItem(CONSENT_PROMPT_AT_KEY, String(Date.now()));
+    setConsent("accepted");
+    // Se já estiver logado e tiver e-mail, inscreve direto
+    if (user?.email && !subscribed) {
+      setBusy(true);
+      try {
+        await subscribeFn({
+          data: { email: user.email, userId: user.id, source: "consent_prompt" },
+        });
+        localStorage.setItem(SUB_KEY, "1");
+        setSubscribed(true);
+        toast.success("Inscrição confirmada! Você receberá nossas novidades.");
+        setShowConsent(false);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Falha ao inscrever");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    // Sem login: abre o painel para o usuário informar o e-mail
+    setShowConsent(false);
+    setTab("subscribe");
+    setOpen(true);
+  }
+
   return (
     <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden">
+      {showConsent && !subscribed && (
+        <div className="w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="relative bg-gradient-to-br from-primary to-primary/70 px-5 py-4 text-primary-foreground">
+            <button
+              onClick={declineConsent}
+              className="absolute right-3 top-3 rounded-full p-1 hover:bg-white/15 transition"
+              aria-label="Fechar"
+            >
+              <X className="size-4" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="size-9 rounded-xl bg-white/20 grid place-items-center">
+                <Sparkles className="size-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base leading-tight">
+                  Quer receber a newsletter?
+                </h3>
+                <p className="text-xs text-white/85">
+                  Novidades, dicas e atualizações direto da nossa redação.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Só enviamos com o seu consentimento. Sem spam, e você pode sair quando quiser.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={declineConsent}
+                disabled={busy}
+              >
+                Agora não
+              </Button>
+              <Button className="flex-1" onClick={acceptConsent} disabled={busy}>
+                {busy ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                Sim, quero receber
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {open && (
         <div className="w-[min(92vw,360px)] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="relative bg-gradient-to-br from-primary to-primary/70 px-5 py-4 text-primary-foreground">
