@@ -189,27 +189,74 @@ export const adminSendNewsletter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getAdminClient();
     await assertAdmin(context.userId);
-    const { data: r, error } = await supabaseAdmin.rpc("admin_send_newsletter", {
-      _post_id: data.id,
-    });
-    if (error) throw new Error(error.message);
-    return r as { ok: boolean; recipients: number };
+    const { data: post, error: postError } = await supabaseAdmin
+      .from("newsletter_posts")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (postError) throw new Error(postError.message);
+    if (!post) throw new Error("Newsletter não encontrada");
+    if (post.status === "sent") throw new Error("Newsletter já enviada");
+
+    const { data: subs, error: subsError } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("user_id")
+      .eq("status", "active")
+      .not("user_id", "is", null);
+    if (subsError) throw new Error(subsError.message);
+
+    const userIds = Array.from(new Set((subs ?? []).map((s) => s.user_id).filter(Boolean)));
+    if (userIds.length > 0) {
+      const { error: notifError } = await supabaseAdmin.from("notifications").insert(
+        userIds.map((userId) => ({
+          user_id: userId,
+          type: "newsletter",
+          title: post.title,
+          body: post.summary ?? post.content.slice(0, 200),
+          data: {
+            post_id: post.id,
+            media_url: post.media_url,
+            media_type: post.media_type,
+            cta_label: post.cta_label,
+            cta_url: post.cta_url,
+            content: post.content,
+          },
+        })),
+      );
+      if (notifError) throw new Error(notifError.message);
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("newsletter_posts")
+      .update({ status: "sent", sent_at: new Date().toISOString(), recipients_count: userIds.length })
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+    return { ok: true, recipients: userIds.length };
   });
 
 // Admin: stats
 export const adminNewsletterStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getAdminClient();
     await assertAdmin(context.userId);
-    const { data, error } = await supabaseAdmin.rpc("admin_newsletter_stats");
-    if (error) throw new Error(error.message);
-    return data as {
-      total_subscribers: number;
-      active_subscribers: number;
-      reachable_in_app: number;
-      feedback_total: number;
-      feedback_unhandled: number;
+    const [total, active, linked, feedback, unhandled] = await Promise.all([
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "active").not("user_id", "is", null),
+      supabaseAdmin.from("newsletter_feedback").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("newsletter_feedback").select("id", { count: "exact", head: true }).eq("handled", false),
+    ]);
+    const firstError = [total, active, linked, feedback, unhandled].find((r) => r.error)?.error;
+    if (firstError) throw new Error(firstError.message);
+    return {
+      total_subscribers: total.count ?? 0,
+      active_subscribers: active.count ?? 0,
+      reachable_in_app: linked.count ?? 0,
+      feedback_total: feedback.count ?? 0,
+      feedback_unhandled: unhandled.count ?? 0,
     };
   });
 
