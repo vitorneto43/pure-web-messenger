@@ -71,6 +71,7 @@ export function NewsletterTab() {
   const subsFn = useServerFn(adminListSubscribers);
   const fbFn = useServerFn(adminListFeedback);
   const toggleFbFn = useServerFn(adminToggleFeedback);
+  const replyFbFn = useServerFn(adminReplyFeedback);
   const bulkFn = useServerFn(adminBulkSubscribeAllUsers);
 
   const bulkSubscribe = useMutation({
