@@ -1,4 +1,6 @@
+import "@/i18n";
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Mail, Phone } from "lucide-react";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -22,41 +24,42 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
+  const { t } = useTranslation();
   return (
     <PublicLayout>
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Fale com a gente</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">{t("contact.title")}</h1>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Estamos a um clique de distância. Escolha o canal que preferir.
+            {t("contact.subtitle")}
           </p>
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           <Card
             icon={<Mail className="size-6" />}
-            title="E-mail"
-            description="Resposta em até 24h úteis."
+            title={t("contact.email.title")}
+            description={t("contact.email.desc")}
             value="veiganeto46@gmail.com"
             href="mailto:veiganeto46@gmail.com"
-            cta="Enviar e-mail"
+            cta={t("contact.email.cta")}
           />
           <Card
             icon={<Phone className="size-6" />}
-            title="Telefone"
-            description="Atendimento de seg. a sex., 9h–18h."
+            title={t("contact.phone.title")}
+            description={t("contact.phone.desc")}
             value="(81) 92001-3218"
             href="tel:+5581920013218"
-            cta="Ligar agora"
+            cta={t("contact.phone.cta")}
           />
         </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-gradient-to-br from-primary/15 to-accent/10 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
           <img src={wavechatLogo.url} alt="WaveChat" className="size-14 rounded-2xl shadow-lg object-cover" />
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-xl font-semibold">Contato rápido pelo WhatsApp</h3>
+            <h3 className="text-xl font-semibold">{t("contact.whatsapp.title")}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Mande uma mensagem direta para nosso número de suporte.
+              {t("contact.whatsapp.desc")}
             </p>
           </div>
           <Button asChild size="lg">
@@ -65,7 +68,7 @@ function ContactPage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Abrir WhatsApp
+              {t("contact.whatsapp.cta")}
             </a>
           </Button>
         </div>
