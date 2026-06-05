@@ -300,7 +300,7 @@ function AuthPage() {
             <>
               <div className="my-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-xs text-muted-foreground">ou</span>
+                <span className="text-xs text-muted-foreground">{t("auth.or")}</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
               <Button
@@ -311,8 +311,6 @@ function AuthPage() {
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    // Persist attribution to localStorage before OAuth redirect
-                    // so it survives the round-trip to Google and back.
                     snapshotAttributionForOAuth("google");
                     const attr = readAttribution();
                     void track("google_signin_click", {
@@ -325,7 +323,7 @@ function AuthPage() {
                     });
                     if (result.error) throw result.error;
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Falha no login com Google");
+                    toast.error(err instanceof Error ? err.message : t("auth.toast.googleFail"));
                     setBusy(false);
                   }
                 }}
@@ -333,7 +331,7 @@ function AuthPage() {
                 <svg className="size-4 mr-2" viewBox="0 0 24 24" aria-hidden>
                   <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.32 0-6.02-2.74-6.02-6.12S8.68 5.96 12 5.96c1.88 0 3.14.8 3.86 1.48l2.64-2.54C16.86 3.36 14.66 2.4 12 2.4 6.76 2.4 2.52 6.64 2.52 11.88S6.76 21.36 12 21.36c6.92 0 11.5-4.86 11.5-11.7 0-.78-.08-1.38-.2-1.96H12z"/>
                 </svg>
-                Continuar com Google
+                {t("auth.google")}
               </Button>
             </>
           )}
@@ -341,7 +339,7 @@ function AuthPage() {
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "login" ? (
               <>
-                Não tem conta?{" "}
+                {t("auth.noAccount")}{" "}
                 <button
                   onClick={() => {
                     void track("signup_click", { from: "auth_toggle" });
@@ -349,14 +347,14 @@ function AuthPage() {
                   }}
                   className="text-primary hover:underline"
                 >
-                  Criar agora
+                  {t("auth.createNow")}
                 </button>
               </>
             ) : (
               <>
-                Já tem conta?{" "}
+                {t("auth.haveAccount")}{" "}
                 <button onClick={() => setMode("login")} className="text-primary hover:underline">
-                  Entrar
+                  {t("auth.signIn")}
                 </button>
               </>
             )}
@@ -365,7 +363,7 @@ function AuthPage() {
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           <Link to="/" className="hover:text-foreground">
-            ← Voltar
+            ← {t("common.back")}
           </Link>
         </p>
       </div>
