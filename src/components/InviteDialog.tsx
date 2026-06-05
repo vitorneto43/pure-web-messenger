@@ -179,6 +179,30 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     }
   }
 
+  async function downloadQr() {
+    if (!qrUrl) {
+      toast.error("Aguarde o QR Code carregar");
+      return;
+    }
+    void logInviteAction(user?.id, "qr-download");
+    try {
+      const res = await fetch(qrUrl);
+      const blob = await res.blob();
+      const fileName = `wavechat-qr-${username ?? "convite"}.png`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      toast.success("QR salvo — anexe da galeria");
+    } catch {
+      toast.error("Falha ao salvar");
+    }
+  }
+
   async function copyQrLink() {
     try {
       await navigator.clipboard.writeText(link);
