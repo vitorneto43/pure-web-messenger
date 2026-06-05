@@ -166,6 +166,7 @@ export function NotificationsBell() {
   const viewerCtaUrl = typeof viewerData.cta_url === "string" ? viewerData.cta_url : null;
 
   return (
+    <>
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button size="icon" variant="ghost" className="rounded-full relative">
@@ -262,6 +263,44 @@ export function NotificationsBell() {
         </div>
       </PopoverContent>
     </Popover>
+    <Dialog open={!!viewerPost} onOpenChange={(o) => !o && setViewerPost(null)}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="size-4 text-primary" />
+            {viewerPost?.title}
+          </DialogTitle>
+          {viewerPost?.body && (
+            <DialogDescription>{viewerPost.body}</DialogDescription>
+          )}
+        </DialogHeader>
+        {viewerMediaUrl && (
+          <div className="rounded-md overflow-hidden bg-muted">
+            {viewerMediaType === "video" ? (
+              <video src={viewerMediaUrl} controls className="w-full max-h-80" />
+            ) : (
+              <img src={viewerMediaUrl} alt="" className="w-full max-h-80 object-contain" />
+            )}
+          </div>
+        )}
+        <div className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap text-sm text-foreground/90">
+          {viewerContent}
+        </div>
+        <DialogFooter>
+          {viewerCtaUrl && viewerCtaLabel && (
+            <Button asChild>
+              <a href={viewerCtaUrl} target="_blank" rel="noreferrer">
+                {viewerCtaLabel}
+              </a>
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setViewerPost(null)}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
