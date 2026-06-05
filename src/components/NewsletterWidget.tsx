@@ -15,7 +15,7 @@ const CONSENT_PROMPT_AT_KEY = "wc_newsletter_consent_prompt_at";
 const DECLINE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
 
 // Hide on routes where the widget would obscure UI.
-const HIDDEN_PATH_PREFIXES = ["/admin", "/chat", "/auth", "/reset-password"];
+const HIDDEN_PATH_PREFIXES = ["/admin", "/auth", "/reset-password"];
 
 function shouldHideOnPath(path: string) {
   return HIDDEN_PATH_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));

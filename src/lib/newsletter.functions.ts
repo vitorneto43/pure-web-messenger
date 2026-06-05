@@ -264,6 +264,66 @@ export const adminNewsletterStats = createServerFn({ method: "GET" })
     };
   });
 
+// Admin: bulk subscribe all confirmed users (one-click "inscrever todo mundo")
+export const adminBulkSubscribeAllUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+
+    const { data: users, error: usersError } = await supabaseAdmin
+      .from("profiles_private")
+      .select("user_id, email");
+    if (usersError) throw new Error(usersError.message);
+
+    type UserRow = { user_id: string; email: string | null };
+    const rows = ((users ?? []) as UserRow[])
+      .filter((u) => u.email && u.user_id)
+      .map((u) => ({
+        email: (u.email as string).toLowerCase(),
+        user_id: u.user_id,
+        source: "admin_bulk",
+        status: "active" as const,
+      }));
+
+    if (rows.length === 0) return { inserted: 0, total: 0 };
+
+    // Fetch existing emails (case-insensitive unique index exists on lower(email))
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("email, id, user_id, status");
+    if (existingError) throw new Error(existingError.message);
+    const existingSet = new Set(
+      ((existing ?? []) as { email: string }[]).map((r) => r.email.toLowerCase()),
+    );
+    const toInsert = rows.filter((r) => !existingSet.has(r.email));
+
+    // Reactivate any inactive matching records
+    const emailsToReactivate = rows
+      .filter((r) => existingSet.has(r.email))
+      .map((r) => r.email);
+    if (emailsToReactivate.length > 0) {
+      await supabaseAdmin
+        .from("newsletter_subscribers")
+        .update({ status: "active", unsubscribed_at: null })
+        .in("email", emailsToReactivate)
+        .neq("status", "active");
+    }
+
+    let inserted = 0;
+    if (toInsert.length > 0) {
+      const { error: insertError, count } = await supabaseAdmin
+        .from("newsletter_subscribers")
+        .insert(toInsert, { count: "exact" });
+      if (insertError) throw new Error(insertError.message);
+      inserted = count ?? toInsert.length;
+    }
+
+    return { inserted, total: rows.length };
+  });
+
+
+
 // Admin: list subscribers
 export const adminListSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

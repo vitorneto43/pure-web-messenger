@@ -13,6 +13,7 @@ import {
   adminListSubscribers,
   adminListFeedback,
   adminToggleFeedback,
+  adminBulkSubscribeAllUsers,
 } from "@/lib/newsletter.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2, Upload, X, Rocket } from "lucide-react";
+import { Loader2, Send, Trash2, Edit3, Plus, Users, MessageSquare, CheckCircle2, Upload, X, Rocket, UserPlus } from "lucide-react";
 
 type Post = {
   id: string;
@@ -66,6 +67,16 @@ export function NewsletterTab() {
   const subsFn = useServerFn(adminListSubscribers);
   const fbFn = useServerFn(adminListFeedback);
   const toggleFbFn = useServerFn(adminToggleFeedback);
+  const bulkFn = useServerFn(adminBulkSubscribeAllUsers);
+
+  const bulkSubscribe = useMutation({
+    mutationFn: () => bulkFn(),
+    onSuccess: (r) => {
+      toast.success(`${r.inserted ?? 0} usuário(s) inscritos automaticamente`);
+      qc.invalidateQueries({ queryKey: ["nl"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Falha ao inscrever em massa"),
+  });
 
   const stats = useQuery({ queryKey: ["nl", "stats"], queryFn: () => statsFn() });
   const posts = useQuery({ queryKey: ["nl", "posts"], queryFn: () => listFn() });
@@ -449,7 +460,25 @@ export function NewsletterTab() {
           </div>
         </TabsContent>
 
-        <TabsContent value="subs" className="mt-4">
+        <TabsContent value="subs" className="mt-4 space-y-3">
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (confirm("Inscrever automaticamente todos os usuários do app na newsletter?"))
+                  bulkSubscribe.mutate();
+              }}
+              disabled={bulkSubscribe.isPending}
+            >
+              {bulkSubscribe.isPending ? (
+                <Loader2 className="size-4 animate-spin mr-2" />
+              ) : (
+                <UserPlus className="size-4 mr-2" />
+              )}
+              Inscrever todos os usuários
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0">
               <div className="max-h-[500px] overflow-auto divide-y divide-border">
