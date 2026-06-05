@@ -150,6 +150,45 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     if (!opened) window.location.href = url;
   }
 
+  async function copyQrImage() {
+    if (!qrUrl) {
+      toast.error("Aguarde o QR Code carregar");
+      return;
+    }
+    void logInviteAction(user?.id, "qr-copy");
+    try {
+      const res = await fetch(qrUrl);
+      const blob = await res.blob();
+      const ClipboardItemCtor = (window as unknown as { ClipboardItem?: typeof ClipboardItem })
+        .ClipboardItem;
+      if (navigator.clipboard && "write" in navigator.clipboard && ClipboardItemCtor) {
+        await navigator.clipboard.write([
+          new ClipboardItemCtor({ [blob.type]: blob }),
+        ]);
+        toast.success("QR copiado — cole em qualquer app");
+        return;
+      }
+      throw new Error("clipboard-image-unsupported");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Imagem não suportada — link copiado");
+      } catch {
+        toast.error("Não foi possível copiar");
+      }
+    }
+  }
+
+  async function copyQrLink() {
+    try {
+      await navigator.clipboard.writeText(link);
+      void logInviteAction(user?.id, "qr-link-copy");
+      toast.success("Link copiado — cole onde quiser");
+    } catch {
+      toast.error("Falha ao copiar");
+    }
+  }
+
   function shareWhatsApp() {
     const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     void logInviteAction(user?.id, "whatsapp");
