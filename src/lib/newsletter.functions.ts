@@ -264,6 +264,41 @@ export const adminNewsletterStats = createServerFn({ method: "GET" })
     };
   });
 
+// Admin: bulk subscribe all confirmed users (one-click "inscrever todo mundo")
+export const adminBulkSubscribeAllUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+
+    const { data: users, error: usersError } = await supabaseAdmin
+      .from("profiles_private")
+      .select("user_id, email");
+    if (usersError) throw new Error(usersError.message);
+
+    type UserRow = { user_id: string; email: string | null };
+    const rows = ((users ?? []) as UserRow[])
+      .filter((u) => u.email && u.user_id)
+      .map((u) => ({
+        email: (u.email as string).toLowerCase(),
+        user_id: u.user_id,
+        source: "admin_bulk",
+        status: "active" as const,
+      }));
+
+    if (rows.length === 0) return { inserted: 0, updated: 0, total: 0 };
+
+    // Upsert by email (unique). Reactivates any unsubscribed records.
+    const { error: upsertError, count } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .upsert(rows, { onConflict: "email", count: "exact" });
+    if (upsertError) throw new Error(upsertError.message);
+
+    return { inserted: count ?? rows.length, total: rows.length };
+  });
+
+
+
 // Admin: list subscribers
 export const adminListSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
