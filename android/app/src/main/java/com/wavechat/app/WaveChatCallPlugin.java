@@ -1,5 +1,6 @@
 package com.wavechat.app;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -17,16 +18,24 @@ import android.util.Base64;
 import androidx.activity.result.ActivityResult;
 
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.OutputStream;
 
-@CapacitorPlugin(name = "WaveChatCall")
+@CapacitorPlugin(
+    name = "WaveChatCall",
+    permissions = @Permission(strings = { Manifest.permission.WRITE_EXTERNAL_STORAGE }, alias = WaveChatCallPlugin.GALLERY_PERMISSION)
+)
 public class WaveChatCallPlugin extends Plugin {
+    static final String GALLERY_PERMISSION = "gallery";
+
     @PluginMethod
     public void stopAlerts(PluginCall call) {
         String callId = call.getString("callId", null);
