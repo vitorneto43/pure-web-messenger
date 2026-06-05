@@ -80,6 +80,62 @@ public class WaveChatCallPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void saveImageToGallery(PluginCall call) {
+        String dataUrl = call.getString("dataUrl", null);
+        String fileName = call.getString("fileName", "wavechat-qr-convite.png");
+        if (dataUrl == null || !dataUrl.startsWith("data:image/")) {
+            call.reject("Imagem inválida");
+            return;
+        }
+
+        try {
+            int commaIndex = dataUrl.indexOf(',');
+            if (commaIndex < 0) {
+                call.reject("Imagem inválida");
+                return;
+            }
+
+            String mimeType = dataUrl.substring(5, dataUrl.indexOf(';'));
+            byte[] imageBytes = Base64.decode(dataUrl.substring(commaIndex + 1), Base64.DEFAULT);
+            ContentResolver resolver = getContext().getContentResolver();
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Images.Media.MIME_TYPE, mimeType);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/WaveChat");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
+            }
+
+            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) {
+                call.reject("Não foi possível criar a imagem na galeria");
+                return;
+            }
+
+            try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                if (outputStream == null) {
+                    call.reject("Não foi possível abrir a galeria");
+                    return;
+                }
+                outputStream.write(imageBytes);
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues doneValues = new ContentValues();
+                doneValues.put(MediaStore.Images.Media.IS_PENDING, 0);
+                resolver.update(uri, doneValues, null, null);
+            }
+
+            JSObject result = new JSObject();
+            result.put("ok", true);
+            result.put("uri", uri.toString());
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Falha ao salvar na galeria", e);
+        }
+    }
+
+    @PluginMethod
     public void getRingtone(PluginCall call) {
         SharedPreferences prefs = getContext()
             .getSharedPreferences(CallAlertUtils.PREFS_NAME, Context.MODE_PRIVATE);
