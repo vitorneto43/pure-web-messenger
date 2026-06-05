@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import {
   adminListNewsletters,
   adminUpsertNewsletter,
@@ -36,7 +37,26 @@ type Post = {
   created_at: string;
 };
 
+type Subscriber = {
+  id: string;
+  email: string;
+  status: string;
+  source: string | null;
+  user_id: string | null;
+  created_at: string;
+};
+
+type Feedback = {
+  id: string;
+  message: string;
+  email: string | null;
+  user_id: string | null;
+  handled: boolean;
+  created_at: string;
+};
+
 export function NewsletterTab() {
+  const { user } = useAuth();
   const qc = useQueryClient();
   const statsFn = useServerFn(adminNewsletterStats);
   const listFn = useServerFn(adminListNewsletters);
@@ -121,7 +141,10 @@ export function NewsletterTab() {
     setUploading(true);
     try {
       const ext = file.name.split(".").pop() || (isImage ? "jpg" : "mp4");
-      const path = `newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      if (!user?.id) throw new Error("Faça login novamente para enviar mídia");
+      const path = `${user.id}/newsletter/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage
         .from("chat-uploads")
         .upload(path, file, { contentType: file.type, upsert: false });
@@ -408,7 +431,7 @@ export function NewsletterTab() {
           <Card>
             <CardContent className="p-0">
               <div className="max-h-[500px] overflow-auto divide-y divide-border">
-                {subs.data?.items.map((s) => (
+                {subs.data?.items.map((s: Subscriber) => (
                   <div
                     key={s.id}
                     className="px-4 py-2.5 flex items-center justify-between text-sm"
@@ -433,7 +456,7 @@ export function NewsletterTab() {
         </TabsContent>
 
         <TabsContent value="feedback" className="mt-4 space-y-3">
-          {fb.data?.items.map((f) => (
+          {fb.data?.items.map((f: Feedback) => (
             <Card key={f.id} className={f.handled ? "opacity-60" : ""}>
               <CardContent className="p-4 flex gap-3">
                 <div className="flex-1">
