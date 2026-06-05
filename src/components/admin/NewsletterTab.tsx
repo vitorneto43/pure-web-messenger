@@ -90,6 +90,8 @@ export function NewsletterTab() {
 
   const [editing, setEditing] = useState<Partial<Post> | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const buildPayload = (d: Partial<Post>) => {
