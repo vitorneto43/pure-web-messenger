@@ -15,15 +15,20 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources: RESOURCES,
+      // Force SSR + first client paint to render in PT so hydration matches.
+      // LocaleBootstrap switches to the detected/saved locale after mount.
+      lng: "pt",
       fallbackLng: "en",
       supportedLngs: SUPPORTED_LOCALES,
       load: "languageOnly",
       nonExplicitSupportedLngs: true,
       interpolation: { escapeValue: false },
       detection: {
-        order: ["localStorage", "navigator", "htmlTag"],
-        lookupLocalStorage: I18N_STORAGE_KEY,
+        // Disabled at init to avoid SSR/CSR mismatch — handled manually
+        // in LocaleBootstrap after mount.
+        order: [],
         caches: ["localStorage"],
+        lookupLocalStorage: I18N_STORAGE_KEY,
       },
       react: { useSuspense: false },
     });
