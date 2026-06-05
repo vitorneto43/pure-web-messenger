@@ -179,12 +179,12 @@ export function NewsletterWidget() {
     dragStartRef.current = { x: clientX, y: clientY, posX: pos.x, posY: pos.y };
   }
 
-  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+  function handlePointerDown(e: React.PointerEvent<HTMLElement>) {
     if (e.button !== 0 && e.pointerType === "mouse") return;
     startDrag(e.clientX, e.clientY);
   }
 
-  function handleTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+  function handleTouchStart(e: React.TouchEvent<HTMLElement>) {
     const touch = e.touches[0];
     startDrag(touch.clientX, touch.clientY);
   }
