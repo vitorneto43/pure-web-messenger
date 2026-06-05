@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Copy, Share2, QrCode, Link2, MessageCircle, Loader2 } from "lucide-react";
+import { Copy, Share2, QrCode, Link2, MessageCircle, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
