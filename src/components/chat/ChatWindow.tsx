@@ -868,7 +868,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               e.preventDefault();
               sendMessage(text);
             }}
-            className="flex items-end gap-2"
+            className="flex items-end gap-2 flex-wrap sm:flex-nowrap"
           >
             <Popover>
               <PopoverTrigger asChild>
