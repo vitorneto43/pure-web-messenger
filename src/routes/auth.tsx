@@ -41,6 +41,7 @@ const loginSchema = z.object({
 });
 
 function AuthPage() {
+  const { t } = useTranslation();
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("login");
