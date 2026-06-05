@@ -241,13 +241,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-        <SplashScreenHider />
-        <UtmCapture />
-        <PageViewTracker />
-        <Outlet />
-        <NewsletterWidget />
-        <Toaster richColors position="top-right" />
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-}
