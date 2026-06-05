@@ -1260,3 +1260,24 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     </div>
   );
 }
+
+function AttachItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent/40 text-sm text-left"
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
