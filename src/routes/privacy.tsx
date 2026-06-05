@@ -27,6 +27,7 @@ function PrivacyPage() {
   return (
     <PublicLayout>
       <article className="max-w-3xl mx-auto px-4 py-12 prose-invert">
+        <LegalLocaleNotice />
         <h1 className="text-4xl font-bold tracking-tight">Política de Privacidade</h1>
         <p className="text-sm text-muted-foreground mt-2">
           Última atualização: {new Date().toLocaleDateString("pt-BR")}
