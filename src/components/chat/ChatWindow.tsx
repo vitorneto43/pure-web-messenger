@@ -1057,58 +1057,63 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
 
 
-            <Textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(e) => {
-                setText(e.target.value);
-                handleTyping();
-                const el = e.target;
-                el.style.height = "auto";
-                el.style.height = Math.min(el.scrollHeight, 120) + "px";
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage(text);
-                  const el = textareaRef.current;
-                  if (el) {
-                    el.style.height = "auto";
-                  }
-                }
-              }}
-              placeholder="Escreva uma mensagem..."
-              className="flex-1 min-w-0 rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
-              maxLength={4000}
-              rows={1}
-            />
+            </div>
 
-            {text.trim() ? (
-              <Button
-                type="submit"
-                size="icon"
-                className="rounded-full size-11 shrink-0"
-                disabled={sending || uploading}
-              >
-                {sending || uploading ? (
-                  <Loader2 className="size-5 animate-spin" />
-                ) : (
-                  <Send className="size-5" />
-                )}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                size="icon"
-                className="rounded-full size-11 shrink-0"
-                onClick={startRecording}
-                disabled={sending || uploading}
-                title="Gravar áudio"
-              >
-                <Mic className="size-5" />
-              </Button>
-            )}
+            <div className="flex items-end gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  handleTyping();
+                  const el = e.target;
+                  el.style.height = "auto";
+                  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(text);
+                    const el = textareaRef.current;
+                    if (el) {
+                      el.style.height = "auto";
+                    }
+                  }
+                }}
+                placeholder="Escreva uma mensagem..."
+                className="flex-1 min-w-0 rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
+                maxLength={4000}
+                rows={1}
+              />
+
+              {text.trim() ? (
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="rounded-full size-11 shrink-0"
+                  disabled={sending || uploading}
+                >
+                  {sending || uploading ? (
+                    <Loader2 className="size-5 animate-spin" />
+                  ) : (
+                    <Send className="size-5" />
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="icon"
+                  className="rounded-full size-11 shrink-0"
+                  onClick={startRecording}
+                  disabled={sending || uploading}
+                  title="Gravar áudio"
+                >
+                  <Mic className="size-5" />
+                </Button>
+              )}
+            </div>
           </form>
+
         )}
       </div>
       <SendPixDialog
