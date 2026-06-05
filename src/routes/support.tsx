@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import "@/i18n";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Mail, Phone, Loader2, Send } from "lucide-react";
@@ -12,14 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
-      { title: "Suporte — WaveChat" },
+      { title: "Support — WaveChat" },
       {
         name: "description",
         content:
-          "Precisa de ajuda? Fale com o suporte do WaveChat por formulário, e-mail ou telefone.",
+          "Need help? Contact WaveChat support via form, email or phone.",
       },
-      { property: "og:title", content: "Suporte — WaveChat" },
-      { property: "og:description", content: "Atendimento e suporte do WaveChat." },
+      { property: "og:title", content: "Support — WaveChat" },
+      { property: "og:description", content: "WaveChat support and assistance." },
       { property: "og:url", content: "https://webconnectchat.com/support" },
     ],
     links: [{ rel: "canonical", href: "https://webconnectchat.com/support" }],
@@ -27,15 +29,16 @@ export const Route = createFileRoute("/support")({
   component: SupportPage,
 });
 
-const schema = z.object({
-  name: z.string().trim().min(2, "Informe seu nome").max(100),
-  email: z.string().trim().email("E-mail inválido").max(255),
-  message: z.string().trim().min(10, "Mensagem muito curta").max(2000),
-});
-
 function SupportPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [busy, setBusy] = useState(false);
+
+  const schema = z.object({
+    name: z.string().trim().min(2, t("support.form.errName")).max(100),
+    email: z.string().trim().email(t("support.form.errEmail")).max(255),
+    message: z.string().trim().min(10, t("support.form.errMsg")).max(2000),
+  });
 
   function update(k: keyof typeof form, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -49,15 +52,15 @@ function SupportPage() {
       return;
     }
     setBusy(true);
-    const subject = `[Suporte WaveChat] ${parsed.data.name}`;
-    const body = `Nome: ${parsed.data.name}\nE-mail: ${parsed.data.email}\n\n${parsed.data.message}`;
+    const subject = `[Support WaveChat] ${parsed.data.name}`;
+    const body = `${t("support.form.name")}: ${parsed.data.name}\n${t("support.form.email")}: ${parsed.data.email}\n\n${parsed.data.message}`;
     const mailto = `mailto:veiganeto46@gmail.com?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
     setTimeout(() => {
       setBusy(false);
-      toast.success("Abrimos seu cliente de e-mail para concluir o envio.");
+      toast.success(t("support.form.opened"));
     }, 800);
   }
 
@@ -65,10 +68,8 @@ function SupportPage() {
     <PublicLayout>
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Como podemos ajudar?</h1>
-          <p className="mt-3 text-muted-foreground">
-            Nossa equipe responde de segunda a sexta, das 9h às 18h.
-          </p>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">{t("support.title")}</h1>
+          <p className="mt-3 text-muted-foreground">{t("support.subtitle")}</p>
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_1fr]">
@@ -77,32 +78,32 @@ function SupportPage() {
             className="rounded-2xl border border-border bg-card/60 p-6 sm:p-8 shadow-xl space-y-4"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="name">Nome</Label>
+              <Label htmlFor="name">{t("support.form.name")}</Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={(e) => update("name", e.target.value)}
-                placeholder="Seu nome"
+                placeholder={t("support.form.namePh")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">{t("support.form.email")}</Label>
               <Input
                 id="email"
                 type="email"
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
-                placeholder="voce@email.com"
+                placeholder={t("support.form.emailPh")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="message">Mensagem</Label>
+              <Label htmlFor="message">{t("support.form.message")}</Label>
               <Textarea
                 id="message"
                 rows={6}
                 value={form.message}
                 onChange={(e) => update("message", e.target.value)}
-                placeholder="Descreva como podemos ajudar..."
+                placeholder={t("support.form.messagePh")}
               />
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
@@ -111,29 +112,29 @@ function SupportPage() {
               ) : (
                 <Send className="size-4 mr-2" />
               )}
-              Enviar mensagem
+              {t("support.form.submit")}
             </Button>
           </form>
 
           <aside className="space-y-4">
             <ContactCard
               icon={<Mail className="size-5" />}
-              title="E-mail"
+              title={t("support.card.email")}
               value="veiganeto46@gmail.com"
               href="mailto:veiganeto46@gmail.com"
             />
             <ContactCard
               icon={<Phone className="size-5" />}
-              title="Telefone / WhatsApp"
+              title={t("support.card.phone")}
               value="(81) 92001-3218"
               href="tel:+5581920013218"
             />
             <div className="rounded-2xl border border-border bg-card/60 p-5">
-              <h3 className="font-semibold">Antes de abrir um chamado</h3>
+              <h3 className="font-semibold">{t("support.before.title")}</h3>
               <ul className="mt-2 text-sm text-muted-foreground space-y-1 list-disc pl-5">
-                <li>Atualize o navegador para a versão mais recente</li>
-                <li>Confira sua conexão com a internet</li>
-                <li>Tente sair e entrar de novo na conta</li>
+                <li>{t("support.before.li1")}</li>
+                <li>{t("support.before.li2")}</li>
+                <li>{t("support.before.li3")}</li>
               </ul>
             </div>
           </aside>

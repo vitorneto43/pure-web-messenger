@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/public/PublicLayout";
+import { LegalLocaleNotice } from "@/components/public/LegalLocaleNotice";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -26,6 +27,7 @@ function TermsPage() {
   return (
     <PublicLayout>
       <article className="max-w-3xl mx-auto px-4 py-12">
+        <LegalLocaleNotice />
         <h1 className="text-4xl font-bold tracking-tight">Termos de Uso</h1>
         <p className="text-sm text-muted-foreground mt-2">
           Ao usar o WaveChat você concorda integralmente com os termos abaixo.
