@@ -78,18 +78,10 @@ export function getEmbedInfo(rawUrl: string): EmbedInfo | null {
     }
   }
 
-  // Facebook video / posts
-  if (host === "facebook.com" || host === "fb.watch" || host === "m.facebook.com") {
-    const embedSrc = `https://www.facebook.com/plugins/${
-      /\/videos?\//.test(path) || host === "fb.watch" ? "video" : "post"
-    }.php?href=${encodeURIComponent(rawUrl)}&show_text=true`;
-    return {
-      src: embedSrc,
-      aspect: "aspect-[4/5]",
-      allow: "encrypted-media",
-      title: "Facebook",
-    };
-  }
+  // Facebook: o iframe plugins.facebook.com costuma ser bloqueado por
+  // X-Frame-Options/CSP em apps de terceiros ("conexão recusada").
+  // Em vez disso, deixamos cair no card de preview tradicional (OG tags),
+  // que mostra imagem, título e descrição do post/vídeo.
 
   // Spotify
   if (host === "open.spotify.com") {
