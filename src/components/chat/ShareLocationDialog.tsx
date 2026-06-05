@@ -23,17 +23,47 @@ const DURATIONS: { label: string; minutes: number }[] = [
   { label: "8 horas", minutes: 480 },
 ];
 
-function getPosition(): Promise<GeolocationPosition> {
+async function getPosition(): Promise<{ coords: { latitude: number; longitude: number; accuracy: number } }> {
+  // Use Capacitor Geolocation on native (handles permissions properly)
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (Capacitor.isNativePlatform()) {
+      const { Geolocation } = await import("@capacitor/geolocation");
+      const perm = await Geolocation.checkPermissions();
+      if (perm.location !== "granted" && perm.coarseLocation !== "granted") {
+        const req = await Geolocation.requestPermissions({ permissions: ["location", "coarseLocation"] });
+        if (req.location !== "granted" && req.coarseLocation !== "granted") {
+          throw new Error("Permissão de localização negada. Habilite nas configurações do app.");
+        }
+      }
+      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
+      return { coords: { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy } };
+    }
+  } catch (e: any) {
+    if (e?.message?.includes("Permissão")) throw e;
+    // fall through to web API
+  }
+
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocalização não suportada"));
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ coords: { latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy } }),
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          reject(new Error("Permissão de localização negada. Habilite nas configurações do navegador/app."));
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          reject(new Error("Localização indisponível. Verifique se o GPS está ativado."));
+        } else if (err.code === err.TIMEOUT) {
+          reject(new Error("Tempo esgotado ao obter localização."));
+        } else {
+          reject(new Error(err.message || "Falha ao obter localização"));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   });
 }
 
