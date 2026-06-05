@@ -8,6 +8,7 @@ import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
 import { usePushSetup } from "@/hooks/use-push";
 import { useAppBadgeSync } from "@/hooks/use-app-badge";
 import { useBoostReturn } from "@/hooks/use-boost-return";
+import { useLiveLocationBroadcast } from "@/hooks/use-live-location-broadcast";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -41,5 +42,6 @@ function PushBootstrap() {
   usePushSetup();
   useAppBadgeSync();
   useBoostReturn();
+  useLiveLocationBroadcast();
   return null;
 }
