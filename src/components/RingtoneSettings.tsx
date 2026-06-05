@@ -1,3 +1,4 @@
+import "@/i18n";
 import { useEffect, useState } from "react";
 import { Music, Loader2, Play, Square, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -10,8 +11,10 @@ import {
   previewNativeRingtone,
   stopPreviewNativeRingtone,
 } from "@/integrations/native-call";
+import { useTranslation } from "react-i18next";
 
 export function RingtoneSettings() {
+  const { t } = useTranslation();
   // Custom ringtone picking is only available on the native Android app.
   if (!isNativeApp()) return null;
 
@@ -37,12 +40,12 @@ export function RingtoneSettings() {
       const r = await pickNativeRingtone();
       if (!r || r.cancelled) return;
       if (!r.ok) {
-        toast.error("Não foi possível selecionar o arquivo");
+        toast.error(t("app.ringtone.toastPickFail"));
         return;
       }
-      setName(r.name ?? "Toque personalizado");
+      setName(r.name ?? t("app.ringtone.customName"));
       setIsDefault(false);
-      toast.success("Toque atualizado");
+      toast.success(t("app.ringtone.toastUpdated"));
     } finally {
       setBusy(false);
     }
@@ -54,7 +57,7 @@ export function RingtoneSettings() {
       await clearNativeRingtone();
       setName(null);
       setIsDefault(true);
-      toast.success("Toque padrão restaurado");
+      toast.success(t("app.ringtone.toastReset"));
     } finally {
       setBusy(false);
     }
@@ -68,7 +71,6 @@ export function RingtoneSettings() {
     }
     await previewNativeRingtone();
     setPlaying(true);
-    // Preview auto-stops after 5s on native; mirror that on the UI.
     setTimeout(() => setPlaying(false), 5000);
   }
 
@@ -79,41 +81,40 @@ export function RingtoneSettings() {
           <Music className="size-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold">Toque de chamada</h3>
+          <h3 className="font-semibold">{t("app.ringtone.title")}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Escolha qualquer música ou áudio do seu celular como toque. O som
-            é reproduzido em volume máximo para chamar sua atenção.
+            {t("app.ringtone.desc")}
           </p>
 
           <div className="mt-3 text-xs">
-            <span className="text-muted-foreground">Atual: </span>
+            <span className="text-muted-foreground">{t("app.ringtone.currentLabel")}</span>
             <span className="font-medium">
-              {isDefault ? "Toque padrão do sistema" : name ?? "Toque personalizado"}
+              {isDefault ? t("app.ringtone.defaultName") : name ?? t("app.ringtone.customName")}
             </span>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" onClick={pick} disabled={busy}>
               {busy && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-              Escolher música/áudio
+              {t("app.ringtone.btnPick")}
             </Button>
             <Button size="sm" variant="secondary" onClick={togglePreview} disabled={busy}>
               {playing ? (
                 <>
                   <Square className="size-3.5 mr-1.5" />
-                  Parar
+                  {t("app.ringtone.btnStop")}
                 </>
               ) : (
                 <>
                   <Play className="size-3.5 mr-1.5" />
-                  Testar
+                  {t("app.ringtone.btnTest")}
                 </>
               )}
             </Button>
             {!isDefault && (
               <Button size="sm" variant="ghost" onClick={reset} disabled={busy}>
                 <RotateCcw className="size-3.5 mr-1.5" />
-                Restaurar padrão
+                {t("app.ringtone.btnReset")}
               </Button>
             )}
           </div>

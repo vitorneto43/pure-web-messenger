@@ -1,7 +1,9 @@
+import "@/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
 const PIX_TYPES = ["CPF/CNPJ", "E-mail", "Telefone", "Aleatória"];
 
 function ProfilePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -66,7 +69,7 @@ function ProfilePage() {
     try {
       await deleteAccount();
       await supabase.auth.signOut();
-      toast.success("Conta excluída");
+      toast.success(t("profile.accountDeleted"));
       window.location.href = "/auth";
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao excluir conta");
@@ -125,7 +128,7 @@ function ProfilePage() {
         });
       if (privErr) throw privErr;
 
-      toast.success("Perfil atualizado");
+      toast.success(t("profile.profileSaved"));
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -135,7 +138,7 @@ function ProfilePage() {
 
   async function uploadAvatar(file: File) {
     if (!user) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem deve ter no máximo 5MB");
+    if (file.size > 5 * 1024 * 1024) return toast.error(t("profile.avatarTooLarge"));
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
@@ -143,7 +146,7 @@ function ProfilePage() {
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
     setProfile((p) => ({ ...p, avatar_url: data.publicUrl }));
-    toast.success("Foto atualizada");
+    toast.success(t("profile.avatarUpdated"));
   }
 
   if (loading)
@@ -159,11 +162,11 @@ function ProfilePage() {
         onClick={() => navigate({ to: "/chat" })}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
-        <ArrowLeft className="size-4" /> Voltar ao chat
+        <ArrowLeft className="size-4" /> {t("profile.backToChat")}
       </button>
 
       <div className="glass border border-border rounded-2xl p-6 sm:p-8">
-        <h1 className="text-2xl font-semibold">Meu perfil</h1>
+        <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
 
         <div className="mt-6 flex items-center gap-5">
           <Avatar className="size-20 ring-2 ring-border">
@@ -174,7 +177,7 @@ function ProfilePage() {
           </Avatar>
           <div>
             <Button variant="secondary" onClick={() => fileRef.current?.click()}>
-              <Upload className="size-4 mr-2" /> Mudar foto
+              <Upload className="size-4 mr-2" /> {t("profile.changePhoto")}
             </Button>
             <input
               ref={fileRef}
@@ -186,18 +189,18 @@ function ProfilePage() {
                 if (f) uploadAvatar(f);
               }}
             />
-            <p className="text-xs text-muted-foreground mt-2">PNG / JPG até 5MB</p>
+            <p className="text-xs text-muted-foreground mt-2">{t("profile.photoHint")}</p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4">
           <div>
-            <Label>Nome de usuário</Label>
+            <Label>{t("profile.usernameLabel")}</Label>
             <Input value={profile.username} disabled className="mt-1.5" />
-            <p className="text-xs text-muted-foreground mt-1">Não pode ser alterado</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("profile.usernameHint")}</p>
           </div>
           <div>
-            <Label>Nome de exibição</Label>
+            <Label>{t("profile.displayNameLabel")}</Label>
             <Input
               value={profile.display_name}
               onChange={(e) => setProfile((p) => ({ ...p, display_name: e.target.value }))}
@@ -206,7 +209,7 @@ function ProfilePage() {
             />
           </div>
           <div>
-            <Label>Bio</Label>
+            <Label>{t("profile.bioLabel")}</Label>
             <Textarea
               value={profile.bio}
               onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
@@ -218,13 +221,13 @@ function ProfilePage() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-border">
-          <h2 className="text-lg font-semibold">Chave Pix</h2>
+          <h2 className="text-lg font-semibold">{t("profile.pixTitle")}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Sua chave Pix preenche automaticamente ao enviar um pagamento no chat.
+            {t("profile.pixDesc")}
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div>
-              <Label>Tipo</Label>
+              <Label>{t("profile.pixTypeLabel")}</Label>
               <Select
                 value={profile.pix_key_type}
                 onValueChange={(v) => setProfile((p) => ({ ...p, pix_key_type: v }))}
@@ -242,11 +245,11 @@ function ProfilePage() {
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>Chave</Label>
+              <Label>{t("profile.pixKeyLabel")}</Label>
               <Input
                 value={profile.pix_key}
                 onChange={(e) => setProfile((p) => ({ ...p, pix_key: e.target.value }))}
-                placeholder="Ex.: email@exemplo.com"
+                placeholder={t("profile.pixKeyPlaceholder")}
                 maxLength={120}
                 className="mt-1.5"
               />
@@ -254,23 +257,21 @@ function ProfilePage() {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t border-border">
-          <h2 className="text-lg font-semibold">Banco preferido</h2>
+          <h2 className="text-lg font-semibold">{t("profile.bankTitle")}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Ao enviar um Pix no chat, oferecemos um atalho para abrir esse app.
-            O app abre na tela inicial — você cola o código Pix lá dentro e finaliza
-            por lá (os bancos não permitem preencher chave e valor de fora).
+            {t("profile.bankDesc")}
           </p>
           <div className="mt-3">
-            <Label>Meu banco</Label>
+            <Label>{t("profile.bankLabel")}</Label>
             <Select
               value={profile.preferred_bank || "none"}
               onValueChange={(v) => setProfile((p) => ({ ...p, preferred_bank: v === "none" ? "" : v }))}
             >
               <SelectTrigger className="mt-1.5">
-                <SelectValue placeholder="Nenhum" />
+                <SelectValue placeholder={t("profile.bankNone")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="none">{t("profile.bankNone")}</SelectItem>
                 {BANKS.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
@@ -284,7 +285,7 @@ function ProfilePage() {
 
         <div className="mt-6 flex justify-end">
           <Button onClick={save} disabled={saving}>
-            {saving && <Loader2 className="size-4 animate-spin mr-2" />} Salvar
+            {saving && <Loader2 className="size-4 animate-spin mr-2" />} {t("profile.save")}
           </Button>
         </div>
       </div>
@@ -303,24 +304,21 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6 glass border border-destructive/40 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-destructive">Excluir conta</h2>
+        <h2 className="text-lg font-semibold text-destructive">{t("profile.deleteTitle")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Esta ação remove permanentemente seu perfil, mensagens, status e
-          assinaturas. Não é possível desfazer.
+          {t("profile.deleteDesc")}
         </p>
         <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="mt-4">
-              <Trash2 className="size-4 mr-2" /> Excluir minha conta
+              <Trash2 className="size-4 mr-2" /> {t("profile.deleteCta")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogTitle>{t("profile.deleteConfirmTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                Sua conta e todos os seus dados serão apagados imediatamente
-                e de forma permanente. Para confirmar, digite{" "}
-                <span className="font-semibold">EXCLUIR</span> abaixo.
+                {t("profile.deleteConfirmDesc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <Input
@@ -330,7 +328,7 @@ function ProfilePage() {
               autoFocus
             />
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={deleting}>{t("profile.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 disabled={confirmText !== "EXCLUIR" || deleting}
                 onClick={(e) => {
@@ -340,7 +338,7 @@ function ProfilePage() {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {deleting && <Loader2 className="size-4 animate-spin mr-2" />}
-                Excluir definitivamente
+                {t("profile.deleteForever")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
