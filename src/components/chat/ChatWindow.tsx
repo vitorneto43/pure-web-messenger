@@ -757,8 +757,6 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     </button>
                   </div>
                 )}
-                {m.attachment_url &&
-                  !m.attachment_type?.startsWith("image/") &&
                 {m.attachment_url && m.attachment_type === "location" && (() => {
                   const coords = m.attachment_url.replace(/^geo:/, "").split(",");
                   const lat = parseFloat(coords[0]);
@@ -796,6 +794,9 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                       {m.attachment_name ?? "Baixar arquivo"}
                     </button>
                   )}
+                {m.content && (
+                  <MessageContent content={m.content} isMine={isMine} />
+                )}
                 <div
                   className={`mt-0.5 flex items-center gap-1 text-[10px] ${
                     isMine ? "text-bubble-out-foreground/70 justify-end" : "text-muted-foreground"
