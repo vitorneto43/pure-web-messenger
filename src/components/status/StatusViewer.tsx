@@ -13,6 +13,7 @@ import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
+import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
 function renderWithLinks(text: string) {
@@ -259,10 +260,16 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       <div className="flex-1 relative grid place-items-center overflow-hidden select-none">
         {current.kind === "text" && (
           <div
-            className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold"
+            className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold overflow-y-auto"
             style={{ background: current.background ?? "linear-gradient(135deg,#7c3aed,#ec4899)" }}
           >
-            <div className="relative z-20 break-words">{renderWithLinks(current.content ?? "")}</div>
+            <div className="relative z-20 break-words w-full max-w-xl space-y-4">
+              <div>{renderWithLinks(current.content ?? "")}</div>
+              {(() => {
+                const u = extractFirstUrl(current.content);
+                return u ? <StatusLinkPreview url={u} /> : null;
+              })()}
+            </div>
           </div>
         )}
         {current.kind === "image" && current.media_url && (
@@ -283,11 +290,20 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             className="max-h-full max-w-full pointer-events-none"
           />
         )}
-        {current.caption && (
-          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm z-20">
-            {renderWithLinks(current.caption)}
-          </p>
+        {(current.caption || (current.kind !== "text" && extractFirstUrl(current.caption))) && (
+          <div className="absolute bottom-4 left-4 right-4 z-20 space-y-2">
+            {current.kind !== "text" && (() => {
+              const u = extractFirstUrl(current.caption);
+              return u ? <StatusLinkPreview url={u} /> : null;
+            })()}
+            {current.caption && (
+              <p className="text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm">
+                {renderWithLinks(current.caption)}
+              </p>
+            )}
+          </div>
         )}
+
 
         {/* tap/hold zones — tap navigates, hold pauses (WhatsApp/Instagram behavior) */}
         <TapZone side="left" onTap={prev} onHoldChange={setPaused} ariaLabel={t("status.previous")}>
