@@ -7,6 +7,7 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
+  MapPin,
   Mic,
   Paperclip,
   Phone,
@@ -41,6 +42,8 @@ import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageD
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
 import { GroupSettingsDialog } from "./GroupSettingsDialog";
 import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
+import { ShareLocationDialog } from "./ShareLocationDialog";
+import { LocationMessage } from "./LocationMessage";
 
 interface AIRequest {
   action: AIAction;
@@ -95,6 +98,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
   const [pixOpen, setPixOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
   const [actionMsg, setActionMsg] = useState<ActionableMessage | null>(null);
   const [aiRequest, setAiRequest] = useState<AIRequest | null>(null);
@@ -753,10 +757,32 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                     </button>
                   </div>
                 )}
+                {m.attachment_url && m.attachment_type === "location" && (() => {
+                  const coords = m.attachment_url.replace(/^geo:/, "").split(",");
+                  const lat = parseFloat(coords[0]);
+                  const lng = parseFloat(coords[1]);
+                  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    return <LocationMessage kind="static" lat={lat} lng={lng} isMine={isMine} />;
+                  }
+                  return null;
+                })()}
+                {m.attachment_url && m.attachment_type === "live-location" && (() => {
+                  const liveId = m.attachment_url.replace(/^live:/, "");
+                  return (
+                    <LocationMessage
+                      kind="live"
+                      liveId={liveId}
+                      ownerId={m.sender_id}
+                      isMine={isMine}
+                    />
+                  );
+                })()}
                 {m.attachment_url &&
                   !m.attachment_type?.startsWith("image/") &&
                   !m.attachment_type?.startsWith("video/") &&
-                  !m.attachment_type?.startsWith("audio/") && (
+                  !m.attachment_type?.startsWith("audio/") &&
+                  m.attachment_type !== "location" &&
+                  m.attachment_type !== "live-location" && (
                     <button
                       type="button"
                       onClick={() =>
@@ -906,6 +932,17 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
               title="Enviar Pix"
             >
               <QrCode className="size-5" />
+            </Button>
+
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="rounded-full shrink-0 text-rose-500"
+              onClick={() => setLocationOpen(true)}
+              title="Compartilhar localização"
+            >
+              <MapPin className="size-5" />
             </Button>
             <input
               ref={fileRef}
@@ -1060,6 +1097,21 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         onOpenChange={setPixOpen}
         onSend={(marker) => sendMessage(marker)}
       />
+      {user && (
+        <ShareLocationDialog
+          open={locationOpen}
+          onOpenChange={setLocationOpen}
+          conversationId={conversationId}
+          userId={user.id}
+          onSent={async ({ content, attachment_url, attachment_type }) => {
+            await sendMessage(content, {
+              url: attachment_url,
+              type: attachment_type,
+              name: "",
+            });
+          }}
+        />
+      )}
       <ForwardMessageDialog
         open={forwardMsg !== null}
         onOpenChange={(v) => !v && setForwardMsg(null)}
