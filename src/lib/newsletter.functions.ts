@@ -346,10 +346,61 @@ export const adminListFeedback = createServerFn({ method: "GET" })
     await assertAdmin(supabaseAdmin, context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_feedback")
-      .select("id, message, email, user_id, handled, created_at")
+      .select("id, message, email, user_id, handled, created_at, reply, replied_at, replied_by")
       .order("created_at", { ascending: false })
       .limit(300);
     return { items: data ?? [] };
+  });
+
+// Admin: reply to feedback (notifies the user in-app)
+export const adminReplyFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        reply: z.string().trim().min(1).max(4000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+
+    const { data: fb, error: fbError } = await supabaseAdmin
+      .from("newsletter_feedback")
+      .select("id, user_id, message, email")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (fbError) throw new Error(fbError.message);
+    if (!fb) throw new Error("Feedback não encontrado");
+
+    const { error: updateError } = await supabaseAdmin
+      .from("newsletter_feedback")
+      .update({
+        reply: data.reply,
+        replied_at: new Date().toISOString(),
+        replied_by: context.userId,
+        handled: true,
+      })
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+
+    if (fb.user_id) {
+      await supabaseAdmin.from("notifications").insert({
+        user_id: fb.user_id,
+        type: "newsletter_reply",
+        title: "Resposta da redação da newsletter",
+        body: data.reply.slice(0, 200),
+        data: {
+          feedback_id: fb.id,
+          original_message: fb.message,
+          reply: data.reply,
+        },
+      });
+    }
+
+    return { ok: true, notified: !!fb.user_id };
   });
 
 // Admin: mark feedback handled
