@@ -7,7 +7,12 @@ export interface LinkPreview {
   description?: string;
   image?: string;
   siteName?: string;
+  video?: string;
+  videoType?: string;
+  videoWidth?: number;
+  videoHeight?: number;
 }
+
 
 function pickMeta(html: string, names: string[]): string | undefined {
   for (const name of names) {
