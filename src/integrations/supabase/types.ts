@@ -363,6 +363,9 @@ export type Database = {
           handled: boolean
           id: string
           message: string
+          replied_at: string | null
+          replied_by: string | null
+          reply: string | null
           user_id: string | null
         }
         Insert: {
@@ -371,6 +374,9 @@ export type Database = {
           handled?: boolean
           id?: string
           message: string
+          replied_at?: string | null
+          replied_by?: string | null
+          reply?: string | null
           user_id?: string | null
         }
         Update: {
@@ -379,6 +385,9 @@ export type Database = {
           handled?: boolean
           id?: string
           message?: string
+          replied_at?: string | null
+          replied_by?: string | null
+          reply?: string | null
           user_id?: string | null
         }
         Relationships: []
