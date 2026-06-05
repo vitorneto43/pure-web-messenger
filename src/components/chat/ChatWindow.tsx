@@ -111,6 +111,8 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [aiRequest, setAiRequest] = useState<AIRequest | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingPing = useRef<number>(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
