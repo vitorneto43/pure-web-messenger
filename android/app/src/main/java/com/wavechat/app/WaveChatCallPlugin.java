@@ -90,6 +90,23 @@ public class WaveChatCallPlugin extends Plugin {
 
     @PluginMethod
     public void saveImageToGallery(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && getPermissionState(GALLERY_PERMISSION) != PermissionState.GRANTED) {
+            requestPermissionForAlias(GALLERY_PERMISSION, call, "saveImagePermissionCallback");
+            return;
+        }
+        doSaveImageToGallery(call);
+    }
+
+    @PermissionCallback
+    private void saveImagePermissionCallback(PluginCall call) {
+        if (getPermissionState(GALLERY_PERMISSION) == PermissionState.GRANTED) {
+            doSaveImageToGallery(call);
+        } else {
+            call.reject("Permissão da galeria negada");
+        }
+    }
+
+    private void doSaveImageToGallery(PluginCall call) {
         String dataUrl = call.getString("dataUrl", null);
         String fileName = call.getString("fileName", "wavechat-qr-convite.png");
         if (dataUrl == null || !dataUrl.startsWith("data:image/")) {
