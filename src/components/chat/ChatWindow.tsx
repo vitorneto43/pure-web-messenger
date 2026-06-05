@@ -1055,15 +1055,30 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
 
 
-            <Input
+            <Textarea
+              ref={textareaRef}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
                 handleTyping();
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = Math.min(el.scrollHeight, 120) + "px";
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage(text);
+                  const el = textareaRef.current;
+                  if (el) {
+                    el.style.height = "auto";
+                  }
+                }
               }}
               placeholder="Escreva uma mensagem..."
-              className="flex-1 rounded-full bg-background/80 h-11"
+              className="flex-1 min-w-0 rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
               maxLength={4000}
+              rows={1}
             />
 
             {text.trim() ? (
