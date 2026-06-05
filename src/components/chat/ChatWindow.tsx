@@ -1097,6 +1097,21 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         onOpenChange={setPixOpen}
         onSend={(marker) => sendMessage(marker)}
       />
+      {user && (
+        <ShareLocationDialog
+          open={locationOpen}
+          onOpenChange={setLocationOpen}
+          conversationId={conversationId}
+          userId={user.id}
+          onSent={async ({ content, attachment_url, attachment_type }) => {
+            await sendMessage(content, {
+              url: attachment_url,
+              type: attachment_type,
+              name: "",
+            });
+          }}
+        />
+      )}
       <ForwardMessageDialog
         open={forwardMsg !== null}
         onOpenChange={(v) => !v && setForwardMsg(null)}
