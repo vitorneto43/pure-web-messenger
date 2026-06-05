@@ -4,13 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const emailSchema = z.string().trim().email().max(255);
 
-async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
-async function assertAdmin(userId: string) {
-  const supabaseAdmin = await getAdminClient();
+async function assertAdmin(supabaseAdmin: any, userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -34,7 +28,7 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const supabaseAdmin = await getAdminClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
     const { data: existing } = await supabaseAdmin
       .from("newsletter_subscribers")
@@ -75,7 +69,7 @@ export const submitNewsletterFeedback = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
-    const supabaseAdmin = await getAdminClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("newsletter_feedback").insert({
       message: data.message,
       email: data.email ?? null,
@@ -89,7 +83,7 @@ export const submitNewsletterFeedback = createServerFn({ method: "POST" })
 export const listSentNewsletters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const supabaseAdmin = await getAdminClient();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("newsletter_posts")
       .select("id, title, summary, content, media_url, media_type, cta_label, cta_url, sent_at")
