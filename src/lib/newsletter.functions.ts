@@ -264,6 +264,7 @@ export const adminNewsletterStats = createServerFn({ method: "GET" })
 export const adminListSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getAdminClient();
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_subscribers")
@@ -277,6 +278,7 @@ export const adminListSubscribers = createServerFn({ method: "GET" })
 export const adminListFeedback = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const supabaseAdmin = await getAdminClient();
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_feedback")
@@ -293,6 +295,7 @@ export const adminToggleFeedback = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), handled: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    const supabaseAdmin = await getAdminClient();
     await assertAdmin(context.userId);
     const { error } = await supabaseAdmin
       .from("newsletter_feedback")
