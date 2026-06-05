@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Loader2 } from "lucide-react";
+import { Bell, Loader2, Mail } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullTime } from "@/lib/format-time";
 
@@ -53,6 +61,7 @@ export function NotificationsBell() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, ProfileMini>>({});
+  const [viewerPost, setViewerPost] = useState<NotificationRow | null>(null);
 
   async function load() {
     if (!user) return;
@@ -133,18 +142,28 @@ export function NotificationsBell() {
   async function handleClick(n: NotificationRow) {
     setOpen(false);
     const data = (n.data ?? {}) as Record<string, unknown>;
+    if (n.type === "newsletter") {
+      setViewerPost(n);
+      return;
+    }
     const convId = typeof data.conversation_id === "string" ? data.conversation_id : null;
     if (convId) {
       navigate({ to: "/chat/$conversationId", params: { conversationId: convId } });
       return;
     }
-    // Invite accepted → open chat with the new user (find or create 1:1)
     const newUserId = typeof data.new_user_id === "string" ? data.new_user_id : null;
     if (n.type === "invite_accepted" && newUserId && user) {
       const id = await findOrCreateDirectConversation(user.id, newUserId);
       if (id) navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
     }
   }
+
+  const viewerData = (viewerPost?.data ?? {}) as Record<string, unknown>;
+  const viewerMediaUrl = typeof viewerData.media_url === "string" ? viewerData.media_url : null;
+  const viewerMediaType = typeof viewerData.media_type === "string" ? viewerData.media_type : null;
+  const viewerContent = typeof viewerData.content === "string" ? viewerData.content : viewerPost?.body ?? "";
+  const viewerCtaLabel = typeof viewerData.cta_label === "string" ? viewerData.cta_label : null;
+  const viewerCtaUrl = typeof viewerData.cta_url === "string" ? viewerData.cta_url : null;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
