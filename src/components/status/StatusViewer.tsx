@@ -14,6 +14,33 @@ import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
 
+const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
+function renderWithLinks(text: string) {
+  if (!text) return null;
+  const parts = text.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (!part) return null;
+    if (URL_REGEX.test(part)) {
+      URL_REGEX.lastIndex = 0;
+      const href = part.startsWith("http") ? part : `https://${part}`;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="underline text-sky-300 hover:text-sky-200 break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 interface Props {
   groups: UserGroup[];
   startGroupIndex: number;
@@ -235,7 +262,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold"
             style={{ background: current.background ?? "linear-gradient(135deg,#7c3aed,#ec4899)" }}
           >
-            {current.content}
+            <div className="relative z-20 break-words">{renderWithLinks(current.content ?? "")}</div>
           </div>
         )}
         {current.kind === "image" && current.media_url && (
@@ -257,8 +284,8 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           />
         )}
         {current.caption && (
-          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm pointer-events-none">
-            {current.caption}
+          <p className="absolute bottom-4 left-4 right-4 text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm z-20">
+            {renderWithLinks(current.caption)}
           </p>
         )}
 
