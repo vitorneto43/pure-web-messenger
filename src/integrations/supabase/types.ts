@@ -279,6 +279,54 @@ export type Database = {
         }
         Relationships: []
       }
+      live_locations: {
+        Row: {
+          accuracy: number | null
+          conversation_id: string
+          ended_at: string | null
+          expires_at: string
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          message_id: string | null
+          speed: number | null
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          conversation_id: string
+          ended_at?: string | null
+          expires_at: string
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          message_id?: string | null
+          speed?: number | null
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          conversation_id?: string
+          ended_at?: string | null
+          expires_at?: string
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          message_id?: string | null
+          speed?: number | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachment_name: string | null
