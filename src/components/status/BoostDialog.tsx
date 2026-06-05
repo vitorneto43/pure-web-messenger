@@ -81,10 +81,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
           environment: getStripeEnvironment(),
         },
       });
-      if (!result.clientSecret) throw new Error("Sem clientSecret");
+      if (!result.clientSecret) throw new Error("Missing clientSecret");
       setClientSecret(result.clientSecret);
     } catch (e: any) {
-      toast.error("Falha ao iniciar pagamento", { description: e.message });
+      toast.error(t("boost.checkoutFailed"), { description: e.message });
     } finally {
       setLoading(null);
     }
