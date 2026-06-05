@@ -150,6 +150,45 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     if (!opened) window.location.href = url;
   }
 
+  async function copyQrImage() {
+    if (!qrUrl) {
+      toast.error("Aguarde o QR Code carregar");
+      return;
+    }
+    void logInviteAction(user?.id, "qr-copy");
+    try {
+      const res = await fetch(qrUrl);
+      const blob = await res.blob();
+      const ClipboardItemCtor = (window as unknown as { ClipboardItem?: typeof ClipboardItem })
+        .ClipboardItem;
+      if (navigator.clipboard && "write" in navigator.clipboard && ClipboardItemCtor) {
+        await navigator.clipboard.write([
+          new ClipboardItemCtor({ [blob.type]: blob }),
+        ]);
+        toast.success("QR copiado — cole em qualquer app");
+        return;
+      }
+      throw new Error("clipboard-image-unsupported");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Imagem não suportada — link copiado");
+      } catch {
+        toast.error("Não foi possível copiar");
+      }
+    }
+  }
+
+  async function copyQrLink() {
+    try {
+      await navigator.clipboard.writeText(link);
+      void logInviteAction(user?.id, "qr-link-copy");
+      toast.success("Link copiado — cole onde quiser");
+    } catch {
+      toast.error("Falha ao copiar");
+    }
+  }
+
   function shareWhatsApp() {
     const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     void logInviteAction(user?.id, "whatsapp");
@@ -293,9 +332,20 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
                 conversa com você.
               </p>
-              <Button onClick={shareQR} size="sm" disabled={!qrUrl}>
-                <Share2 className="size-4 mr-1.5" /> Compartilhar QR
-              </Button>
+              <div className="grid grid-cols-2 gap-2 w-full max-w-[280px]">
+                <Button onClick={shareQR} size="sm" disabled={!qrUrl} variant="secondary">
+                  <Share2 className="size-4 mr-1.5" /> Compartilhar
+                </Button>
+                <Button onClick={copyQrImage} size="sm" disabled={!qrUrl}>
+                  <Copy className="size-4 mr-1.5" /> Copiar imagem
+                </Button>
+                <Button onClick={copyQrLink} size="sm" variant="outline" className="col-span-2">
+                  <Link2 className="size-4 mr-1.5" /> Copiar link do convite
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
+                Copie a imagem e cole no WhatsApp, Instagram, Telegram ou onde preferir.
+              </p>
             </div>
           </TabsContent>
         </Tabs>
