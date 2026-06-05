@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { NewsletterWidget } from "@/components/NewsletterWidget";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
@@ -178,7 +179,7 @@ function RootComponent() {
         <UtmCapture />
         <PageViewTracker />
         <Outlet />
-        
+        <NewsletterWidget />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
