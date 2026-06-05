@@ -1,17 +1,24 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const emailSchema = z.string().trim().email().max(255);
 
-async function assertAdmin(userId: string) {
+type AdminClient = { from: (table: string) => any };
+type RoleRow = { role: string };
+type NewsletterSubscriberRow = { user_id: string | null };
+
+function isString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+async function assertAdmin(supabaseAdmin: AdminClient, userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
   if (error) throw new Error("Falha ao verificar permissão");
-  const ok = (data ?? []).some((r) =>
+  const ok = ((data ?? []) as RoleRow[]).some((r) =>
     ["moderator", "admin", "superadmin"].includes(r.role as string),
   );
   if (!ok) throw new Error("Acesso negado");
@@ -29,6 +36,7 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
     const { data: existing } = await supabaseAdmin
       .from("newsletter_subscribers")
@@ -69,6 +77,7 @@ export const submitNewsletterFeedback = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("newsletter_feedback").insert({
       message: data.message,
       email: data.email ?? null,
@@ -82,6 +91,7 @@ export const submitNewsletterFeedback = createServerFn({ method: "POST" })
 export const listSentNewsletters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("newsletter_posts")
       .select("id, title, summary, content, media_url, media_type, cta_label, cta_url, sent_at")
@@ -95,7 +105,8 @@ export const listSentNewsletters = createServerFn({ method: "GET" })
 export const adminListNewsletters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_posts")
       .select("*")
@@ -121,7 +132,8 @@ export const adminUpsertNewsletter = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     if (data.id) {
       const { error } = await supabaseAdmin
         .from("newsletter_posts")
@@ -163,7 +175,8 @@ export const adminDeleteNewsletter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { error } = await supabaseAdmin
       .from("newsletter_posts")
       .delete()
@@ -178,27 +191,76 @@ export const adminSendNewsletter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
-    const { data: r, error } = await supabaseAdmin.rpc("admin_send_newsletter", {
-      _post_id: data.id,
-    });
-    if (error) throw new Error(error.message);
-    return r as { ok: boolean; recipients: number };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { data: post, error: postError } = await supabaseAdmin
+      .from("newsletter_posts")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (postError) throw new Error(postError.message);
+    if (!post) throw new Error("Newsletter não encontrada");
+    if (post.status === "sent") throw new Error("Newsletter já enviada");
+
+    const { data: subs, error: subsError } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("user_id")
+      .eq("status", "active")
+      .not("user_id", "is", null);
+    if (subsError) throw new Error(subsError.message);
+
+    const userIds = Array.from(
+      new Set(((subs ?? []) as NewsletterSubscriberRow[]).map((s) => s.user_id).filter(isString)),
+    );
+    if (userIds.length > 0) {
+      const { error: notifError } = await supabaseAdmin.from("notifications").insert(
+        userIds.map((userId) => ({
+          user_id: userId,
+          type: "newsletter",
+          title: post.title,
+          body: post.summary ?? post.content.slice(0, 200),
+          data: {
+            post_id: post.id,
+            media_url: post.media_url,
+            media_type: post.media_type,
+            cta_label: post.cta_label,
+            cta_url: post.cta_url,
+            content: post.content,
+          },
+        })),
+      );
+      if (notifError) throw new Error(notifError.message);
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("newsletter_posts")
+      .update({ status: "sent", sent_at: new Date().toISOString(), recipients_count: userIds.length })
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+    return { ok: true, recipients: userIds.length };
   });
 
 // Admin: stats
 export const adminNewsletterStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
-    const { data, error } = await supabaseAdmin.rpc("admin_newsletter_stats");
-    if (error) throw new Error(error.message);
-    return data as {
-      total_subscribers: number;
-      active_subscribers: number;
-      reachable_in_app: number;
-      feedback_total: number;
-      feedback_unhandled: number;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const [total, active, linked, feedback, unhandled] = await Promise.all([
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabaseAdmin.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "active").not("user_id", "is", null),
+      supabaseAdmin.from("newsletter_feedback").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("newsletter_feedback").select("id", { count: "exact", head: true }).eq("handled", false),
+    ]);
+    const firstError = [total, active, linked, feedback, unhandled].find((r) => r.error)?.error;
+    if (firstError) throw new Error(firstError.message);
+    return {
+      total_subscribers: total.count ?? 0,
+      active_subscribers: active.count ?? 0,
+      reachable_in_app: linked.count ?? 0,
+      feedback_total: feedback.count ?? 0,
+      feedback_unhandled: unhandled.count ?? 0,
     };
   });
 
@@ -206,7 +268,8 @@ export const adminNewsletterStats = createServerFn({ method: "GET" })
 export const adminListSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_subscribers")
       .select("id, email, status, source, user_id, created_at")
@@ -219,7 +282,8 @@ export const adminListSubscribers = createServerFn({ method: "GET" })
 export const adminListFeedback = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { data } = await supabaseAdmin
       .from("newsletter_feedback")
       .select("id, message, email, user_id, handled, created_at")
@@ -235,7 +299,8 @@ export const adminToggleFeedback = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), handled: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
     const { error } = await supabaseAdmin
       .from("newsletter_feedback")
       .update({ handled: data.handled })
