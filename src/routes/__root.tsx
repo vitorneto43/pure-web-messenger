@@ -15,6 +15,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
 import { captureUtmFromUrl, backfillSignupAttribution } from "@/lib/utm-capture";
 import { trackPageView } from "@/lib/track";
+import "@/i18n";
+import { applyHtmlLang, currentLocale, setLocale, I18N_STORAGE_KEY } from "@/i18n";
+import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
+import { detectLocaleFromIp } from "@/lib/geo.functions";
 
 
 import appCss from "../styles.css?url";
@@ -93,6 +97,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.json" },
       { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      // hreflang alternates for global SEO. Same URL is served per locale —
+      // crawlers see all variants and pick the right one for the user.
+      ...SUPPORTED_LOCALES.map((loc) => ({
+        rel: "alternate" as const,
+        hrefLang: HTML_LANG[loc],
+        href: `https://webconnectchat.com/?lang=${loc}`,
+      })),
+      {
+        rel: "alternate",
+        hrefLang: "x-default",
+        href: "https://webconnectchat.com/",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -169,11 +185,51 @@ function PageViewTracker() {
   return null;
 }
 
+function LocaleBootstrap() {
+  useEffect(() => {
+    // Apply current locale immediately to <html lang/dir>.
+    applyHtmlLang(currentLocale());
+
+    // ?lang=xx URL override (campaign links).
+    try {
+      const url = new URL(window.location.href);
+      const qp = url.searchParams.get("lang");
+      if (qp && (SUPPORTED_LOCALES as string[]).includes(qp)) {
+        setLocale(qp as Locale);
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
+    // Only auto-detect when user has no stored preference yet.
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage.getItem(I18N_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    if (stored) return;
+
+    void detectLocaleFromIp()
+      .then((res) => {
+        if (res?.locale && (SUPPORTED_LOCALES as string[]).includes(res.locale)) {
+          setLocale(res.locale);
+        }
+      })
+      .catch(() => {
+        // ignore — keep browser/default locale
+      });
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <LocaleBootstrap />
         <AuthInvalidator />
         <SplashScreenHider />
         <UtmCapture />
