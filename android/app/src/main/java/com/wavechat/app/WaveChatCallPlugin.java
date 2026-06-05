@@ -1,12 +1,18 @@
 package com.wavechat.app;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.util.Base64;
 
 import androidx.activity.result.ActivityResult;
 
@@ -16,6 +22,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.io.OutputStream;
 
 @CapacitorPlugin(name = "WaveChatCall")
 public class WaveChatCallPlugin extends Plugin {
