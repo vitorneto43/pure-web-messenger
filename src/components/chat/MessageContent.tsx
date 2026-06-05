@@ -160,6 +160,7 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
   const [preview, setPreview] = useState<LinkPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const fetchPreview = useServerFn(fetchLinkPreview);
+  const embed = useMemo(() => getEmbedInfo(url), [url]);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,8 +184,91 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
     return () => { cancelled = true; };
   }, [url]);
 
+  // If we have a known embeddable provider, render the player even before meta loads.
+  if (embed) {
+    const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } })();
+    return (
+      <div
+        className={`rounded-lg overflow-hidden border ${
+          isMine ? "border-bubble-out-foreground/20 bg-black/10" : "border-border bg-background/40"
+        }`}
+      >
+        <div className={`w-full ${embed.aspect} bg-black`}>
+          <iframe
+            src={embed.src}
+            title={embed.title}
+            loading="lazy"
+            allow={embed.allow}
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="w-full h-full border-0"
+          />
+        </div>
+        {(preview?.title || preview?.siteName || host) && (
+          <a
+            href={preview?.url || url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block p-2.5 hover:opacity-90 transition"
+          >
+            <div className="text-[10px] uppercase tracking-wide opacity-70 mb-0.5">
+              {preview?.siteName || host}
+            </div>
+            {preview?.title && (
+              <div className="text-sm font-semibold leading-snug line-clamp-2">
+                {preview.title}
+              </div>
+            )}
+            {preview?.description && (
+              <div className="text-xs opacity-80 mt-0.5 line-clamp-2">
+                {preview.description}
+              </div>
+            )}
+          </a>
+        )}
+      </div>
+    );
+  }
+
   if (loading) return null;
-  if (!preview || (!preview.title && !preview.image && !preview.description)) return null;
+  if (!preview || (!preview.title && !preview.image && !preview.description && !preview.video)) return null;
+
+  // og:video support (mp4 / webm)
+  if (preview.video && /\.(mp4|webm|ogg)(\?|$)/i.test(preview.video)) {
+    return (
+      <div
+        className={`rounded-lg overflow-hidden border ${
+          isMine ? "border-bubble-out-foreground/20 bg-black/10" : "border-border bg-background/40"
+        }`}
+      >
+        <video
+          src={preview.video}
+          poster={preview.image}
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full max-h-72 bg-black"
+        />
+        <a
+          href={preview.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-2.5 hover:opacity-90 transition"
+        >
+          {preview.siteName && (
+            <div className="text-[10px] uppercase tracking-wide opacity-70 mb-0.5">
+              {preview.siteName}
+            </div>
+          )}
+          {preview.title && (
+            <div className="text-sm font-semibold leading-snug line-clamp-2">
+              {preview.title}
+            </div>
+          )}
+        </a>
+      </div>
+    );
+  }
 
   return (
     <a
@@ -224,6 +308,7 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
     </a>
   );
 }
+
 
 function PixCard({ pix, isMine }: { pix: PixMessage; isMine: boolean }) {
   const { t } = useTranslation();
