@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mail, X, Send, MessageSquare, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
