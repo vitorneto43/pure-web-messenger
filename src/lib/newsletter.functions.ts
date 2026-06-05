@@ -8,6 +8,10 @@ type AdminClient = { from: (table: string) => any };
 type RoleRow = { role: string };
 type NewsletterSubscriberRow = { user_id: string | null };
 
+function isString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
 async function assertAdmin(supabaseAdmin: AdminClient, userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
@@ -206,7 +210,7 @@ export const adminSendNewsletter = createServerFn({ method: "POST" })
     if (subsError) throw new Error(subsError.message);
 
     const userIds = Array.from(
-      new Set(((subs ?? []) as NewsletterSubscriberRow[]).map((s) => s.user_id).filter(Boolean)),
+      new Set(((subs ?? []) as NewsletterSubscriberRow[]).map((s) => s.user_id).filter(isString)),
     );
     if (userIds.length > 0) {
       const { error: notifError } = await supabaseAdmin.from("notifications").insert(
