@@ -227,23 +227,66 @@ export function NewsletterTab() {
                   onChange={(e) => setEditing((s) => ({ ...s, content: e.target.value }))}
                   maxLength={20000}
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2 rounded-md border border-dashed p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Mídia (opcional)</p>
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleFileUpload(f);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        {uploading ? (
+                          <Loader2 className="size-4 animate-spin mr-1.5" />
+                        ) : (
+                          <Upload className="size-4 mr-1.5" />
+                        )}
+                        Enviar arquivo
+                      </Button>
+                      {editing.media_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setEditing((s) => ({ ...s, media_url: null, media_type: null }))
+                          }
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                   <Input
-                    placeholder="URL de imagem/vídeo (opcional)"
+                    placeholder="Ou cole uma URL de imagem/vídeo"
                     value={editing.media_url ?? ""}
                     onChange={(e) => setEditing((s) => ({ ...s, media_url: e.target.value }))}
                   />
-                  <select
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-                    value={editing.media_type ?? ""}
-                    onChange={(e) =>
-                      setEditing((s) => ({ ...s, media_type: e.target.value || null }))
-                    }
-                  >
-                    <option value="">Tipo de mídia</option>
-                    <option value="image">Imagem</option>
-                    <option value="video">Vídeo</option>
-                  </select>
+                  {editing.media_url && (
+                    <div className="mt-2 rounded-md overflow-hidden bg-muted">
+                      {editing.media_type === "video" ? (
+                        <video src={editing.media_url} controls className="max-h-48 w-full" />
+                      ) : (
+                        <img
+                          src={editing.media_url}
+                          alt="prévia"
+                          className="max-h-48 w-full object-contain"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
@@ -253,23 +296,49 @@ export function NewsletterTab() {
                     maxLength={60}
                   />
                   <Input
-                    placeholder="Botão CTA (URL)"
+                    placeholder="Botão CTA (URL, opcional)"
                     value={editing.cta_url ?? ""}
                     onChange={(e) => setEditing((s) => ({ ...s, cta_url: e.target.value }))}
                   />
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 justify-end flex-wrap">
                   <Button variant="outline" onClick={() => setEditing(null)}>
                     Cancelar
                   </Button>
                   <Button
+                    variant="secondary"
                     onClick={() => upsert.mutate(editing)}
-                    disabled={upsert.isPending || !editing.title || !editing.content}
+                    disabled={
+                      upsert.isPending ||
+                      saveAndSend.isPending ||
+                      !editing.title?.trim() ||
+                      !editing.content?.trim()
+                    }
                   >
                     {upsert.isPending && <Loader2 className="size-4 animate-spin mr-2" />}
                     Salvar rascunho
                   </Button>
+                  <Button
+                    onClick={() => {
+                      if (confirm("Enviar esta newsletter a todos os inscritos agora?"))
+                        saveAndSend.mutate(editing);
+                    }}
+                    disabled={
+                      upsert.isPending ||
+                      saveAndSend.isPending ||
+                      !editing.title?.trim() ||
+                      !editing.content?.trim()
+                    }
+                  >
+                    {saveAndSend.isPending ? (
+                      <Loader2 className="size-4 animate-spin mr-2" />
+                    ) : (
+                      <Rocket className="size-4 mr-2" />
+                    )}
+                    Salvar e enviar agora
+                  </Button>
                 </div>
+
               </CardContent>
             </Card>
           )}
