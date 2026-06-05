@@ -32,6 +32,8 @@ export function NewsletterWidget() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [consent, setConsent] = useState<"accepted" | "declined" | null>(null);
+  const [showConsent, setShowConsent] = useState(false);
 
   const subscribeFn = useServerFn(subscribeNewsletter);
   const feedbackFn = useServerFn(submitNewsletterFeedback);
@@ -39,6 +41,23 @@ export function NewsletterWidget() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSubscribed(localStorage.getItem(SUB_KEY) === "1");
+    const storedConsent = localStorage.getItem(CONSENT_KEY) as
+      | "accepted"
+      | "declined"
+      | null;
+    setConsent(storedConsent);
+
+    // Mostra o prompt inicial uma vez (ou novamente após 7 dias se recusou)
+    const lastPrompt = Number(localStorage.getItem(CONSENT_PROMPT_AT_KEY) || 0);
+    const now = Date.now();
+    const shouldPrompt =
+      storedConsent === null ||
+      (storedConsent === "declined" && now - lastPrompt > DECLINE_COOLDOWN_MS);
+    if (shouldPrompt) {
+      const t = setTimeout(() => setShowConsent(true), 1500);
+      return () => clearTimeout(t);
+    }
+
     const onPop = () => setPath(window.location.pathname);
     window.addEventListener("popstate", onPop);
     const id = setInterval(() => setPath(window.location.pathname), 800);
