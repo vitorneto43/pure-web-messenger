@@ -71,7 +71,7 @@ export function ShareLocationDialog({
       const { latitude, longitude, accuracy } = pos.coords;
       const expiresAt = new Date(Date.now() + minutes * 60_000).toISOString();
 
-      const { data: row, error } = await supabase
+      const { data: row, error } = await (supabase as any)
         .from("live_locations")
         .insert({
           user_id: userId,

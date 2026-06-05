@@ -40,7 +40,7 @@ export function LocationMessage(props: Props) {
     let cancelled = false;
 
     const load = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("live_locations")
         .select("latitude,longitude,accuracy,updated_at,expires_at,ended_at")
         .eq("id", props.liveId)
@@ -86,7 +86,7 @@ export function LocationMessage(props: Props) {
 
   async function stopSharing() {
     if (props.kind !== "live") return;
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("live_locations")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", props.liveId);

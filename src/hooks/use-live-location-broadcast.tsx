@@ -19,7 +19,7 @@ export function useLiveLocationBroadcast() {
     let cancelled = false;
 
     async function refreshActive() {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("live_locations")
         .select("id,expires_at,ended_at")
         .eq("user_id", user!.id)
@@ -32,7 +32,7 @@ export function useLiveLocationBroadcast() {
           async (pos) => {
             if (activeIds.length === 0) return;
             const { latitude, longitude, accuracy, heading, speed } = pos.coords;
-            await supabase
+            await (supabase as any)
               .from("live_locations")
               .update({
                 latitude,
