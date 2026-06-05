@@ -7,6 +7,7 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
+  MapPin,
   Mic,
   Paperclip,
   Phone,
@@ -41,6 +42,8 @@ import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageD
 import { MessageActionsDialog, type ActionableMessage } from "./MessageActionsDialog";
 import { GroupSettingsDialog } from "./GroupSettingsDialog";
 import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
+import { ShareLocationDialog } from "./ShareLocationDialog";
+import { LocationMessage } from "./LocationMessage";
 
 interface AIRequest {
   action: AIAction;
@@ -95,6 +98,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const [othersLastRead, setOthersLastRead] = useState<Date | null>(null);
 
   const [pixOpen, setPixOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<ForwardableMessage | null>(null);
   const [actionMsg, setActionMsg] = useState<ActionableMessage | null>(null);
   const [aiRequest, setAiRequest] = useState<AIRequest | null>(null);
