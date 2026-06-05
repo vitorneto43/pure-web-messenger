@@ -10,6 +10,9 @@ import { subscribeNewsletter, submitNewsletterFeedback } from "@/lib/newsletter.
 
 const DISMISS_KEY = "wc_newsletter_dismissed_v1";
 const SUB_KEY = "wc_newsletter_subscribed";
+const CONSENT_KEY = "wc_newsletter_consent_v1"; // "accepted" | "declined" | null
+const CONSENT_PROMPT_AT_KEY = "wc_newsletter_consent_prompt_at";
+const DECLINE_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
 
 // Hide on routes where the widget would obscure UI.
 const HIDDEN_PATH_PREFIXES = ["/admin", "/chat", "/auth", "/reset-password"];
