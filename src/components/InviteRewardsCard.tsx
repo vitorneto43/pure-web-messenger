@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InviteDialog } from "./InviteDialog";
+import { useTranslation } from "react-i18next";
 
 interface Stats {
   invited: number;
@@ -14,6 +15,7 @@ interface Stats {
 }
 
 export function InviteRewardsCard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -34,13 +36,13 @@ export function InviteRewardsCard() {
       if (error) throw error;
       const granted = (data as any)?.granted ?? 0;
       if (granted > 0) {
-        toast.success(`🎁 Você ganhou ${granted * 100} visualizações grátis!`);
+        toast.success(t("app.inviteRewards.toastClaimed", { views: granted * 100 }));
       } else {
-        toast.info("Nenhuma recompensa nova ainda. Continue convidando!");
+        toast.info(t("app.inviteRewards.toastNone"));
       }
       await load();
     } catch (e: any) {
-      toast.error(e.message ?? "Falha ao resgatar");
+      toast.error(e.message ?? t("app.inviteRewards.toastFail"));
     } finally {
       setClaiming(false);
     }
@@ -61,28 +63,27 @@ export function InviteRewardsCard() {
       <div className="rounded-2xl border border-border bg-gradient-to-br from-pink-500/10 via-card to-purple-500/10 p-5">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="size-5 text-pink-500" />
-          <h2 className="text-lg font-semibold">Convide e ganhe</h2>
+          <h2 className="text-lg font-semibold">{t("app.inviteRewards.title")}</h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          A cada <strong>3 amigos que criarem conta</strong> pelo seu link, você ganha{" "}
-          <strong>100 visualizações grátis</strong> para impulsionar seu status. O contador só sobe
-          após o cadastro confirmado — convites enviados não contam sozinhos.
-        </p>
+        <p
+          className="text-sm text-muted-foreground mb-4"
+          dangerouslySetInnerHTML={{ __html: t("app.inviteRewards.desc") }}
+        />
 
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <Stat label="Convidados" value={stats.invited} />
-          <Stat label="Faltam" value={stats.invited_until_next_reward || 3} />
-          <Stat label="Views grátis" value={stats.pending_views} highlight={stats.pending_views > 0} />
+          <Stat label={t("app.inviteRewards.statInvited")} value={stats.invited} />
+          <Stat label={t("app.inviteRewards.statMissing")} value={stats.invited_until_next_reward || 3} />
+          <Stat label={t("app.inviteRewards.statViews")} value={stats.pending_views} highlight={stats.pending_views > 0} />
         </div>
 
         <div className="flex gap-2">
           <Button onClick={() => setInviteOpen(true)} className="flex-1">
-            <UserPlus className="size-4 mr-1.5" /> Convidar amigos
+            <UserPlus className="size-4 mr-1.5" /> {t("app.inviteRewards.btnInvite")}
           </Button>
           {eligibleNew > 0 && (
             <Button onClick={claim} disabled={claiming} variant="secondary">
               {claiming ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4 mr-1" />}
-              Resgatar +{eligibleNew * 100}
+              {t("app.inviteRewards.btnClaim", { views: eligibleNew * 100 })}
             </Button>
           )}
         </div>
