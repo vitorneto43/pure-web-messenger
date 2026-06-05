@@ -332,9 +332,20 @@ export function InviteDialog({ open, onOpenChange }: Props) {
                 Peça para a pessoa apontar a câmera do celular para este QR — ela cai direto numa
                 conversa com você.
               </p>
-              <Button onClick={shareQR} size="sm" disabled={!qrUrl}>
-                <Share2 className="size-4 mr-1.5" /> Compartilhar QR
-              </Button>
+              <div className="grid grid-cols-2 gap-2 w-full max-w-[280px]">
+                <Button onClick={shareQR} size="sm" disabled={!qrUrl} variant="secondary">
+                  <Share2 className="size-4 mr-1.5" /> Compartilhar
+                </Button>
+                <Button onClick={copyQrImage} size="sm" disabled={!qrUrl}>
+                  <Copy className="size-4 mr-1.5" /> Copiar imagem
+                </Button>
+                <Button onClick={copyQrLink} size="sm" variant="outline" className="col-span-2">
+                  <Link2 className="size-4 mr-1.5" /> Copiar link do convite
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
+                Copie a imagem e cole no WhatsApp, Instagram, Telegram ou onde preferir.
+              </p>
             </div>
           </TabsContent>
         </Tabs>
