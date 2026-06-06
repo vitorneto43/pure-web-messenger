@@ -315,8 +315,19 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         </TapZone>
       </div>
 
+      {/* reactions */}
+      <StatusReactions
+        statusId={current.id}
+        ownerId={current.user_id}
+        onReact={() => {
+          setPaused(true);
+          setTimeout(() => setPaused(false), 1500);
+        }}
+      />
+
       {/* footer */}
       <div className="px-4 py-3 flex items-center gap-2">
+
         {isOwner ? (
           <>
             <div className="flex items-center gap-1.5 text-white/80 text-xs">
