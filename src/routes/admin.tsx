@@ -558,6 +558,18 @@ function RetentionTab() {
         <Stat label="Ativos 30 dias" value={data.active_30.toLocaleString("pt-BR")} icon={Activity} />
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Stat label="Total de logins" value={(data.total_logins ?? 0).toLocaleString("pt-BR")} icon={LogIn} />
+        <Stat label="Mensagens enviadas" value={(data.messages_total ?? 0).toLocaleString("pt-BR")} icon={MessageSquare} />
+        <Stat label="Chamadas realizadas" value={(data.calls_total ?? 0).toLocaleString("pt-BR")} icon={Phone} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <TopList title="País" items={data.top_countries ?? []} icon={Globe2} />
+        <TopList title="Idioma detectado" items={data.top_languages ?? []} icon={Languages} />
+        <TopList title="Origem" items={data.top_sources ?? []} icon={Megaphone} />
+      </div>
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2"><Repeat className="size-4 text-muted-foreground" />Retenção</CardTitle>
@@ -571,6 +583,7 @@ function RetentionTab() {
           </div>
         </CardContent>
       </Card>
+
 
       <ChartCard title="Cadastros vs Ativos (30 dias)">
         <ResponsiveContainer width="100%" height="100%">
