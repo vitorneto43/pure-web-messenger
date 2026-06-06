@@ -24,6 +24,10 @@ export async function track(
   try {
     const { data: auth } = await supabase.auth.getSession();
     const userId = auth?.session?.user?.id ?? null;
+    const language =
+      (typeof navigator !== "undefined" &&
+        (navigator.language || (navigator.languages && navigator.languages[0]))) ||
+      null;
     await supabase.from("analytics_events").insert({
       user_id: userId,
       session_id: getSessionId(),
@@ -31,7 +35,7 @@ export async function track(
       path: window.location.pathname,
       referrer: document.referrer || null,
       user_agent: navigator.userAgent,
-      metadata: metadata as never,
+      metadata: { language, ...metadata } as never,
     });
   } catch (e) {
     console.warn("track failed", e);
