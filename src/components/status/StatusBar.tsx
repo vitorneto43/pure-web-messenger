@@ -19,6 +19,8 @@ export interface StatusRow {
   is_official: boolean | null;
   created_at: string;
   expires_at: string;
+  cta_url?: string | null;
+  cta_label?: string | null;
 }
 
 export interface UserGroup {
