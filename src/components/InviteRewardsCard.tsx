@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Gift, Loader2, Sparkles, UserPlus } from "lucide-react";
+import { Gift, Loader2, Sparkles, UserPlus, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InviteDialog } from "./InviteDialog";
+import { PickStatusForFreeBoostDialog } from "./PickStatusForFreeBoostDialog";
 import { useTranslation } from "react-i18next";
 
 interface Stats {
@@ -19,6 +20,7 @@ export function InviteRewardsCard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [pickOpen, setPickOpen] = useState(false);
 
   async function load() {
     const { data } = await (supabase as any).rpc("get_invite_stats");
@@ -87,9 +89,25 @@ export function InviteRewardsCard() {
             </Button>
           )}
         </div>
+
+        {stats.pending_views >= 100 && (
+          <Button
+            onClick={() => setPickOpen(true)}
+            className="w-full mt-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90"
+          >
+            <Rocket className="size-4 mr-1.5" />
+            Usar {stats.pending_views} views grátis em um status
+          </Button>
+        )}
       </div>
 
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <PickStatusForFreeBoostDialog
+        open={pickOpen}
+        onOpenChange={setPickOpen}
+        freeViews={stats.pending_views}
+        onRedeemed={load}
+      />
     </>
   );
 }
