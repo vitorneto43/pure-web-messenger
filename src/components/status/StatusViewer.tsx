@@ -14,6 +14,7 @@ import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
 import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
+import { StatusReactions } from "./StatusReactions";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
 function renderWithLinks(text: string) {
@@ -314,8 +315,19 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         </TapZone>
       </div>
 
+      {/* reactions */}
+      <StatusReactions
+        statusId={current.id}
+        ownerId={current.user_id}
+        onReact={() => {
+          setPaused(true);
+          setTimeout(() => setPaused(false), 1500);
+        }}
+      />
+
       {/* footer */}
       <div className="px-4 py-3 flex items-center gap-2">
+
         {isOwner ? (
           <>
             <div className="flex items-center gap-1.5 text-white/80 text-xs">

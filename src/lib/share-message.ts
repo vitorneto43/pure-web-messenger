@@ -7,12 +7,30 @@ export interface ShareableMessage {
   attachment_name: string | null;
 }
 
+async function tryCapacitorShare(msg: ShareableMessage): Promise<boolean> {
+  try {
+    const cap = (window as any).Capacitor;
+    if (!cap?.isNativePlatform?.()) return false;
+    const { Share } = await import("@capacitor/share");
+    await Share.share({
+      title: "WaveChat",
+      text: msg.content ?? undefined,
+      url: msg.attachment_url ?? undefined,
+      dialogTitle: "Compartilhar",
+    });
+    return true;
+  } catch (e: any) {
+    if (e?.message?.toLowerCase?.().includes("cancel")) return true;
+    return false;
+  }
+}
+
 async function tryShareFile(msg: ShareableMessage): Promise<boolean> {
   if (!msg.attachment_url) return false;
   try {
     const nav = navigator as any;
     if (!nav.canShare || !nav.share) return false;
-    const res = await fetch(msg.attachment_url, { mode: "cors" });
+    const res = await fetch(msg.attachment_url);
     if (!res.ok) return false;
     const blob = await res.blob();
     const name =
@@ -36,30 +54,29 @@ async function tryShareFile(msg: ShareableMessage): Promise<boolean> {
 }
 
 export async function shareMessageExternally(msg: ShareableMessage) {
-  // 1) Try sharing the file itself (works on mobile WhatsApp/Telegram/IG/etc.)
+  // 1) Native (Capacitor) share — opens system share sheet on Android/iOS
+  if (await tryCapacitorShare(msg)) return;
+
+  // 2) Web Share API with file (mobile browsers)
   if (msg.attachment_url) {
     const ok = await tryShareFile(msg);
     if (ok) return;
   }
 
-  // 2) Fall back to text + URL share
+  // 3) Web Share API with text + URL (no clipboard fallback for files)
   const text = msg.content?.trim() ?? "";
   const url = msg.attachment_url ?? undefined;
   const nav = navigator as any;
   if (nav.share) {
     try {
-      await nav.share({
-        title: "WaveChat",
-        text: text || undefined,
-        url,
-      });
+      await nav.share({ title: "WaveChat", text: text || undefined, url });
       return;
     } catch (e: any) {
       if (e?.name === "AbortError") return;
     }
   }
 
-  // 3) Last resort: copy to clipboard
+  // 4) Desktop last resort
   const payload = [text, url].filter(Boolean).join("\n");
   try {
     await navigator.clipboard.writeText(payload || "");
