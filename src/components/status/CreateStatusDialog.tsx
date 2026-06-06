@@ -43,6 +43,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [isOfficialAccount, setIsOfficialAccount] = useState(false);
   const [isOfficial, setIsOfficial] = useState(false);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
