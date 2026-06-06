@@ -27,6 +27,7 @@ import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
 import { InviteDialog } from "@/components/InviteDialog";
+import { InviteMissionBanner } from "./InviteMissionBanner";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
@@ -286,6 +287,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       </div>
 
       <StatusBar />
+
+      <InviteMissionBanner />
 
       <div className="px-3 pt-3 pb-2 space-y-2">
 
