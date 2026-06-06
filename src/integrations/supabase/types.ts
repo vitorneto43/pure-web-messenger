@@ -571,6 +571,7 @@ export type Database = {
           invited_by: string | null
           last_ip: string | null
           last_seen: string
+          onboarded: boolean
           region: string | null
           signup_campaign: string | null
           signup_landing: string | null
@@ -593,6 +594,7 @@ export type Database = {
           invited_by?: string | null
           last_ip?: string | null
           last_seen?: string
+          onboarded?: boolean
           region?: string | null
           signup_campaign?: string | null
           signup_landing?: string | null
@@ -615,6 +617,7 @@ export type Database = {
           invited_by?: string | null
           last_ip?: string | null
           last_seen?: string
+          onboarded?: boolean
           region?: string | null
           signup_campaign?: string | null
           signup_landing?: string | null
@@ -1008,6 +1011,10 @@ export type Database = {
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       claim_invite_reward: { Args: never; Returns: Json }
+      complete_onboarding: {
+        Args: { _display_name: string; _username: string }
+        Returns: Json
+      }
       discover_people: {
         Args: { _limit?: number }
         Returns: {
