@@ -43,6 +43,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [isOfficialAccount, setIsOfficialAccount] = useState(false);
   const [isOfficial, setIsOfficial] = useState(false);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,6 +59,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setCaption("");
     setFile(null);
     setPreview(null);
+    setCtaLabel("");
+    setCtaUrl("");
     setTab("text");
   }
 
@@ -97,6 +101,22 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           setSubmitting(false);
           return;
         }
+        // Validate CTA url if provided
+        let cta_url: string | null = null;
+        const ctaTrim = ctaUrl.trim();
+        if (ctaTrim) {
+          try {
+            const u = new URL(ctaTrim.startsWith("http") ? ctaTrim : `https://${ctaTrim}`);
+            if (!/^https?:$/.test(u.protocol)) throw new Error();
+            cta_url = u.toString();
+          } catch {
+            toast.error("Link inválido");
+            setSubmitting(false);
+            return;
+          }
+        }
+        const cta_label = ctaLabel.trim().slice(0, 30) || (cta_url ? "Saiba mais" : null);
+
         const ext = file.name.split(".").pop() ?? (kind === "video" ? "mp4" : "jpg");
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage
@@ -110,7 +130,9 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
           is_official: isOfficialAccount && isOfficial,
-        });
+          cta_url,
+          cta_label,
+        } as any);
         if (error) throw error;
       }
       toast.success(t("status.published"));
@@ -219,6 +241,37 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
             />
           </TabsContent>
         </Tabs>
+
+        {tab !== "text" && (
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold">Botão de ação (opcional)</p>
+              <span className="text-[10px] text-muted-foreground">visível ao impulsionar</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={ctaLabel}
+                onChange={(e) => setCtaLabel(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="">Saiba mais</option>
+                <option value="Cadastre-se">Cadastre-se</option>
+                <option value="Compre agora">Compre agora</option>
+                <option value="Baixar agora">Baixar agora</option>
+                <option value="Assista">Assista</option>
+                <option value="Reserve agora">Reserve agora</option>
+                <option value="Contate-nos">Contate-nos</option>
+              </select>
+              <Input
+                value={ctaUrl}
+                onChange={(e) => setCtaUrl(e.target.value)}
+                placeholder="https://seusite.com"
+                inputMode="url"
+                maxLength={500}
+              />
+            </div>
+          </div>
+        )}
 
         {isOfficialAccount && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">

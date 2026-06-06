@@ -44,6 +44,9 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [freeViews, setFreeViews] = useState<number>(0);
   const [redeemingFree, setRedeemingFree] = useState(false);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
+  const [statusKind, setStatusKind] = useState<string>("");
   const startCheckout = useServerFn(createBoostCheckout);
 
   useEffect(() => {
@@ -51,12 +54,49 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     (async () => {
       const { data } = await (supabase as any).rpc("get_invite_stats");
       setFreeViews((data as any)?.pending_views ?? 0);
+      const { data: s } = await supabase
+        .from("statuses")
+        .select("kind, cta_url, cta_label")
+        .eq("id", statusId)
+        .maybeSingle();
+      if (s) {
+        setStatusKind((s as any).kind ?? "");
+        setCtaUrl((s as any).cta_url ?? "");
+        setCtaLabel((s as any).cta_label ?? "");
+      }
     })();
-  }, [open]);
+  }, [open, statusId]);
+
+  async function saveCta(): Promise<boolean> {
+    const trimmed = ctaUrl.trim();
+    let url: string | null = null;
+    if (trimmed) {
+      try {
+        const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+        if (!/^https?:$/.test(u.protocol)) throw new Error();
+        url = u.toString();
+      } catch {
+        toast.error("Link inválido");
+        return false;
+      }
+    }
+    const label = ctaLabel.trim().slice(0, 30) || (url ? "Saiba mais" : null);
+    const { error } = await (supabase as any)
+      .from("statuses")
+      .update({ cta_url: url, cta_label: label })
+      .eq("id", statusId);
+    if (error) {
+      toast.error("Falha ao salvar link", { description: error.message });
+      return false;
+    }
+    return true;
+  }
 
   async function redeemFree() {
     setRedeemingFree(true);
     try {
+      const ok = await saveCta();
+      if (!ok) { setRedeemingFree(false); return; }
       const { data, error } = await (supabase as any).rpc("redeem_free_boost", {
         _status_id: statusId,
       });
@@ -73,6 +113,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   async function pick(key: PackKey) {
     setLoading(key);
     try {
+      const ok = await saveCta();
+      if (!ok) { setLoading(null); return; }
       const result = await startCheckout({
         data: {
           statusId,
@@ -112,6 +154,37 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
           {!clientSecret ? (
             <div className="space-y-2.5 mt-4">
+              {(statusKind === "image" || statusKind === "video") && (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold">Botão de ação no anúncio</p>
+                    <span className="text-[10px] text-muted-foreground">aparece sobre a mídia</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={ctaLabel}
+                      onChange={(e) => setCtaLabel(e.target.value)}
+                      className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="">Saiba mais</option>
+                      <option value="Cadastre-se">Cadastre-se</option>
+                      <option value="Compre agora">Compre agora</option>
+                      <option value="Baixar agora">Baixar agora</option>
+                      <option value="Assista">Assista</option>
+                      <option value="Reserve agora">Reserve agora</option>
+                      <option value="Contate-nos">Contate-nos</option>
+                    </select>
+                    <input
+                      value={ctaUrl}
+                      onChange={(e) => setCtaUrl(e.target.value)}
+                      placeholder="https://seusite.com"
+                      inputMode="url"
+                      maxLength={500}
+                      className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
               {freeViews >= 100 && (
                 <div className="rounded-xl border border-pink-500/40 bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-4">
                   <div className="flex items-center justify-between gap-3">

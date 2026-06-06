@@ -907,6 +907,8 @@ export type Database = {
           caption: string | null
           content: string | null
           created_at: string
+          cta_label: string | null
+          cta_url: string | null
           expires_at: string
           id: string
           is_official: boolean
@@ -919,6 +921,8 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           expires_at?: string
           id?: string
           is_official?: boolean
@@ -931,6 +935,8 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           expires_at?: string
           id?: string
           is_official?: boolean

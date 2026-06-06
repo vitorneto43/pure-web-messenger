@@ -292,7 +292,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             className="max-h-full max-w-full pointer-events-none"
           />
         )}
-        {(current.caption || (current.kind !== "text" && extractFirstUrl(current.caption))) && (
+        {(current.caption || current.cta_url || (current.kind !== "text" && extractFirstUrl(current.caption))) && (
           <div className="absolute bottom-4 left-4 right-4 z-20 space-y-2">
             {current.kind !== "text" && (() => {
               const u = extractFirstUrl(current.caption);
@@ -302,6 +302,18 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               <p className="text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm">
                 {renderWithLinks(current.caption)}
               </p>
+            )}
+            {current.cta_url && (
+              <a
+                href={current.cta_url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="block w-full text-center font-semibold text-white bg-gradient-to-r from-pink-500 to-amber-500 hover:opacity-90 rounded-full px-4 py-2.5 shadow-lg"
+              >
+                {current.cta_label || "Saiba mais"} →
+              </a>
             )}
           </div>
         )}
