@@ -14,6 +14,7 @@ import type { UserGroup } from "./StatusBar";
 import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
 import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
+import { StatusReactions } from "./StatusReactions";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
 function renderWithLinks(text: string) {
