@@ -734,6 +734,12 @@ export const getUserActivityStats = createServerFn({ method: "GET" })
       active_today: number;
       active_7: number;
       active_30: number;
+      total_logins: number;
+      messages_total: number;
+      calls_total: number;
+      top_countries: Array<{ name: string; count: number }>;
+      top_languages: Array<{ name: string; count: number }>;
+      top_sources: Array<{ name: string; count: number }>;
       retention: {
         d1: { cohort: number; returned: number; rate: number };
         d7: { cohort: number; returned: number; rate: number };
