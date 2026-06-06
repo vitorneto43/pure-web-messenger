@@ -101,6 +101,22 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           setSubmitting(false);
           return;
         }
+        // Validate CTA url if provided
+        let cta_url: string | null = null;
+        const ctaTrim = ctaUrl.trim();
+        if (ctaTrim) {
+          try {
+            const u = new URL(ctaTrim.startsWith("http") ? ctaTrim : `https://${ctaTrim}`);
+            if (!/^https?:$/.test(u.protocol)) throw new Error();
+            cta_url = u.toString();
+          } catch {
+            toast.error("Link inválido");
+            setSubmitting(false);
+            return;
+          }
+        }
+        const cta_label = ctaLabel.trim().slice(0, 30) || (cta_url ? "Saiba mais" : null);
+
         const ext = file.name.split(".").pop() ?? (kind === "video" ? "mp4" : "jpg");
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage
@@ -114,7 +130,9 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
           is_official: isOfficialAccount && isOfficial,
-        });
+          cta_url,
+          cta_label,
+        } as any);
         if (error) throw error;
       }
       toast.success(t("status.published"));
