@@ -28,6 +28,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
 import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
+import { MeetPeopleCard } from "./MeetPeopleCard";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
@@ -289,6 +290,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       <StatusBar />
 
       <InviteMissionBanner />
+
+      <MeetPeopleCard />
 
       <div className="px-3 pt-3 pb-2 space-y-2">
 
