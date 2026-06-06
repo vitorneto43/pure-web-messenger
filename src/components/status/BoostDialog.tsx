@@ -154,6 +154,37 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
           {!clientSecret ? (
             <div className="space-y-2.5 mt-4">
+              {(statusKind === "image" || statusKind === "video") && (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold">Botão de ação no anúncio</p>
+                    <span className="text-[10px] text-muted-foreground">aparece sobre a mídia</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={ctaLabel}
+                      onChange={(e) => setCtaLabel(e.target.value)}
+                      className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="">Saiba mais</option>
+                      <option value="Cadastre-se">Cadastre-se</option>
+                      <option value="Compre agora">Compre agora</option>
+                      <option value="Baixar agora">Baixar agora</option>
+                      <option value="Assista">Assista</option>
+                      <option value="Reserve agora">Reserve agora</option>
+                      <option value="Contate-nos">Contate-nos</option>
+                    </select>
+                    <input
+                      value={ctaUrl}
+                      onChange={(e) => setCtaUrl(e.target.value)}
+                      placeholder="https://seusite.com"
+                      inputMode="url"
+                      maxLength={500}
+                      className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
               {freeViews >= 100 && (
                 <div className="rounded-xl border border-pink-500/40 bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-4">
                   <div className="flex items-center justify-between gap-3">
