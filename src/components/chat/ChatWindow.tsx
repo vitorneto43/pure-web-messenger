@@ -984,6 +984,18 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 e.target.value = "";
               }}
             />
+            <input
+              ref={imgRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAndSend(f);
+                e.target.value = "";
+              }}
+            />
+
 
 
             <Button
