@@ -182,6 +182,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         attachment_url: current.media_url,
         attachment_type: current.kind === "video" ? "video/mp4" : current.kind === "image" ? "image/jpeg" : null,
         attachment_name: current.media_url ? `wavechat-status-${current.id}` : null,
+        brandWatermark: true,
       });
     } finally {
       setPaused(false);
