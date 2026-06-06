@@ -20,6 +20,7 @@ export function InviteRewardsCard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [pickOpen, setPickOpen] = useState(false);
 
   async function load() {
     const { data } = await (supabase as any).rpc("get_invite_stats");
