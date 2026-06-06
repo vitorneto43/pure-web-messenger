@@ -1008,6 +1008,21 @@ export type Database = {
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       claim_invite_reward: { Args: never; Returns: Json }
+      discover_people: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          city: string
+          country: string
+          display_name: string
+          id: string
+          mutual_count: number
+          reason: string
+          region: string
+          score: number
+          username: string
+        }[]
+      }
       get_invite_stats: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_people_you_may_know: {
