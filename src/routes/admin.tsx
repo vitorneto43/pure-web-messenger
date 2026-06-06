@@ -221,6 +221,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
               <TabsTrigger value="usage"><MousePointerClick className="size-4 mr-1.5" />Uso</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
+              <TabsTrigger value="retention"><Repeat className="size-4 mr-1.5" />Atividade</TabsTrigger>
               <TabsTrigger value="engagement"><MessageSquare className="size-4 mr-1.5" />Engajamento</TabsTrigger>
               <TabsTrigger value="calls"><Phone className="size-4 mr-1.5" />Chamadas</TabsTrigger>
               <TabsTrigger value="ai"><Sparkles className="size-4 mr-1.5" />IA</TabsTrigger>
