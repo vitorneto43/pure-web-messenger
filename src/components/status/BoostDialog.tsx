@@ -95,6 +95,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   async function redeemFree() {
     setRedeemingFree(true);
     try {
+      const ok = await saveCta();
+      if (!ok) { setRedeemingFree(false); return; }
       const { data, error } = await (supabase as any).rpc("redeem_free_boost", {
         _status_id: statusId,
       });
@@ -111,6 +113,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   async function pick(key: PackKey) {
     setLoading(key);
     try {
+      const ok = await saveCta();
+      if (!ok) { setLoading(null); return; }
       const result = await startCheckout({
         data: {
           statusId,
