@@ -44,6 +44,9 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [freeViews, setFreeViews] = useState<number>(0);
   const [redeemingFree, setRedeemingFree] = useState(false);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
+  const [statusKind, setStatusKind] = useState<string>("");
   const startCheckout = useServerFn(createBoostCheckout);
 
   useEffect(() => {
@@ -51,8 +54,43 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     (async () => {
       const { data } = await (supabase as any).rpc("get_invite_stats");
       setFreeViews((data as any)?.pending_views ?? 0);
+      const { data: s } = await supabase
+        .from("statuses")
+        .select("kind, cta_url, cta_label")
+        .eq("id", statusId)
+        .maybeSingle();
+      if (s) {
+        setStatusKind((s as any).kind ?? "");
+        setCtaUrl((s as any).cta_url ?? "");
+        setCtaLabel((s as any).cta_label ?? "");
+      }
     })();
-  }, [open]);
+  }, [open, statusId]);
+
+  async function saveCta(): Promise<boolean> {
+    const trimmed = ctaUrl.trim();
+    let url: string | null = null;
+    if (trimmed) {
+      try {
+        const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+        if (!/^https?:$/.test(u.protocol)) throw new Error();
+        url = u.toString();
+      } catch {
+        toast.error("Link inválido");
+        return false;
+      }
+    }
+    const label = ctaLabel.trim().slice(0, 30) || (url ? "Saiba mais" : null);
+    const { error } = await (supabase as any)
+      .from("statuses")
+      .update({ cta_url: url, cta_label: label })
+      .eq("id", statusId);
+    if (error) {
+      toast.error("Falha ao salvar link", { description: error.message });
+      return false;
+    }
+    return true;
+  }
 
   async function redeemFree() {
     setRedeemingFree(true);
