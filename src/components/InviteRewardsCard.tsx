@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Gift, Loader2, Sparkles, UserPlus } from "lucide-react";
+import { Gift, Loader2, Sparkles, UserPlus, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InviteDialog } from "./InviteDialog";
+import { PickStatusForFreeBoostDialog } from "./PickStatusForFreeBoostDialog";
 import { useTranslation } from "react-i18next";
 
 interface Stats {
