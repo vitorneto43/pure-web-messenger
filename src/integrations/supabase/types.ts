@@ -967,6 +967,7 @@ export type Database = {
       admin_send_newsletter: { Args: { _post_id: string }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
+      admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       claim_invite_reward: { Args: never; Returns: Json }
       get_invite_stats: { Args: never; Returns: Json }

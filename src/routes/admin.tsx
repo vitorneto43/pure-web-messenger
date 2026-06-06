@@ -22,6 +22,7 @@ import {
   grantAdminRole,
   revokeAdminRole,
   getInvitesOverview,
+  getUserActivityStats,
 } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail, Repeat } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -220,6 +221,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
               <TabsTrigger value="usage"><MousePointerClick className="size-4 mr-1.5" />Uso</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
+              <TabsTrigger value="retention"><Repeat className="size-4 mr-1.5" />Atividade</TabsTrigger>
               <TabsTrigger value="engagement"><MessageSquare className="size-4 mr-1.5" />Engajamento</TabsTrigger>
               <TabsTrigger value="calls"><Phone className="size-4 mr-1.5" />Chamadas</TabsTrigger>
               <TabsTrigger value="ai"><Sparkles className="size-4 mr-1.5" />IA</TabsTrigger>
@@ -239,6 +241,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>
           <TabsContent value="usage" className="mt-4"><UsageTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
+          <TabsContent value="retention" className="mt-4"><RetentionTab /></TabsContent>
           <TabsContent value="engagement" className="mt-4"><EngagementTab /></TabsContent>
           <TabsContent value="calls" className="mt-4"><CallsTab /></TabsContent>
           <TabsContent value="ai" className="mt-4"><AITab /></TabsContent>
@@ -539,6 +542,94 @@ function UsersTab() {
     </div>
   );
 }
+
+// ============ Retention / Activity ============
+function RetentionTab() {
+  const fn = useServerFn(getUserActivityStats);
+  const { data, isLoading } = useFn(() => fn(), ["admin", "retention"], 60000);
+  if (isLoading || !data) return <LoadingBlock />;
+  const r = data.retention;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Cadastrados (total)" value={data.total.toLocaleString("pt-BR")} icon={Users} />
+        <Stat label="Ativos hoje" value={data.active_today.toLocaleString("pt-BR")} icon={Activity} />
+        <Stat label="Ativos 7 dias" value={data.active_7.toLocaleString("pt-BR")} icon={Activity} />
+        <Stat label="Ativos 30 dias" value={data.active_30.toLocaleString("pt-BR")} icon={Activity} />
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Repeat className="size-4 text-muted-foreground" />Retenção</CardTitle>
+          <CardDescription className="text-xs">% de cadastrados que voltaram ao app após N dias.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <RetCard label="D+1 (voltou após 1 dia)" returned={r.d1.returned} cohort={r.d1.cohort} rate={r.d1.rate} />
+            <RetCard label="D+7 (voltou após 7 dias)" returned={r.d7.returned} cohort={r.d7.cohort} rate={r.d7.rate} />
+            <RetCard label="D+30 (voltou após 30 dias)" returned={r.d30.returned} cohort={r.d30.cohort} rate={r.d30.rate} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <ChartCard title="Cadastros vs Ativos (30 dias)">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data.series}>
+            <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+            <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(d) => d.slice(5)} />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+            <Legend />
+            <Line type="monotone" dataKey="signups" name="Cadastros" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="active" name="Ativos" stroke="#22c55e" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Usuários recentes</CardTitle></CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border/50 max-h-96 overflow-auto">
+            {data.recent.map((u) => {
+              const days = Number(u.days_since_signup) || 0;
+              const returned = days >= 1;
+              return (
+                <div key={u.id} className="py-2 flex items-center justify-between text-sm gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.display_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">@{u.username}</p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
+                    <p>Criado: {new Date(u.created_at).toLocaleDateString("pt-BR")}</p>
+                    <p>
+                      Último: {new Date(u.last_seen).toLocaleString("pt-BR")}{" "}
+                      <Badge variant={returned ? "default" : "secondary"} className="ml-1">
+                        {returned ? `voltou (${days.toFixed(1)}d)` : "não voltou"}
+                      </Badge>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function RetCard({ label, returned, cohort, rate }: { label: string; returned: number; cohort: number; rate: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-2xl font-bold mt-1">{rate.toFixed(1)}%</p>
+      <p className="text-xs text-muted-foreground mt-1">
+        {returned.toLocaleString("pt-BR")} de {cohort.toLocaleString("pt-BR")} voltaram
+      </p>
+    </div>
+  );
+}
+
 
 function TopList({ title, items, icon: Icon }: { title: string; items: { name: string; count: number }[]; icon?: React.ComponentType<{ className?: string }> }) {
   return (

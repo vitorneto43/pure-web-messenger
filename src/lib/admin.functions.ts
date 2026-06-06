@@ -722,3 +722,24 @@ export const getInvitesOverview = createServerFn({ method: "GET" })
       }>;
     };
   });
+
+export const getUserActivityStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin.rpc("admin_user_activity_stats" as any);
+    if (error) throw new Error(error.message);
+    return data as {
+      total: number;
+      active_today: number;
+      active_7: number;
+      active_30: number;
+      retention: {
+        d1: { cohort: number; returned: number; rate: number };
+        d7: { cohort: number; returned: number; rate: number };
+        d30: { cohort: number; returned: number; rate: number };
+      };
+      series: Array<{ date: string; signups: number; active: number }>;
+      recent: Array<{ id: string; username: string; display_name: string; created_at: string; last_seen: string; days_since_signup: number }>;
+    };
+  });
