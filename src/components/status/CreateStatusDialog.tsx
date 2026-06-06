@@ -59,6 +59,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setCaption("");
     setFile(null);
     setPreview(null);
+    setCtaLabel("");
+    setCtaUrl("");
     setTab("text");
   }
 
