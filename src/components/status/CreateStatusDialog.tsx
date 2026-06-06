@@ -242,6 +242,37 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </TabsContent>
         </Tabs>
 
+        {tab !== "text" && (
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold">Botão de ação (opcional)</p>
+              <span className="text-[10px] text-muted-foreground">visível ao impulsionar</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={ctaLabel}
+                onChange={(e) => setCtaLabel(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="">Saiba mais</option>
+                <option value="Cadastre-se">Cadastre-se</option>
+                <option value="Compre agora">Compre agora</option>
+                <option value="Baixar agora">Baixar agora</option>
+                <option value="Assista">Assista</option>
+                <option value="Reserve agora">Reserve agora</option>
+                <option value="Contate-nos">Contate-nos</option>
+              </select>
+              <Input
+                value={ctaUrl}
+                onChange={(e) => setCtaUrl(e.target.value)}
+                placeholder="https://seusite.com"
+                inputMode="url"
+                maxLength={500}
+              />
+            </div>
+          </div>
+        )}
+
         {isOfficialAccount && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
             <div className="flex items-center gap-2 text-sm">
