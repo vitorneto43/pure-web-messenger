@@ -89,9 +89,25 @@ export function InviteRewardsCard() {
             </Button>
           )}
         </div>
+
+        {stats.pending_views >= 100 && (
+          <Button
+            onClick={() => setPickOpen(true)}
+            className="w-full mt-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90"
+          >
+            <Rocket className="size-4 mr-1.5" />
+            Usar {stats.pending_views} views grátis em um status
+          </Button>
+        )}
       </div>
 
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <PickStatusForFreeBoostDialog
+        open={pickOpen}
+        onOpenChange={setPickOpen}
+        freeViews={stats.pending_views}
+        onRedeemed={load}
+      />
     </>
   );
 }
