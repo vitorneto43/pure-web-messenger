@@ -98,6 +98,27 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     };
   }, [current?.id, currentGroup?.user, user?.id]);
 
+  // intercalate an interstitial ad every 4 statuses viewed
+  useEffect(() => {
+    if (!current) return;
+    if (lastAdStatusRef.current === current.id) return;
+    lastAdStatusRef.current = current.id;
+    viewedRef.current += 1;
+    if (viewedRef.current > 0 && viewedRef.current % 4 === 0) {
+      setAdOpen(true);
+      setAdCountdown(5);
+    }
+  }, [current?.id]);
+
+  // ad countdown timer
+  useEffect(() => {
+    if (!adOpen) return;
+    const id = setInterval(() => {
+      setAdCountdown((c) => (c > 0 ? c - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [adOpen]);
+
   // progress timer (skip for video which we let play out)
   useEffect(() => {
     if (!current || current.kind === "video") {
