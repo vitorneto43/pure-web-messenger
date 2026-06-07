@@ -63,6 +63,10 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const [author, setAuthor] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [boostOpen, setBoostOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(0);
+  const viewedRef = useRef(0);
+  const lastAdStatusRef = useRef<string | null>(null);
   const startedRef = useRef<number>(Date.now());
   const currentGroup = groups[groupIndex];
   const statuses = currentGroup?.statuses ?? [];
