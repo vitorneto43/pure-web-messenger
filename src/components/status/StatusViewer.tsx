@@ -128,7 +128,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     startedRef.current = Date.now();
     setProgress(0);
     const id = setInterval(() => {
-      if (paused || boostOpen) {
+      if (paused || boostOpen || adOpen) {
         startedRef.current = Date.now() - progress * DURATION_MS;
         return;
       }
