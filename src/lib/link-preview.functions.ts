@@ -101,6 +101,18 @@ export const fetchLinkPreview = createServerFn({ method: "POST" })
           accept: "text/html,application/xhtml+xml",
         },
       });
+      // Re-validate final URL after redirects to prevent SSRF via redirect
+      try {
+        const finalParsed = new URL(res.url || data.url);
+        if (
+          (finalParsed.protocol !== "http:" && finalParsed.protocol !== "https:") ||
+          isBlockedHost(finalParsed.hostname)
+        ) {
+          return { url: data.url };
+        }
+      } catch {
+        return { url: data.url };
+      }
       const ct = res.headers.get("content-type") || "";
       if (!res.ok || !ct.includes("text/html")) {
         return { url: data.url };
