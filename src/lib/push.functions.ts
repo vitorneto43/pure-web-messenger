@@ -66,8 +66,21 @@ export const sendCallPush = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    // Caller must be the authenticated user
-    if (userId !== userId /* always true */) throw new Error("Forbidden");
+    // Verify the call exists and the authenticated user is its caller targeting the given callee
+    const { data: call, error: callErr } = await supabaseAdmin
+      .from("calls")
+      .select("caller_id, callee_id, conversation_id")
+      .eq("id", data.callId)
+      .maybeSingle();
+    if (callErr) throw new Error(callErr.message);
+    if (
+      !call ||
+      (call as any).caller_id !== userId ||
+      (call as any).callee_id !== data.calleeId ||
+      (call as any).conversation_id !== data.conversationId
+    ) {
+      throw new Error("Forbidden");
+    }
 
     configureWebPush();
 
