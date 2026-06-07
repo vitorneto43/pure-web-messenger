@@ -51,9 +51,44 @@ function absUrl(maybe: string | undefined, base: string) {
   }
 }
 
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h === "metadata.google.internal") return true;
+  // IPv4 literal
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const [a, b] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true; // link-local incl. 169.254.169.254
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    if (a >= 224) return true; // multicast / reserved
+  }
+  // IPv6 literal (very conservative)
+  if (h.includes(":")) {
+    if (h === "::1" || h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80") || h === "::") return true;
+  }
+  return false;
+}
+
 export const fetchLinkPreview = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ url: z.string().url().max(2000) }).parse(input))
   .handler(async ({ data }): Promise<LinkPreview> => {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(data.url);
+    } catch {
+      return { url: data.url };
+    }
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      return { url: data.url };
+    }
+    if (isBlockedHost(parsedUrl.hostname)) {
+      return { url: data.url };
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     try {
@@ -66,6 +101,18 @@ export const fetchLinkPreview = createServerFn({ method: "POST" })
           accept: "text/html,application/xhtml+xml",
         },
       });
+      // Re-validate final URL after redirects to prevent SSRF via redirect
+      try {
+        const finalParsed = new URL(res.url || data.url);
+        if (
+          (finalParsed.protocol !== "http:" && finalParsed.protocol !== "https:") ||
+          isBlockedHost(finalParsed.hostname)
+        ) {
+          return { url: data.url };
+        }
+      } catch {
+        return { url: data.url };
+      }
       const ct = res.headers.get("content-type") || "";
       if (!res.ok || !ct.includes("text/html")) {
         return { url: data.url };
