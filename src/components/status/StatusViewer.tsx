@@ -448,10 +448,16 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="absolute top-3 left-0 right-0 text-center text-[10px] uppercase tracking-[0.2em] text-white/60">
-            {t("status.sponsored") || "Sponsored"}
+          <div className="absolute top-4 left-0 right-0 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 bg-pink-500/90 text-white text-[10px] font-bold uppercase tracking-[0.18em] px-3 py-1.5 rounded-full shadow-lg">
+              <span className="size-1.5 rounded-full bg-white animate-pulse" />
+              {t("status.sponsored") || "Patrocinado"}
+            </span>
           </div>
           <div className="flex flex-col items-center gap-4">
+            <div className="text-[11px] text-white/50 uppercase tracking-wider">
+              {t("status.adByPartner") || "Anúncio de parceiro"}
+            </div>
             <AdsterraBanner variant="banner_300x250" />
             <Button
               size="sm"
@@ -460,7 +466,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               onClick={() => setAdOpen(false)}
               className="rounded-full min-w-[120px]"
             >
-              {adCountdown > 0 ? `${t("status.skipIn") || "Skip in"} ${adCountdown}s` : t("status.skip") || "Skip ad"}
+              {adCountdown > 0 ? `${t("status.skipIn") || "Pular em"} ${adCountdown}s` : t("status.skip") || "Pular anúncio"}
             </Button>
           </div>
         </div>
