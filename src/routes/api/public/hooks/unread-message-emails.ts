@@ -25,15 +25,20 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
           auth: { persistSession: false, autoRefreshToken: false },
         })
 
-        // Pull candidate recipients (1 row per recipient with most recent
-        // unread message). We rely on `messages.read_at IS NULL` and the
-        // recipient = the "other" conversation member.
-        // We bound by last 24h to avoid resurfacing old chats.
-        const { data: candidates, error: candErr } = await supabase.rpc('admin_unread_email_candidates' as any).catch(() => ({ data: null, error: { message: 'rpc missing' } }))
-
-        // Fallback: do it inline with SQL via a temp query through PostgREST
-        let rows: Array<any> | null = candidates as any
-        if (!rows) {
+        // Pull candidate recipients — messages unread for >2min, <24h old.
+        let rows: Array<any> = []
+        {
+          const q = await supabase
+            .from('messages')
+            .select('id, conversation_id, sender_id, content, created_at')
+            .is('read_at', null)
+            .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+            .lte('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
+            .order('created_at', { ascending: false })
+            .limit(500)
+          if (q.error) return Response.json({ error: q.error.message }, { status: 500 })
+          rows = q.data ?? []
+        }
           const q = await supabase
             .from('messages')
             .select('id, conversation_id, sender_id, content, created_at')
