@@ -39,17 +39,6 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
           if (q.error) return Response.json({ error: q.error.message }, { status: 500 })
           rows = q.data ?? []
         }
-          const q = await supabase
-            .from('messages')
-            .select('id, conversation_id, sender_id, content, created_at')
-            .is('read_at', null)
-            .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-            .lte('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
-            .order('created_at', { ascending: false })
-            .limit(500)
-          if (q.error) return Response.json({ error: q.error.message }, { status: 500 })
-          rows = q.data ?? []
-        }
 
         if (!rows || rows.length === 0) {
           return Response.json({ ok: true, enqueued: 0, reason: 'no_candidates' })
