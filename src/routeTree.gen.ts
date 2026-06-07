@@ -31,6 +31,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
+import { Route as ApiPublicHooksUnreadMessageEmailsRouteImport } from './routes/api/public/hooks/unread-message-emails'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -148,6 +149,12 @@ const ApiPublicPaymentsRefundSweeperRoute =
     path: '/api/public/payments/refund-sweeper',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksUnreadMessageEmailsRoute =
+  ApiPublicHooksUnreadMessageEmailsRouteImport.update({
+    id: '/api/public/hooks/unread-message-emails',
+    path: '/api/public/hooks/unread-message-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCallsStatusRoute = ApiPublicCallsStatusRouteImport.update({
   id: '/api/public/calls/status',
   path: '/api/public/calls/status',
@@ -172,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -196,6 +204,7 @@ export interface FileRoutesByTo {
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -222,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
     | '/api/public/calls/status'
+    | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
     | '/api/public/calls/status'
+    | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/$conversationId'
     | '/lovable/email/suppression'
     | '/api/public/calls/status'
+    | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -319,6 +332,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
+  ApiPublicHooksUnreadMessageEmailsRoute: typeof ApiPublicHooksUnreadMessageEmailsRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -482,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsRefundSweeperRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/unread-message-emails': {
+      id: '/api/public/hooks/unread-message-emails'
+      path: '/api/public/hooks/unread-message-emails'
+      fullPath: '/api/public/hooks/unread-message-emails'
+      preLoaderRoute: typeof ApiPublicHooksUnreadMessageEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/calls/status': {
       id: '/api/public/calls/status'
       path: '/api/public/calls/status'
@@ -534,6 +555,8 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
+  ApiPublicHooksUnreadMessageEmailsRoute:
+    ApiPublicHooksUnreadMessageEmailsRoute,
   ApiPublicPaymentsRefundSweeperRoute: ApiPublicPaymentsRefundSweeperRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
