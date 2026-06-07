@@ -23,6 +23,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
@@ -97,6 +98,12 @@ const AuthenticatedChatConversationIdRoute =
     path: '/$conversationId',
     getParentRoute: () => AuthenticatedChatRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/_authenticated'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/api/public/calls/status'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +256,7 @@ export interface RootRouteChildren {
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -345,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatConversationIdRouteImport
       parentRoute: typeof AuthenticatedChatRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -410,7 +431,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
   ApiPublicPaymentsRefundSweeperRoute: ApiPublicPaymentsRefundSweeperRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
