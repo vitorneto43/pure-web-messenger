@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -32,6 +33,11 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/terms'
+    | '/unsubscribe'
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/terms'
+    | '/unsubscribe'
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/terms'
+    | '/unsubscribe'
     | '/_authenticated/chat'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
@@ -303,6 +315,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
@@ -315,6 +328,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -510,6 +530,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
@@ -522,3 +543,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
