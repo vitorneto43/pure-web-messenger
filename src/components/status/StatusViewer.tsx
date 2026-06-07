@@ -442,6 +442,30 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         )}
       </div>
 
+      {adOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 grid place-items-center px-4"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="absolute top-3 left-0 right-0 text-center text-[10px] uppercase tracking-[0.2em] text-white/60">
+            {t("status.sponsored") || "Sponsored"}
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <AdsterraBanner variant="banner_300x250" />
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={adCountdown > 0}
+              onClick={() => setAdOpen(false)}
+              className="rounded-full min-w-[120px]"
+            >
+              {adCountdown > 0 ? `${t("status.skipIn") || "Skip in"} ${adCountdown}s` : t("status.skip") || "Skip ad"}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {isOwner && (
         <BoostDialog
           open={boostOpen}
