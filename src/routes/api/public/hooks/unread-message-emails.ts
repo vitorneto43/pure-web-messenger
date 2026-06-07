@@ -25,17 +25,17 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
           auth: { persistSession: false, autoRefreshToken: false },
         })
 
-        // Pull candidate recipients — messages unread for >2min, <24h old.
+        // Pull recent messages (<24h, >2min old) — unread is determined per-recipient
+        // via conversation_members.last_read_at, not a column on messages.
         let rows: Array<any> = []
         {
           const q = await supabase
             .from('messages')
             .select('id, conversation_id, sender_id, content, created_at')
-            .is('read_at', null)
             .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
             .lte('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
             .order('created_at', { ascending: false })
-            .limit(500)
+            .limit(1000)
           if (q.error) return Response.json({ error: q.error.message }, { status: 500 })
           rows = q.data ?? []
         }
@@ -46,11 +46,10 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
 
         // Aggregate by (recipient_id) — pick most recent message per recipient.
         // recipient = the conversation member that is NOT the sender, in 1-1 chats.
-        // Group messages by conversation; resolve recipients via conversation_members.
         const convIds = Array.from(new Set(rows.map((r: any) => r.conversation_id)))
         const { data: members } = await supabase
           .from('conversation_members')
-          .select('conversation_id, user_id')
+          .select('conversation_id, user_id, last_read_at')
           .in('conversation_id', convIds)
 
         const { data: convs } = await supabase
@@ -65,8 +64,13 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
         for (const m of rows) {
           if (groupIds.has(m.conversation_id)) continue
           const pair = (members ?? []).filter((x: any) => x.conversation_id === m.conversation_id)
-          const recip = pair.find((p: any) => p.user_id !== m.sender_id)?.user_id
-          if (!recip) continue
+          const recipMember = pair.find((p: any) => p.user_id !== m.sender_id)
+          if (!recipMember) continue
+          // Skip if recipient already read past this message
+          if (recipMember.last_read_at && new Date(recipMember.last_read_at).getTime() >= new Date(m.created_at).getTime()) {
+            continue
+          }
+          const recip = recipMember.user_id
           const existing = perRecipient.get(recip)
           if (!existing || existing.createdAt < m.created_at) {
             perRecipient.set(recip, {
@@ -79,6 +83,7 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
             })
           }
         }
+
 
         if (perRecipient.size === 0) {
           return Response.json({ ok: true, enqueued: 0, reason: 'no_dm_recipients' })
