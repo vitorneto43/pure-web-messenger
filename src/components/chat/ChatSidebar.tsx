@@ -330,6 +330,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
           </Button>
         </div>
+        <AdsterraBanner variant="banner_320x50" className="pt-1" />
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
