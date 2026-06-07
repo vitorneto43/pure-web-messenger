@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/status/StatusBar";
 import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
+import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
@@ -330,6 +331,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
           </Button>
         </div>
+        <AdsterraBanner variant="banner_320x50" className="pt-1" />
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">

@@ -15,6 +15,7 @@ import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
 import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
 import { StatusReactions } from "./StatusReactions";
+import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
 function renderWithLinks(text: string) {
@@ -62,6 +63,10 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const [author, setAuthor] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [boostOpen, setBoostOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(0);
+  const viewedRef = useRef(0);
+  const lastAdStatusRef = useRef<string | null>(null);
   const startedRef = useRef<number>(Date.now());
   const currentGroup = groups[groupIndex];
   const statuses = currentGroup?.statuses ?? [];
@@ -93,6 +98,27 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     };
   }, [current?.id, currentGroup?.user, user?.id]);
 
+  // intercalate an interstitial ad every 4 statuses viewed
+  useEffect(() => {
+    if (!current) return;
+    if (lastAdStatusRef.current === current.id) return;
+    lastAdStatusRef.current = current.id;
+    viewedRef.current += 1;
+    if (viewedRef.current > 0 && viewedRef.current % 4 === 0) {
+      setAdOpen(true);
+      setAdCountdown(5);
+    }
+  }, [current?.id]);
+
+  // ad countdown timer
+  useEffect(() => {
+    if (!adOpen) return;
+    const id = setInterval(() => {
+      setAdCountdown((c) => (c > 0 ? c - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [adOpen]);
+
   // progress timer (skip for video which we let play out)
   useEffect(() => {
     if (!current || current.kind === "video") {
@@ -102,7 +128,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     startedRef.current = Date.now();
     setProgress(0);
     const id = setInterval(() => {
-      if (paused || boostOpen) {
+      if (paused || boostOpen || adOpen) {
         startedRef.current = Date.now() - progress * DURATION_MS;
         return;
       }
@@ -116,7 +142,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, index, paused, boostOpen]);
+  }, [current?.id, index, paused, boostOpen, adOpen]);
 
   function next() {
     if (index < statuses.length - 1) {
@@ -415,6 +441,30 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </div>
         )}
       </div>
+
+      {adOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 grid place-items-center px-4"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="absolute top-3 left-0 right-0 text-center text-[10px] uppercase tracking-[0.2em] text-white/60">
+            {t("status.sponsored") || "Sponsored"}
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <AdsterraBanner variant="banner_300x250" />
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={adCountdown > 0}
+              onClick={() => setAdOpen(false)}
+              className="rounded-full min-w-[120px]"
+            >
+              {adCountdown > 0 ? `${t("status.skipIn") || "Skip in"} ${adCountdown}s` : t("status.skip") || "Skip ad"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isOwner && (
         <BoostDialog
