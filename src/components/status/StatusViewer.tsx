@@ -142,7 +142,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, index, paused, boostOpen]);
+  }, [current?.id, index, paused, boostOpen, adOpen]);
 
   function next() {
     if (index < statuses.length - 1) {
