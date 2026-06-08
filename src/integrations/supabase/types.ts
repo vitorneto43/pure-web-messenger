@@ -646,20 +646,14 @@ export type Database = {
       }
       profiles: {
         Row: {
-          app_version: string | null
           avatar_url: string | null
           bio: string | null
-          city: string | null
-          country: string | null
           created_at: string
-          device_platform: string | null
           display_name: string
           id: string
           invited_by: string | null
-          last_ip: string | null
           last_seen: string
           onboarded: boolean
-          region: string | null
           signup_campaign: string | null
           signup_landing: string | null
           signup_medium: string | null
@@ -669,20 +663,14 @@ export type Database = {
           username: string
         }
         Insert: {
-          app_version?: string | null
           avatar_url?: string | null
           bio?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
-          device_platform?: string | null
           display_name: string
           id: string
           invited_by?: string | null
-          last_ip?: string | null
           last_seen?: string
           onboarded?: boolean
-          region?: string | null
           signup_campaign?: string | null
           signup_landing?: string | null
           signup_medium?: string | null
@@ -692,20 +680,14 @@ export type Database = {
           username: string
         }
         Update: {
-          app_version?: string | null
           avatar_url?: string | null
           bio?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
-          device_platform?: string | null
           display_name?: string
           id?: string
           invited_by?: string | null
-          last_ip?: string | null
           last_seen?: string
           onboarded?: boolean
-          region?: string | null
           signup_campaign?: string | null
           signup_landing?: string | null
           signup_medium?: string | null
@@ -718,29 +700,47 @@ export type Database = {
       }
       profiles_private: {
         Row: {
+          app_version: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          device_platform: string | null
           email: string | null
+          last_ip: string | null
           pix_key: string | null
           pix_key_type: string | null
           preferred_bank: string | null
+          region: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          app_version?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          device_platform?: string | null
           email?: string | null
+          last_ip?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           preferred_bank?: string | null
+          region?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          app_version?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          device_platform?: string | null
           email?: string | null
+          last_ip?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           preferred_bank?: string | null
+          region?: string | null
           updated_at?: string
           user_id?: string
         }
