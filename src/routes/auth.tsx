@@ -331,7 +331,16 @@ function AuthPage() {
                     });
                     if (result.error) throw result.error;
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : t("auth.toast.googleFail"));
+                    const raw =
+                      err instanceof Error
+                        ? err.message
+                        : typeof err === "string"
+                          ? err
+                          : (() => {
+                              try { return JSON.stringify(err); } catch { return String(err); }
+                            })();
+                    console.error("[google-signin] error", err);
+                    toast.error(`Google: ${raw || t("auth.toast.googleFail")}`, { duration: 10000 });
                     setBusy(false);
                   }
                 }}
