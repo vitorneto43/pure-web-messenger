@@ -517,10 +517,16 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         </button>
         <button
           type="button"
-          onClick={() => conv?.is_group && setGroupSettingsOpen(true)}
-          disabled={!conv?.is_group}
+          onClick={() => {
+            if (conv?.is_group) {
+              setGroupSettingsOpen(true);
+            } else if (otherUser?.username) {
+              navigate({ to: "/u/$username", params: { username: otherUser.username } });
+            }
+          }}
+          disabled={!conv?.is_group && !otherUser?.username}
           className="flex items-center gap-3 flex-1 min-w-0 text-left -mx-1 px-1 rounded-lg hover:bg-accent/20 disabled:hover:bg-transparent disabled:cursor-default transition-colors"
-          title={conv?.is_group ? t("chat.viewGroupDetails") : undefined}
+          title={conv?.is_group ? t("chat.viewGroupDetails") : t("chat.viewProfile") ?? "Ver perfil"}
         >
           <Avatar className="size-10">
             <AvatarImage src={headerAvatar ?? undefined} />

@@ -29,6 +29,7 @@ import { StatusBar } from "@/components/status/StatusBar";
 import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
+import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
 import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
@@ -289,6 +290,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       </div>
 
       <StatusBar />
+
+      <ProfileCompletionBanner />
 
       <InviteMissionBanner />
 
