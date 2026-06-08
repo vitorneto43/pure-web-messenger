@@ -64,6 +64,9 @@ function ProfilePage() {
     created_at: "" as string,
   });
   const [interests, setInterests] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const deleteAccount = useServerFn(deleteMyAccount);
 
   async function handleDelete() {
