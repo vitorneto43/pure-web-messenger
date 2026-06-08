@@ -1,5 +1,7 @@
 import "@/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { ProfileCompletionMeter, type CompletionCheck } from "@/components/profile/ProfileCompletionMeter";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
