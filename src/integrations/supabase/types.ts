@@ -1266,6 +1266,7 @@ export type Database = {
           username: string
         }[]
       }
+      survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
