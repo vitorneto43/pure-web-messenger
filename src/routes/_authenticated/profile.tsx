@@ -1,5 +1,7 @@
 import "@/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { ProfileCompletionMeter, type CompletionCheck } from "@/components/profile/ProfileCompletionMeter";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -62,8 +64,10 @@ function ProfilePage() {
     visibility: "public" as "public" | "private",
     show_city: false,
     created_at: "" as string,
+    city: "" as string,
   });
   const [interests, setInterests] = useState<string[]>([]);
+  const [hasSurvey, setHasSurvey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -92,11 +96,16 @@ function ProfilePage() {
         .single(),
       supabase
         .from("profiles_private")
-        .select("pix_key, pix_key_type, preferred_bank")
+        .select("pix_key, pix_key_type, preferred_bank, city")
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase.rpc("survey_interest_tags", { _user_id: user.id }),
-    ]).then(([{ data }, { data: priv }, { data: tags }]) => {
+      supabase
+        .from("user_onboarding_survey")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
       if (data)
         setProfile({
           username: data.username,
@@ -110,11 +119,26 @@ function ProfilePage() {
           visibility: ((data as any).visibility ?? "public") as "public" | "private",
           show_city: !!(data as any).show_city,
           created_at: (data as any).created_at ?? "",
+          city: (priv as any)?.city ?? "",
         });
       setInterests((tags as string[] | null) ?? []);
+      setHasSurvey(!!survey?.id);
       setLoading(false);
     });
   }, [user?.id]);
+
+  const completionChecks: CompletionCheck[] = useMemo(
+    () => [
+      { key: "avatar", label: "Foto", ok: !!profile.avatar_url },
+      { key: "name", label: "Nome", ok: !!profile.display_name?.trim() },
+      { key: "username", label: "Username", ok: !!profile.username?.trim() },
+      { key: "bio", label: "Bio", ok: !!profile.bio?.trim() },
+      { key: "goal", label: "Objetivo", ok: !!profile.goal },
+      { key: "city", label: "Cidade", ok: !!profile.city?.trim() },
+      { key: "interests", label: "Interesses", ok: hasSurvey },
+    ],
+    [profile.avatar_url, profile.display_name, profile.username, profile.bio, profile.goal, profile.city, hasSurvey],
+  );
 
   async function save() {
     if (!user) return;
@@ -181,6 +205,11 @@ function ProfilePage() {
 
       <div className="glass border border-border rounded-2xl p-6 sm:p-8">
         <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
+
+        <div className="mt-5">
+          <ProfileCompletionMeter checks={completionChecks} />
+        </div>
+
 
         <div className="mt-6 flex items-center gap-5">
           <Avatar className="size-20 ring-2 ring-border">
