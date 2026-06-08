@@ -96,11 +96,16 @@ function ProfilePage() {
         .single(),
       supabase
         .from("profiles_private")
-        .select("pix_key, pix_key_type, preferred_bank")
+        .select("pix_key, pix_key_type, preferred_bank, city")
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase.rpc("survey_interest_tags", { _user_id: user.id }),
-    ]).then(([{ data }, { data: priv }, { data: tags }]) => {
+      supabase
+        .from("user_onboarding_survey")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
       if (data)
         setProfile({
           username: data.username,
@@ -114,11 +119,26 @@ function ProfilePage() {
           visibility: ((data as any).visibility ?? "public") as "public" | "private",
           show_city: !!(data as any).show_city,
           created_at: (data as any).created_at ?? "",
+          city: (priv as any)?.city ?? "",
         });
       setInterests((tags as string[] | null) ?? []);
+      setHasSurvey(!!survey?.id);
       setLoading(false);
     });
   }, [user?.id]);
+
+  const completionChecks: CompletionCheck[] = useMemo(
+    () => [
+      { key: "avatar", label: "Foto", ok: !!profile.avatar_url },
+      { key: "name", label: "Nome", ok: !!profile.display_name?.trim() },
+      { key: "username", label: "Username", ok: !!profile.username?.trim() },
+      { key: "bio", label: "Bio", ok: !!profile.bio?.trim() },
+      { key: "goal", label: "Objetivo", ok: !!profile.goal },
+      { key: "city", label: "Cidade", ok: !!profile.city?.trim() },
+      { key: "interests", label: "Interesses", ok: hasSurvey },
+    ],
+    [profile.avatar_url, profile.display_name, profile.username, profile.bio, profile.goal, profile.city, hasSurvey],
+  );
 
   async function save() {
     if (!user) return;
