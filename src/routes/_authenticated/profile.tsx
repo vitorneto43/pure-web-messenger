@@ -58,10 +58,12 @@ function ProfilePage() {
     pix_key: "",
     pix_key_type: "CPF/CNPJ",
     preferred_bank: "" as string,
+    goal: "" as string,
+    visibility: "public" as "public" | "private",
+    show_city: false,
+    created_at: "" as string,
   });
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
   const deleteAccount = useServerFn(deleteMyAccount);
 
   async function handleDelete() {
