@@ -229,31 +229,44 @@ export const getUserAnalytics = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
 
     const byCountry = await supabaseAdmin
-      .from("profiles")
+      .from("profiles_private")
       .select("country")
       .not("country", "is", null);
     const byRegion = await supabaseAdmin
-      .from("profiles")
+      .from("profiles_private")
       .select("region")
       .not("region", "is", null);
     const byCity = await supabaseAdmin
-      .from("profiles")
+      .from("profiles_private")
       .select("city")
       .not("city", "is", null);
     const byPlat = await supabaseAdmin
-      .from("profiles")
+      .from("profiles_private")
       .select("device_platform")
       .not("device_platform", "is", null);
     const byVer = await supabaseAdmin
-      .from("profiles")
+      .from("profiles_private")
       .select("app_version")
       .not("app_version", "is", null);
 
-    const { data: latest } = await supabaseAdmin
+    const { data: latestProfiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, display_name, last_seen, device_platform, country")
+      .select("id, username, display_name, last_seen")
       .order("last_seen", { ascending: false })
       .limit(20);
+    const latestIds = (latestProfiles ?? []).map((p) => p.id);
+    const { data: latestPriv } = latestIds.length
+      ? await supabaseAdmin
+          .from("profiles_private")
+          .select("user_id, device_platform, country")
+          .in("user_id", latestIds)
+      : { data: [] as Array<{ user_id: string; device_platform: string | null; country: string | null }> };
+    const privMap = new Map((latestPriv ?? []).map((r) => [r.user_id, r]));
+    const latest = (latestProfiles ?? []).map((p) => ({
+      ...p,
+      device_platform: privMap.get(p.id)?.device_platform ?? null,
+      country: privMap.get(p.id)?.country ?? null,
+    }));
 
     return {
       countries: countTop(byCountry.data ?? [], "country"),
@@ -261,7 +274,7 @@ export const getUserAnalytics = createServerFn({ method: "GET" })
       cities: countTop(byCity.data ?? [], "city"),
       platforms: countTop(byPlat.data ?? [], "device_platform"),
       versions: countTop(byVer.data ?? [], "app_version"),
-      latestSeen: latest ?? [],
+      latestSeen: latest,
     };
   });
 
