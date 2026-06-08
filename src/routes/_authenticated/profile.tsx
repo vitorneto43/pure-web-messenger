@@ -206,6 +206,11 @@ function ProfilePage() {
       <div className="glass border border-border rounded-2xl p-6 sm:p-8">
         <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
 
+        <div className="mt-5">
+          <ProfileCompletionMeter checks={completionChecks} />
+        </div>
+
+
         <div className="mt-6 flex items-center gap-5">
           <Avatar className="size-20 ring-2 ring-border">
             <AvatarImage src={profile.avatar_url ?? undefined} />
