@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -92,6 +93,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/u/$username': typeof UUsernameRoute
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/u/$username': typeof UUsernameRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
+    | '/u/$username'
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
     | '/api/public/calls/status'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
+    | '/u/$username'
     | '/'
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
+    | '/u/$username'
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
     | '/lovable/email/suppression'
@@ -330,6 +342,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  UUsernameRoute: typeof UUsernameRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
   ApiPublicHooksUnreadMessageEmailsRoute: typeof ApiPublicHooksUnreadMessageEmailsRoute
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  UUsernameRoute: UUsernameRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
   ApiPublicHooksUnreadMessageEmailsRoute:

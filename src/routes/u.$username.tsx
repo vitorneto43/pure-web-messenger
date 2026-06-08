@@ -219,20 +219,35 @@ function PendingRequestsCard({ ownerId }: { ownerId: string }) {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
-    const { data } = await supabase
+    const { data: reqs } = await supabase
       .from("profile_view_requests")
-      .select("requester_id, created_at, profiles:requester_id(username, display_name, avatar_url)")
+      .select("requester_id, created_at")
       .eq("owner_id", ownerId)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    const mapped = (data ?? []).map((r: any) => ({
-      requester_id: r.requester_id,
-      created_at: r.created_at,
-      username: r.profiles?.username ?? null,
-      display_name: r.profiles?.display_name ?? null,
-      avatar_url: r.profiles?.avatar_url ?? null,
-    }));
-    setItems(mapped);
+    const list = reqs ?? [];
+    if (list.length === 0) {
+      setItems([]);
+      return;
+    }
+    const ids = list.map((r) => r.requester_id);
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .in("id", ids);
+    const byId = new Map((profs ?? []).map((p: any) => [p.id, p]));
+    setItems(
+      list.map((r) => {
+        const p = byId.get(r.requester_id) as any;
+        return {
+          requester_id: r.requester_id,
+          created_at: r.created_at,
+          username: p?.username ?? null,
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+        };
+      }),
+    );
   }
 
   useEffect(() => {
