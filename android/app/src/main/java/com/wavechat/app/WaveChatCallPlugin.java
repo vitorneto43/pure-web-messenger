@@ -179,6 +179,80 @@ public class WaveChatCallPlugin extends Plugin {
         }
     }
 
+    private void doSaveMediaToGallery(PluginCall call) {
+        String dataUrl = call.getString("dataUrl", null);
+        String fileName = call.getString("fileName", "wavechat-status");
+        if (dataUrl == null || !dataUrl.startsWith("data:")) {
+            call.reject("Mídia inválida");
+            return;
+        }
+        if (dataUrl.startsWith("data:image/")) {
+            doSaveImageToGallery(call);
+            return;
+        }
+
+        try {
+            int semicolonIndex = dataUrl.indexOf(';');
+            int commaIndex = dataUrl.indexOf(',');
+            if (semicolonIndex < 0 || commaIndex < 0 || semicolonIndex > commaIndex) {
+                call.reject("Mídia inválida");
+                return;
+            }
+
+            String mimeType = dataUrl.substring(5, semicolonIndex);
+            byte[] mediaBytes = Base64.decode(dataUrl.substring(commaIndex + 1), Base64.DEFAULT);
+            ContentResolver resolver = getContext().getContentResolver();
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+
+            Uri collectionUri;
+            if (mimeType.startsWith("video/")) {
+                collectionUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/WaveChat");
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                collectionUri = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/WaveChat");
+            } else {
+                call.reject("Tipo de mídia não suportado");
+                return;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+            }
+
+            Uri uri = resolver.insert(collectionUri, values);
+            if (uri == null) {
+                call.reject("Não foi possível criar a mídia na galeria");
+                return;
+            }
+
+            try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                if (outputStream == null) {
+                    call.reject("Não foi possível abrir a galeria");
+                    return;
+                }
+                outputStream.write(mediaBytes);
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues doneValues = new ContentValues();
+                doneValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                resolver.update(uri, doneValues, null, null);
+            }
+
+            JSObject result = new JSObject();
+            result.put("ok", true);
+            result.put("uri", uri.toString());
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Falha ao salvar na galeria", e);
+        }
+    }
+
     @PluginMethod
     public void getRingtone(PluginCall call) {
         SharedPreferences prefs = getContext()
