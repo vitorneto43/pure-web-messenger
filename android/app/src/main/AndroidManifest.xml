@@ -46,6 +46,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep link used by the OAuth (Google sign-in) callback flow.
+                 The Lovable broker redirects to com.wavechat.app://oauth-callback
+                 with the access/refresh tokens, which the app then hands to
+                 supabase.auth.setSession() via installNativeOAuthListener. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.wavechat.app" android:host="oauth-callback" />
+            </intent-filter>
+
         </activity>
 
         <activity
