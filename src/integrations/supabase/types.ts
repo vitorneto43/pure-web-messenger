@@ -644,16 +644,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_view_requests: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
           created_at: string
           display_name: string
+          goal: string | null
           id: string
           invited_by: string | null
           last_seen: string
           onboarded: boolean
+          show_city: boolean
           signup_campaign: string | null
           signup_landing: string | null
           signup_medium: string | null
@@ -661,16 +690,19 @@ export type Database = {
           signup_source: string | null
           updated_at: string
           username: string
+          visibility: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_name: string
+          goal?: string | null
           id: string
           invited_by?: string | null
           last_seen?: string
           onboarded?: boolean
+          show_city?: boolean
           signup_campaign?: string | null
           signup_landing?: string | null
           signup_medium?: string | null
@@ -678,16 +710,19 @@ export type Database = {
           signup_source?: string | null
           updated_at?: string
           username: string
+          visibility?: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string
+          goal?: string | null
           id?: string
           invited_by?: string | null
           last_seen?: string
           onboarded?: boolean
+          show_city?: boolean
           signup_campaign?: string | null
           signup_landing?: string | null
           signup_medium?: string | null
@@ -695,6 +730,7 @@ export type Database = {
           signup_source?: string | null
           updated_at?: string
           username?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -1155,6 +1191,7 @@ export type Database = {
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
+      can_view_full_profile: { Args: { _owner: string }; Returns: boolean }
       claim_invite_reward: { Args: never; Returns: Json }
       complete_onboarding: {
         Args: { _display_name: string; _username: string }
@@ -1196,6 +1233,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_public_profile: { Args: { _username: string }; Returns: Json }
       get_status_profile_cards: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -1253,6 +1291,11 @@ export type Database = {
       }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
+      request_profile_view: { Args: { _owner: string }; Returns: Json }
+      respond_profile_view: {
+        Args: { _approve: boolean; _requester: string }
+        Returns: Json
+      }
       role_rank: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: number
