@@ -194,12 +194,8 @@ function PublicProfile() {
           </>
         )}
 
-        {!isOwn && user && (
-          <div className="mt-8 pt-6 border-t border-border">
-            <ProfileRequestsForOwner ownerId={data.id} viewerId={user.id} />
-          </div>
-        )}
       </div>
+
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
