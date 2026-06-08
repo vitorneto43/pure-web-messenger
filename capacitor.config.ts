@@ -23,6 +23,16 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
     },
+    GoogleAuth: {
+      // Google Web OAuth Client ID (type "Web application") from Google Cloud
+      // Console for project wavechat-fe92e. REQUIRED for native sign-in: the
+      // Android SDK uses it as the audience for the idToken, and the same ID
+      // must be added as an authorized client in Supabase Auth → Google.
+      // TODO: fill in with the real Web Client ID before building the APK.
+      serverClientId: 'REPLACE_WITH_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+      forceCodeForRefreshToken: true,
+    },
   },
   android: {
     buildOptions: {
