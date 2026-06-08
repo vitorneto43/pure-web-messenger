@@ -34,6 +34,7 @@ function AuthGuard() {
     <CallProvider>
       <PushBootstrap />
       <OnboardingNameDialog />
+      <OnboardingSurveyDialog />
       <Outlet />
       <CallScreen />
       <IncomingCallDialog />
