@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { recordDeviceInfo } from "@/lib/device-tracking";
+import { installNativeOAuthListener } from "@/lib/native-google-auth";
 
 interface AuthContextValue {
   session: Session | null;
@@ -28,7 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    let removeNative: (() => void) | null = null;
+    installNativeOAuthListener().then((fn) => {
+      removeNative = fn;
+    });
+    return () => {
+      sub.subscription.unsubscribe();
+      removeNative?.();
+    };
   }, []);
 
   // Heartbeat: update last_seen every 60s while session is active

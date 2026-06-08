@@ -8,6 +8,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { signInWithGoogleNative } from "@/lib/native-google-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,6 +320,12 @@ function AuthPage() {
                       medium: attr?.medium,
                       campaign: attr?.campaign,
                     });
+                    const launchedNative = await signInWithGoogleNative();
+                    if (launchedNative) {
+                      // Native flow continues in Chrome Custom Tab; the session
+                      // is applied via the appUrlOpen listener in AuthProvider.
+                      return;
+                    }
                     const result = await lovable.auth.signInWithOAuth("google", {
                       redirect_uri: `${window.location.origin}/chat`,
                     });
