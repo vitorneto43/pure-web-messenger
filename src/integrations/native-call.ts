@@ -16,6 +16,7 @@ const WaveChatCall = registerPlugin<{
   setSpeaker(options: { on: boolean }): Promise<{ ok: boolean }>;
   setBadge(options: { count: number }): Promise<{ ok: boolean }>;
   saveImageToGallery(options: { dataUrl: string; fileName: string }): Promise<{ ok: boolean; uri?: string }>;
+  saveMediaToGallery(options: { dataUrl: string; fileName: string }): Promise<{ ok: boolean; uri?: string }>;
   getRingtone(): Promise<{ uri: string | null; name: string | null; isDefault: boolean }>;
   clearRingtone(): Promise<{ ok: boolean }>;
   pickRingtone(): Promise<{ ok: boolean; cancelled?: boolean; uri?: string; name?: string }>;
@@ -40,6 +41,20 @@ export async function saveNativeImageToGallery(dataUrl: string, fileName: string
     return result.ok === true;
   } catch (e) {
     console.error('Failed to save native image to gallery', e);
+    return false;
+  }
+}
+
+export async function saveNativeMediaToGallery(dataUrl: string, fileName: string): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const result = await WaveChatCall.saveMediaToGallery({ dataUrl, fileName });
+    return result.ok === true;
+  } catch (e) {
+    if (dataUrl.startsWith('data:image/')) {
+      return saveNativeImageToGallery(dataUrl, fileName);
+    }
+    console.error('Failed to save native media to gallery', e);
     return false;
   }
 }
