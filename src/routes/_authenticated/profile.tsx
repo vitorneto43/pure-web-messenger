@@ -125,7 +125,10 @@ function ProfilePage() {
         .update({
           display_name: profile.display_name.trim(),
           bio: profile.bio.trim() || null,
-        })
+          goal: profile.goal || null,
+          visibility: profile.visibility,
+          show_city: profile.show_city,
+        } as any)
         .eq("id", user.id);
       if (error) throw error;
 
