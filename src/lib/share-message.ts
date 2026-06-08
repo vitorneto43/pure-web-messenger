@@ -135,10 +135,9 @@ export async function shareMessageExternally(msg: ShareableMessage) {
   if (msg.attachment_url && (isImage(msg.attachment_type, msg.attachment_url) || isVideo(msg.attachment_type, msg.attachment_url) || msg.attachment_type)) {
     const file = await fetchAsFile(msg);
     if (file) {
-      // Web Share API with files works in modern Android WebView too
-      if (await tryWebShareFile(file, brandedText)) return;
-      // Native fallback: write to cache and share via Capacitor
+      // Native Android must use the Capacitor share sheet with a cache file URI.
       if (await tryCapacitorFileShare(file, brandedText)) return;
+      if (await tryWebShareFile(file, brandedText)) return;
     }
   }
 
