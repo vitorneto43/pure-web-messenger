@@ -34,15 +34,15 @@ export async function recordDeviceInfo(userId: string) {
       }
     } catch {}
     await supabase
-      .from("profiles")
-      .update({
+      .from("profiles_private")
+      .upsert({
+        user_id: userId,
         device_platform: platform,
         app_version: APP_VERSION,
         ...(geo.country ? { country: geo.country } : {}),
         ...(geo.region ? { region: geo.region } : {}),
         ...(geo.city ? { city: geo.city } : {}),
-      })
-      .eq("id", userId);
+      }, { onConflict: "user_id" });
   } catch (e) {
     console.warn("recordDeviceInfo failed", e);
   }
