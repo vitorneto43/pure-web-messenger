@@ -61,6 +61,48 @@ function dataUrlToFile(dataUrl: string, fileName: string) {
   return new File([bytes], fileName, { type: mime });
 }
 
+function dataUrlToBase64(dataUrl: string) {
+  const commaIndex = dataUrl.indexOf(",");
+  return commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
+}
+
+async function isNativePlatform() {
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
+
+async function shareQrOnNative(qrUrl: string, fileName: string, title: string, text: string, dialogTitle: string) {
+  if (!(await isNativePlatform())) return false;
+  try {
+    const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+      import("@capacitor/filesystem"),
+      import("@capacitor/share"),
+    ]);
+    const written = await Filesystem.writeFile({
+      path: `qr/${Date.now()}-${fileName}`,
+      data: dataUrlToBase64(qrUrl),
+      directory: Directory.Cache,
+      recursive: true,
+    });
+    await Share.share({
+      title,
+      text,
+      files: [written.uri],
+      dialogTitle,
+    });
+    return true;
+  } catch (error: any) {
+    if (error?.message?.toLowerCase?.().includes("cancel")) return true;
+    if (isAbortError(error)) return true;
+    console.error("Failed to share QR natively", error);
+    return false;
+  }
+}
+
 async function logInviteAction(userId: string | undefined, target: string) {
   if (!userId) return;
   try {
@@ -239,6 +281,14 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const capacitor = getCapacitor();
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
+    const nativeShared = await shareQrOnNative(
+      qrUrl,
+      fileName,
+      `QR Code ${t("app.invite.shareTitle")}`,
+      qrShareText,
+      t("app.invite.shareQrTitle"),
+    );
+    if (nativeShared) return;
 
     if (nav.share) {
       try {
