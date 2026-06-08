@@ -58,7 +58,12 @@ function ProfilePage() {
     pix_key: "",
     pix_key_type: "CPF/CNPJ",
     preferred_bank: "" as string,
+    goal: "" as string,
+    visibility: "public" as "public" | "private",
+    show_city: false,
+    created_at: "" as string,
   });
+  const [interests, setInterests] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -82,7 +87,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at")
         .eq("id", user.id)
         .single(),
       supabase
@@ -90,7 +95,8 @@ function ProfilePage() {
         .select("pix_key, pix_key_type, preferred_bank")
         .eq("user_id", user.id)
         .maybeSingle(),
-    ]).then(([{ data }, { data: priv }]) => {
+      supabase.rpc("survey_interest_tags", { _user_id: user.id }),
+    ]).then(([{ data }, { data: priv }, { data: tags }]) => {
       if (data)
         setProfile({
           username: data.username,
@@ -100,7 +106,12 @@ function ProfilePage() {
           pix_key: priv?.pix_key ?? "",
           pix_key_type: priv?.pix_key_type ?? "CPF/CNPJ",
           preferred_bank: priv?.preferred_bank ?? "",
+          goal: (data as any).goal ?? "",
+          visibility: ((data as any).visibility ?? "public") as "public" | "private",
+          show_city: !!(data as any).show_city,
+          created_at: (data as any).created_at ?? "",
         });
+      setInterests((tags as string[] | null) ?? []);
       setLoading(false);
     });
   }, [user?.id]);
@@ -114,7 +125,10 @@ function ProfilePage() {
         .update({
           display_name: profile.display_name.trim(),
           bio: profile.bio.trim() || null,
-        })
+          goal: profile.goal || null,
+          visibility: profile.visibility,
+          show_city: profile.show_city,
+        } as any)
         .eq("id", user.id);
       if (error) throw error;
 
@@ -218,7 +232,83 @@ function ProfilePage() {
               className="mt-1.5"
             />
           </div>
+
+          <div>
+            <Label>Objetivo no WaveChat</Label>
+            <Select
+              value={profile.goal || "none"}
+              onValueChange={(v) => setProfile((p) => ({ ...p, goal: v === "none" ? "" : v }))}
+            >
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não informar</SelectItem>
+                <SelectItem value="amizades">Fazer amizades</SelectItem>
+                <SelectItem value="networking">Networking</SelectItem>
+                <SelectItem value="negocios">Negócios</SelectItem>
+                <SelectItem value="comunidades">Comunidades</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {interests.length > 0 && (
+            <div>
+              <Label>Seus interesses</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Baseado nas respostas da pesquisa de boas-vindas.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {interests.map((tag) => (
+                  <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted text-foreground/80 capitalize">
+                    {tag.replace("idade:", "")}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {profile.created_at && (
+            <div className="text-xs text-muted-foreground">
+              No WaveChat desde {new Date(profile.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+            </div>
+          )}
         </div>
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <h2 className="text-lg font-semibold">Privacidade do perfil</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Perfis públicos podem ser vistos por qualquer pessoa. Em perfis privados, bio, interesses, objetivo e cidade só aparecem para quem você aprovar.
+          </p>
+          <div className="mt-3 grid gap-3">
+            <div>
+              <Label>Visibilidade</Label>
+              <Select
+                value={profile.visibility}
+                onValueChange={(v) => setProfile((p) => ({ ...p, visibility: v as "public" | "private" }))}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Público</SelectItem>
+                  <SelectItem value="private">Privado (requer aprovação)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={profile.show_city}
+                onChange={(e) => setProfile((p) => ({ ...p, show_city: e.target.checked }))}
+                className="size-4 rounded border-border"
+              />
+              Mostrar minha cidade no perfil público
+            </label>
+          </div>
+        </div>
+
+
 
         <div className="mt-8 pt-6 border-t border-border">
           <h2 className="text-lg font-semibold">{t("profile.pixTitle")}</h2>
