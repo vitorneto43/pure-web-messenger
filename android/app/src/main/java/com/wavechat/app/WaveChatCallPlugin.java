@@ -97,10 +97,28 @@ public class WaveChatCallPlugin extends Plugin {
         doSaveImageToGallery(call);
     }
 
+    @PluginMethod
+    public void saveMediaToGallery(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && getPermissionState(GALLERY_PERMISSION) != PermissionState.GRANTED) {
+            requestPermissionForAlias(GALLERY_PERMISSION, call, "saveMediaPermissionCallback");
+            return;
+        }
+        doSaveMediaToGallery(call);
+    }
+
     @PermissionCallback
     private void saveImagePermissionCallback(PluginCall call) {
         if (getPermissionState(GALLERY_PERMISSION) == PermissionState.GRANTED) {
             doSaveImageToGallery(call);
+        } else {
+            call.reject("Permissão da galeria negada");
+        }
+    }
+
+    @PermissionCallback
+    private void saveMediaPermissionCallback(PluginCall call) {
+        if (getPermissionState(GALLERY_PERMISSION) == PermissionState.GRANTED) {
+            doSaveMediaToGallery(call);
         } else {
             call.reject("Permissão da galeria negada");
         }
