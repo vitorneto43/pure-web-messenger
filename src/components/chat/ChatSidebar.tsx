@@ -290,6 +290,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
       <StatusBar />
 
+      <ProfileCompletionBanner />
+
       <InviteMissionBanner />
 
       <MeetPeopleCard />
