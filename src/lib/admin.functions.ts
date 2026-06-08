@@ -749,3 +749,39 @@ export const getUserActivityStats = createServerFn({ method: "GET" })
       recent: Array<{ id: string; username: string; display_name: string; created_at: string; last_seen: string; days_since_signup: number }>;
     };
   });
+
+export const getOnboardingSurveyStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin.rpc("admin_onboarding_survey_stats" as never, { _days: 3650 } as never);
+    if (error) throw new Error(error.message);
+    return data as {
+      total: number;
+      today: number;
+      week: number;
+      month: number;
+      byReason: Array<{ name: string; count: number }>;
+      bySource: Array<{ name: string; count: number }>;
+      byFeature: Array<{ name: string; count: number }>;
+      byGoal: Array<{ name: string; count: number }>;
+      byAge: Array<{ name: string; count: number }>;
+      byCountry: Array<{ name: string; count: number }>;
+      byCity: Array<{ name: string; count: number }>;
+      recent: Array<{
+        id: string;
+        user_id: string;
+        reason_joined: string;
+        source_channel: string;
+        favorite_feature: string;
+        main_goal: string;
+        age_range: string;
+        created_at: string;
+        username: string | null;
+        display_name: string | null;
+        country: string | null;
+        city: string | null;
+      }>;
+      days: number;
+    };
+  });

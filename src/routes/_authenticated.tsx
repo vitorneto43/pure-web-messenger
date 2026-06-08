@@ -10,6 +10,7 @@ import { useAppBadgeSync } from "@/hooks/use-app-badge";
 import { useBoostReturn } from "@/hooks/use-boost-return";
 import { useLiveLocationBroadcast } from "@/hooks/use-live-location-broadcast";
 import { OnboardingNameDialog } from "@/components/OnboardingNameDialog";
+import { OnboardingSurveyDialog } from "@/components/OnboardingSurveyDialog";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -33,6 +34,7 @@ function AuthGuard() {
     <CallProvider>
       <PushBootstrap />
       <OnboardingNameDialog />
+      <OnboardingSurveyDialog />
       <Outlet />
       <CallScreen />
       <IncomingCallDialog />

@@ -1086,6 +1086,39 @@ export type Database = {
           },
         ]
       }
+      user_onboarding_survey: {
+        Row: {
+          age_range: string
+          created_at: string
+          favorite_feature: string
+          id: string
+          main_goal: string
+          reason_joined: string
+          source_channel: string
+          user_id: string
+        }
+        Insert: {
+          age_range: string
+          created_at?: string
+          favorite_feature: string
+          id?: string
+          main_goal: string
+          reason_joined: string
+          source_channel: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string
+          created_at?: string
+          favorite_feature?: string
+          id?: string
+          main_goal?: string
+          reason_joined?: string
+          source_channel?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1115,6 +1148,7 @@ export type Database = {
       admin_invites_overview: { Args: never; Returns: Json }
       admin_list_admins: { Args: never; Returns: Json }
       admin_newsletter_stats: { Args: never; Returns: Json }
+      admin_onboarding_survey_stats: { Args: { _days?: number }; Returns: Json }
       admin_push_logs: { Args: { _days?: number }; Returns: Json }
       admin_send_newsletter: { Args: { _post_id: string }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
