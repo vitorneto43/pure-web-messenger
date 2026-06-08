@@ -201,16 +201,12 @@ function PublicProfile() {
         )}
       </div>
 
-      {isOwn && (
-        <PendingRequestsCard ownerId={data.id} />
-      )}
+      {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
   );
 }
 
-function ProfileRequestsForOwner(_props: { ownerId: string; viewerId: string }) {
-  return null;
-}
+
 
 function PendingRequestsCard({ ownerId }: { ownerId: string }) {
   const [items, setItems] = useState<
