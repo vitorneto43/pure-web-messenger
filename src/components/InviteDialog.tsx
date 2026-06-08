@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { saveNativeMediaToGallery } from "@/integrations/native-call";
+import { saveNativeImageToGallery } from "@/integrations/native-call";
 import { useTranslation } from "react-i18next";
 
 type NativeSharePlugin = {
@@ -281,6 +281,14 @@ export function InviteDialog({ open, onOpenChange }: Props) {
     const capacitor = getCapacitor();
     const fileName = `wavechat-qr-${username ?? "convite"}.png`;
     const qrFile = dataUrlToFile(qrUrl, fileName);
+    const nativeShared = await shareQrOnNative(
+      qrUrl,
+      fileName,
+      `QR Code ${t("app.invite.shareTitle")}`,
+      qrShareText,
+      t("app.invite.shareQrTitle"),
+    );
+    if (nativeShared) return;
 
     if (nav.share) {
       try {
