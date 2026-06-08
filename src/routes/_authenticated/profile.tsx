@@ -64,8 +64,10 @@ function ProfilePage() {
     visibility: "public" as "public" | "private",
     show_city: false,
     created_at: "" as string,
+    city: "" as string,
   });
   const [interests, setInterests] = useState<string[]>([]);
+  const [hasSurvey, setHasSurvey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
