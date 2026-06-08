@@ -87,7 +87,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at")
         .eq("id", user.id)
         .single(),
       supabase
@@ -95,7 +95,8 @@ function ProfilePage() {
         .select("pix_key, pix_key_type, preferred_bank")
         .eq("user_id", user.id)
         .maybeSingle(),
-    ]).then(([{ data }, { data: priv }]) => {
+      supabase.rpc("survey_interest_tags", { _user_id: user.id }),
+    ]).then(([{ data }, { data: priv }, { data: tags }]) => {
       if (data)
         setProfile({
           username: data.username,
@@ -105,7 +106,12 @@ function ProfilePage() {
           pix_key: priv?.pix_key ?? "",
           pix_key_type: priv?.pix_key_type ?? "CPF/CNPJ",
           preferred_bank: priv?.preferred_bank ?? "",
+          goal: (data as any).goal ?? "",
+          visibility: ((data as any).visibility ?? "public") as "public" | "private",
+          show_city: !!(data as any).show_city,
+          created_at: (data as any).created_at ?? "",
         });
+      setInterests((tags as string[] | null) ?? []);
       setLoading(false);
     });
   }, [user?.id]);
