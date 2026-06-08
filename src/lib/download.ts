@@ -9,6 +9,18 @@ function isImage(url: string) {
   return /\.(png|jpe?g|webp|gif|bmp|heic|heif)(\?|$)/i.test(url);
 }
 
+function getMimeFromName(fileName: string, fallback = "application/octet-stream") {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "gif") return "image/gif";
+  if (ext === "mp4") return "video/mp4";
+  if (ext === "webm") return "video/webm";
+  if (ext === "mov") return "video/quicktime";
+  return fallback;
+}
+
 async function isNative(): Promise<boolean> {
   try {
     const { Capacitor } = await import("@capacitor/core");
@@ -36,19 +48,16 @@ async function downloadOnNative(url: string, fileName: string): Promise<boolean>
     const res = await fetch(url, { mode: "cors" });
     if (!res.ok) throw new Error(String(res.status));
     const blob = await res.blob();
+    const mime = blob.type || getMimeFromName(fileName);
+    const dataUrl = `data:${mime};base64,${await blobToBase64(blob)}`;
 
-    // Images: try to save straight to the gallery via our native plugin
-    if (isImage(url) || (blob.type || "").startsWith("image/")) {
-      try {
-        const { saveNativeImageToGallery } = await import("@/integrations/native-call");
-        const dataUrl = `data:${blob.type || "image/jpeg"};base64,${await blobToBase64(blob)}`;
-        const ok = await saveNativeImageToGallery(dataUrl, fileName);
-        if (ok) {
-          toast.success("Salvo na galeria");
-          return true;
-        }
-      } catch {
-        /* fall through */
+    // Status media should be saved directly to the Android gallery.
+    if (isImage(url) || mime.startsWith("image/") || mime.startsWith("video/")) {
+      const { saveNativeMediaToGallery } = await import("@/integrations/native-call");
+      const ok = await saveNativeMediaToGallery(dataUrl, fileName);
+      if (ok) {
+        toast.success(mime.startsWith("video/") ? "Vídeo salvo na galeria" : "Salvo na galeria");
+        return true;
       }
     }
 
@@ -57,10 +66,9 @@ async function downloadOnNative(url: string, fileName: string): Promise<boolean>
       import("@capacitor/filesystem"),
       import("@capacitor/share"),
     ]);
-    const base64 = await blobToBase64(blob);
     const written = await Filesystem.writeFile({
       path: `downloads/${Date.now()}-${fileName}`,
-      data: base64,
+      data: dataUrl.slice(dataUrl.indexOf(",") + 1),
       directory: Directory.Cache,
       recursive: true,
     });

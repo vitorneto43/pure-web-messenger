@@ -27,7 +27,12 @@ function pickName(msg: ShareableMessage, ext?: string) {
     msg.attachment_name ||
     msg.attachment_url?.split("/").pop()?.split("?")[0] ||
     "wavechat-arquivo";
-  if (!ext) return base;
+  if (!ext) {
+    if (/\.[a-z0-9]{2,5}$/i.test(base)) return base;
+    if (isImage(msg.attachment_type, msg.attachment_url)) return `${base}.jpg`;
+    if (isVideo(msg.attachment_type, msg.attachment_url)) return `${base}.mp4`;
+    return base;
+  }
   return base.replace(/\.[^.]+$/, "") + "." + ext;
 }
 
@@ -67,12 +72,12 @@ async function tryWebShareFile(file: File, text?: string): Promise<boolean> {
 
 async function tryCapacitorFileShare(file: File, text?: string): Promise<boolean> {
   try {
-    const cap = (window as any).Capacitor;
-    if (!cap?.isNativePlatform?.()) return false;
-    const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+    const [{ Capacitor }, { Filesystem, Directory }, { Share }] = await Promise.all([
+      import("@capacitor/core"),
       import("@capacitor/filesystem"),
       import("@capacitor/share"),
     ]);
+    if (!Capacitor.isNativePlatform()) return false;
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(reader.error);
@@ -88,11 +93,12 @@ async function tryCapacitorFileShare(file: File, text?: string): Promise<boolean
       path,
       data: base64,
       directory: Directory.Cache,
+      recursive: true,
     });
     await Share.share({
       title: "WaveChat",
       text: text || undefined,
-      url: written.uri,
+      files: [written.uri],
       dialogTitle: "Compartilhar",
     });
     return true;
@@ -104,9 +110,8 @@ async function tryCapacitorFileShare(file: File, text?: string): Promise<boolean
 
 async function tryCapacitorTextShare(msg: ShareableMessage): Promise<boolean> {
   try {
-    const cap = (window as any).Capacitor;
-    if (!cap?.isNativePlatform?.()) return false;
-    const { Share } = await import("@capacitor/share");
+    const [{ Capacitor }, { Share }] = await Promise.all([import("@capacitor/core"), import("@capacitor/share")]);
+    if (!Capacitor.isNativePlatform()) return false;
     await Share.share({
       title: "WaveChat",
       text: msg.content ?? undefined,
@@ -130,10 +135,9 @@ export async function shareMessageExternally(msg: ShareableMessage) {
   if (msg.attachment_url && (isImage(msg.attachment_type, msg.attachment_url) || isVideo(msg.attachment_type, msg.attachment_url) || msg.attachment_type)) {
     const file = await fetchAsFile(msg);
     if (file) {
-      // Web Share API with files works in modern Android WebView too
-      if (await tryWebShareFile(file, brandedText)) return;
-      // Native fallback: write to cache and share via Capacitor
+      // Native Android must use the Capacitor share sheet with a cache file URI.
       if (await tryCapacitorFileShare(file, brandedText)) return;
+      if (await tryWebShareFile(file, brandedText)) return;
     }
   }
 
