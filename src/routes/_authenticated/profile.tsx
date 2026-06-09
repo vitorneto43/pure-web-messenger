@@ -177,10 +177,39 @@ function ProfilePage() {
   async function uploadAvatar(file: File) {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) return toast.error(t("profile.avatarTooLarge"));
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (error) return toast.error(error.message);
+
+    // Garante que a sessão Supabase está fresca antes do upload — em alguns
+    // fluxos (login nativo Google em Capacitor) o JWT pode estar expirado e o
+    // storage retorna "new row violates row-level security policy".
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess?.session) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+    try {
+      await supabase.auth.refreshSession();
+    } catch {
+      /* ignore */
+    }
+    const fresh = await supabase.auth.getUser();
+    const authUid = fresh.data.user?.id;
+    if (!authUid || authUid !== user.id) {
+      console.error("[avatar] auth.uid mismatch", { authUid, userId: user.id });
+      toast.error("Sessão inválida. Faça login novamente.");
+      return;
+    }
+
+    const rawExt = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const ext = rawExt || (file.type === "image/png" ? "png" : "jpg");
+    const path = `${authUid}/avatar-${Date.now()}.${ext}`;
+    console.info("[avatar] uploading", { path, size: file.size, type: file.type });
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
+    if (error) {
+      console.error("[avatar] upload failed", { message: error.message, name: (error as any).name, path });
+      return toast.error(`Upload falhou: ${error.message}`);
+    }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
     setProfile((p) => ({ ...p, avatar_url: data.publicUrl }));
