@@ -4,10 +4,10 @@ type Variant = "banner_320x50" | "banner_300x250" | "native";
 
 const CONFIG: Record<
   Exclude<Variant, "native">,
-  { key: string; width: number; height: number }
+  { src: string; width: number; height: number }
 > = {
-  banner_320x50: { key: "818fe4794de605d398a0ea1f0e070275", width: 320, height: 50 },
-  banner_300x250: { key: "1d314a45064ab8408c620f913cb58969", width: 300, height: 250 },
+  banner_320x50: { src: "/ads/adsterra-320x50.html", width: 320, height: 50 },
+  banner_300x250: { src: "/ads/adsterra-300x250.html", width: 300, height: 250 },
 };
 
 const NATIVE_SRC =
@@ -20,15 +20,15 @@ interface Props {
 }
 
 /**
- * Adsterra ad slot. Banners are isolated inside an iframe (srcdoc) so the
- * publisher script can't touch the host page. Native ads inject inline
- * because they need to render into a DOM container in the document.
+ * Adsterra ad slot. Banners load a same-origin static HTML page in an
+ * iframe so the publisher script sees the real site as the referrer
+ * (required for Adsterra to serve creatives on approved domains).
+ * Native ads inject inline because they need a DOM container in the host.
  */
 export function AdsterraBanner({ variant, className }: Props) {
   if (variant === "native") return <NativeAd className={className} />;
 
   const cfg = CONFIG[variant];
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style></head><body><script type="text/javascript">atOptions={'key':'${cfg.key}','format':'iframe','height':${cfg.height},'width':${cfg.width},'params':{}};</script><script type="text/javascript" src="https://www.highperformanceformat.com/${cfg.key}/invoke.js"></script></body></html>`;
 
   return (
     <div
@@ -37,9 +37,9 @@ export function AdsterraBanner({ variant, className }: Props) {
     >
       <iframe
         title="ad"
-        srcDoc={html}
-        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+        src={cfg.src}
         scrolling="no"
+        referrerPolicy="no-referrer-when-downgrade"
         style={{
           width: cfg.width,
           height: cfg.height,
