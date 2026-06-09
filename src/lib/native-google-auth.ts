@@ -46,17 +46,38 @@ export async function signInWithGoogleNative(): Promise<boolean> {
   await ensureInit();
   const { GoogleAuth } = await import("@codetrix-studio/capacitor-google-auth");
 
-  const user = await GoogleAuth.signIn();
-  const idToken = user?.authentication?.idToken;
-  if (!idToken) {
-    throw new Error("Google não retornou idToken. Verifique a configuração do Web Client ID.");
+  let user: Awaited<ReturnType<typeof GoogleAuth.signIn>>;
+  try {
+    user = await GoogleAuth.signIn();
+  } catch (e: unknown) {
+    // The plugin often rejects with a plain object { code, message, ... }
+    // whose .message is just "Something went wrong" — surface every field.
+    const obj = (e ?? {}) as Record<string, unknown>;
+    const code = obj.code ?? obj.errorCode ?? "?";
+    const msg = obj.message ?? (e instanceof Error ? e.message : String(e));
+    let dump = "";
+    try { dump = JSON.stringify(e, Object.getOwnPropertyNames(obj)); } catch { dump = String(e); }
+    console.error("[google-native] signIn failed", { code, msg, dump, raw: e });
+    throw new Error(`GoogleAuth.signIn falhou [code=${code}]: ${msg} :: ${dump}`);
   }
 
-  const { error } = await supabase.auth.signInWithIdToken({
+  const idToken = user?.authentication?.idToken;
+  if (!idToken) {
+    console.error("[google-native] no idToken in response", user);
+    throw new Error(
+      `Google não retornou idToken. Resposta: ${JSON.stringify(user)?.slice(0, 300)}`,
+    );
+  }
+
+  const { data, error } = await supabase.auth.signInWithIdToken({
     provider: "google",
     token: idToken,
   });
-  if (error) throw error;
+  if (error) {
+    console.error("[google-native] supabase signInWithIdToken failed", error);
+    throw new Error(`Supabase rejeitou idToken: ${error.message} (status=${error.status ?? "?"})`);
+  }
+  console.log("[google-native] sign-in OK", { userId: data.user?.id });
   return true;
 }
 
