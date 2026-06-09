@@ -73,7 +73,11 @@ export async function signInWithGoogleNative(): Promise<boolean> {
     const code = obj.code ?? obj.errorCode ?? "?";
     const msg = obj.message ?? (e instanceof Error ? e.message : String(e));
     let dump = "";
-    try { dump = JSON.stringify(e, Object.getOwnPropertyNames(obj)); } catch { dump = String(e); }
+    try {
+      dump = JSON.stringify(e, Object.getOwnPropertyNames(obj));
+    } catch {
+      dump = String(e);
+    }
     console.error("[google-native] signIn failed", { code, msg, dump, raw: e });
     throw new Error(`GoogleAuth.signIn falhou [code=${code}]: ${msg} :: ${dump}`);
   }
@@ -123,7 +127,9 @@ export async function signInWithGoogleNative(): Promise<boolean> {
       idTokenIssuer: claims?.iss,
       hasAtHash: Boolean(claims?.at_hash),
     });
-    throw new Error(`Backend rejeitou login Google: ${error.message} (status=${error.status ?? "?"})`);
+    throw new Error(
+      `Backend rejeitou login Google: ${error.message} (status=${error.status ?? "?"})`,
+    );
   }
   console.log("[google-native] sign-in OK", { userId: data.user?.id });
   return true;
