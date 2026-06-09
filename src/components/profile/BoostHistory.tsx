@@ -46,6 +46,7 @@ export function BoostHistory() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [items, setItems] = useState<Boost[] | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
