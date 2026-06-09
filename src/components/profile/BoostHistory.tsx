@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2, Rocket, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatTime } from "@/lib/format-time";
+import { Button } from "@/components/ui/button";
+import { BoostReportDialog } from "@/components/status/BoostReportDialog";
 
 type Boost = {
   id: string;
@@ -44,6 +46,7 @@ export function BoostHistory() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [items, setItems] = useState<Boost[] | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -100,19 +103,33 @@ export function BoostHistory() {
                     )}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">
-                    {formatMoney(b.amount_cents, b.currency)}
-                  </p>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${cls}`}>
-                    {t(labelKey)}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">
+                      {formatMoney(b.amount_cents, b.currency)}
+                    </p>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${cls}`}>
+                      {t(labelKey)}
+                    </span>
+                  </div>
+                  {(b.status === "active" || b.status === "completed") && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-8"
+                      onClick={() => setReportId(b.id)}
+                      title="Ver relatório"
+                    >
+                      <BarChart3 className="size-4" />
+                    </Button>
+                  )}
                 </div>
               </li>
             );
           })}
         </ul>
       )}
+      <BoostReportDialog boostId={reportId} open={!!reportId} onOpenChange={(v) => !v && setReportId(null)} />
     </div>
   );
 }
