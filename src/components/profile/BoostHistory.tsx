@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2, Rocket, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatTime } from "@/lib/format-time";
+import { Button } from "@/components/ui/button";
+import { BoostReportDialog } from "@/components/status/BoostReportDialog";
 
 type Boost = {
   id: string;
