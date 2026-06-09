@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "209558207951-1upkasausdkrm30mvr40agi722th6hs9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wavechat.app",
+            "certificate_hash": "8d8cbf20c2111f2ff1f832d8a361fa4f500e5585"
+          }
+        },
+        {
+          "client_id": "209558207951-grtui02pe5np5bntqa34s0sluhlep27k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wavechat.app",
+            "certificate_hash": "f7413ed93cf3174b2e4c9688dae0d70c6b48877e"
+          }
+        },
+        {
           "client_id": "209558207951-ujjpp8l4h0h4cnqlg4visarfq8mu3ce5.apps.googleusercontent.com",
           "client_type": 3
         }
