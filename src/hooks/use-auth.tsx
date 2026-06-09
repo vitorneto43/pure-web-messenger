@@ -42,14 +42,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Heartbeat: update last_seen every 60s while session is active
   useEffect(() => {
     if (!session?.user) return;
-    const ping = () =>
-      supabase
-        .from("profiles")
-        .update({ last_seen: new Date().toISOString() })
-        .eq("id", session.user.id);
-    ping();
+    const ping = async () => {
+      try {
+        await supabase
+          .from("profiles")
+          .update({ last_seen: new Date().toISOString() })
+          .eq("id", session.user.id);
+      } catch (e) {
+        console.warn("last_seen heartbeat failed", e);
+      }
+    };
+    void ping();
     void recordDeviceInfo(session.user.id);
-    const id = setInterval(ping, 60_000);
+    const id = setInterval(() => { void ping(); }, 60_000);
     return () => clearInterval(id);
   }, [session?.user?.id]);
 
