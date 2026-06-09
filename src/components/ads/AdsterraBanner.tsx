@@ -41,9 +41,11 @@ interface Props {
  * Native ads inject inline because they need a DOM container in the host.
  */
 export function AdsterraBanner({ variant, className }: Props) {
+  if (!isAdsterraAllowed()) return null;
   if (variant === "native") return <NativeAd className={className} />;
 
   const cfg = CONFIG[variant];
+
 
   return (
     <div
