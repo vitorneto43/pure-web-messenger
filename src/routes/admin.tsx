@@ -234,6 +234,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="admins"><Shield className="size-4 mr-1.5" />Admins</TabsTrigger>
               <TabsTrigger value="newsletter"><Mail className="size-4 mr-1.5" />Newsletter</TabsTrigger>
               <TabsTrigger value="survey"><ClipboardList className="size-4 mr-1.5" />Pesquisa</TabsTrigger>
+              <TabsTrigger value="boosts"><Rocket className="size-4 mr-1.5" />Impulsos</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
