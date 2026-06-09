@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Check, Rocket, Gift } from "lucide-react";
+import { Loader2, Check, Rocket, Gift, Sparkles } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
@@ -12,14 +12,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBoostCheckout } from "@/lib/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { currentLocale } from "@/i18n";
 import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
+import { BR_STATES, OBJECTIVES, calculateCpm, estimateViews, type BoostObjective, type BoostGender } from "@/lib/boost-pricing";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
+
 
 // Base price in BRL. Display is converted to the user's locale currency.
 // Stripe still charges in BRL — Stripe handles FX at the card level.
