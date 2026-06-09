@@ -50,12 +50,30 @@ function buildPrompt(input: Input): { system: string; user: string } {
 export const runAIAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => ActionSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return { ok: false as const, error: "AI não configurada" };
     }
     const { system, user } = buildPrompt(data);
+    const model = "google/gemini-3-flash-preview";
+    const inputChars = (system?.length ?? 0) + (user?.length ?? 0);
+
+    async function logUsage(outputChars: number, success: boolean) {
+      try {
+        await (context.supabase as any).from("ai_usage_logs").insert({
+          user_id: context.userId,
+          feature: data.action,
+          model,
+          input_chars: inputChars,
+          output_chars: outputChars,
+          success,
+        });
+      } catch (e) {
+        console.warn("ai_usage_logs insert failed", e);
+      }
+    }
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,7 +81,7 @@ export const runAIAssistant = createServerFn({ method: "POST" })
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -71,17 +89,21 @@ export const runAIAssistant = createServerFn({ method: "POST" })
       }),
     });
     if (resp.status === 429) {
+      await logUsage(0, false);
       return { ok: false as const, error: "Muitas requisições. Tente novamente em instantes." };
     }
     if (resp.status === 402) {
+      await logUsage(0, false);
       return { ok: false as const, error: "Créditos de IA esgotados. Adicione créditos no workspace." };
     }
     if (!resp.ok) {
       const t = await resp.text().catch(() => "");
       console.error("AI gateway error", resp.status, t);
+      await logUsage(0, false);
       return { ok: false as const, error: "Falha ao consultar a IA." };
     }
     const json: any = await resp.json();
     const content: string = json?.choices?.[0]?.message?.content?.trim() ?? "";
+    await logUsage(content.length, true);
     return { ok: true as const, content };
   });
