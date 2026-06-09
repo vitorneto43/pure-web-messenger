@@ -742,6 +742,7 @@ export type Database = {
           created_at: string
           device_platform: string | null
           email: string | null
+          gender: string | null
           last_ip: string | null
           pix_key: string | null
           pix_key_type: string | null
@@ -757,6 +758,7 @@ export type Database = {
           created_at?: string
           device_platform?: string | null
           email?: string | null
+          gender?: string | null
           last_ip?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
@@ -772,6 +774,7 @@ export type Database = {
           created_at?: string
           device_platform?: string | null
           email?: string | null
+          gender?: string | null
           last_ip?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
@@ -892,22 +895,82 @@ export type Database = {
         }
         Relationships: []
       }
+      status_boost_clicks: {
+        Row: {
+          boost_id: string
+          clicker_id: string | null
+          created_at: string
+          id: string
+          status_id: string
+          viewer_age_range: string | null
+          viewer_country: string | null
+          viewer_gender: string | null
+          viewer_state: string | null
+        }
+        Insert: {
+          boost_id: string
+          clicker_id?: string | null
+          created_at?: string
+          id?: string
+          status_id: string
+          viewer_age_range?: string | null
+          viewer_country?: string | null
+          viewer_gender?: string | null
+          viewer_state?: string | null
+        }
+        Update: {
+          boost_id?: string
+          clicker_id?: string | null
+          created_at?: string
+          id?: string
+          status_id?: string
+          viewer_age_range?: string | null
+          viewer_country?: string | null
+          viewer_gender?: string | null
+          viewer_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_boost_clicks_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "status_boosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "status_boost_clicks_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       status_boosts: {
         Row: {
           activated_at: string | null
           amount_cents: number
+          boost_type: string
           checkout_session_id: string | null
+          cpm_cents: number | null
           created_at: string
           currency: string
+          duration_days: number | null
+          ends_at: string | null
           environment: string
           id: string
           is_free_reward: boolean
+          objective: string
           package: string
           refund_reason: string | null
           refunded_amount_cents: number | null
           refunded_at: string | null
           status: string
           status_id: string
+          target_age_max: number | null
+          target_age_min: number | null
+          target_gender: string
+          target_states: string[]
           transaction_id: string | null
           updated_at: string
           user_id: string
@@ -917,18 +980,27 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           amount_cents: number
+          boost_type?: string
           checkout_session_id?: string | null
+          cpm_cents?: number | null
           created_at?: string
           currency?: string
+          duration_days?: number | null
+          ends_at?: string | null
           environment?: string
           id?: string
           is_free_reward?: boolean
+          objective?: string
           package: string
           refund_reason?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
           status?: string
           status_id: string
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_gender?: string
+          target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
           user_id: string
@@ -938,18 +1010,27 @@ export type Database = {
         Update: {
           activated_at?: string | null
           amount_cents?: number
+          boost_type?: string
           checkout_session_id?: string | null
+          cpm_cents?: number | null
           created_at?: string
           currency?: string
+          duration_days?: number | null
+          ends_at?: string | null
           environment?: string
           id?: string
           is_free_reward?: boolean
+          objective?: string
           package?: string
           refund_reason?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
           status?: string
           status_id?: string
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_gender?: string
+          target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
@@ -1000,22 +1081,37 @@ export type Database = {
       }
       status_views: {
         Row: {
+          boost_id: string | null
           from_boost: boolean
           status_id: string
           viewed_at: string
+          viewer_age_range: string | null
+          viewer_country: string | null
+          viewer_gender: string | null
           viewer_id: string
+          viewer_state: string | null
         }
         Insert: {
+          boost_id?: string | null
           from_boost?: boolean
           status_id: string
           viewed_at?: string
+          viewer_age_range?: string | null
+          viewer_country?: string | null
+          viewer_gender?: string | null
           viewer_id: string
+          viewer_state?: string | null
         }
         Update: {
+          boost_id?: string | null
           from_boost?: boolean
           status_id?: string
           viewed_at?: string
+          viewer_age_range?: string | null
+          viewer_country?: string | null
+          viewer_gender?: string | null
           viewer_id?: string
+          viewer_state?: string | null
         }
         Relationships: [
           {
@@ -1181,6 +1277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_boost_overview: { Args: { _days?: number }; Returns: Json }
       admin_invites_overview: { Args: never; Returns: Json }
       admin_list_admins: { Args: never; Returns: Json }
       admin_newsletter_stats: { Args: never; Returns: Json }
@@ -1220,6 +1317,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_boost_report: { Args: { _boost_id: string }; Returns: Json }
       get_invite_stats: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_people_you_may_know: {
@@ -1290,6 +1388,7 @@ export type Database = {
         }[]
       }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
+      register_boost_click: { Args: { _status_id: string }; Returns: Json }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
       request_profile_view: { Args: { _owner: string }; Returns: Json }
       respond_profile_view: {
