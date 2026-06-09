@@ -23,6 +23,23 @@ export async function isNativePlatform(): Promise<boolean> {
 
 let initialized = false;
 
+function readJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(normalized)
+        .split("")
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+        .join(""),
+    );
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 async function ensureInit() {
   if (initialized) return;
   const { GoogleAuth } = await import("@codetrix-studio/capacitor-google-auth");
@@ -56,12 +73,17 @@ export async function signInWithGoogleNative(): Promise<boolean> {
     const code = obj.code ?? obj.errorCode ?? "?";
     const msg = obj.message ?? (e instanceof Error ? e.message : String(e));
     let dump = "";
-    try { dump = JSON.stringify(e, Object.getOwnPropertyNames(obj)); } catch { dump = String(e); }
+    try {
+      dump = JSON.stringify(e, Object.getOwnPropertyNames(obj));
+    } catch {
+      dump = String(e);
+    }
     console.error("[google-native] signIn failed", { code, msg, dump, raw: e });
     throw new Error(`GoogleAuth.signIn falhou [code=${code}]: ${msg} :: ${dump}`);
   }
 
   const idToken = user?.authentication?.idToken;
+  const accessToken = user?.authentication?.accessToken;
   if (!idToken) {
     console.error("[google-native] no idToken in response", user);
     throw new Error(
@@ -69,13 +91,45 @@ export async function signInWithGoogleNative(): Promise<boolean> {
     );
   }
 
+  if (!accessToken) {
+    const claims = readJwtPayload(idToken);
+    console.error("[google-native] no accessToken in response", {
+      email: user?.email,
+      hasIdToken: Boolean(idToken),
+      idTokenAudience: claims?.aud,
+      idTokenIssuer: claims?.iss,
+      hasAtHash: Boolean(claims?.at_hash),
+      rawUser: user,
+    });
+    throw new Error("Google não retornou accessToken para concluir o login nativo.");
+  }
+
+  const claims = readJwtPayload(idToken);
+  console.info("[google-native] token received", {
+    email: user?.email,
+    idTokenAudience: claims?.aud,
+    idTokenIssuer: claims?.iss,
+    hasAtHash: Boolean(claims?.at_hash),
+    hasAccessToken: Boolean(accessToken),
+  });
+
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: "google",
     token: idToken,
+    access_token: accessToken,
   });
   if (error) {
-    console.error("[google-native] supabase signInWithIdToken failed", error);
-    throw new Error(`Supabase rejeitou idToken: ${error.message} (status=${error.status ?? "?"})`);
+    console.error("[google-native] auth backend signInWithIdToken failed", {
+      message: error.message,
+      status: error.status,
+      name: error.name,
+      idTokenAudience: claims?.aud,
+      idTokenIssuer: claims?.iss,
+      hasAtHash: Boolean(claims?.at_hash),
+    });
+    throw new Error(
+      `Backend rejeitou login Google: ${error.message} (status=${error.status ?? "?"})`,
+    );
   }
   console.log("[google-native] sign-in OK", { userId: data.user?.id });
   return true;
