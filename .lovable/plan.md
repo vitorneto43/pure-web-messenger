@@ -1,90 +1,99 @@
-# Atualização WaveChat — escopo completo
+# Impulsionamento personalizado, relatório e aba admin
 
-Mantendo `appName: WaveChat` e package `com.wavechat.app`. Sem quebrar login, grupos, mensagens, status, chamadas atuais ou PWA. Mesmo banco (com migrações).
+## 1. Banco de dados (migração única)
 
-> **Aviso**: você disse antes que queria fazer a parte de **privacidade de entrada** só depois de entrar em produção (app já está em teste fechado na Play Store). Confirme se quer que eu já implemente agora junto com o resto, ou se devo deixar o item 1 para depois e seguir com 2–5.
+Estender `status_boosts` para suportar boosts personalizados:
+- `boost_type` text default `'package'` (`'package' | 'custom'`)
+- `duration_days` int (1–30)
+- `target_states` text[] (UFs BR; vazio = país todo)
+- `target_age_min` int, `target_age_max` int
+- `target_gender` text (`'male' | 'female' | 'all'`)
+- `objective` text (`'views' | 'comments' | 'profile_visits' | 'chat' | 'network' | 'website' | 'cross_platform'`)
+- `cpm_cents` int (custo por mil impressões calculado)
+- `starts_at`, `ends_at` timestamptz
 
----
+Estender `status_views` (já registra views) com:
+- `viewer_state` text, `viewer_age` int, `viewer_gender` text, `viewer_country` text
+- (preenchidos no `register_status_view` a partir de `profiles_private` + survey)
 
-## 1. Privacidade de entrada
+Nova tabela `status_boost_clicks` para cliques no CTA:
+- id, boost_id, status_id, clicker_id (nullable), clicked_at, viewer_state, viewer_age, viewer_gender
 
-- Alterar `handle_new_user()`: remover o broadcast `'new_user'` para todos os usuários. Manter apenas a notificação `'invite_accepted'` para quem convidou.
-- Reforçar regra: usuários só conversam se forem contatos, convidados ou membros do mesmo grupo. As policies atuais (`profiles` via `users_share_conversation`, `messages` via `is_conversation_member`) já fazem isso — adicionar verificação no `NewChatDialog` para só permitir iniciar conversa com quem tem vínculo (`users_share_conversation` ou foi convidado por você).
-- `search_users()`: restringir para retornar apenas quem o usuário convidou, foi convidado por, ou já compartilha conversa.
+Funções RPC:
+- `get_boost_report(_boost_id uuid)` → JSON com: total views, total clicks, CTR, CPM real, gasto total, séries diárias, breakdown por estado/idade/sexo
+- `admin_boost_overview(_days int)` → JSON com: total boosts, gasto total, receita por dia, top objetivos, top estados-alvo, breakdown por tipo (package/custom)
 
-## 2. Badge e notificações
+CPM base (BRL cents por 1000 impressões):
+- views: 5000 (R$ 50/1k) base
+- multiplicadores por segmentação (estados específicos +20%, idade restrita +15%, gênero específico +10%)
+- objetivos premium (chat, network, cross_platform): +30%
 
-Hoje o badge já conta mensagens não lidas + notificações. Estender para incluir chamadas perdidas/recebidas pendentes:
+## 2. Backend (server functions)
 
-- Adicionar coluna `seen_at` em `calls` (ou usar `notifications` tipo `missed_call` / `incoming_call`).
-- `useAppBadgeSync` passa a somar: mensagens não lidas + notificações não lidas + chamadas com status `ringing`/`missed` ainda não vistas pelo callee.
-- Service worker (`public/sw.js`) já atualiza badge via `postMessage`; garantir que push de chamada e push de mensagem incrementam o contador persistido mesmo com app fechado.
-- Ao abrir conversa → marca `last_read_at` (já existe). Ao atender/dispensar chamada → marca call como vista.
+`src/lib/payments.functions.ts`:
+- estender `createBoostCheckout` para aceitar `custom` package com os novos campos
+- calcular `amount_cents` server-side a partir de CPM + views_total
+- `views_total = floor((budget_cents / cpm_cents) * 1000)`
 
-## 3. Indicador de digitação
+Novos arquivos:
+- `src/lib/boost-report.functions.ts` → `getBoostReport({ boostId })`
+- `src/lib/admin-boosts.functions.ts` → `getAdminBoostStats({ days })`
+- `src/lib/boost-tracking.functions.ts` → `trackBoostClick({ statusId })` chamada quando usuário clica no CTA
 
-A tabela `typing_indicators` já existe. Falta UI consistente:
+Stripe: criar product/price `boost_custom` com `custom_unit_amount` para suportar valores variáveis.
 
-- Hook `useTyping(conversationId)` que faz upsert com debounce ao digitar em `ChatWindow` e remove após 4s de inatividade.
-- Em `ChatWindow`/`ChatSidebar`, ler via realtime e mostrar:
-  - 1:1 → "digitando…"
-  - Grupo → "Fulano está digitando…" (ou "Fulano e Beltrano estão digitando…")
-- Auto-expira pelo `updated_at > now() - 6s`.
+## 3. Frontend — diálogo de boost
 
-## 4. Chamadas em grupo
+`src/components/status/BoostDialog.tsx`:
+- Adicionar aba "Personalizado" no topo (tabs: Pacotes | Personalizado)
+- Tela personalizada:
+  - Slider de orçamento R$ 10–R$ 500
+  - Slider de duração 1–30 dias
+  - Multi-select de estados BR (com botão "Brasil todo")
+  - Range slider idade 13–80
+  - Radio sexo (masc / fem / todos)
+  - Select objetivo (7 opções com ícones)
+  - Estimativa em tempo real: "≈ X visualizações em Y dias"
+  - Preço por mil impressões exibido
+- Mantém CTA label/url já existente
 
-Mudança maior. O schema atual de `calls` é 1:1 (`caller_id` + `callee_id`).
+## 4. Relatório de boost
 
-- Migração: criar `call_participants(call_id, user_id, state, joined_at, left_at)` onde `state` ∈ `ringing|joined|declined|left|missed`. Manter `calls.callee_id` nullable para retrocompatibilidade ou marcar `is_group`.
-- Botão **"Iniciar chamada"** no header de grupos (ChatWindow) — áudio e vídeo.
-- Notificar todos os membros via FCM/web push (reaproveitar `WaveChatMessagingService` com `type=call` + lista de tokens dos membros do grupo).
-- WebRTC: mesh para até N participantes (limite prático ~6). Refatorar `use-call.tsx` + `CallScreen` para múltiplos `RTCPeerConnection`.
-- Mostrar eventos: entrou / saiu / recusou em tempo real (realtime na tabela `call_participants`).
-- Garantir parar ringtone em todos os dispositivos quando call.status muda para `active|ended` (já parcial, reforçar via realtime e `stopNativeRinging`).
+Novo botão "Relatório" ao lado de "Impulsionar" em `BoostHistory.tsx`.
 
-## 5. Apagar mensagens
+Novo componente `src/components/status/BoostReportDialog.tsx`:
+- Cards: gasto total, views entregues, cliques, CTR%, CPM real
+- Gráfico de linha (views/dia, cliques/dia) — Recharts
+- Barras: top 10 estados que viram
+- Barras: faixa etária (13-17, 18-24, 25-34, 35-44, 45-54, 55+)
+- Pizza: gênero (M/F/desconhecido)
+- Tabela: timeline de eventos
 
-- Migração: adicionar `deleted_for_everyone_at timestamptz`, `deleted_for jsonb default '[]'` em `messages`.
-- **Apagar só para mim** → adiciona meu user_id em `deleted_for`. Cliente filtra.
-- **Apagar para todos** → permitido se `now() - created_at < interval '1 hour'` e `sender_id = auth.uid()`. Seta `deleted_for_everyone_at` e zera `content`/`attachment_*`.
-- UI: menu de contexto na mensagem com as duas opções. Renderizar "Esta mensagem foi apagada" em itálico quando `deleted_for_everyone_at` não for nulo.
+## 5. Aba admin "Impulsionamentos"
 
-## 6. Compatibilidade
+`src/routes/admin.tsx` (ou tab existente):
+- Nova aba "Impulsos"
+- Stats cards: total impulsos, receita total, impulsos ativos, ticket médio
+- Gráfico de receita diária (últimos 30 dias)
+- Tabela: últimos 100 impulsos (usuário, tipo, valor, status, views entregues/totais)
+- Breakdown: pacote vs personalizado, por objetivo, por estado-alvo
 
-- Nenhuma alteração em login/cadastro além de `handle_new_user`.
-- Mesmo `appName`/package — sem rebuild de identidade Android.
-- Migrações puramente aditivas (novas colunas/tabelas), nada destrutivo.
-- PWA, status, sons, ringtone, FCM continuam funcionando.
+## 6. Tracking de views enriquecido
 
----
+Atualizar `register_status_view` para gravar viewer demographics (estado/idade/gênero) puxando de `profiles_private` + `user_onboarding_survey`.
 
-## Detalhes técnicos
+## 7. Critérios de aceite
 
-```text
-Migrações SQL:
-  - ALTER FUNCTION handle_new_user (remove broadcast 'new_user')
-  - ALTER FUNCTION search_users (filtro por vínculo)
-  - ALTER TABLE messages ADD deleted_for_everyone_at, deleted_for
-  - CREATE TABLE call_participants + RLS + GRANT + realtime publication
-  - (opcional) ALTER TABLE calls ADD is_group bool default false
+- Usuário consegue criar boost personalizado e ver estimativa antes de pagar
+- Após pagamento, boost ativa e aparece no histórico
+- Botão "Relatório" abre dialog com 5 gráficos populados
+- Admin vê aba "Impulsos" com receita total e lista
+- Filtros (estado/idade/gênero) afetam quem vê o status sponsored
 
-Código:
-  - src/lib/messages.functions.ts        (deleteForMe, deleteForEveryone)
-  - src/hooks/use-typing.tsx             (novo)
-  - src/components/chat/TypingIndicator.tsx (novo)
-  - src/hooks/use-call.tsx               (multi-peer)
-  - src/components/call/CallScreen.tsx   (grade de participantes)
-  - src/components/chat/ChatWindow.tsx   (botão "Iniciar chamada" em grupo, menu apagar, typing)
-  - src/hooks/use-app-badge.tsx          (soma chamadas pendentes)
-  - public/sw.js                         (badge em push de chamada)
-  - android/.../WaveChatMessagingService.java (payload de chamada de grupo)
-```
+## Notas técnicas (para revisão)
 
-Risco maior: refator de WebRTC para grupo. Resto é incremental.
-
----
-
-**Confirme dois pontos antes de eu começar:**
-
-1. Implementar **item 1 (privacidade de entrada) agora** ou deixar pra depois conforme combinamos?
-2. Limite de tempo para "apagar para todos": **1 hora** está bom (padrão WhatsApp era ~7 min, hoje ~2 dias)?
+- CPM calculado server-side em `createBoostCheckout`; cliente envia parâmetros, servidor retorna preço final
+- Filtros de segmentação implementados em `get_my_sponsored_status_ids` (extender para checar estado/idade/gênero do viewer atual)
+- `boost-tracking.functions.ts` chamado em onClick do CTA no `StatusViewer.tsx`
+- Recharts já está no projeto (usado em outros admin tabs)
+- i18n: novas chaves em `boost.*`
