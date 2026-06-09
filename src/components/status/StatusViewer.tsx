@@ -334,7 +334,10 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
                 href={current.cta_url}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  (supabase as any).rpc("register_boost_click", { _status_id: current.id }).catch(() => {});
+                }}
                 onPointerDown={(e) => e.stopPropagation()}
                 className="block w-full text-center font-semibold text-white bg-gradient-to-r from-pink-500 to-amber-500 hover:opacity-90 rounded-full px-4 py-2.5 shadow-lg"
               >
