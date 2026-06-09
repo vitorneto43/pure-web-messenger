@@ -1,4 +1,19 @@
 import { useEffect, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+
+// Domínios aprovados no painel Adsterra. Em domínios não aprovados, o
+// script não retorna criativo e o iframe fica em branco — melhor não
+// renderizar nada para evitar espaço vazio. No app nativo sempre roda.
+const ALLOWED_WEB_HOSTS = ["webconnectchat.com"];
+
+function isAdsterraAllowed(): boolean {
+  if (typeof window === "undefined") return false;
+  if (Capacitor.isNativePlatform()) return true;
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") return true;
+  return ALLOWED_WEB_HOSTS.some((d) => host === d || host.endsWith("." + d));
+}
+
 
 type Variant = "banner_320x50" | "banner_300x250" | "native";
 
