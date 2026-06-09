@@ -27,6 +27,8 @@ const config: CapacitorConfig = {
       // Google Web OAuth Client ID (type "Web application") from Google Cloud
       // Console for project wavechat-fe92e. Used as idToken audience by the
       // Android SDK and must match the Client ID configured in Supabase Auth.
+      clientId: '209558207951-ujjpp8l4h0h4cnqlg4visarfq8mu3ce5.apps.googleusercontent.com',
+      androidClientId: '209558207951-ujjpp8l4h0h4cnqlg4visarfq8mu3ce5.apps.googleusercontent.com',
       serverClientId: '209558207951-ujjpp8l4h0h4cnqlg4visarfq8mu3ce5.apps.googleusercontent.com',
       scopes: ['profile', 'email'],
       forceCodeForRefreshToken: true,
