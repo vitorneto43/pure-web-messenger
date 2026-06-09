@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { NewsletterTab } from "@/components/admin/NewsletterTab";
 import { OnboardingSurveyTab } from "@/components/admin/OnboardingSurveyTab";
+import { BoostsTab } from "@/components/admin/BoostsTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
