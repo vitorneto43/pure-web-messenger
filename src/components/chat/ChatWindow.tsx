@@ -21,6 +21,7 @@ import {
   Smile,
   Sparkles,
   Trash2,
+  User,
   Video,
   X,
 } from "lucide-react";
