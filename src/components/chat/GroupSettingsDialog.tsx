@@ -160,9 +160,11 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
     if (!user) return;
     setBusy(true);
     try {
-      const { error } = await supabase
+      // Soft-leave: keep membership row so chat history stays visible in
+      // the sidebar; user just can't send new messages.
+      const { error } = await (supabase as any)
         .from("conversation_members")
-        .delete()
+        .update({ left_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
       if (error) throw error;
