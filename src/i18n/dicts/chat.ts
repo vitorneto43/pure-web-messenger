@@ -290,6 +290,7 @@ export const dict = {
     "chat.shareLocation": "Share location",
     "chat.aiAssistant": "AI Assistant",
     "chat.viewGroupDetails": "View group details",
+    "chat.viewProfile": "View profile",
     // EmptyChat
     "chat.emptyChatTitle": "Your conversations, in real time",
     "chat.emptyChatDescription": "Invite friends, family and acquaintances to WaveChat — it's quick and simple.",
