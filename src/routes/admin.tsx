@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail, Repeat, LogIn, Languages, ClipboardList, Rocket, LifeBuoy } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail, Repeat, LogIn, Languages, ClipboardList, Rocket, LifeBuoy, FileImage, Heart } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -41,6 +41,8 @@ import { NewsletterTab } from "@/components/admin/NewsletterTab";
 import { OnboardingSurveyTab } from "@/components/admin/OnboardingSurveyTab";
 import { BoostsTab } from "@/components/admin/BoostsTab";
 import { SupportTab } from "@/components/admin/SupportTab";
+import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
+import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
