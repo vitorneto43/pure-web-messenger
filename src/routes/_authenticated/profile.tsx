@@ -132,6 +132,8 @@ function ProfilePage() {
       }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
+      setFollowerCount(followers ?? 0);
+      setFollowingCount(following ?? 0);
       setLoading(false);
     });
   }, [user?.id]);
