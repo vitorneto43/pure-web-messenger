@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
+import type { SocialLinks } from "@/lib/social-links";
 
 export const Route = createFileRoute("/u/$username")({
   component: PublicProfile,
