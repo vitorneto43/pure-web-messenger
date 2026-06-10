@@ -9,6 +9,7 @@ import {
   Loader2,
   UserPlus,
   HelpCircle,
+  User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import {
   requestBrowserNotificationPermission,
   playNotification,
@@ -67,6 +69,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
+  const [userResults, setUserResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     requestBrowserNotificationPermission();
@@ -165,6 +171,56 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     loadConversations();
   }, [user?.id]);
 
+  // When user navigates back to /chat root (no active conversation), refresh
+  // so newly created groups / direct chats appear without needing a hard reload.
+  useEffect(() => {
+    if (!user) return;
+    if (!activeConversationId) loadConversations();
+  }, [activeConversationId, user?.id]);
+
+  // Global user search — when the sidebar search has text, look up users in
+  // parallel so you can start a chat with anyone, not only people you've
+  // talked to before.
+  useEffect(() => {
+    const q = search.trim();
+    if (!q) {
+      setUserResults([]);
+      return;
+    }
+    let cancelled = false;
+    setSearchingUsers(true);
+    const handle = setTimeout(async () => {
+      const { data } = await supabase.rpc("search_users", { q });
+      if (cancelled) return;
+      setUserResults((data as any[]) ?? []);
+      setSearchingUsers(false);
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [search]);
+
+  async function openDirectWith(otherUserId: string) {
+    if (!user || startingChat) return;
+    if (otherUserId === user.id) {
+      toast.error(t("chat.cannotChatWithSelf"));
+      return;
+    }
+    setStartingChat(true);
+    try {
+      const id = await getOrCreateDirectConversation(user.id, otherUserId);
+      setSearch("");
+      setUserResults([]);
+      navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setStartingChat(false);
+    }
+  }
+
+
   // When the user opens a conversation, immediately clear its unread badge
   // locally so the number disappears as soon as they tap the message —
   // don't wait for the background mark-as-read + reload round trip.
@@ -239,13 +295,29 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter((c) => {
+    let list = conversations;
+    if (filter === "groups") list = list.filter((c) => c.is_group);
+    else if (filter === "direct") list = list.filter((c) => !c.is_group);
+    if (!q) return list;
+    return list.filter((c) => {
       const name = c.is_group ? c.name ?? t("chat.group") : c.other_user?.display_name ?? "";
       const uname = c.other_user?.username ?? "";
       return name.toLowerCase().includes(q) || uname.toLowerCase().includes(q);
     });
-  }, [conversations, search]);
+  }, [conversations, search, filter, t]);
+
+  // Users from global search that the current user has no conversation with yet
+  const newUserResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const existingDirectIds = new Set(
+      conversations
+        .filter((c) => !c.is_group && c.other_user?.id)
+        .map((c) => c.other_user!.id),
+    );
+    return userResults.filter(
+      (u) => u.id !== user?.id && !existingDirectIds.has(u.id),
+    );
+  }, [userResults, conversations, search, user?.id]);
 
   return (
     <>
@@ -334,6 +406,21 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
           </Button>
         </div>
+        <div className="flex gap-1.5 pt-0.5">
+          {(["all", "direct", "groups"] as const).map((key) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors ${
+                filter === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-sidebar-hover text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {key === "all" ? t("chat.filterAll") : key === "direct" ? t("chat.filterDirect") : t("chat.filterGroups")}
+            </button>
+          ))}
+        </div>
         <AdsterraBanner variant="banner_320x50" className="pt-1" />
       </div>
 
@@ -342,21 +429,66 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
-        ) : filtered.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-10 px-4">
-            {t("chat.noConversationsBefore")}<b>{t("chat.noConversationsBold")}</b>{t("chat.noConversationsAfter")}
-          </p>
         ) : (
-          filtered.map((c) => (
-            <ConversationRow
-              key={c.id}
-              conv={c}
-              active={c.id === activeConversationId}
-              currentUserId={user!.id}
-            />
-          ))
+          <>
+            {filtered.length === 0 && newUserResults.length === 0 && !searchingUsers && (
+              <p className="text-center text-sm text-muted-foreground py-10 px-4">
+                {search.trim() ? (
+                  t("chat.noUsersFound")
+                ) : (
+                  <>
+                    {t("chat.noConversationsBefore")}
+                    <b>{t("chat.noConversationsBold")}</b>
+                    {t("chat.noConversationsAfter")}
+                  </>
+                )}
+              </p>
+            )}
+            {filtered.map((c) => (
+              <ConversationRow
+                key={c.id}
+                conv={c}
+                active={c.id === activeConversationId}
+                currentUserId={user!.id}
+              />
+            ))}
+            {search.trim() && (newUserResults.length > 0 || searchingUsers) && (
+              <div className="mt-2">
+                <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <UserIcon className="size-3" />
+                  {t("chat.startNewConversation")}
+                </div>
+                {searchingUsers && (
+                  <div className="grid place-items-center py-3">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {newUserResults.map((u) => (
+                  <button
+                    key={u.id}
+                    disabled={startingChat}
+                    onClick={() => openDirectWith(u.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
+                  >
+                    <Avatar className="size-10">
+                      <AvatarImage src={u.avatar_url ?? undefined} />
+                      <AvatarFallback className="bg-secondary text-sm">
+                        {u.display_name?.[0]?.toUpperCase() ?? "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{u.display_name}</div>
+                      <div className="text-xs text-muted-foreground truncate">@{u.username}</div>
+                    </div>
+                    <MessageSquarePlus className="size-4 text-primary shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
+
 
       <NewChatDialog
         open={newChatOpen}
