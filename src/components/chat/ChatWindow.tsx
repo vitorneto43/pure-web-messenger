@@ -516,19 +516,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         >
           <ArrowLeft className="size-5" />
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (conv?.is_group) {
-              setGroupSettingsOpen(true);
-            } else if (otherUser?.username) {
-              navigate({ to: "/u/$username", params: { username: otherUser.username } });
-            }
-          }}
-          disabled={!conv?.is_group && !otherUser?.username}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left -mx-1 px-1 rounded-lg hover:bg-accent/20 disabled:hover:bg-transparent disabled:cursor-default transition-colors"
-          title={conv?.is_group ? t("chat.viewGroupDetails") : t("chat.viewProfile") ?? "Ver perfil"}
-        >
+        <div className="flex items-center gap-3 flex-1 min-w-0 -mx-1 px-1">
           <Avatar className="size-10">
             <AvatarImage src={headerAvatar ?? undefined} />
             <AvatarFallback>{headerTitle?.[0]?.toUpperCase()}</AvatarFallback>
@@ -537,7 +525,31 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
             <div className="font-semibold text-sm truncate">{headerTitle}</div>
             <div className="text-[11px] text-muted-foreground truncate">{headerSub}</div>
           </div>
-        </button>
+        </div>
+        {conv?.is_group && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-full text-xs"
+            onClick={() => setGroupSettingsOpen(true)}
+            title={t("chat.viewGroupDetails")}
+          >
+            <Settings className="size-4 mr-1" />
+            <span className="hidden sm:inline">{t("chat.viewGroupDetails")}</span>
+          </Button>
+        )}
+        {!conv?.is_group && otherUser?.username && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-full text-xs"
+            onClick={() => navigate({ to: "/u/$username", params: { username: otherUser.username } })}
+            title={t("chat.viewProfile") ?? "Ver perfil"}
+          >
+            <User className="size-4 mr-1" />
+            <span className="hidden sm:inline">{t("chat.viewProfile") ?? "Ver perfil"}</span>
+          </Button>
+        )}
         {!conv?.is_group && otherUser && (
           <>
             <Button
