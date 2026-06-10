@@ -263,6 +263,8 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="newsletter" className="mt-4"><NewsletterTab /></TabsContent>
           <TabsContent value="survey" className="mt-4"><OnboardingSurveyTab /></TabsContent>
           <TabsContent value="boosts" className="mt-4"><BoostsTab /></TabsContent>
+          <TabsContent value="status" className="mt-4"><StatusAdminTab /></TabsContent>
+          <TabsContent value="followers" className="mt-4"><FollowersAdminTab /></TabsContent>
           <TabsContent value="support" className="mt-4"><SupportTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
