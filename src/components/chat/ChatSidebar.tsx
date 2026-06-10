@@ -295,13 +295,29 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter((c) => {
+    let list = conversations;
+    if (filter === "groups") list = list.filter((c) => c.is_group);
+    else if (filter === "direct") list = list.filter((c) => !c.is_group);
+    if (!q) return list;
+    return list.filter((c) => {
       const name = c.is_group ? c.name ?? t("chat.group") : c.other_user?.display_name ?? "";
       const uname = c.other_user?.username ?? "";
       return name.toLowerCase().includes(q) || uname.toLowerCase().includes(q);
     });
-  }, [conversations, search]);
+  }, [conversations, search, filter, t]);
+
+  // Users from global search that the current user has no conversation with yet
+  const newUserResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const existingDirectIds = new Set(
+      conversations
+        .filter((c) => !c.is_group && c.other_user?.id)
+        .map((c) => c.other_user!.id),
+    );
+    return userResults.filter(
+      (u) => u.id !== user?.id && !existingDirectIds.has(u.id),
+    );
+  }, [userResults, conversations, search, user?.id]);
 
   return (
     <>
