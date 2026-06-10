@@ -25,6 +25,8 @@ import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { InviteRewardsCard } from "@/components/InviteRewardsCard";
 import { BANKS } from "@/lib/banks";
+import { SocialLinksEditor } from "@/components/profile/SocialLinks";
+import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
 import {
@@ -66,6 +68,7 @@ function ProfilePage() {
     created_at: "" as string,
     city: "" as string,
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [hasSurvey, setHasSurvey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -91,7 +94,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links")
         .eq("id", user.id)
         .single(),
       supabase
@@ -106,7 +109,7 @@ function ProfilePage() {
         .eq("user_id", user.id)
         .maybeSingle(),
     ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
-      if (data)
+      if (data) {
         setProfile({
           username: data.username,
           display_name: data.display_name,
@@ -121,6 +124,8 @@ function ProfilePage() {
           created_at: (data as any).created_at ?? "",
           city: (priv as any)?.city ?? "",
         });
+        setSocialLinks(((data as any).social_links as SocialLinks) ?? {});
+      }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
       setLoading(false);
@@ -152,6 +157,7 @@ function ProfilePage() {
           goal: profile.goal || null,
           visibility: profile.visibility,
           show_city: profile.show_city,
+          social_links: cleanSocialLinks(socialLinks),
         } as any)
         .eq("id", user.id);
       if (error) throw error;
@@ -332,6 +338,12 @@ function ProfilePage() {
             </div>
           )}
         </div>
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <SocialLinksEditor value={socialLinks} onChange={setSocialLinks} />
+        </div>
+
+
 
         <div className="mt-8 pt-6 border-t border-border">
           <h2 className="text-lg font-semibold">Privacidade do perfil</h2>

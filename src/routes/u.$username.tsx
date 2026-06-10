@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
+import type { SocialLinks } from "@/lib/social-links";
 
 export const Route = createFileRoute("/u/$username")({
   component: PublicProfile,
@@ -30,6 +32,7 @@ type ProfileData = {
   goal: string | null;
   city: string | null;
   interests: string[];
+  social_links: SocialLinks;
 };
 
 const GOAL_LABELS: Record<string, string> = {
@@ -188,6 +191,15 @@ function PublicProfile() {
                       {tag.replace("idade:", "")}
                     </span>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {data.social_links && Object.keys(data.social_links).length > 0 && (
+              <div className="mt-6">
+                <span className="text-xs text-muted-foreground">Redes sociais</span>
+                <div className="mt-2">
+                  <SocialLinksDisplay links={data.social_links} />
                 </div>
               </div>
             )}
