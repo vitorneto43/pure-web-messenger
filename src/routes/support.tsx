@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import "@/i18n";
 import { useTranslation } from "react-i18next";
+import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Mail, Phone, Loader2, Send } from "lucide-react";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { submitSupportTicket } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/support")({
   head: () => ({
@@ -33,6 +35,8 @@ function SupportPage() {
   const { t } = useTranslation();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const submit = useServerFn(submitSupportTicket);
 
   const schema = z.object({
     name: z.string().trim().min(2, t("support.form.errName")).max(100),
@@ -44,7 +48,7 @@ function SupportPage() {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
@@ -52,16 +56,17 @@ function SupportPage() {
       return;
     }
     setBusy(true);
-    const subject = `[Support WaveChat] ${parsed.data.name}`;
-    const body = `${t("support.form.name")}: ${parsed.data.name}\n${t("support.form.email")}: ${parsed.data.email}\n\n${parsed.data.message}`;
-    const mailto = `mailto:veiganeto46@gmail.com?subject=${encodeURIComponent(
-      subject,
-    )}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
-    setTimeout(() => {
+    try {
+      await submit({ data: parsed.data });
+      setSent(true);
+      setForm({ name: "", email: "", message: "" });
+      toast.success("Mensagem enviada! Nossa equipe vai responder em breve.");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || "Erro ao enviar. Tente novamente.");
+    } finally {
       setBusy(false);
-      toast.success(t("support.form.opened"));
-    }, 800);
+    }
   }
 
   return (
@@ -77,6 +82,11 @@ function SupportPage() {
             onSubmit={handleSubmit}
             className="rounded-2xl border border-border bg-card/60 p-6 sm:p-8 shadow-xl space-y-4"
           >
+            {sent && (
+              <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-300">
+                Recebemos sua mensagem. Vamos responder no e-mail informado.
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="name">{t("support.form.name")}</Label>
               <Input
