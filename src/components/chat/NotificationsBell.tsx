@@ -157,6 +157,11 @@ export function NotificationsBell() {
     if (n.type === "invite_accepted" && newUserId && user) {
       const id = await findOrCreateDirectConversation(user.id, newUserId);
       if (id) navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+      return;
+    }
+    if (n.type === "follow_status") {
+      // Open chat home — status bar shows latest statuses
+      navigate({ to: "/" });
     }
   }
 
