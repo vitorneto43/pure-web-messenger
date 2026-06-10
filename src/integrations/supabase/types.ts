@@ -192,6 +192,7 @@ export type Database = {
           conversation_id: string
           joined_at: string
           last_read_at: string
+          left_at: string | null
           role: string
           user_id: string
         }
@@ -199,6 +200,7 @@ export type Database = {
           conversation_id: string
           joined_at?: string
           last_read_at?: string
+          left_at?: string | null
           role?: string
           user_id: string
         }
@@ -206,6 +208,7 @@ export type Database = {
           conversation_id?: string
           joined_at?: string
           last_read_at?: string
+          left_at?: string | null
           role?: string
           user_id?: string
         }
