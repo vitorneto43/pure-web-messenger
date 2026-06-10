@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ProfileCompletionMeter, type CompletionCheck } from "@/components/profile/ProfileCompletionMeter";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -71,6 +71,8 @@ function ProfilePage() {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [hasSurvey, setHasSurvey] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -108,7 +110,9 @@ function ProfilePage() {
         .select("id")
         .eq("user_id", user.id)
         .maybeSingle(),
-    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
+      supabase.from("profile_follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
+      supabase.from("profile_follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
+    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }, { count: following }, { count: followers }]) => {
       if (data) {
         setProfile({
           username: data.username,
@@ -128,6 +132,8 @@ function ProfilePage() {
       }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
+      setFollowerCount(followers ?? 0);
+      setFollowingCount(following ?? 0);
       setLoading(false);
     });
   }, [user?.id]);
@@ -268,6 +274,19 @@ function ProfilePage() {
               }}
             />
             <p className="text-xs text-muted-foreground mt-2">{t("profile.photoHint")}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-5 text-sm">
+          <div className="flex items-center gap-1.5">
+            <Users className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{followerCount}</span>
+            <span className="text-muted-foreground">seguidores</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <UserPlus className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{followingCount}</span>
+            <span className="text-muted-foreground">seguindo</span>
           </div>
         </div>
 
