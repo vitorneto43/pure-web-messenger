@@ -340,6 +340,12 @@ function ProfilePage() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-border">
+          <SocialLinksEditor value={socialLinks} onChange={setSocialLinks} />
+        </div>
+
+
+
+        <div className="mt-8 pt-6 border-t border-border">
           <h2 className="text-lg font-semibold">Privacidade do perfil</h2>
           <p className="text-xs text-muted-foreground mt-1">
             Perfis públicos podem ser vistos por qualquer pessoa. Em perfis privados, bio, interesses, objetivo e cidade só aparecem para quem você aprovar.
