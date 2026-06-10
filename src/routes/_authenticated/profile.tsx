@@ -71,6 +71,8 @@ function ProfilePage() {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [hasSurvey, setHasSurvey] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
