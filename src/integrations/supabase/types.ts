@@ -688,6 +688,7 @@ export type Database = {
           signup_medium: string | null
           signup_referrer: string | null
           signup_source: string | null
+          social_links: Json
           updated_at: string
           username: string
           visibility: string
@@ -708,6 +709,7 @@ export type Database = {
           signup_medium?: string | null
           signup_referrer?: string | null
           signup_source?: string | null
+          social_links?: Json
           updated_at?: string
           username: string
           visibility?: string
@@ -728,6 +730,7 @@ export type Database = {
           signup_medium?: string | null
           signup_referrer?: string | null
           signup_source?: string | null
+          social_links?: Json
           updated_at?: string
           username?: string
           visibility?: string
