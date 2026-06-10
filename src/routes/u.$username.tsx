@@ -194,6 +194,15 @@ function PublicProfile() {
                 </div>
               </div>
             )}
+
+            {data.social_links && Object.keys(data.social_links).length > 0 && (
+              <div className="mt-6">
+                <span className="text-xs text-muted-foreground">Redes sociais</span>
+                <div className="mt-2">
+                  <SocialLinksDisplay links={data.social_links} />
+                </div>
+              </div>
+            )}
           </>
         )}
 
