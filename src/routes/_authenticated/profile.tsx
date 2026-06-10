@@ -277,6 +277,19 @@ function ProfilePage() {
           </div>
         </div>
 
+        <div className="mt-4 flex items-center gap-5 text-sm">
+          <div className="flex items-center gap-1.5">
+            <Users className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{followerCount}</span>
+            <span className="text-muted-foreground">seguidores</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <UserPlus className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{followingCount}</span>
+            <span className="text-muted-foreground">seguindo</span>
+          </div>
+        </div>
+
         <div className="mt-6 grid gap-4">
           <div>
             <Label>{t("profile.usernameLabel")}</Label>
