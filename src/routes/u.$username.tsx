@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X } from "lucide-react";
+import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X, Eye, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,6 +33,10 @@ type ProfileData = {
   city: string | null;
   interests: string[];
   social_links: SocialLinks;
+  follower_count: number;
+  following_count: number;
+  is_following: boolean;
+  view_count: number | null;
 };
 
 const GOAL_LABELS: Record<string, string> = {
@@ -61,6 +65,36 @@ function PublicProfile() {
   useEffect(() => {
     load();
   }, [username]);
+
+  // Register a view once the profile loads (if not own profile)
+  useEffect(() => {
+    if (!data || !user || user.id === data.id) return;
+    supabase.rpc("record_profile_view", { _owner: data.id }).then(({ error }) => {
+      if (error) console.warn("record_profile_view", error.message);
+    });
+  }, [data?.id, user?.id]);
+
+  async function toggleFollow() {
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    if (!data) return;
+    setBusy(true);
+    const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: data.id });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(nowFollowing ? "Seguindo" : "Deixou de seguir");
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            is_following: !!nowFollowing,
+            follower_count: prev.follower_count + (nowFollowing ? 1 : -1),
+          }
+        : prev,
+    );
+  }
 
   async function requestAccess() {
     if (!user) {
@@ -134,6 +168,42 @@ function PublicProfile() {
           <Calendar className="size-4" />
           No WaveChat desde {joinDate}
         </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div>
+            <span className="font-semibold">{data.follower_count}</span>{" "}
+            <span className="text-muted-foreground">seguidores</span>
+          </div>
+          <div>
+            <span className="font-semibold">{data.following_count}</span>{" "}
+            <span className="text-muted-foreground">seguindo</span>
+          </div>
+          {isOwn && data.view_count !== null && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Eye className="size-4" />
+              <span className="font-semibold text-foreground">{data.view_count}</span> visualizações
+            </div>
+          )}
+        </div>
+
+        {!isOwn && user && (
+          <Button
+            onClick={toggleFollow}
+            disabled={busy}
+            variant={data.is_following ? "secondary" : "default"}
+            className="mt-4 w-full sm:w-auto"
+          >
+            {data.is_following ? (
+              <>
+                <UserCheck className="size-4 mr-2" /> Seguindo
+              </>
+            ) : (
+              <>
+                <UserPlus className="size-4 mr-2" /> Seguir
+              </>
+            )}
+          </Button>
+        )}
 
         {isPrivate ? (
           <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border text-center">
