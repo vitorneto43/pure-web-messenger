@@ -33,6 +33,10 @@ type ProfileData = {
   city: string | null;
   interests: string[];
   social_links: SocialLinks;
+  follower_count: number;
+  following_count: number;
+  is_following: boolean;
+  view_count: number | null;
 };
 
 const GOAL_LABELS: Record<string, string> = {
