@@ -9,6 +9,7 @@ import {
   Loader2,
   UserPlus,
   HelpCircle,
+  User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import {
   requestBrowserNotificationPermission,
   playNotification,
