@@ -531,24 +531,24 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           <Button
             size="sm"
             variant="ghost"
-            className="rounded-full text-xs"
+            className="h-auto py-1 px-2 flex flex-col items-center gap-0.5 text-[10px] leading-tight rounded-lg sm:flex-row sm:gap-1 sm:text-xs"
             onClick={() => setGroupSettingsOpen(true)}
             title={t("chat.viewGroupDetails")}
           >
-            <Settings className="size-4 mr-1" />
-            <span className="hidden sm:inline">{t("chat.viewGroupDetails")}</span>
+            <Settings className="size-4" />
+            <span className="sm:inline">{t("chat.viewGroupDetails")}</span>
           </Button>
         )}
         {!conv?.is_group && otherUser?.username && (
           <Button
             size="sm"
             variant="ghost"
-            className="rounded-full text-xs"
+            className="h-auto py-1 px-2 flex flex-col items-center gap-0.5 text-[10px] leading-tight rounded-lg sm:flex-row sm:gap-1 sm:text-xs"
             onClick={() => navigate({ to: "/u/$username", params: { username: otherUser.username } })}
             title={t("chat.viewProfile") ?? "Ver perfil"}
           >
-            <User className="size-4 mr-1" />
-            <span className="hidden sm:inline">{t("chat.viewProfile") ?? "Ver perfil"}</span>
+            <User className="size-4" />
+            <span className="sm:inline">{t("chat.viewProfile") ?? "Perfil"}</span>
           </Button>
         )}
         {!conv?.is_group && otherUser && (
