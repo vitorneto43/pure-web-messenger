@@ -32,6 +32,7 @@ type ProfileData = {
   goal: string | null;
   city: string | null;
   interests: string[];
+  social_links: SocialLinks;
 };
 
 const GOAL_LABELS: Record<string, string> = {
