@@ -94,7 +94,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links")
         .eq("id", user.id)
         .single(),
       supabase
@@ -109,7 +109,7 @@ function ProfilePage() {
         .eq("user_id", user.id)
         .maybeSingle(),
     ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
-      if (data)
+      if (data) {
         setProfile({
           username: data.username,
           display_name: data.display_name,
@@ -124,6 +124,8 @@ function ProfilePage() {
           created_at: (data as any).created_at ?? "",
           city: (priv as any)?.city ?? "",
         });
+        setSocialLinks(((data as any).social_links as SocialLinks) ?? {});
+      }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
       setLoading(false);
