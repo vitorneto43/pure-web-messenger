@@ -69,6 +69,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
+  const [userResults, setUserResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     requestBrowserNotificationPermission();
