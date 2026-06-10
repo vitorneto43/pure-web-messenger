@@ -171,6 +171,56 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     loadConversations();
   }, [user?.id]);
 
+  // When user navigates back to /chat root (no active conversation), refresh
+  // so newly created groups / direct chats appear without needing a hard reload.
+  useEffect(() => {
+    if (!user) return;
+    if (!activeConversationId) loadConversations();
+  }, [activeConversationId, user?.id]);
+
+  // Global user search — when the sidebar search has text, look up users in
+  // parallel so you can start a chat with anyone, not only people you've
+  // talked to before.
+  useEffect(() => {
+    const q = search.trim();
+    if (!q) {
+      setUserResults([]);
+      return;
+    }
+    let cancelled = false;
+    setSearchingUsers(true);
+    const handle = setTimeout(async () => {
+      const { data } = await supabase.rpc("search_users", { q });
+      if (cancelled) return;
+      setUserResults((data as any[]) ?? []);
+      setSearchingUsers(false);
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [search]);
+
+  async function openDirectWith(otherUserId: string) {
+    if (!user || startingChat) return;
+    if (otherUserId === user.id) {
+      toast.error(t("chat.cannotChatWithSelf"));
+      return;
+    }
+    setStartingChat(true);
+    try {
+      const id = await getOrCreateDirectConversation(user.id, otherUserId);
+      setSearch("");
+      setUserResults([]);
+      navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setStartingChat(false);
+    }
+  }
+
+
   // When the user opens a conversation, immediately clear its unread badge
   // locally so the number disappears as soon as they tap the message —
   // don't wait for the background mark-as-read + reload round trip.
