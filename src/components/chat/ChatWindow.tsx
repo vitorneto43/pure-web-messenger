@@ -17,6 +17,7 @@ import {
   QrCode,
   Search,
   Send,
+  Settings,
   Share2,
   Smile,
   Sparkles,

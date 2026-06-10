@@ -75,6 +75,7 @@ export const dict = {
     "chat.shareLocation": "Compartilhar localização",
     "chat.aiAssistant": "Assistente de IA",
     "chat.viewGroupDetails": "Ver detalhes do grupo",
+    "chat.viewProfile": "Ver perfil",
     // EmptyChat
     "chat.emptyChatTitle": "Suas conversas, em tempo real",
     "chat.emptyChatDescription": "Chame amigos, família e conhecidos para o WaveChat — é rápido e simples.",
