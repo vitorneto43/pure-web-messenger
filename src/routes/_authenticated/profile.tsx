@@ -157,6 +157,7 @@ function ProfilePage() {
           goal: profile.goal || null,
           visibility: profile.visibility,
           show_city: profile.show_city,
+          social_links: cleanSocialLinks(socialLinks),
         } as any)
         .eq("id", user.id);
       if (error) throw error;
