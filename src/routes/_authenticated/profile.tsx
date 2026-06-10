@@ -110,7 +110,9 @@ function ProfilePage() {
         .select("id")
         .eq("user_id", user.id)
         .maybeSingle(),
-    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }]) => {
+      supabase.from("profile_follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
+      supabase.from("profile_follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
+    ]).then(([{ data }, { data: priv }, { data: tags }, { data: survey }, { count: following }, { count: followers }]) => {
       if (data) {
         setProfile({
           username: data.username,
