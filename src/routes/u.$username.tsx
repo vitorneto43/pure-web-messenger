@@ -169,6 +169,42 @@ function PublicProfile() {
           No WaveChat desde {joinDate}
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div>
+            <span className="font-semibold">{data.follower_count}</span>{" "}
+            <span className="text-muted-foreground">seguidores</span>
+          </div>
+          <div>
+            <span className="font-semibold">{data.following_count}</span>{" "}
+            <span className="text-muted-foreground">seguindo</span>
+          </div>
+          {isOwn && data.view_count !== null && (
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Eye className="size-4" />
+              <span className="font-semibold text-foreground">{data.view_count}</span> visualizações
+            </div>
+          )}
+        </div>
+
+        {!isOwn && user && (
+          <Button
+            onClick={toggleFollow}
+            disabled={busy}
+            variant={data.is_following ? "secondary" : "default"}
+            className="mt-4 w-full sm:w-auto"
+          >
+            {data.is_following ? (
+              <>
+                <UserCheck className="size-4 mr-2" /> Seguindo
+              </>
+            ) : (
+              <>
+                <UserPlus className="size-4 mr-2" /> Seguir
+              </>
+            )}
+          </Button>
+        )}
+
         {isPrivate ? (
           <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border text-center">
             <Lock className="size-6 mx-auto text-muted-foreground" />
