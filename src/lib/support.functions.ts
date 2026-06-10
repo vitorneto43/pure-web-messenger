@@ -129,10 +129,11 @@ export const replySupportTicket = createServerFn({ method: "POST" })
         status: "pending",
       });
 
+      const subjectRaw: unknown = template.subject;
       const subject =
-        typeof template.subject === "function"
-          ? template.subject({})
-          : template.subject;
+        typeof subjectRaw === "function"
+          ? (subjectRaw as (d: Record<string, any>) => string)({})
+          : (subjectRaw as string);
 
       await supabaseAdmin.rpc("enqueue_email", {
         queue_name: "transactional_emails",
