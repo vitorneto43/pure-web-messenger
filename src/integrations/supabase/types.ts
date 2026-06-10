@@ -644,6 +644,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_view_requests: {
         Row: {
           created_at: string
@@ -670,6 +703,42 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      profile_views: {
+        Row: {
+          id: string
+          owner_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_views_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1435,6 +1504,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_profile_view: { Args: { _owner: string }; Returns: undefined }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
       register_boost_click: { Args: { _status_id: string }; Returns: Json }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
@@ -1457,6 +1527,7 @@ export type Database = {
         }[]
       }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
+      toggle_follow: { Args: { _target: string }; Returns: boolean }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
