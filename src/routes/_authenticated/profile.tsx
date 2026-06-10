@@ -68,6 +68,7 @@ function ProfilePage() {
     created_at: "" as string,
     city: "" as string,
   });
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [hasSurvey, setHasSurvey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
