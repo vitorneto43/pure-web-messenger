@@ -406,6 +406,21 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
           </Button>
         </div>
+        <div className="flex gap-1.5 pt-0.5">
+          {(["all", "direct", "groups"] as const).map((key) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors ${
+                filter === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-sidebar-hover text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {key === "all" ? t("chat.filterAll") : key === "direct" ? t("chat.filterDirect") : t("chat.filterGroups")}
+            </button>
+          ))}
+        </div>
         <AdsterraBanner variant="banner_320x50" className="pt-1" />
       </div>
 
@@ -414,21 +429,66 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
-        ) : filtered.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-10 px-4">
-            {t("chat.noConversationsBefore")}<b>{t("chat.noConversationsBold")}</b>{t("chat.noConversationsAfter")}
-          </p>
         ) : (
-          filtered.map((c) => (
-            <ConversationRow
-              key={c.id}
-              conv={c}
-              active={c.id === activeConversationId}
-              currentUserId={user!.id}
-            />
-          ))
+          <>
+            {filtered.length === 0 && newUserResults.length === 0 && !searchingUsers && (
+              <p className="text-center text-sm text-muted-foreground py-10 px-4">
+                {search.trim() ? (
+                  t("chat.noUsersFound")
+                ) : (
+                  <>
+                    {t("chat.noConversationsBefore")}
+                    <b>{t("chat.noConversationsBold")}</b>
+                    {t("chat.noConversationsAfter")}
+                  </>
+                )}
+              </p>
+            )}
+            {filtered.map((c) => (
+              <ConversationRow
+                key={c.id}
+                conv={c}
+                active={c.id === activeConversationId}
+                currentUserId={user!.id}
+              />
+            ))}
+            {search.trim() && (newUserResults.length > 0 || searchingUsers) && (
+              <div className="mt-2">
+                <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <UserIcon className="size-3" />
+                  {t("chat.startNewConversation")}
+                </div>
+                {searchingUsers && (
+                  <div className="grid place-items-center py-3">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {newUserResults.map((u) => (
+                  <button
+                    key={u.id}
+                    disabled={startingChat}
+                    onClick={() => openDirectWith(u.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
+                  >
+                    <Avatar className="size-10">
+                      <AvatarImage src={u.avatar_url ?? undefined} />
+                      <AvatarFallback className="bg-secondary text-sm">
+                        {u.display_name?.[0]?.toUpperCase() ?? "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{u.display_name}</div>
+                      <div className="text-xs text-muted-foreground truncate">@{u.username}</div>
+                    </div>
+                    <MessageSquarePlus className="size-4 text-primary shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
+
 
       <NewChatDialog
         open={newChatOpen}
