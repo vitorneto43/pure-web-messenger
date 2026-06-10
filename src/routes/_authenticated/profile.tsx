@@ -25,6 +25,8 @@ import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { InviteRewardsCard } from "@/components/InviteRewardsCard";
 import { BANKS } from "@/lib/banks";
+import { SocialLinksEditor } from "@/components/profile/SocialLinks";
+import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
 import {
