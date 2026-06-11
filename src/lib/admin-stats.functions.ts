@@ -481,7 +481,7 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
         .limit(5000),
       supabaseAdmin
         .from("analytics_events")
-        .select("id, created_at, user_agent, metadata")
+        .select("id, user_id, created_at, user_agent, metadata")
         .eq("event_name", "signup_completed")
         .gte("created_at", since30)
         .limit(5000),
