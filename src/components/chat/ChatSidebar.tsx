@@ -327,7 +327,21 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <span className="text-primary-foreground font-bold text-sm">W</span>
           </div>
           <div>
-            <div className="font-semibold text-sm leading-tight">Wavechat</div>
+            <div className="flex items-center gap-1.5">
+              <div className="font-semibold text-sm leading-tight">Wavechat</div>
+              <a
+                href="https://play.google.com/store/apps/details?id=com.wavechat.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Baixe na Play Store"
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-accent/40 transition leading-none"
+              >
+                <svg className="size-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M3 20.5V3.5c0-.59.34-1.11.84-1.35L13.69 12 3.84 21.85A1.5 1.5 0 0 1 3 20.5Zm13.81-5.38L6.05 21.34 14.54 12.85l2.27 2.27Zm3.35-4.31a1.495 1.495 0 0 1 0 2.38l-2.27 1.31L15.39 12l2.27-2.5 2.27 1.31ZM6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66Z" />
+                </svg>
+                Baixar app
+              </a>
+            </div>
             <div className="text-[11px] text-muted-foreground leading-tight">
               {user?.email}
             </div>
