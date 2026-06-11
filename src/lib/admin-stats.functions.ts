@@ -446,6 +446,10 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       signupClicksRes,
       loginClicksRes,
       signupCompletedRes,
+      appInstallRes,
+      appFirstOpenRes,
+      appSignupRes,
+      appLoginRes,
       profilesAllRes,
       profilesPrivateRes,
       invitesRes,
@@ -481,6 +485,30 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
         .eq("event_name", "signup_completed")
         .gte("created_at", since30)
         .limit(5000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, session_id")
+        .eq("event_name", "app_install")
+        .gte("created_at", since30)
+        .limit(10000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, user_id")
+        .eq("event_name", "app_first_open")
+        .gte("created_at", since30)
+        .limit(10000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, user_id")
+        .eq("event_name", "app_signup")
+        .gte("created_at", since30)
+        .limit(10000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, user_id")
+        .eq("event_name", "app_login")
+        .gte("created_at", since30)
+        .limit(20000),
       supabaseAdmin
         .from("profiles")
         .select("id, created_at, last_seen, signup_source, signup_medium, signup_campaign, signup_referrer, username, display_name, avatar_url")
