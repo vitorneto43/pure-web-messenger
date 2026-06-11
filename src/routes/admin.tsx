@@ -242,6 +242,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="status"><FileImage className="size-4 mr-1.5" />Status</TabsTrigger>
               <TabsTrigger value="followers"><Heart className="size-4 mr-1.5" />Seguidores</TabsTrigger>
               <TabsTrigger value="support"><LifeBuoy className="size-4 mr-1.5" />Suporte</TabsTrigger>
+              <TabsTrigger value="app-acquisition"><Download className="size-4 mr-1.5" />Aquisição App</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
