@@ -43,6 +43,7 @@ import { BoostsTab } from "@/components/admin/BoostsTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
 import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
+import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
