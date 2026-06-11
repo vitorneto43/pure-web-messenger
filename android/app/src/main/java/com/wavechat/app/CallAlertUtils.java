@@ -327,7 +327,7 @@ public final class CallAlertUtils {
         // service, IncomingCallActivity, ConnectionService) all call this method.
         // If we ever start a second player we leak the first one and it rings
         // forever on MIUI/HyperOS because Ringtone.stop() is unreliable there.
-        if (mediaPlayer != null) {
+        if (mediaPlayer != null || ringtonePlayer != null) {
             scheduleRingtoneSafetyStop(context.getApplicationContext());
             return;
         }
@@ -362,12 +362,56 @@ public final class CallAlertUtils {
                 } catch (Exception ignored) {}
             }
 
+            boolean isCustom = hasCustomRingtone(context);
             Uri uri = callRingtoneUri(context);
+
+            // For the SYSTEM default ringtone, the Ringtone API is far more reliable
+            // than MediaPlayer across OEMs (MIUI/HyperOS, Samsung One UI, EMUI).
+            // Many ROMs reject MediaPlayer.setDataSource() on content:// system
+            // ringtone URIs or play them silently when routed through STREAM_ALARM.
+            // The Ringtone API handles permissions and stream routing internally.
+            if (!isCustom && startWithRingtoneApi(context, uri)) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                return;
+            }
+
+            // Custom user-picked file (or fallback): use MediaPlayer for proper
+            // looping + full-volume music playback.
+            if (startWithMediaPlayer(context, uri)) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                return;
+            }
+
+            // Last resort if MediaPlayer also failed: try Ringtone API on the same URI.
+            if (startWithRingtoneApi(context, uri)) {
+                scheduleRingtoneSafetyStop(context.getApplicationContext());
+                return;
+            }
+
+            // Nothing worked — generate a tone so the user still hears something.
+            startFallbackTone();
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
+        } catch (Exception ignored) {
+            startFallbackTone();
+            scheduleRingtoneSafetyStop(context.getApplicationContext());
+        }
+    }
+
+    private static boolean hasCustomRingtone(Context context) {
+        try {
+            SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String custom = prefs.getString(PREF_RINGTONE_URI, null);
+            return custom != null && !custom.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean startWithMediaPlayer(Context context, Uri uri) {
+        try {
             MediaPlayer mp = new MediaPlayer();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                // USAGE_ALARM + CONTENT_TYPE_MUSIC makes the system route this
-                // to the alarm stream (max-volume capable) and treat custom
-                // music files as full audio (no notification ducking).
                 mp.setAudioAttributes(new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -382,13 +426,68 @@ public final class CallAlertUtils {
             mp.start();
             mediaPlayer = mp;
             leakedPlayers.add(mp);
-            scheduleRingtoneSafetyStop(context.getApplicationContext());
-        } catch (Exception ignored) {
-            // MediaPlayer failed (corrupted ringtone, no permission, etc.) — fall
-            // back to a generated tone so the user still hears something.
-            startFallbackTone();
-            scheduleRingtoneSafetyStop(context.getApplicationContext());
+            return true;
+        } catch (Exception e) {
+            return false;
         }
+    }
+
+    private static Handler ringtoneLoopHandler;
+    private static Runnable ringtoneLoopRunnable;
+
+    private static boolean startWithRingtoneApi(Context context, Uri uri) {
+        try {
+            Ringtone r = RingtoneManager.getRingtone(context.getApplicationContext(), uri);
+            if (r == null) return false;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                r.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build());
+            } else {
+                r.setStreamType(AudioManager.STREAM_ALARM);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try { r.setLooping(true); } catch (Exception ignored) {}
+                try { r.setVolume(1.0f); } catch (Exception ignored) {}
+            }
+            r.play();
+            ringtonePlayer = r;
+            leakedRingtones.add(r);
+            // Pre-Android 9 has no setLooping(), so we re-trigger play() periodically.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                scheduleRingtoneLoop();
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static void scheduleRingtoneLoop() {
+        cancelRingtoneLoop();
+        ringtoneLoopHandler = new Handler(Looper.getMainLooper());
+        ringtoneLoopRunnable = new Runnable() {
+            @Override public void run() {
+                try {
+                    if (ringtonePlayer != null && !ringtonePlayer.isPlaying()) {
+                        ringtonePlayer.play();
+                    }
+                } catch (Exception ignored) {}
+                if (ringtoneLoopHandler != null) ringtoneLoopHandler.postDelayed(this, 1500L);
+            }
+        };
+        ringtoneLoopHandler.postDelayed(ringtoneLoopRunnable, 1500L);
+    }
+
+    private static void cancelRingtoneLoop() {
+        try {
+            if (ringtoneLoopHandler != null && ringtoneLoopRunnable != null) {
+                ringtoneLoopHandler.removeCallbacks(ringtoneLoopRunnable);
+            }
+        } catch (Exception ignored) {}
+        ringtoneLoopRunnable = null;
+        ringtoneLoopHandler = null;
     }
 
     private static synchronized void scheduleRingtoneSafetyStop(Context context) {
@@ -443,6 +542,7 @@ public final class CallAlertUtils {
     public static synchronized void stopCallRingtone(Context context) {
         try {
             stopRingtoneSafetyStop();
+            cancelRingtoneLoop();
             stopFallbackTone();
             // Tear down EVERY MediaPlayer we ever started for this call session.
             // On some ROMs the FCM + foreground-service + activity start paths can
