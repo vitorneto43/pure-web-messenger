@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
 import { getSignupAttributionForSignup, snapshotAttributionForOAuth, readAttribution } from "@/lib/utm-capture";
 import { track } from "@/lib/track";
+import { recordAppSignup } from "@/lib/app-events";
 
 
 type Mode = "login" | "signup" | "forgot";
@@ -127,6 +128,7 @@ function AuthPage() {
         });
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email });
+        recordAppSignup();
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success(t("auth.toast.signupOk"));
         setShowConfirmEmail(true);

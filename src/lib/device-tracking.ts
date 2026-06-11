@@ -11,6 +11,11 @@ function detectPlatform(): string {
       if (p === "ios") return "ios";
     }
   } catch {}
+  // Fallback: TWA / Android WebView (instalado via Play Store sem Capacitor nativo)
+  try {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    if (/Android/i.test(ua) && /(wv|WebView)/.test(ua)) return "android";
+  } catch {}
   return "web";
 }
 
