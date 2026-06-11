@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail, Repeat, LogIn, Languages, ClipboardList, Rocket, LifeBuoy, FileImage, Heart } from "lucide-react";
+import { Loader2, Shield, Users, MessageSquare, Phone, Sparkles, Server, ListChecks, Share2, LogOut, KeyRound, TrendingUp, Activity, Globe2, Smartphone, MailCheck, MailWarning, Megaphone, MousePointerClick, Bell, Gift, ChevronDown, ChevronRight, Mail, Repeat, LogIn, Languages, ClipboardList, Rocket, LifeBuoy, FileImage, Heart, Download } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
@@ -43,6 +43,7 @@ import { BoostsTab } from "@/components/admin/BoostsTab";
 import { SupportTab } from "@/components/admin/SupportTab";
 import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
 import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
+import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -241,6 +242,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="status"><FileImage className="size-4 mr-1.5" />Status</TabsTrigger>
               <TabsTrigger value="followers"><Heart className="size-4 mr-1.5" />Seguidores</TabsTrigger>
               <TabsTrigger value="support"><LifeBuoy className="size-4 mr-1.5" />Suporte</TabsTrigger>
+              <TabsTrigger value="app-acquisition"><Download className="size-4 mr-1.5" />Aquisição App</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
@@ -266,6 +268,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="status" className="mt-4"><StatusAdminTab /></TabsContent>
           <TabsContent value="followers" className="mt-4"><FollowersAdminTab /></TabsContent>
           <TabsContent value="support" className="mt-4"><SupportTab /></TabsContent>
+          <TabsContent value="app-acquisition" className="mt-4"><AppAcquisitionTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
       </main>

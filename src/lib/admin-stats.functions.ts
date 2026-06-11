@@ -410,3 +410,286 @@ export const getAdminBoostStatsFull = createServerFn({ method: "POST" })
       campaigns,
     };
   });
+
+// ============================ APP ACQUISITION ============================
+type AnyRow = Record<string, any>;
+
+function bucketByDay(rows: AnyRow[], days: number, dateField = "created_at") {
+  const series = emptyDailySeries(days);
+  const map = new Map(series.map((s) => [s.date, 0]));
+  for (const r of rows) {
+    const d = r[dateField];
+    if (!d) continue;
+    const key = String(d).slice(0, 10);
+    if (map.has(key)) map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return series.map((s) => ({ date: s.date, count: map.get(s.date) ?? 0 }));
+}
+
+function isAndroidUA(ua: string | null | undefined) {
+  if (!ua) return false;
+  return /android/i.test(ua) && !/wv\)/i.test(ua) === false ? true : /android/i.test(ua);
+}
+
+export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+
+    const since30 = daysBack(30);
+    const since1 = daysBack(1);
+    const since7 = daysBack(7);
+
+    const [
+      playstoreClicksRes,
+      pageViewsRes,
+      signupClicksRes,
+      loginClicksRes,
+      signupCompletedRes,
+      profilesAllRes,
+      profilesPrivateRes,
+      invitesRes,
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, user_agent, metadata, path, referrer, session_id")
+        .eq("event_name", "playstore_click")
+        .gte("created_at", since30)
+        .order("created_at", { ascending: false })
+        .limit(5000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at")
+        .eq("event_name", "page_view")
+        .gte("created_at", since30)
+        .limit(20000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at")
+        .eq("event_name", "signup_click")
+        .gte("created_at", since30)
+        .limit(5000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at")
+        .eq("event_name", "login_click")
+        .gte("created_at", since30)
+        .limit(5000),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, created_at, user_agent, metadata")
+        .eq("event_name", "signup_completed")
+        .gte("created_at", since30)
+        .limit(5000),
+      supabaseAdmin
+        .from("profiles")
+        .select("id, created_at, last_seen, signup_source, signup_medium, signup_campaign, signup_referrer, username, display_name, avatar_url")
+        .limit(20000),
+      supabaseAdmin
+        .from("profiles_private")
+        .select("user_id, device_platform, country, region, city, app_version")
+        .limit(20000),
+      supabaseAdmin
+        .from("profiles")
+        .select("id, invited_by, created_at")
+        .not("invited_by", "is", null)
+        .limit(20000),
+    ]);
+
+    const clicks = playstoreClicksRes.data ?? [];
+    const pageViews = pageViewsRes.data ?? [];
+    const signupClicks = signupClicksRes.data ?? [];
+    const loginClicks = loginClicksRes.data ?? [];
+    const signupCompleted = signupCompletedRes.data ?? [];
+    const profiles = profilesAllRes.data ?? [];
+    const priv = profilesPrivateRes.data ?? [];
+    const invites = invitesRes.data ?? [];
+
+    // Map device by user
+    const deviceByUser = new Map<string, string>();
+    const geoByUser = new Map<string, { country?: string; region?: string; city?: string }>();
+    for (const p of priv) {
+      if (p.device_platform) deviceByUser.set(p.user_id, p.device_platform);
+      geoByUser.set(p.user_id, { country: p.country ?? undefined, region: p.region ?? undefined, city: p.city ?? undefined });
+    }
+
+    // Android profiles (proxy for "instalou e abriu o app")
+    const androidProfiles = profiles.filter((p: any) => deviceByUser.get(p.id) === "android");
+    const androidIds = new Set(androidProfiles.map((p: any) => p.id));
+
+    // Clicks breakdown by "from"
+    const clicksFrom = new Map<string, number>();
+    for (const c of clicks) {
+      const from = (c.metadata as AnyRow)?.from ?? "outro";
+      clicksFrom.set(from, (clicksFrom.get(from) ?? 0) + 1);
+    }
+
+    // Origin (signup_source) breakdown
+    const sourceMap = new Map<string, number>();
+    for (const p of profiles) {
+      const src = (p as any).signup_source || "direct";
+      sourceMap.set(src, (sourceMap.get(src) ?? 0) + 1);
+    }
+
+    // Country / region
+    const countryMap = new Map<string, number>();
+    const regionMap = new Map<string, number>();
+    const cityMap = new Map<string, number>();
+    for (const p of priv) {
+      if (p.country) countryMap.set(p.country, (countryMap.get(p.country) ?? 0) + 1);
+      if (p.region) regionMap.set(p.region, (regionMap.get(p.region) ?? 0) + 1);
+      if (p.city) cityMap.set(p.city, (cityMap.get(p.city) ?? 0) + 1);
+    }
+    const androidCountryMap = new Map<string, number>();
+    for (const p of androidProfiles) {
+      const g = geoByUser.get((p as any).id);
+      if (g?.country) androidCountryMap.set(g.country, (androidCountryMap.get(g.country) ?? 0) + 1);
+    }
+
+    // DAU/MAU (android)
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const dau = androidProfiles.filter((p: any) => p.last_seen && now - new Date(p.last_seen).getTime() < dayMs).length;
+    const mau = androidProfiles.filter((p: any) => p.last_seen && now - new Date(p.last_seen).getTime() < 30 * dayMs).length;
+
+    // Retention (android) — D1, D7, D30: % of users whose last_seen is >= created_at + N days
+    function retention(days: number) {
+      const cohort = androidProfiles.filter((p: any) => {
+        const created = new Date(p.created_at).getTime();
+        return now - created >= days * dayMs;
+      });
+      if (cohort.length === 0) return 0;
+      const retained = cohort.filter((p: any) => {
+        const created = new Date(p.created_at).getTime();
+        const seen = p.last_seen ? new Date(p.last_seen).getTime() : 0;
+        return seen - created >= days * dayMs;
+      }).length;
+      return Number(((retained / cohort.length) * 100).toFixed(1));
+    }
+
+    // Engagement post-install (android users)
+    let messagesCount = 0, callsCount = 0, statusesCount = 0, followersGainedCount = 0, groupsCount = 0;
+    if (androidIds.size > 0) {
+      const ids = Array.from(androidIds);
+      const [m, c, s, f, g] = await Promise.all([
+        supabaseAdmin.from("messages").select("id", { count: "exact", head: true }).in("sender_id", ids),
+        supabaseAdmin.from("calls").select("id", { count: "exact", head: true }).in("caller_id", ids),
+        supabaseAdmin.from("statuses").select("id", { count: "exact", head: true }).in("user_id", ids),
+        supabaseAdmin.from("profile_follows").select("follower_id", { count: "exact", head: true }).in("following_id", ids),
+        supabaseAdmin.from("conversations").select("id", { count: "exact", head: true }).eq("is_group", true).in("created_by", ids),
+      ]);
+      messagesCount = m.count ?? 0;
+      callsCount = c.count ?? 0;
+      statusesCount = s.count ?? 0;
+      followersGainedCount = f.count ?? 0;
+      groupsCount = g.count ?? 0;
+    }
+
+    // Top invitadores (using profiles.invited_by)
+    const inviteCount = new Map<string, number>();
+    for (const i of invites) {
+      const inv = (i as any).invited_by;
+      if (inv) inviteCount.set(inv, (inviteCount.get(inv) ?? 0) + 1);
+    }
+    const topInviters = Array.from(inviteCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id, count]) => {
+        const p: any = profiles.find((x: any) => x.id === id);
+        return { id, count, display_name: p?.display_name, username: p?.username, avatar_url: p?.avatar_url };
+      });
+
+    // Top active android users
+    const topActive = androidProfiles
+      .slice()
+      .sort((a: any, b: any) => new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime())
+      .slice(0, 10)
+      .map((p: any) => ({ id: p.id, display_name: p.display_name, username: p.username, avatar_url: p.avatar_url, last_seen: p.last_seen }));
+
+    // Series (30d)
+    const clicksSeries = bucketByDay(clicks as AnyRow[], 30);
+    const signupsSeries = bucketByDay(androidProfiles as AnyRow[], 30);
+    const allSignupsSeries = bucketByDay(profiles as AnyRow[], 30);
+
+    // Active per day (android, by last_seen)
+    const activeSeries = (() => {
+      const series = emptyDailySeries(30);
+      const map = new Map(series.map((s) => [s.date, 0]));
+      for (const p of androidProfiles as any[]) {
+        if (!p.last_seen) continue;
+        const key = String(p.last_seen).slice(0, 10);
+        if (map.has(key)) map.set(key, (map.get(key) ?? 0) + 1);
+      }
+      return series.map((s) => ({ date: s.date, count: map.get(s.date) ?? 0 }));
+    })();
+
+    // Funnel
+    const totalVisitors = new Set(pageViews.map((p: any) => p.id)).size || pageViews.length;
+    const totalClicks = clicks.length;
+    const totalInstalls = androidProfiles.length; // proxy
+    const totalFirstOpens = androidProfiles.length; // proxy = same (no separate metric)
+    const totalSignupsApp = androidProfiles.length;
+    const totalLoginsApp = androidProfiles.filter((p: any) => p.last_seen && new Date(p.last_seen).getTime() > new Date(p.created_at).getTime() + 60_000).length;
+    const totalActive = mau;
+
+    function pct(num: number, den: number) {
+      return den > 0 ? Number(((num / den) * 100).toFixed(1)) : 0;
+    }
+
+    return {
+      // Summary
+      total_clicks: totalClicks,
+      total_installs: totalInstalls,
+      total_first_opens: totalFirstOpens,
+      total_signups_app: totalSignupsApp,
+      total_logins_app: totalLoginsApp,
+      conv_click_to_install: pct(totalInstalls, totalClicks),
+      conv_install_to_signup: pct(totalSignupsApp, totalInstalls),
+      conv_signup_to_login: pct(totalLoginsApp, totalSignupsApp),
+      dau,
+      mau,
+      // Web context
+      total_pageviews: pageViews.length,
+      total_signup_clicks: signupClicks.length,
+      total_login_clicks: loginClicks.length,
+      total_signups_global: signupCompleted.length,
+      // Funnel stages
+      funnel: [
+        { stage: "Visitas web (30d)", value: pageViews.length },
+        { stage: "Cliques baixar app", value: totalClicks },
+        { stage: "Instalações (Android)", value: totalInstalls },
+        { stage: "Primeira abertura", value: totalFirstOpens },
+        { stage: "Cadastro app", value: totalSignupsApp },
+        { stage: "Login app", value: totalLoginsApp },
+        { stage: "Usuário ativo (MAU)", value: totalActive },
+      ],
+      // Series
+      clicks_series: clicksSeries,
+      signups_series: signupsSeries,
+      all_signups_series: allSignupsSeries,
+      active_series: activeSeries,
+      // Breakdowns
+      clicks_by_source: Array.from(clicksFrom.entries()).map(([name, count]) => ({ name, count })),
+      sources: Array.from(sourceMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+      countries: Array.from(countryMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 15),
+      regions: Array.from(regionMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 15),
+      cities: Array.from(cityMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 15),
+      android_countries: Array.from(androidCountryMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 15),
+      // Retention
+      retention_d1: retention(1),
+      retention_d7: retention(7),
+      retention_d30: retention(30),
+      // Engagement
+      engagement: {
+        messages: messagesCount,
+        calls: callsCount,
+        statuses: statusesCount,
+        followers_gained: followersGainedCount,
+        groups: groupsCount,
+        invites_sent: invites.filter((i: any) => androidIds.has(i.invited_by)).length,
+      },
+      // Rankings
+      top_inviters: topInviters,
+      top_active: topActive,
+    };
+  });
