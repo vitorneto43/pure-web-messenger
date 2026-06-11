@@ -362,27 +362,18 @@ public final class CallAlertUtils {
                 } catch (Exception ignored) {}
             }
 
-            boolean isCustom = hasCustomRingtone(context);
             Uri uri = callRingtoneUri(context);
 
-            // For the SYSTEM default ringtone, the Ringtone API is far more reliable
-            // than MediaPlayer across OEMs (MIUI/HyperOS, Samsung One UI, EMUI).
-            // Many ROMs reject MediaPlayer.setDataSource() on content:// system
-            // ringtone URIs or play them silently when routed through STREAM_ALARM.
-            // The Ringtone API handles permissions and stream routing internally.
-            if (!isCustom && startWithRingtoneApi(context, uri)) {
-                scheduleRingtoneSafetyStop(context.getApplicationContext());
-                return;
-            }
-
-            // Custom user-picked file (or fallback): use MediaPlayer for proper
-            // looping + full-volume music playback.
+            // Try MediaPlayer FIRST (works reliably for both system default ringtones
+            // AND custom user-picked music files). On most devices this plays at full
+            // alarm-stream volume, even when the user lowered the regular ringer.
             if (startWithMediaPlayer(context, uri)) {
                 scheduleRingtoneSafetyStop(context.getApplicationContext());
                 return;
             }
 
-            // Last resort if MediaPlayer also failed: try Ringtone API on the same URI.
+            // Fallback to the Ringtone API for ROMs (some MIUI/HyperOS builds) that
+            // refuse MediaPlayer.setDataSource() on content:// system ringtone URIs.
             if (startWithRingtoneApi(context, uri)) {
                 scheduleRingtoneSafetyStop(context.getApplicationContext());
                 return;
