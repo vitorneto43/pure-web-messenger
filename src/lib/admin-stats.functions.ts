@@ -699,7 +699,7 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       total_pageviews: pageViews.length,
       total_signup_clicks: signupClicks.length,
       total_login_clicks: loginClicks.length,
-      total_signups_global: signupCompleted.length,
+      total_signups_global: new Set(signupCompleted.map((e: any) => e.user_id ?? e.id).filter(Boolean)).size || signupCompleted.length,
       // Funnel stages
       funnel: [
         { stage: "Visitas web (30d)", value: pageViews.length },
