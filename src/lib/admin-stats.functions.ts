@@ -686,7 +686,7 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
         statuses: statusesCount,
         followers_gained: followersGainedCount,
         groups: groupsCount,
-        invites_sent: invites.filter((i: any) => androidIds.has(i.inviter_id)).length,
+        invites_sent: invites.filter((i: any) => androidIds.has(i.invited_by)).length,
       },
       // Rankings
       top_inviters: topInviters,
