@@ -22,13 +22,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    // app_install: dispara uma vez por dispositivo nativo (independe de login)
+    recordAppInstallOnce();
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setLoading(false);
+      if (event === "SIGNED_IN" && s?.user) {
+        recordAppFirstOpenOnce(s.user.id);
+        recordAppLogin(s.user.id);
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
+      if (data.session?.user) recordAppFirstOpenOnce(data.session.user.id);
     });
     let removeNative: (() => void) | null = null;
     installNativeOAuthListener().then((fn) => {
