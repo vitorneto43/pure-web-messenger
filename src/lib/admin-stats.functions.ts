@@ -655,13 +655,28 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       return series.map((s) => ({ date: s.date, count: map.get(s.date) ?? 0 }));
     })();
 
-    // Funnel
+    // Funnel — usa eventos reais quando disponíveis (últimos 30d), com fallback p/ proxy
     const totalVisitors = new Set(pageViews.map((p: any) => p.id)).size || pageViews.length;
     const totalClicks = clicks.length;
-    const totalInstalls = androidProfiles.length; // proxy
-    const totalFirstOpens = androidProfiles.length; // proxy = same (no separate metric)
-    const totalSignupsApp = androidProfiles.length;
-    const totalLoginsApp = androidProfiles.filter((p: any) => p.last_seen && new Date(p.last_seen).getTime() > new Date(p.created_at).getTime() + 60_000).length;
+    // Instalações: distintas por session_id do evento app_install (uma por dispositivo)
+    const installSessions = new Set(appInstalls.map((e: any) => e.session_id).filter(Boolean));
+    const eventInstalls = installSessions.size || appInstalls.length;
+    const totalInstalls = eventInstalls > 0 ? eventInstalls : androidProfiles.length;
+    // Primeira abertura: distinta por user_id
+    const firstOpenUsers = new Set(appFirstOpens.map((e: any) => e.user_id).filter(Boolean));
+    const eventFirstOpens = firstOpenUsers.size || appFirstOpens.length;
+    const totalFirstOpens = eventFirstOpens > 0 ? eventFirstOpens : androidProfiles.length;
+    // Cadastros via app: evento app_signup OR perfis android criados nos últimos 30d
+    const signupUsers = new Set(appSignups.map((e: any) => e.user_id).filter(Boolean));
+    const eventSignups = signupUsers.size || appSignups.length;
+    const since30Ms = new Date(since30).getTime();
+    const androidSignups30d = androidProfiles.filter((p: any) => new Date(p.created_at).getTime() >= since30Ms).length;
+    const totalSignupsApp = eventSignups > 0 ? eventSignups : androidSignups30d;
+    // Logins via app: cada app_login conta; fallback p/ heurística last_seen
+    const eventLogins = appLogins.length;
+    const totalLoginsApp = eventLogins > 0
+      ? eventLogins
+      : androidProfiles.filter((p: any) => p.last_seen && new Date(p.last_seen).getTime() > new Date(p.created_at).getTime() + 60_000).length;
     const totalActive = mau;
 
     function pct(num: number, den: number) {
