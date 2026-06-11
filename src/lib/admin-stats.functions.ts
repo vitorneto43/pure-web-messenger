@@ -585,9 +585,12 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       groupsCount = g.count ?? 0;
     }
 
-    // Top invitadores
+    // Top invitadores (using profiles.invited_by)
     const inviteCount = new Map<string, number>();
-    for (const i of invites) inviteCount.set(i.inviter_id, (inviteCount.get(i.inviter_id) ?? 0) + 1);
+    for (const i of invites) {
+      const inv = (i as any).invited_by;
+      if (inv) inviteCount.set(inv, (inviteCount.get(inv) ?? 0) + 1);
+    }
     const topInviters = Array.from(inviteCount.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
