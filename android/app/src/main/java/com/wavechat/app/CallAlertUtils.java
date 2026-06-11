@@ -542,6 +542,7 @@ public final class CallAlertUtils {
     public static synchronized void stopCallRingtone(Context context) {
         try {
             stopRingtoneSafetyStop();
+            cancelRingtoneLoop();
             stopFallbackTone();
             // Tear down EVERY MediaPlayer we ever started for this call session.
             // On some ROMs the FCM + foreground-service + activity start paths can
