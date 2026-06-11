@@ -490,8 +490,9 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
         .select("user_id, device_platform, country, region, city, app_version")
         .limit(20000),
       supabaseAdmin
-        .from("invite_rewards")
-        .select("inviter_id, invitee_id, created_at")
+        .from("profiles")
+        .select("id, invited_by, created_at")
+        .not("invited_by", "is", null)
         .limit(20000),
     ]);
 
