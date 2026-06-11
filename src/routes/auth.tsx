@@ -128,6 +128,7 @@ function AuthPage() {
         });
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email });
+        recordAppSignup();
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success(t("auth.toast.signupOk"));
         setShowConfirmEmail(true);
