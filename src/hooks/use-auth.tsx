@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { recordDeviceInfo } from "@/lib/device-tracking";
 import { installNativeOAuthListener } from "@/lib/native-google-auth";
+import { recordAppInstallOnce, recordAppFirstOpenOnce, recordAppLogin } from "@/lib/app-events";
 
 interface AuthContextValue {
   session: Session | null;
