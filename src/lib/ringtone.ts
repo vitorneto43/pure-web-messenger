@@ -45,8 +45,8 @@ function ringbackTone() {
   const freqs = [440, 480];
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.18, t + 0.05);
-  gain.gain.setValueAtTime(0.18, t + duration - 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.6, t + 0.05);
+  gain.gain.setValueAtTime(0.6, t + duration - 0.05);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
   gain.connect(ctx.destination);
   freqs.forEach((f) => {
