@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Rocket, ChevronLeft } from "lucide-react";
@@ -7,89 +8,95 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type Q = { key: keyof Answers; title: string; options: string[] };
+type AnswerKey =
+  | "reason_joined"
+  | "source_channel"
+  | "favorite_feature"
+  | "main_goal"
+  | "age_range";
 
-type Answers = {
-  reason_joined: string;
-  source_channel: string;
-  favorite_feature: string;
-  main_goal: string;
-  age_range: string;
-};
+type Answers = Record<AnswerKey, string>;
+
+// Each option carries a stable i18n key for display and a canonical value
+// (Portuguese) that is persisted to the DB so analytics stay consistent
+// regardless of the user's selected language.
+type Option = { id: string; canonical: string };
+type Q = { key: AnswerKey; titleKey: string; options: Option[] };
 
 const QUESTIONS: Q[] = [
   {
     key: "reason_joined",
-    title: "O que trouxe você ao WaveChat?",
+    titleKey: "onboarding.q.reason_joined.title",
     options: [
-      "Conhecer novas pessoas",
-      "Conversar com amigos",
-      "Fazer networking profissional",
-      "Criar conteúdo",
-      "Divulgar meu negócio",
-      "Participar de grupos e comunidades",
-      "Curiosidade",
-      "Outro",
+      { id: "meet_people", canonical: "Conhecer novas pessoas" },
+      { id: "talk_friends", canonical: "Conversar com amigos" },
+      { id: "networking", canonical: "Fazer networking profissional" },
+      { id: "create_content", canonical: "Criar conteúdo" },
+      { id: "promote_business", canonical: "Divulgar meu negócio" },
+      { id: "communities", canonical: "Participar de grupos e comunidades" },
+      { id: "curiosity", canonical: "Curiosidade" },
+      { id: "other", canonical: "Outro" },
     ],
   },
   {
     key: "source_channel",
-    title: "Como você conheceu o WaveChat?",
+    titleKey: "onboarding.q.source_channel.title",
     options: [
-      "Google",
-      "Instagram",
-      "TikTok",
-      "Facebook",
-      "Indicação de amigo",
-      "Influenciador",
-      "YouTube",
-      "Pesquisa na internet",
-      "Outro",
+      { id: "google", canonical: "Google" },
+      { id: "instagram", canonical: "Instagram" },
+      { id: "tiktok", canonical: "TikTok" },
+      { id: "facebook", canonical: "Facebook" },
+      { id: "friend", canonical: "Indicação de amigo" },
+      { id: "influencer", canonical: "Influenciador" },
+      { id: "youtube", canonical: "YouTube" },
+      { id: "web_search", canonical: "Pesquisa na internet" },
+      { id: "other", canonical: "Outro" },
     ],
   },
   {
     key: "favorite_feature",
-    title: "O que mais chamou sua atenção?",
+    titleKey: "onboarding.q.favorite_feature.title",
     options: [
-      "Pessoas para conhecer",
-      "Tradução por IA",
-      "Chamadas de voz e vídeo",
-      "Compartilhamento de status",
-      "Download de status",
-      "CTA nos status",
-      "Privacidade sem telefone",
-      "Grupos",
-      "Outro",
+      { id: "people", canonical: "Pessoas para conhecer" },
+      { id: "ai_translation", canonical: "Tradução por IA" },
+      { id: "calls", canonical: "Chamadas de voz e vídeo" },
+      { id: "status_share", canonical: "Compartilhamento de status" },
+      { id: "status_download", canonical: "Download de status" },
+      { id: "status_cta", canonical: "CTA nos status" },
+      { id: "privacy", canonical: "Privacidade sem telefone" },
+      { id: "groups", canonical: "Grupos" },
+      { id: "other", canonical: "Outro" },
     ],
   },
   {
     key: "main_goal",
-    title: "Você pretende utilizar o WaveChat principalmente para:",
+    titleKey: "onboarding.q.main_goal.title",
     options: [
-      "Fazer novas amizades",
-      "Conversar com pessoas conhecidas",
-      "Trabalho e networking",
-      "Divulgação de conteúdo",
-      "Divulgação de empresa ou negócio",
-      "Participar de comunidades",
-      "Ainda não sei",
+      { id: "new_friends", canonical: "Fazer novas amizades" },
+      { id: "known_people", canonical: "Conversar com pessoas conhecidas" },
+      { id: "work", canonical: "Trabalho e networking" },
+      { id: "content_promo", canonical: "Divulgação de conteúdo" },
+      { id: "business_promo", canonical: "Divulgação de empresa ou negócio" },
+      { id: "communities", canonical: "Participar de comunidades" },
+      { id: "unsure", canonical: "Ainda não sei" },
     ],
   },
   {
     key: "age_range",
-    title: "Qual sua faixa etária?",
+    titleKey: "onboarding.q.age_range.title",
     options: [
-      "Menos de 18 anos",
-      "18 a 24 anos",
-      "25 a 34 anos",
-      "35 a 44 anos",
-      "45 a 54 anos",
-      "55 anos ou mais",
+      { id: "lt18", canonical: "Menos de 18 anos" },
+      { id: "18_24", canonical: "18 a 24 anos" },
+      { id: "25_34", canonical: "25 a 34 anos" },
+      { id: "35_44", canonical: "35 a 44 anos" },
+      { id: "45_54", canonical: "45 a 54 anos" },
+      { id: "gte55", canonical: "55 anos ou mais" },
     ],
   },
 ];
 
 export function OnboardingSurveyDialog() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -100,7 +107,6 @@ export function OnboardingSurveyDialog() {
     if (!user) return;
     let cancelled = false;
     (async () => {
-      // Only show after the name onboarding is complete
       const { data: prof } = await supabase
         .from("profiles")
         .select("onboarded")
@@ -123,18 +129,16 @@ export function OnboardingSurveyDialog() {
   const current = QUESTIONS[step];
   const isLast = step === QUESTIONS.length - 1;
 
-  function pick(value: string) {
-    setAnswers((a) => ({ ...a, [current.key]: value }));
-    if (!isLast) {
-      setStep((s) => s + 1);
-    }
+  function pick(canonical: string) {
+    setAnswers((a) => ({ ...a, [current.key]: canonical }));
+    if (!isLast) setStep((s) => s + 1);
   }
 
   async function submit() {
     if (!user) return;
     const a = answers;
     if (!a.reason_joined || !a.source_channel || !a.favorite_feature || !a.main_goal || !a.age_range) {
-      toast.error("Responda todas as perguntas");
+      toast.error(t("onboarding.answerAll"));
       return;
     }
     setBusy(true);
@@ -148,10 +152,10 @@ export function OnboardingSurveyDialog() {
         age_range: a.age_range,
       });
       if (error) throw error;
-      toast.success("Obrigado! Vamos personalizar sua experiência.");
+      toast.success(t("onboarding.thanks"));
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao enviar");
+      toast.error(err instanceof Error ? err.message : t("onboarding.sendError"));
     } finally {
       setBusy(false);
     }
@@ -171,10 +175,9 @@ export function OnboardingSurveyDialog() {
           <div className="mx-auto size-12 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center mb-2">
             <Rocket className="size-6 text-primary-foreground" />
           </div>
-          <DialogTitle className="text-center">🚀 Bem-vindo ao WaveChat!</DialogTitle>
+          <DialogTitle className="text-center">{t("onboarding.title")}</DialogTitle>
           <DialogDescription className="text-center">
-            Queremos entender melhor o que você procura para oferecer uma experiência cada vez melhor.
-            Leva menos de 30 segundos.
+            {t("onboarding.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -185,19 +188,20 @@ export function OnboardingSurveyDialog() {
           />
         </div>
         <p className="text-xs text-muted-foreground text-center -mt-1">
-          Pergunta {step + 1} de {QUESTIONS.length}
+          {t("onboarding.progress", { step: step + 1, total: QUESTIONS.length })}
         </p>
 
         <div className="space-y-3">
-          <h3 className="text-base font-semibold">{current.title}</h3>
+          <h3 className="text-base font-semibold">{t(current.titleKey)}</h3>
           <div className="grid grid-cols-1 gap-2">
             {current.options.map((opt) => {
-              const active = selected === opt;
+              const active = selected === opt.canonical;
+              const labelKey = `onboarding.q.${current.key}.${opt.id}`;
               return (
                 <button
-                  key={opt}
+                  key={opt.id}
                   type="button"
-                  onClick={() => pick(opt)}
+                  onClick={() => pick(opt.canonical)}
                   className={cn(
                     "w-full text-left rounded-xl border px-4 py-3 text-sm transition-all",
                     active
@@ -205,7 +209,7 @@ export function OnboardingSurveyDialog() {
                       : "border-border bg-background hover:bg-muted/40",
                   )}
                 >
-                  {opt}
+                  {t(labelKey)}
                 </button>
               );
             })}
@@ -218,19 +222,19 @@ export function OnboardingSurveyDialog() {
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0 || busy}
           >
-            <ChevronLeft className="size-4 mr-1" /> Voltar
+            <ChevronLeft className="size-4 mr-1" /> {t("onboarding.back")}
           </Button>
           {isLast ? (
             <Button onClick={submit} disabled={!selected || busy}>
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
-              Finalizar
+              {t("onboarding.finish")}
             </Button>
           ) : (
             <Button
               onClick={() => selected && setStep((s) => s + 1)}
               disabled={!selected}
             >
-              Continuar
+              {t("onboarding.continue")}
             </Button>
           )}
         </div>
