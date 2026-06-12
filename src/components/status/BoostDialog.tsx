@@ -194,8 +194,10 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
           package: key,
           returnUrl: `${window.location.origin}/?boost=success&session_id={CHECKOUT_SESSION_ID}`,
           environment: getStripeEnvironment(),
+          currency,
         },
       });
+
       if (!result.clientSecret) throw new Error("Missing clientSecret");
       setClientSecret(result.clientSecret);
     } catch (e: any) {
