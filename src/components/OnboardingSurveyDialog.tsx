@@ -106,7 +106,7 @@ export function OnboardingSurveyDialog() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    (async () => {
+    const check = async () => {
       const { data: prof } = await supabase
         .from("profiles")
         .select("onboarded")
@@ -120,9 +120,13 @@ export function OnboardingSurveyDialog() {
         .maybeSingle();
       if (cancelled) return;
       if (!survey) setOpen(true);
-    })();
+    };
+    void check();
+    const onNameDone = () => { void check(); };
+    window.addEventListener("onboarding:name-completed", onNameDone);
     return () => {
       cancelled = true;
+      window.removeEventListener("onboarding:name-completed", onNameDone);
     };
   }, [user]);
 
