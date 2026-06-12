@@ -1044,6 +1044,7 @@ export type Database = {
           status_id: string
           target_age_max: number | null
           target_age_min: number | null
+          target_countries: string[] | null
           target_gender: string
           target_states: string[]
           transaction_id: string | null
@@ -1074,6 +1075,7 @@ export type Database = {
           status_id: string
           target_age_max?: number | null
           target_age_min?: number | null
+          target_countries?: string[] | null
           target_gender?: string
           target_states?: string[]
           transaction_id?: string | null
@@ -1104,6 +1106,7 @@ export type Database = {
           status_id?: string
           target_age_max?: number | null
           target_age_min?: number | null
+          target_countries?: string[] | null
           target_gender?: string
           target_states?: string[]
           transaction_id?: string | null
