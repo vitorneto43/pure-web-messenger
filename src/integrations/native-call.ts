@@ -123,19 +123,22 @@ async function ensureMessageChannel(): Promise<void> {
   if (!isAndroid()) return;
   try {
     await PushNotifications.createChannel({
-      id: 'messages_v3',
+      id: 'messages_v4',
       name: 'Mensagens novas',
       description: 'Notificações de novas mensagens (som e vibração)',
       importance: 5, // IMPORTANCE_HIGH (heads-up)
       visibility: 1, // VISIBILITY_PUBLIC (show on lockscreen)
-      sound: 'default',
+      // NOTE: do NOT pass `sound` here — omitting it keeps the system
+      // default notification sound. Passing 'default' points the channel
+      // at a non-existent res/raw file and makes the channel SILENT.
       vibration: true,
       lights: true,
     });
   } catch (e) {
-    console.error('Failed to create messages_v3 channel', e);
+    console.error('Failed to create messages_v4 channel', e);
   }
-  // Remove the old silent channel so Android can't route through it anymore.
+  // Remove the old broken/silent channels so Android can't route through them.
+  try { await PushNotifications.deleteChannel({ id: 'messages_v3' }); } catch { /* ignore */ }
   try { await PushNotifications.deleteChannel({ id: 'messages_v2' }); } catch { /* ignore */ }
   try { await PushNotifications.deleteChannel({ id: 'messages' }); } catch { /* ignore */ }
 }
