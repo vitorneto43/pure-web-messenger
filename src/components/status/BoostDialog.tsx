@@ -136,9 +136,11 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     );
   }, [locale, countrySearch]);
 
-  const budgetUserCcy = convertFromBRL(budget, currency);
-  const totalUserCcy = convertFromBRL(budget, currency);
+  const dailyUserCcy = convertFromBRL(budget, currency);
+  const totalUserCcy = convertFromBRL(budget * days, currency);
+  const budgetUserCcy = dailyUserCcy;
   const cpmUserCcy = convertFromBRL(cpmCents / 100, currency);
+
 
   async function saveCta(): Promise<boolean> {
     const trimmed = ctaUrl.trim();
