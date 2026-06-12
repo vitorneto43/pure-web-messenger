@@ -759,5 +759,6 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       // Rankings
       top_inviters: topInviters,
       top_active: topActive,
+      recent_app_signups: recentAppSignups,
     };
   });
