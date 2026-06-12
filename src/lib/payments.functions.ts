@@ -49,8 +49,10 @@ const inputSchema = z.object({
   package: z.enum(["boost_100", "boost_500", "boost_2000", "custom"]),
   returnUrl: z.string().url(),
   environment: z.enum(["sandbox", "live"]),
+  currency: z.enum(SUPPORTED_CURRENCIES).optional(),
   custom: customSchema.optional(),
 });
+
 
 export const createBoostCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
