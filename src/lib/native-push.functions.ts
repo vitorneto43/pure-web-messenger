@@ -235,24 +235,24 @@ export async function sendNativeMessage(args: {
   senderName?: string;
   badge?: number;
 }) {
-  // Data-only payload: forces FCM to deliver to WaveChatMessagingService even when
-  // the app is in background or killed. The native service then posts a
-  // MessagingStyle notification on the "messages_v2" channel (sound + vibration
-  // + heads-up + lockscreen public) and updates the launcher badge. We keep it
-  // data-only on purpose so the OS never auto-renders a duplicate.
+  // Hybrid payload: include the FCM `notification` block so Android renders
+  // the heads-up system notification by itself (on the pre-existing
+  // "messages" channel created by WaveChatApplication — IMPORTANCE_HIGH,
+  // default sound, vibration, lights) WITHOUT needing any JS to be running.
+  // This is what makes app-closed / background pushes reach the user.
+  // The `data` block carries conversationId so MainActivity can deep-link
+  // into the right chat when the user taps the notification.
   return sendNativePayloadToUser(
     args.recipientId,
     {
       type: "message",
       conversationId: args.conversationId,
-      title: args.title,
-      body: args.body,
       senderName: args.senderName ?? args.title,
       badge: String(args.badge ?? 0),
       timestamp: String(Date.now()),
     },
     "120s",
-    undefined,
+    { title: args.title, body: args.body },
     { senderId: args.senderId, conversationId: args.conversationId, kind: "message" },
   );
 }
