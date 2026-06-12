@@ -147,10 +147,11 @@ async function sendNativePayloadToUser(
             ...(notification
               ? {
                   notification: {
-                    channel_id: "messages",
+                    channel_id: "messages_v2",
                     default_sound: true,
                     default_vibrate_timings: true,
                     notification_priority: "PRIORITY_HIGH",
+                    visibility: "PUBLIC",
                   },
                 }
               : {}),
