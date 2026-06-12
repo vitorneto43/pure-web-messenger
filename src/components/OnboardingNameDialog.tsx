@@ -58,6 +58,7 @@ export function OnboardingNameDialog() {
       if (error) throw error;
       toast.success(`Bem-vindo(a), ${displayName}!`);
       setOpen(false);
+      try { window.dispatchEvent(new Event("onboarding:name-completed")); } catch { /* noop */ }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
     } finally {
