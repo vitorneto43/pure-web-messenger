@@ -638,6 +638,27 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       .slice(0, 10)
       .map((p: any) => ({ id: p.id, display_name: p.display_name, username: p.username, avatar_url: p.avatar_url, last_seen: p.last_seen }));
 
+    // Últimos cadastros via app (evento app_signup)
+    const profileById = new Map(profiles.map((p: any) => [p.id, p]));
+    const recentAppSignups = appSignups
+      .filter((e: any) => e.user_id)
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 20)
+      .map((e: any) => {
+        const p: any = profileById.get(e.user_id) ?? {};
+        const g = geoByUser.get(e.user_id) ?? {};
+        return {
+          id: e.user_id,
+          created_at: e.created_at,
+          display_name: p.display_name ?? null,
+          username: p.username ?? null,
+          avatar_url: p.avatar_url ?? null,
+          device_platform: deviceByUser.get(e.user_id) ?? "android",
+          country: g.country ?? null,
+          city: g.city ?? null,
+        };
+      });
+
     // Series (30d)
     const clicksSeries = bucketByDay(clicks as AnyRow[], 30);
     const signupsSeries = bucketByDay(androidProfiles as AnyRow[], 30);
@@ -738,5 +759,6 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
       // Rankings
       top_inviters: topInviters,
       top_active: topActive,
+      recent_app_signups: recentAppSignups,
     };
   });

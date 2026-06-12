@@ -113,7 +113,7 @@ function AuthPage() {
           return;
         }
         const attribution = getSignupAttributionForSignup();
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -127,8 +127,8 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        void track("signup_completed", { email: parsed.data.email });
-        recordAppSignup();
+        void track("signup_completed", { email: parsed.data.email, user_id: signUpData.user?.id });
+        recordAppSignup(signUpData.user?.id);
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success(t("auth.toast.signupOk"));
         setShowConfirmEmail(true);

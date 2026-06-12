@@ -250,6 +250,40 @@ export function AppAcquisitionTab() {
         </Card>
       </div>
 
+      {/* Últimos cadastros via app */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><UserPlus className="size-4 text-green-500" /> Últimos cadastros via app</CardTitle>
+          <CardDescription className="text-xs">Usuários que criaram conta de dentro do aplicativo Android (evento <code>app_signup</code>).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {(!data.recent_app_signups || data.recent_app_signups.length === 0) ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Nenhum cadastro via app registrado ainda.</p>
+          ) : (
+            <div className="space-y-2">
+              {data.recent_app_signups.map((u: any) => (
+                <div key={`${u.id}-${u.created_at}`} className="flex items-center gap-3 py-1.5 border-b border-border/40 last:border-0">
+                  <Avatar className="size-8">
+                    <AvatarImage src={u.avatar_url ?? undefined} />
+                    <AvatarFallback>{(u.display_name || u.username || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.display_name || u.username || u.id.slice(0, 8)}</p>
+                    {u.username && <p className="text-[10px] text-muted-foreground truncate">@{u.username}</p>}
+                  </div>
+                  <div className="text-right text-xs">
+                    <p className="font-medium tabular-nums">{new Date(u.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {u.device_platform}{u.city ? ` · ${u.city}` : ""}{u.country ? ` · ${u.country}` : ""}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Integração futura */}
       <Card className="border-dashed">
         <CardHeader className="pb-2">
