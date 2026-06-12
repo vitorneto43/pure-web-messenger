@@ -95,7 +95,7 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       });
       views = estimateViews({ ...c });
       if (views < 1) throw new Error("Orçamento muito baixo para a segmentação escolhida");
-      amountCents = c.budgetCents;
+      amountCents = c.budgetCents * c.durationDays;
     } else {
       const pack = PACKAGES[data.package as BoostPackage];
       views = pack.views;
