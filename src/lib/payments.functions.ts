@@ -15,7 +15,8 @@ type BoostPackage = keyof typeof PACKAGES;
 const customSchema = z.object({
   budgetCents: z.number().int().min(1000).max(50000),
   durationDays: z.number().int().min(1).max(30),
-  states: z.array(z.string().regex(/^[A-Z]{2}$/)).max(27),
+  countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(250),
+  states: z.array(z.string().min(1).max(8).regex(/^[A-Z0-9]+$/)).max(60),
   ageMin: z.number().int().min(13).max(80),
   ageMax: z.number().int().min(13).max(80),
   gender: z.enum(["male", "female", "all"]),
@@ -29,6 +30,7 @@ const customSchema = z.object({
     "cross_platform",
   ]),
 });
+
 
 const inputSchema = z.object({
   statusId: z.string().uuid(),
@@ -70,6 +72,7 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
     if (isCustom) {
       const c = data.custom!;
       cpmCents = calculateCpm({
+        countries: c.countries,
         states: c.states,
         ageMin: c.ageMin,
         ageMax: c.ageMax,
@@ -113,6 +116,7 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
     if (isCustom && data.custom) {
       const c = data.custom;
       boostRow.duration_days = c.durationDays;
+      boostRow.target_countries = c.countries;
       boostRow.target_states = c.states;
       boostRow.target_age_min = c.ageMin;
       boostRow.target_age_max = c.ageMax;
@@ -121,6 +125,7 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       boostRow.cpm_cents = cpmCents;
       boostRow.ends_at = new Date(Date.now() + c.durationDays * 24 * 3600 * 1000).toISOString();
     }
+
 
     let boostId: string;
     if (existing) {
