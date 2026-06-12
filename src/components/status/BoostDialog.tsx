@@ -567,7 +567,7 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     ) : (
                       <>
                         <Rocket className="size-4 mr-2" />
-                        {t("boost.custom.go", { price: formatMoney(budgetUserCcy, currency, locale) })}
+                        {t("boost.custom.go", { price: formatMoney(totalUserCcy, currency, locale) })}
                       </>
                     )}
                   </Button>
