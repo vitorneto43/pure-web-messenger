@@ -50,7 +50,7 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
         } catch (Exception ignored) {}
     }
 
-
+    private void showIncomingCallNotification(java.util.Map<String, String> data) {
         String callerName = data.getOrDefault("callerName", "Alguém");
         String callId = data.getOrDefault("callId", "");
         String kind = data.getOrDefault("kind", "audio");
