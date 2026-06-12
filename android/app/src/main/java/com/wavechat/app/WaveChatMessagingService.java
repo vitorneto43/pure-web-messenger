@@ -7,11 +7,14 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.Person;
 
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+
+import java.util.Map;
 
 public class WaveChatMessagingService extends FirebaseMessagingService {
     private static final String TAG = "WaveChatFCM";
@@ -29,6 +32,11 @@ public class WaveChatMessagingService extends FirebaseMessagingService {
             CallAlertUtils.stopAllCallAlerts(this, callId);
         } else if (remoteMessage.getData() != null && "call".equals(remoteMessage.getData().get("type"))) {
             showIncomingCallNotification(remoteMessage.getData());
+        } else if (remoteMessage.getData() != null && "message".equals(remoteMessage.getData().get("type"))) {
+            showMessageNotification(remoteMessage.getData());
+            // Also forward to the JS bridge so an open app updates its in-app
+            // state (unread badge, conversation list) without waiting for realtime.
+            try { PushNotificationsPlugin.sendRemoteMessage(remoteMessage); } catch (Exception ignored) {}
         } else {
             PushNotificationsPlugin.sendRemoteMessage(remoteMessage);
         }
