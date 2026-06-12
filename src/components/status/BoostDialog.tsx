@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Check, Rocket, Gift, Sparkles } from "lucide-react";
+import { Loader2, Check, Rocket, Gift, Sparkles, Globe2, Search } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
@@ -21,13 +21,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { currentLocale } from "@/i18n";
 import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
 import {
-  BR_STATES,
   OBJECTIVES,
   calculateCpm,
   estimateViews,
   type BoostObjective,
   type BoostGender,
 } from "@/lib/boost-pricing";
+import {
+  ALL_COUNTRIES,
+  SUBDIVISIONS,
+  getCountryName,
+  flagEmoji,
+} from "@/lib/world-regions";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 
@@ -56,9 +61,11 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [ctaUrl, setCtaUrl] = useState("");
   const [statusKind, setStatusKind] = useState<string>("");
 
-  // Custom boost state
-  const [budget, setBudget] = useState<number>(20); // BRL
+  // Custom boost state — budget kept internally in BRL; displayed in user currency.
+  const [budget, setBudget] = useState<number>(20);
   const [days, setDays] = useState<number>(7);
+  const [countries, setCountries] = useState<string[]>([]); // [] = worldwide
+  const [countrySearch, setCountrySearch] = useState("");
   const [states, setStates] = useState<string[]>([]);
   const [ageMin, setAgeMin] = useState<number>(18);
   const [ageMax, setAgeMax] = useState<number>(55);
@@ -85,18 +92,53 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     })();
   }, [open, statusId]);
 
+  // If a single country is chosen and has subdivisions, allow state selection.
+  const stateCountry = countries.length === 1 ? countries[0] : null;
+  const availableStates = stateCountry ? SUBDIVISIONS[stateCountry] ?? [] : [];
+
+  // Reset states when country selection changes such that they no longer apply.
+  useEffect(() => {
+    if (states.length > 0 && availableStates.length === 0) setStates([]);
+    if (states.length > 0 && availableStates.length > 0) {
+      const valid = new Set(availableStates.map((s) => s.code));
+      const filtered = states.filter((s) => valid.has(s));
+      if (filtered.length !== states.length) setStates(filtered);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateCountry]);
+
   const customInput = useMemo(() => ({
     budgetCents: Math.round(budget * 100),
     durationDays: days,
+    countries,
     states,
     ageMin,
     ageMax,
     gender,
     objective,
-  }), [budget, days, states, ageMin, ageMax, gender, objective]);
+  }), [budget, days, countries, states, ageMin, ageMax, gender, objective]);
 
   const estimatedViews = useMemo(() => estimateViews(customInput), [customInput]);
   const cpmCents = useMemo(() => calculateCpm(customInput), [customInput]);
+
+  // Sorted country list (localized) with optional search filter.
+  const countryList = useMemo(() => {
+    const items = ALL_COUNTRIES.map((c) => ({
+      code: c,
+      name: getCountryName(c, locale),
+      flag: flagEmoji(c),
+    }));
+    items.sort((a, b) => a.name.localeCompare(b.name, locale));
+    const q = countrySearch.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q),
+    );
+  }, [locale, countrySearch]);
+
+  const budgetUserCcy = convertFromBRL(budget, currency);
+  const totalUserCcy = convertFromBRL(budget, currency);
+  const cpmUserCcy = convertFromBRL(cpmCents / 100, currency);
 
   async function saveCta(): Promise<boolean> {
     const trimmed = ctaUrl.trim();
@@ -107,17 +149,17 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
         if (!/^https?:$/.test(u.protocol)) throw new Error();
         url = u.toString();
       } catch {
-        toast.error("Link inválido");
+        toast.error(t("boost.cta.invalidLink"));
         return false;
       }
     }
-    const label = ctaLabel.trim().slice(0, 30) || (url ? "Saiba mais" : null);
+    const label = ctaLabel.trim().slice(0, 30) || (url ? t("boost.cta.learnMore") : null);
     const { error } = await (supabase as any)
       .from("statuses")
       .update({ cta_url: url, cta_label: label })
       .eq("id", statusId);
     if (error) {
-      toast.error("Falha ao salvar link", { description: error.message });
+      toast.error(t("boost.cta.saveFail"), { description: error.message });
       return false;
     }
     return true;
@@ -165,11 +207,11 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
   async function pickCustom() {
     if (ageMin > ageMax) {
-      toast.error("Faixa etária inválida");
+      toast.error(t("boost.custom.ageInvalid"));
       return;
     }
     if (estimatedViews < 1) {
-      toast.error("Orçamento muito baixo para a segmentação escolhida");
+      toast.error(t("boost.custom.budgetTooLow"));
       return;
     }
     setLoading("custom");
@@ -194,8 +236,13 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     }
   }
 
+  function toggleCountry(code: string) {
+    setCountries((cur) =>
+      cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code],
+    );
+  }
   function toggleState(code: string) {
-    setStates((cur) => cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code]);
+    setStates((cur) => (cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code]));
   }
 
   function close(v: boolean) {
@@ -205,6 +252,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     }
     onOpenChange(v);
   }
+
+  const dayUnit = days === 1 ? t("boost.custom.day_one") : t("boost.custom.day_other");
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -223,8 +272,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
               {(statusKind === "image" || statusKind === "video") && (
                 <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold">Botão de ação no anúncio</p>
-                    <span className="text-[10px] text-muted-foreground">aparece sobre a mídia</span>
+                    <p className="text-xs font-semibold">{t("boost.cta.heading")}</p>
+                    <span className="text-[10px] text-muted-foreground">{t("boost.cta.aside")}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <select
@@ -232,18 +281,18 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                       onChange={(e) => setCtaLabel(e.target.value)}
                       className="h-9 rounded-md border border-input bg-background px-2 text-sm"
                     >
-                      <option value="">Saiba mais</option>
-                      <option value="Cadastre-se">Cadastre-se</option>
-                      <option value="Compre agora">Compre agora</option>
-                      <option value="Baixar agora">Baixar agora</option>
-                      <option value="Assista">Assista</option>
-                      <option value="Reserve agora">Reserve agora</option>
-                      <option value="Contate-nos">Contate-nos</option>
+                      <option value="">{t("boost.cta.learnMore")}</option>
+                      <option value={t("boost.cta.signUp")}>{t("boost.cta.signUp")}</option>
+                      <option value={t("boost.cta.buyNow")}>{t("boost.cta.buyNow")}</option>
+                      <option value={t("boost.cta.download")}>{t("boost.cta.download")}</option>
+                      <option value={t("boost.cta.watch")}>{t("boost.cta.watch")}</option>
+                      <option value={t("boost.cta.book")}>{t("boost.cta.book")}</option>
+                      <option value={t("boost.cta.contact")}>{t("boost.cta.contact")}</option>
                     </select>
                     <input
                       value={ctaUrl}
                       onChange={(e) => setCtaUrl(e.target.value)}
-                      placeholder="https://seusite.com"
+                      placeholder={t("boost.cta.placeholderSite")}
                       inputMode="url"
                       maxLength={500}
                       className="h-9 rounded-md border border-input bg-background px-2 text-sm"
@@ -278,8 +327,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
 
               <Tabs defaultValue="packages" className="w-full">
                 <TabsList className="grid grid-cols-2 w-full">
-                  <TabsTrigger value="packages">Pacotes</TabsTrigger>
-                  <TabsTrigger value="custom"><Sparkles className="size-3.5 mr-1" />Personalizado</TabsTrigger>
+                  <TabsTrigger value="packages">{t("boost.tabs.packages")}</TabsTrigger>
+                  <TabsTrigger value="custom"><Sparkles className="size-3.5 mr-1" />{t("boost.tabs.custom")}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="packages" className="space-y-2.5 mt-3">
@@ -335,64 +384,141 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                   <div className="rounded-xl border border-pink-500/30 bg-gradient-to-br from-pink-500/5 to-amber-500/5 p-3">
                     <div className="flex items-baseline justify-between">
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Estimativa</p>
-                        <p className="text-2xl font-bold">{estimatedViews.toLocaleString("pt-BR")} <span className="text-xs font-normal text-muted-foreground">views</span></p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("boost.custom.estimate")}</p>
+                        <p className="text-2xl font-bold">
+                          {estimatedViews.toLocaleString(locale)}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">{t("boost.custom.views")}</span>
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</p>
-                        <p className="text-2xl font-bold">R$ {budget.toFixed(2).replace(".", ",")}</p>
-                        <p className="text-[10px] text-muted-foreground">CPM R$ {(cpmCents/100).toFixed(2).replace(".", ",")}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("boost.custom.total")}</p>
+                        <p className="text-2xl font-bold">{formatMoney(totalUserCcy, currency, locale)}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t("boost.custom.cpm", { price: formatMoney(cpmUserCcy, currency, locale) })}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  <Field label={`Orçamento: R$ ${budget.toFixed(2).replace(".", ",")}`}>
+                  <Field label={t("boost.custom.budget", { price: formatMoney(budgetUserCcy, currency, locale) })}>
                     <Slider min={10} max={500} step={5} value={[budget]} onValueChange={(v) => setBudget(v[0])} />
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>R$ 10</span><span>R$ 500</span></div>
-                  </Field>
-
-                  <Field label={`Duração: ${days} ${days === 1 ? "dia" : "dias"}`}>
-                    <Slider min={1} max={30} step={1} value={[days]} onValueChange={(v) => setDays(v[0])} />
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>1 dia</span><span>30 dias</span></div>
-                  </Field>
-
-                  <Field label={`Estados (${states.length === 0 ? "Brasil todo" : `${states.length} selecionados`})`}>
-                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                      <button
-                        type="button"
-                        onClick={() => setStates([])}
-                        className={`text-[10px] px-2 py-1 rounded-full border transition ${states.length === 0 ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
-                      >Brasil todo</button>
-                      {BR_STATES.map((s) => (
-                        <button
-                          key={s.code}
-                          type="button"
-                          onClick={() => toggleState(s.code)}
-                          className={`text-[10px] px-2 py-1 rounded-full border transition ${states.includes(s.code) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
-                        >{s.code}</button>
-                      ))}
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>{formatMoney(convertFromBRL(10, currency), currency, locale)}</span>
+                      <span>{formatMoney(convertFromBRL(500, currency), currency, locale)}</span>
                     </div>
                   </Field>
 
-                  <Field label={`Idade: ${ageMin} – ${ageMax} anos`}>
+                  <Field label={t("boost.custom.duration", { count: days, unit: dayUnit })}>
+                    <Slider min={1} max={30} step={1} value={[days]} onValueChange={(v) => setDays(v[0])} />
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>1 {t("boost.custom.day_one")}</span>
+                      <span>30 {t("boost.custom.day_other")}</span>
+                    </div>
+                  </Field>
+
+                  <Field
+                    label={
+                      countries.length === 0
+                        ? `${t("boost.custom.countries")} · ${t("boost.custom.worldwide")}`
+                        : `${t("boost.custom.countries")} · ${t("boost.custom.countriesSelected", { count: countries.length })}`
+                    }
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCountries([]);
+                          setStates([]);
+                        }}
+                        className={`text-[10px] px-2 py-1 rounded-full border transition flex items-center gap-1 ${countries.length === 0 ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
+                      >
+                        <Globe2 className="size-3" /> {t("boost.custom.worldwide")}
+                      </button>
+                      <div className="flex-1 relative">
+                        <Search className="size-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          value={countrySearch}
+                          onChange={(e) => setCountrySearch(e.target.value)}
+                          placeholder={t("boost.custom.searchCountry")}
+                          className="w-full h-7 pl-6 pr-2 text-[11px] rounded-md border border-input bg-background"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto rounded-md border border-border bg-background/50 p-1.5">
+                      <div className="flex flex-wrap gap-1">
+                        {countryList.map((c) => {
+                          const active = countries.includes(c.code);
+                          return (
+                            <button
+                              key={c.code}
+                              type="button"
+                              onClick={() => toggleCountry(c.code)}
+                              className={`text-[10px] px-2 py-1 rounded-full border transition inline-flex items-center gap-1 max-w-full ${active ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
+                              title={c.name}
+                            >
+                              <span aria-hidden>{c.flag}</span>
+                              <span className="truncate max-w-[120px]">{c.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Field>
+
+                  {stateCountry && (
+                    <Field
+                      label={
+                        availableStates.length === 0
+                          ? `${t("boost.custom.states")} · ${t("boost.custom.statesNoData")}`
+                          : states.length === 0
+                            ? `${t("boost.custom.states")} · ${t("boost.custom.statesAll")}`
+                            : `${t("boost.custom.states")} · ${t("boost.custom.statesSelected", { count: states.length })}`
+                      }
+                    >
+                      {availableStates.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                          <button
+                            type="button"
+                            onClick={() => setStates([])}
+                            className={`text-[10px] px-2 py-1 rounded-full border transition ${states.length === 0 ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
+                          >
+                            {t("boost.custom.statesAll")}
+                          </button>
+                          {availableStates.map((s) => (
+                            <button
+                              key={s.code}
+                              type="button"
+                              onClick={() => toggleState(s.code)}
+                              className={`text-[10px] px-2 py-1 rounded-full border transition ${states.includes(s.code) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
+                              title={s.name}
+                            >
+                              {s.code}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </Field>
+                  )}
+
+                  <Field label={t("boost.custom.age", { min: ageMin, max: ageMax })}>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">Mínima</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">{t("boost.custom.ageMin")}</p>
                         <Slider min={13} max={80} step={1} value={[ageMin]} onValueChange={(v) => setAgeMin(v[0])} />
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">Máxima</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">{t("boost.custom.ageMax")}</p>
                         <Slider min={13} max={80} step={1} value={[ageMax]} onValueChange={(v) => setAgeMax(v[0])} />
                       </div>
                     </div>
                   </Field>
 
-                  <Field label="Gênero">
+                  <Field label={t("boost.custom.gender")}>
                     <div className="grid grid-cols-3 gap-2">
                       {([
-                        { v: "all", l: "Ambos" },
-                        { v: "male", l: "Masculino" },
-                        { v: "female", l: "Feminino" },
+                        { v: "all", l: t("boost.custom.genderAll") },
+                        { v: "male", l: t("boost.custom.genderMale") },
+                        { v: "female", l: t("boost.custom.genderFemale") },
                       ] as { v: BoostGender; l: string }[]).map((g) => (
                         <button
                           key={g.v}
@@ -404,7 +530,7 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     </div>
                   </Field>
 
-                  <Field label="Objetivo">
+                  <Field label={t("boost.custom.objective")}>
                     <div className="grid grid-cols-1 gap-1.5">
                       {OBJECTIVES.map((o) => (
                         <button
@@ -414,8 +540,12 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                           className={`flex items-center gap-2 px-3 py-2 rounded-md border text-xs text-left transition ${objective === o.key ? "bg-primary/10 border-primary" : "border-border hover:bg-accent"}`}
                         >
                           <span className="text-base">{o.emoji}</span>
-                          <span className="flex-1">{o.label}</span>
-                          {o.premium && <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">+30%</span>}
+                          <span className="flex-1">{t(o.i18nKey)}</span>
+                          {o.premium && (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                              {t("boost.obj.premium")}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -426,11 +556,23 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     onClick={pickCustom}
                     disabled={!!loading || estimatedViews < 1}
                   >
-                    {loading === "custom" ? <Loader2 className="size-4 animate-spin" /> : <><Rocket className="size-4 mr-2" />Impulsionar por R$ {budget.toFixed(2).replace(".", ",")}</>}
+                    {loading === "custom" ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Rocket className="size-4 mr-2" />
+                        {t("boost.custom.go", { price: formatMoney(budgetUserCcy, currency, locale) })}
+                      </>
+                    )}
                   </Button>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    CPM base R$ 50/1k views. Estados, gênero, idade e objetivo premium ajustam o preço.
+                    {t("boost.custom.pricingFootnote")}
                   </p>
+                  {currency !== "BRL" && (
+                    <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                      {t("boost.fxNotice")}
+                    </p>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

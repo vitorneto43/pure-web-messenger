@@ -756,6 +756,7 @@ const ja: Dict = {
 
 import { APP_PT, APP_EN } from "./dicts";
 import { ONBOARDING_SURVEY_DICT } from "./dicts/onboarding-survey";
+import { BOOST_DICT } from "./dicts/boost";
 
 // App-interior keys (PT + EN); other locales fall back to EN automatically.
 Object.assign(pt, APP_PT);
@@ -772,6 +773,19 @@ Object.assign(ar, ONBOARDING_SURVEY_DICT.ar);
 Object.assign(hi, ONBOARDING_SURVEY_DICT.hi);
 Object.assign(zh, ONBOARDING_SURVEY_DICT.zh);
 Object.assign(ja, ONBOARDING_SURVEY_DICT.ja);
+
+// Boost dialog — fully translated across all supported locales.
+Object.assign(pt, BOOST_DICT.pt);
+Object.assign(en, BOOST_DICT.en);
+Object.assign(es, BOOST_DICT.es);
+Object.assign(fr, BOOST_DICT.fr);
+Object.assign(de, BOOST_DICT.de);
+Object.assign(it, BOOST_DICT.it);
+Object.assign(ar, BOOST_DICT.ar);
+Object.assign(hi, BOOST_DICT.hi);
+Object.assign(zh, BOOST_DICT.zh);
+Object.assign(ja, BOOST_DICT.ja);
+
 
 export const RESOURCES: Record<Locale, { translation: Dict }> = {
   pt: { translation: pt },

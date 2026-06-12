@@ -15,7 +15,8 @@ export type BoostGender = "male" | "female" | "all";
 export interface CustomBoostInput {
   budgetCents: number;
   durationDays: number;
-  states: string[]; // BR UF codes; [] = país todo
+  countries: string[]; // ISO 3166-1 alpha-2 codes; [] = worldwide
+  states: string[]; // ISO 3166-2 subdivision codes (without country prefix); [] = whole country
   ageMin: number;
   ageMax: number;
   gender: BoostGender;
@@ -25,8 +26,14 @@ export interface CustomBoostInput {
 const BASE_CPM_CENTS = 5000;
 const PREMIUM_OBJECTIVES: BoostObjective[] = ["chat", "network", "cross_platform"];
 
-export function calculateCpm(input: Omit<CustomBoostInput, "budgetCents" | "durationDays">): number {
+export function calculateCpm(
+  input: Omit<CustomBoostInput, "budgetCents" | "durationDays">,
+): number {
   let cpm = BASE_CPM_CENTS;
+  // Country targeting: <=5 narrow countries = +25%, otherwise +10%; worldwide = base.
+  if (input.countries.length > 0) {
+    cpm = Math.round(cpm * (input.countries.length <= 5 ? 1.25 : 1.1));
+  }
   if (input.states.length > 0) cpm = Math.round(cpm * 1.2);
   if (input.gender !== "all") cpm = Math.round(cpm * 1.1);
   const ageRestricted = input.ageMin > 13 || input.ageMax < 80;
@@ -41,6 +48,9 @@ export function estimateViews(input: CustomBoostInput): number {
   return Math.floor((input.budgetCents / cpm) * 1000);
 }
 
+// Legacy export kept for any callers still importing BR_STATES from this module.
+// Prefer `SUBDIVISIONS.BR` from `@/lib/world-regions`.
+export { SUBDIVISIONS as REGION_SUBDIVISIONS } from "@/lib/world-regions";
 export const BR_STATES: { code: string; name: string }[] = [
   { code: "AC", name: "Acre" }, { code: "AL", name: "Alagoas" }, { code: "AP", name: "Amapá" },
   { code: "AM", name: "Amazonas" }, { code: "BA", name: "Bahia" }, { code: "CE", name: "Ceará" },
@@ -54,12 +64,12 @@ export const BR_STATES: { code: string; name: string }[] = [
   { code: "SP", name: "São Paulo" }, { code: "SE", name: "Sergipe" }, { code: "TO", name: "Tocantins" },
 ];
 
-export const OBJECTIVES: { key: BoostObjective; label: string; emoji: string; premium: boolean }[] = [
-  { key: "views", label: "Mais visualizações", emoji: "👀", premium: false },
-  { key: "comments", label: "Mais comentários", emoji: "💬", premium: false },
-  { key: "profile_visits", label: "Ver perfil", emoji: "👤", premium: false },
-  { key: "chat", label: "Iniciar conversa no chat", emoji: "💼", premium: true },
-  { key: "network", label: "Networking", emoji: "🤝", premium: true },
-  { key: "website", label: "Visitas ao site", emoji: "🌐", premium: false },
-  { key: "cross_platform", label: "Perfis em outras plataformas", emoji: "🔗", premium: true },
+export const OBJECTIVES: { key: BoostObjective; emoji: string; premium: boolean; i18nKey: string }[] = [
+  { key: "views", emoji: "👀", premium: false, i18nKey: "boost.obj.views" },
+  { key: "comments", emoji: "💬", premium: false, i18nKey: "boost.obj.comments" },
+  { key: "profile_visits", emoji: "👤", premium: false, i18nKey: "boost.obj.profile_visits" },
+  { key: "chat", emoji: "💼", premium: true, i18nKey: "boost.obj.chat" },
+  { key: "network", emoji: "🤝", premium: true, i18nKey: "boost.obj.network" },
+  { key: "website", emoji: "🌐", premium: false, i18nKey: "boost.obj.website" },
+  { key: "cross_platform", emoji: "🔗", premium: true, i18nKey: "boost.obj.cross_platform" },
 ];

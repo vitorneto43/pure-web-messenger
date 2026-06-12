@@ -1,0 +1,1 @@
+ALTER TABLE public.status_boosts ADD COLUMN IF NOT EXISTS target_countries text[] DEFAULT '{}'::text[];
