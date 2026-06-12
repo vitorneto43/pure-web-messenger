@@ -755,10 +755,23 @@ const ja: Dict = {
 };
 
 import { APP_PT, APP_EN } from "./dicts";
+import { ONBOARDING_SURVEY_DICT } from "./dicts/onboarding-survey";
 
 // App-interior keys (PT + EN); other locales fall back to EN automatically.
 Object.assign(pt, APP_PT);
 Object.assign(en, APP_EN);
+
+// Onboarding survey is fully translated across all supported locales.
+Object.assign(pt, ONBOARDING_SURVEY_DICT.pt);
+Object.assign(en, ONBOARDING_SURVEY_DICT.en);
+Object.assign(es, ONBOARDING_SURVEY_DICT.es);
+Object.assign(fr, ONBOARDING_SURVEY_DICT.fr);
+Object.assign(de, ONBOARDING_SURVEY_DICT.de);
+Object.assign(it, ONBOARDING_SURVEY_DICT.it);
+Object.assign(ar, ONBOARDING_SURVEY_DICT.ar);
+Object.assign(hi, ONBOARDING_SURVEY_DICT.hi);
+Object.assign(zh, ONBOARDING_SURVEY_DICT.zh);
+Object.assign(ja, ONBOARDING_SURVEY_DICT.ja);
 
 export const RESOURCES: Record<Locale, { translation: Dict }> = {
   pt: { translation: pt },
