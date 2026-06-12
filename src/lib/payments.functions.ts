@@ -3,6 +3,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient } from "@/lib/stripe.server";
 import { calculateCpm, estimateViews } from "@/lib/boost-pricing";
+import { convertFromBRL, type Currency } from "@/lib/currency";
+
+const SUPPORTED_CURRENCIES = [
+  "BRL", "USD", "EUR", "GBP", "MXN", "INR", "JPY", "CNY", "SAR",
+] as const;
+
+// Stripe expects amounts in the currency's smallest unit. JPY is zero-decimal.
+function toStripeMinorUnits(amount: number, currency: Currency): number {
+  if (currency === "JPY") return Math.round(amount);
+  return Math.round(amount * 100);
+}
+
 
 const PACKAGES = {
   boost_100: { views: 100, amount_cents: 500 },
