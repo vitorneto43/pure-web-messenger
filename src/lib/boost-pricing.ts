@@ -42,11 +42,15 @@ export function calculateCpm(
   return cpm;
 }
 
+// budgetCents is the DAILY budget. Total spend = budgetCents * durationDays,
+// and estimated views scale with the full campaign spend.
 export function estimateViews(input: CustomBoostInput): number {
   const cpm = calculateCpm(input);
   if (cpm <= 0) return 0;
-  return Math.floor((input.budgetCents / cpm) * 1000);
+  const totalCents = input.budgetCents * input.durationDays;
+  return Math.floor((totalCents / cpm) * 1000);
 }
+
 
 // Legacy export kept for any callers still importing BR_STATES from this module.
 // Prefer `SUBDIVISIONS.BR` from `@/lib/world-regions`.
