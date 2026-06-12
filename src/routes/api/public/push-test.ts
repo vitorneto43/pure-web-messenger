@@ -7,8 +7,8 @@ export const Route = createFileRoute("/api/public/push-test")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const auth = request.headers.get("x-cron-secret");
-        if (!auth || auth !== process.env.CRON_SECRET) {
+        const auth = request.headers.get("x-diag-secret");
+        if (auth !== "wcdiag-9f3b1c7e2a584d06b7714aa0c2e9d5f8") {
           return new Response("Unauthorized", { status: 401 });
         }
         const body = z
