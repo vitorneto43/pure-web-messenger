@@ -182,7 +182,26 @@ export async function registerNativePush(
 }
 
 function handleNativePushPayload(data?: Record<string, unknown>): void {
-  if (!data || data.type !== 'call') return;
+  if (!data) return;
+  const type = data.type as string | undefined;
+
+  if (type === 'message') {
+    // Foreground push: Capacitor swallows the system notification, so we
+    // play sound + vibrate from JS so the user still gets feedback.
+    try {
+      import('@/lib/notification-sound').then(({ playNotification }) => {
+        try { playNotification(); } catch { /* ignore */ }
+      });
+    } catch { /* ignore */ }
+    try {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate?.([0, 250, 120, 250]);
+      }
+    } catch { /* ignore */ }
+    return;
+  }
+
+  if (type !== 'call') return;
   const callId = data.callId as string | undefined;
   const callerName = data.callerName as string | undefined;
   const kind = data.kind as string | undefined;
