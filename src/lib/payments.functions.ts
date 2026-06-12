@@ -115,14 +115,22 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
 
+    // Convert the BRL-base price to the user's local currency. Stripe will
+    // charge in this currency directly, so the embedded checkout matches
+    // exactly what the user sees in the dialog.
+    const targetCurrency: Currency = (data.currency ?? "BRL") as Currency;
+    const amountInTarget = convertFromBRL(amountCents / 100, targetCurrency);
+    const stripeAmount = toStripeMinorUnits(amountInTarget, targetCurrency);
+    const stripeCurrency = targetCurrency.toLowerCase();
+
     const boostRow: Record<string, unknown> = {
       status_id: data.statusId,
       user_id: userId,
       package: data.package,
       views_total: views,
       views_remaining: views,
-      amount_cents: amountCents,
-      currency: "brl",
+      amount_cents: stripeAmount,
+      currency: stripeCurrency,
       status: "pending",
       environment: data.environment,
       boost_type: isCustom ? "custom" : "package",
@@ -191,35 +199,23 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
       customerId = created.id;
     }
 
-    let lineItems: any[];
-    let description: string;
-    if (isCustom) {
-      description = `Impulso personalizado · ${views.toLocaleString("pt-BR")} visualizações em ${data.custom!.durationDays} dias`;
-      lineItems = [
-        {
-          price_data: {
-            currency: "brl",
-            unit_amount: amountCents,
-            product_data: { name: description },
-          },
-          quantity: 1,
+    // Always use inline price_data so we can charge in the user's local
+    // currency. Stripe products / lookup_keys are fixed in BRL and don't
+    // support arbitrary per-checkout currencies.
+    const productName = isCustom
+      ? `WaveChat Boost · ${views.toLocaleString("pt-BR")} views / ${data.custom!.durationDays}d`
+      : `WaveChat Boost · ${views.toLocaleString("pt-BR")} views`;
+    const lineItems = [
+      {
+        price_data: {
+          currency: stripeCurrency,
+          unit_amount: stripeAmount,
+          product_data: { name: productName },
         },
-      ];
-    } else {
-      const prices = await stripe.prices.list({ lookup_keys: [data.package] });
-      if (!prices?.data?.length) {
-        throw new Error(
-          data.environment === "live"
-            ? "Preço ainda não disponível em produção. Republique o projeto."
-            : "Preço não encontrado"
-        );
-      }
-      const sp = prices.data[0];
-      lineItems = [{ price: sp.id, quantity: 1 }];
-      const productId = typeof sp.product === "string" ? sp.product : sp.product.id;
-      const product = await stripe.products.retrieve(productId);
-      description = product.name;
-    }
+        quantity: 1,
+      },
+    ];
+    const description = productName;
 
     const session = await stripe.checkout.sessions.create({
       line_items: lineItems,
@@ -233,8 +229,10 @@ export const createBoostCheckout = createServerFn({ method: "POST" })
         boostId,
         statusId: data.statusId,
         package: data.package,
+        currency: stripeCurrency,
       },
     });
+
 
     await supabase
       .from("status_boosts")
