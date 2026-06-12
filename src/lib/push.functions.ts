@@ -279,6 +279,8 @@ export const sendMessagePush = createServerFn({ method: "POST" })
             conversationId: data.conversationId,
             title,
             body,
+            senderName,
+            badge: badgeByUser.get(rid) ?? 0,
           }).catch(() => {}),
         ),
       );

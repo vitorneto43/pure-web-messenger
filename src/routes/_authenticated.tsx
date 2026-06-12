@@ -9,6 +9,7 @@ import { usePushSetup } from "@/hooks/use-push";
 import { useAppBadgeSync } from "@/hooks/use-app-badge";
 import { useBoostReturn } from "@/hooks/use-boost-return";
 import { useLiveLocationBroadcast } from "@/hooks/use-live-location-broadcast";
+import { useMessageNotificationIntent } from "@/hooks/use-message-notification-intent";
 import { OnboardingNameDialog } from "@/components/OnboardingNameDialog";
 import { OnboardingSurveyDialog } from "@/components/OnboardingSurveyDialog";
 
@@ -47,5 +48,6 @@ function PushBootstrap() {
   useAppBadgeSync();
   useBoostReturn();
   useLiveLocationBroadcast();
+  useMessageNotificationIntent();
   return null;
 }
