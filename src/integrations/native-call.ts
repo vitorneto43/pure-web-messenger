@@ -112,6 +112,30 @@ export async function requestCallPermissions(): Promise<void> {
   }
 }
 
+/**
+ * Create the "messages_v2" notification channel from JS (works on the
+ * already-published APK because the app loads this code remotely).
+ * The old "messages" channel on some devices ended up silent / hidden on
+ * the lockscreen; channel settings are immutable after creation, so the
+ * only no-rebuild fix is a NEW channel with the right settings.
+ */
+async function ensureMessageChannel(): Promise<void> {
+  if (!isAndroid()) return;
+  try {
+    await PushNotifications.createChannel({
+      id: 'messages_v2',
+      name: 'Mensagens',
+      description: 'Notificações de novas mensagens',
+      importance: 5, // IMPORTANCE_HIGH (heads-up)
+      visibility: 1, // VISIBILITY_PUBLIC (show on lockscreen)
+      vibration: true,
+      lights: true,
+    });
+  } catch (e) {
+    console.error('Failed to create messages_v2 channel', e);
+  }
+}
+
 /** Register FCM push token and save to backend */
 export async function registerNativePush(
   saveTokenFn: (token: string, platform: 'android' | 'ios') => Promise<void>,
@@ -121,6 +145,7 @@ export async function registerNativePush(
   registered = true;
 
   try {
+    await ensureMessageChannel();
     const permResult = await PushNotifications.requestPermissions();
     if (permResult.receive !== 'granted') {
       console.warn('Push notification permission denied');
