@@ -123,17 +123,21 @@ async function ensureMessageChannel(): Promise<void> {
   if (!isAndroid()) return;
   try {
     await PushNotifications.createChannel({
-      id: 'messages_v2',
-      name: 'Mensagens',
-      description: 'Notificações de novas mensagens',
+      id: 'messages_v3',
+      name: 'Mensagens novas',
+      description: 'Notificações de novas mensagens (som e vibração)',
       importance: 5, // IMPORTANCE_HIGH (heads-up)
       visibility: 1, // VISIBILITY_PUBLIC (show on lockscreen)
+      sound: 'default',
       vibration: true,
       lights: true,
     });
   } catch (e) {
-    console.error('Failed to create messages_v2 channel', e);
+    console.error('Failed to create messages_v3 channel', e);
   }
+  // Remove the old silent channel so Android can't route through it anymore.
+  try { await PushNotifications.deleteChannel({ id: 'messages_v2' }); } catch { /* ignore */ }
+  try { await PushNotifications.deleteChannel({ id: 'messages' }); } catch { /* ignore */ }
 }
 
 /** Register FCM push token and save to backend */
