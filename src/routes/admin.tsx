@@ -44,6 +44,8 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
 import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
 import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
+import { ModerationTab } from "@/components/admin/ModerationTab";
+import { ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
