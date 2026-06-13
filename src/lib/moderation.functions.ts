@@ -143,7 +143,7 @@ export const listReports = createServerFn({ method: "GET" })
     if (statusIds.length) {
       const { data: sts } = await supabaseAdmin
         .from("statuses")
-        .select("id, caption, media_url, media_type, user_id, created_at")
+        .select("id, caption, content, media_url, kind, user_id, created_at")
         .in("id", statusIds);
       for (const s of sts ?? []) contentMap.set(`status:${s.id}`, s);
     }
