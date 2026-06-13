@@ -15,6 +15,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as DescobrirRouteImport } from './routes/descobrir'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -64,6 +65,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiretrizesRoute = DiretrizesRouteImport.update({
+  id: '/diretrizes',
+  path: '/diretrizes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DescobrirRoute = DescobrirRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/diretrizes'
     | '/guide'
     | '/privacy'
     | '/reset-password'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/diretrizes'
     | '/guide'
     | '/privacy'
     | '/reset-password'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/diretrizes'
     | '/guide'
     | '/privacy'
     | '/reset-password'
@@ -348,6 +360,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DescobrirRoute: typeof DescobrirRoute
+  DiretrizesRoute: typeof DiretrizesRoute
   GuideRoute: typeof GuideRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -408,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diretrizes': {
+      id: '/diretrizes'
+      path: '/diretrizes'
+      fullPath: '/diretrizes'
+      preLoaderRoute: typeof DiretrizesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/descobrir': {
@@ -587,6 +607,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DescobrirRoute: DescobrirRoute,
+  DiretrizesRoute: DiretrizesRoute,
   GuideRoute: GuideRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
