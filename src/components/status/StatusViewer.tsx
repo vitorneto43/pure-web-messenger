@@ -482,6 +482,11 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               {t("status.views", { count: viewerCount ?? "—" })}
             </div>
             <div className="flex-1" />
+            <Button asChild size="sm" variant="ghost" className="text-white hover:bg-white/10">
+              <Link to="/s/$statusId" params={{ statusId: current.id }} onClick={onClose}>
+                <MessageCircle className="size-4 mr-1" /> {t("status.openPublic", { defaultValue: "Comentários" })}
+              </Link>
+            </Button>
             <Button
               size="sm"
               variant="ghost"
