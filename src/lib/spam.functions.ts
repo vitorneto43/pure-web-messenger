@@ -98,7 +98,13 @@ export const analyzeMessageForSpam = createServerFn({ method: "POST" })
       if (data.message_id) {
         await supabaseAdmin
           .from("messages")
-          .update({ deleted_for_all: true, content: null, attachment_url: null })
+          .update({
+            deleted_for_everyone_at: new Date().toISOString(),
+            content: null,
+            attachment_url: null,
+            attachment_name: null,
+            attachment_type: null,
+          })
           .eq("id", data.message_id);
       }
       // Suspende usuário por 7 dias
