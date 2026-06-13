@@ -361,6 +361,8 @@ function AuthPage() {
                     type={show ? "text" : "password"}
                     value={form.password}
                     onChange={(e) => update("password", e.target.value)}
+                    onFocus={onFieldFocus}
+                    onBlur={(e) => onFieldBlurFilled("password", e.target.value)}
                     placeholder="••••••••"
                     autoComplete={mode === "signup" ? "new-password" : "current-password"}
                     className="pr-10"
