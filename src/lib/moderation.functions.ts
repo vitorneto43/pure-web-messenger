@@ -121,11 +121,39 @@ export const listReports = createServerFn({ method: "GET" })
         .in("id", userIds);
       profilesMap = new Map((profs ?? []).map((p) => [p.id, p]));
     }
+
+    // Acesso ao conteúdo denunciado é permitido APENAS para moderação,
+    // e somente porque um participante explicitamente nos pediu para
+    // revisar (denúncia voluntária) ou porque o sistema auto-sinalizou
+    // o próprio remetente. Nunca exibimos mensagens fora desse contexto.
+    const messageIds = Array.from(
+      new Set((rows ?? []).filter((r) => r.target_type === "message").map((r) => r.target_id)),
+    );
+    const statusIds = Array.from(
+      new Set((rows ?? []).filter((r) => r.target_type === "status").map((r) => r.target_id)),
+    );
+    const contentMap = new Map<string, any>();
+    if (messageIds.length) {
+      const { data: msgs } = await supabaseAdmin
+        .from("messages")
+        .select("id, content, attachment_url, attachment_type, attachment_name, sender_id, conversation_id, created_at, deleted_for_everyone_at")
+        .in("id", messageIds);
+      for (const m of msgs ?? []) contentMap.set(`message:${m.id}`, m);
+    }
+    if (statusIds.length) {
+      const { data: sts } = await supabaseAdmin
+        .from("statuses")
+        .select("id, caption, content, media_url, kind, user_id, created_at")
+        .in("id", statusIds);
+      for (const s of sts ?? []) contentMap.set(`status:${s.id}`, s);
+    }
+
     return {
       reports: (rows ?? []).map((r) => ({
         ...r,
         reporter: profilesMap.get(r.reporter_id) ?? null,
         reported_user: r.reported_user_id ? profilesMap.get(r.reported_user_id) ?? null : null,
+        target_content: contentMap.get(`${r.target_type}:${r.target_id}`) ?? null,
       })),
     };
   });

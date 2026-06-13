@@ -101,6 +101,39 @@ function ReportCard({ report, onChanged }: { report: any; onChanged: () => void 
       </CardHeader>
       <CardContent className="text-sm space-y-1.5">
         {report.details && <p className="text-muted-foreground italic">"{report.details}"</p>}
+        {report.target_content && (
+          <div className="rounded-md border bg-muted/40 p-2 space-y-1">
+            <div className="text-xs font-medium text-muted-foreground">
+              Conteúdo denunciado
+              {report.target_content.deleted_for_everyone_at && " (removido)"}
+            </div>
+            {(report.target_content.content || report.target_content.caption) && (
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {report.target_content.content ?? report.target_content.caption}
+              </p>
+            )}
+            {report.target_content.attachment_url && (
+              <a
+                href={report.target_content.attachment_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs underline break-all"
+              >
+                {report.target_content.attachment_name ?? report.target_content.attachment_url}
+              </a>
+            )}
+            {report.target_content.media_url && (
+              <a
+                href={report.target_content.media_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs underline break-all"
+              >
+                {report.target_content.media_url}
+              </a>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
           <span>
             <span className="text-muted-foreground">Denunciado:</span>{" "}
