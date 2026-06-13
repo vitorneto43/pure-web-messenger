@@ -304,6 +304,8 @@ function AuthPage() {
                     id="username"
                     value={form.username}
                     onChange={(e) => update("username", normalizeUsername(e.target.value))}
+                    onFocus={onFieldFocus}
+                    onBlur={(e) => onFieldBlurFilled("username", e.target.value)}
                     placeholder="joao_silva"
                     autoComplete="username"
                     autoCapitalize="none"
@@ -332,6 +334,8 @@ function AuthPage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
+                onFocus={onFieldFocus}
+                onBlur={(e) => onFieldBlurFilled("email", e.target.value)}
                 placeholder="voce@email.com"
                 autoComplete="email"
               />
