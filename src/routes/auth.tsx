@@ -69,6 +69,9 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [showConfirmEmail, setShowConfirmEmail] = useState(false);
+  const [isHuman, setIsHuman] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // anti-bot: deve ficar vazio
+  const [formStartedAt] = useState(() => Date.now());
   const [form, setForm] = useState({
     username: "",
     displayName: "",
