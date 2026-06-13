@@ -384,3 +384,48 @@ function PendingRequestsCard({ ownerId }: { ownerId: string }) {
     </div>
   );
 }
+
+function ProfileActionsMenu({ profileId, username }: { profileId: string; username: string }) {
+  const { user } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
+  const blockFn = useServerFn(blockUser);
+  const handleBlock = async () => {
+    if (!user) {
+      toast.info("Faça login para bloquear");
+      return;
+    }
+    try {
+      await blockFn({ data: { user_id: profileId } });
+      toast.success(`@${username} bloqueado`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao bloquear");
+    }
+  };
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost">
+            <MoreVertical className="size-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setReportOpen(true)}>
+            <Flag className="size-4 mr-2" /> Denunciar
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleBlock} className="text-destructive">
+            <Ban className="size-4 mr-2" /> Bloquear usuário
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ReportContentDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetType="profile"
+        targetId={profileId}
+        reportedUserId={profileId}
+      />
+    </>
+  );
+}
