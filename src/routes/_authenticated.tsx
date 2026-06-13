@@ -35,11 +35,13 @@ function AuthGuard() {
   return (
     <CallProvider>
       <PushBootstrap />
-      <OnboardingNameDialog />
-      <OnboardingSurveyDialog />
-      <Outlet />
-      <CallScreen />
-      <IncomingCallDialog />
+      <ModerationGate>
+        <OnboardingNameDialog />
+        <OnboardingSurveyDialog />
+        <Outlet />
+        <CallScreen />
+        <IncomingCallDialog />
+      </ModerationGate>
     </CallProvider>
   );
 }
