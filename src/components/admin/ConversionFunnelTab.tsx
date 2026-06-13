@@ -177,9 +177,8 @@ function FunnelContent({ data }: { data: FunnelResult }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <Metric icon={<Users className="size-4" />} label="Visitantes únicos" value={data.visitor.visitors} />
-            <Metric icon={<Eye className="size-4" />} label="Abriram perfis públicos" value={data.visitor.publicProfileViews} />
             <Metric icon={<Eye className="size-4" />} label="Visualizaram descobrir" value={data.visitor.discoverViews} />
             <Metric icon={<UserPlus className="size-4" />} label="Voltaram e criaram conta" value={data.visitor.returnedAndSignedUp} />
             <Metric
