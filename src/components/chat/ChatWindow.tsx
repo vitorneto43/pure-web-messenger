@@ -43,8 +43,6 @@ import {
 import { formatFullTime } from "@/lib/format-time";
 import { playNotification } from "@/lib/notification-sound";
 import { sendMessagePush } from "@/lib/push.functions";
-import { reportSpamSignal } from "@/lib/spam.functions";
-import { analyzeMessageLocally } from "@/lib/spam-detector";
 import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
