@@ -391,6 +391,18 @@ function AuthPage() {
               </>
             )}
           </div>
+
+          <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-center">
+            <p className="text-xs text-muted-foreground mb-2">
+              Quer dar uma olhada antes de criar conta?
+            </p>
+            <Link
+              to="/descobrir"
+              className="inline-flex items-center justify-center text-sm font-semibold text-primary hover:underline"
+            >
+              Explorar sem cadastro →
+            </Link>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
