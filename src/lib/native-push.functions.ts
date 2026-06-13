@@ -152,6 +152,12 @@ async function sendNativePayloadToUser(
                     default_vibrate_timings: true,
                     notification_priority: "PRIORITY_HIGH",
                     visibility: "PUBLIC",
+                    // WhatsApp-style: one notification per conversation.
+                    // Same tag = new message updates the existing notification
+                    // (no stacking of duplicates).
+                    ...(dataPayload.conversationId
+                      ? { tag: `conv-${dataPayload.conversationId}` }
+                      : {}),
                   },
                 }
               : {}),
