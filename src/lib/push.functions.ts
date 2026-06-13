@@ -238,7 +238,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     const toRemove: string[] = [];
     const logs: Array<Record<string, unknown>> = [];
     await Promise.all(
-      subs.map(async (s) => {
+      filteredSubs.map(async (s) => {
         const badge = badgeByUser.get(s.user_id) ?? 0;
         const payload = JSON.stringify({
           type: "message",
