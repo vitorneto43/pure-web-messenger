@@ -391,8 +391,6 @@ function ProfileActionsMenu({ profileId, username }: { profileId: string; userna
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const blockFn = useServerFn(blockUser);
-  // Lazy require to avoid changing many imports above
-  const { useTranslation } = require("react-i18next") as typeof import("react-i18next");
   const { t } = useTranslation();
   const handleBlock = async () => {
     if (!user) {
