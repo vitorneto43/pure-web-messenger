@@ -137,24 +137,18 @@ export const listReports = createServerFn({ method: "GET" })
       profilesMap = new Map((profs ?? []).map((p) => [p.id, p]));
     }
 
-    // Acesso ao conteúdo denunciado é permitido APENAS para moderação,
-    // e somente porque um participante explicitamente nos pediu para
-    // revisar (denúncia voluntária) ou porque o sistema auto-sinalizou
-    // o próprio remetente. Nunca exibimos mensagens fora desse contexto.
-    const messageIds = Array.from(
-      new Set((rows ?? []).filter((r) => r.target_type === "message").map((r) => r.target_id)),
-    );
+    // PRIVACIDADE: o conteúdo de mensagens privadas vem do snapshot
+    // capturado no momento da denúncia (content_reports.evidence_snapshot).
+    // NÃO consultamos a tabela `messages` aqui — o moderador só vê o que
+    // o denunciante explicitamente compartilhou. Conteúdo público (status,
+    // perfis) pode ser consultado normalmente.
     const statusIds = Array.from(
       new Set((rows ?? []).filter((r) => r.target_type === "status").map((r) => r.target_id)),
     );
+    const profileIds = Array.from(
+      new Set((rows ?? []).filter((r) => r.target_type === "profile").map((r) => r.target_id)),
+    );
     const contentMap = new Map<string, any>();
-    if (messageIds.length) {
-      const { data: msgs } = await supabaseAdmin
-        .from("messages")
-        .select("id, content, attachment_url, attachment_type, attachment_name, sender_id, conversation_id, created_at, deleted_for_everyone_at")
-        .in("id", messageIds);
-      for (const m of msgs ?? []) contentMap.set(`message:${m.id}`, m);
-    }
     if (statusIds.length) {
       const { data: sts } = await supabaseAdmin
         .from("statuses")
@@ -162,13 +156,25 @@ export const listReports = createServerFn({ method: "GET" })
         .in("id", statusIds);
       for (const s of sts ?? []) contentMap.set(`status:${s.id}`, s);
     }
+    if (profileIds.length) {
+      const { data: profs2 } = await supabaseAdmin
+        .from("profiles")
+        .select("id, username, display_name, bio, avatar_url")
+        .in("id", profileIds);
+      for (const p of profs2 ?? []) contentMap.set(`profile:${p.id}`, p);
+    }
 
     return {
       reports: (rows ?? []).map((r) => ({
         ...r,
         reporter: profilesMap.get(r.reporter_id) ?? null,
         reported_user: r.reported_user_id ? profilesMap.get(r.reported_user_id) ?? null : null,
-        target_content: contentMap.get(`${r.target_type}:${r.target_id}`) ?? null,
+        // Para mensagens, target_content vem do snapshot (preservado mesmo se a
+        // mensagem for apagada). Para status/perfil, vem do banco diretamente.
+        target_content:
+          r.target_type === "message"
+            ? (r as any).evidence_snapshot ?? null
+            : contentMap.get(`${r.target_type}:${r.target_id}`) ?? null,
       })),
     };
   });
