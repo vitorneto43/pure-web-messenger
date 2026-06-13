@@ -222,6 +222,15 @@ export const applyModerationAction = createServerFn({ method: "POST" })
         .from("profiles")
         .update({ banned_at: new Date().toISOString() })
         .eq("id", targetUser);
+      // Atualiza contadores em fingerprints/IPs vinculados
+      await supabaseAdmin.rpc("register_ban", { _user_id: targetUser });
+      // Em casos gravíssimos, propaga: bloqueia dispositivos e marca IPs como críticos
+      if (data.severity === "gravissima") {
+        await supabaseAdmin.rpc("propagate_severe_ban", {
+          _user_id: targetUser,
+          _reason: data.reason ?? "severe_ban",
+        });
+      }
     } else if (data.action === "unsuspended" && targetUser) {
       await supabaseAdmin.from("profiles").update({ suspended_until: null }).eq("id", targetUser);
     } else if (data.action === "unbanned" && targetUser) {

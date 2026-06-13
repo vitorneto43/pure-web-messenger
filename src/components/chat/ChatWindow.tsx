@@ -351,6 +351,20 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     if (!content.trim() && !attachment) return;
     setSending(true);
     try {
+      // Rate limit para contas novas / baixo trust (não lê conteúdo da mensagem).
+      try {
+        const { checkRateLimit } = await import("@/lib/security.functions");
+        const rl: any = await checkRateLimit({ data: { action: "message" } });
+        if (rl && rl.allowed === false) {
+          toast.error(
+            `Limite diário para contas novas (${rl.cap} msgs/dia). Aguarde para enviar mais.`,
+          );
+          setSending(false);
+          return;
+        }
+      } catch {
+        // Falha do limitador não bloqueia o envio
+      }
       const { data: inserted, error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user.id,
