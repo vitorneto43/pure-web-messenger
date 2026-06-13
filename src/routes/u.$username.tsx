@@ -137,6 +137,8 @@ function PublicProfile() {
   const isPrivate = data.visibility === "private" && !data.can_view_full;
 
   return (
+    <>
+    {GateDialog}
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
       <button
         onClick={() => navigate({ to: "/" })}
