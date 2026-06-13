@@ -28,6 +28,7 @@ const pt: Dict = {
   [K.answerAll]: "Responda todas as perguntas",
   [K.thanks]: "Obrigado! Vamos personalizar sua experiência.",
   [K.sendError]: "Erro ao enviar",
+  [K.skip]: "Responder depois",
 
   "onboarding.q.reason_joined.title": "O que trouxe você ao WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conhecer novas pessoas",
@@ -90,6 +91,7 @@ const en: Dict = {
   [K.answerAll]: "Please answer every question",
   [K.thanks]: "Thanks! We'll personalize your experience.",
   [K.sendError]: "Failed to submit",
+  [K.skip]: "Answer later",
 
   "onboarding.q.reason_joined.title": "What brought you to WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Meet new people",
@@ -152,6 +154,7 @@ const es: Dict = {
   [K.answerAll]: "Responde todas las preguntas",
   [K.thanks]: "¡Gracias! Vamos a personalizar tu experiencia.",
   [K.sendError]: "Error al enviar",
+  [K.skip]: "Responder después",
 
   "onboarding.q.reason_joined.title": "¿Qué te trajo a WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conocer gente nueva",
@@ -214,6 +217,7 @@ const fr: Dict = {
   [K.answerAll]: "Répondez à toutes les questions",
   [K.thanks]: "Merci ! Nous allons personnaliser votre expérience.",
   [K.sendError]: "Échec de l'envoi",
+  [K.skip]: "Répondre plus tard",
 
   "onboarding.q.reason_joined.title": "Qu'est-ce qui vous amène sur WaveChat ?",
   "onboarding.q.reason_joined.meet_people": "Rencontrer de nouvelles personnes",
@@ -276,6 +280,7 @@ const de: Dict = {
   [K.answerAll]: "Bitte beantworte alle Fragen",
   [K.thanks]: "Danke! Wir personalisieren dein Erlebnis.",
   [K.sendError]: "Senden fehlgeschlagen",
+  [K.skip]: "Später beantworten",
 
   "onboarding.q.reason_joined.title": "Was hat dich zu WaveChat gebracht?",
   "onboarding.q.reason_joined.meet_people": "Neue Leute kennenlernen",
@@ -338,6 +343,7 @@ const it: Dict = {
   [K.answerAll]: "Rispondi a tutte le domande",
   [K.thanks]: "Grazie! Personalizzeremo la tua esperienza.",
   [K.sendError]: "Invio non riuscito",
+  [K.skip]: "Rispondi dopo",
 
   "onboarding.q.reason_joined.title": "Cosa ti ha portato su WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conoscere persone nuove",
