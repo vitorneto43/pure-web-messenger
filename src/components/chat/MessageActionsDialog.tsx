@@ -1,4 +1,5 @@
-import { Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
+import { Flag, Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { shareMessageExternally } from "@/lib/share-message";
 import { useTranslation } from "react-i18next";
+import { ReportContentDialog } from "@/components/ReportContentDialog";
+
 
 export interface ActionableMessage {
   id: string;
