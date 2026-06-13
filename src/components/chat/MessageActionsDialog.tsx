@@ -165,8 +165,30 @@ export function MessageActionsDialog({
               {t("chat.deleteForEveryoneExpired")}
             </p>
           )}
+          {!isMine && !isAlreadyDeletedForAll && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12 text-destructive hover:text-destructive"
+              onClick={() => setReportOpen(true)}
+            >
+              <Flag className="size-4 mr-3" /> {t("moderation.report") || "Denunciar"}
+            </Button>
+          )}
         </div>
       </DialogContent>
+      {!isMine && (
+        <ReportContentDialog
+          open={reportOpen}
+          onOpenChange={(v) => {
+            setReportOpen(v);
+            if (!v) onOpenChange(false);
+          }}
+          targetType="message"
+          targetId={message.id}
+          reportedUserId={message.sender_id}
+        />
+      )}
     </Dialog>
   );
 }
+
