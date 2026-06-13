@@ -31,15 +31,14 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Acesso restrito a administradores");
 }
 
-function hashString(v: string | null | undefined): string | null {
-  if (!v) return null;
-  // hash leve para não armazenar IP em texto plano
+function hashString(v: string | null | undefined): string | undefined {
+  if (!v) return undefined;
   let h = 0;
   for (let i = 0; i < v.length; i++) h = (h * 31 + v.charCodeAt(i)) | 0;
   return `h${(h >>> 0).toString(16)}_${v.length}`;
 }
 
-function getClientIpHash(): string | null {
+function getClientIpHash(): string | undefined {
   const ip =
     getRequestHeader("cf-connecting-ip") ||
     getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -48,8 +47,8 @@ function getClientIpHash(): string | null {
   return hashString(ip);
 }
 
-function getUserAgent(): string | null {
-  return getRequestHeader("user-agent") ?? null;
+function getUserAgent(): string | undefined {
+  return getRequestHeader("user-agent") ?? undefined;
 }
 
 // ============================================================================
