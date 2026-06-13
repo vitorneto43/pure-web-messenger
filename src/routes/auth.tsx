@@ -150,6 +150,7 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         void track("signup_click", { email: form.email });
+        void track("signup_submit_click");
         // Anti-bot: honeypot deve estar vazio + checkbox humano + tempo mínimo no formulário
         if (honeypot.trim() !== "") {
           toast.error("Erro de validação. Tente novamente.");
