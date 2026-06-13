@@ -15,6 +15,21 @@ export const submitReport = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => reportSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // PRIVACIDADE: denúncias de mensagens passam por um RPC que valida que o
+    // denunciante é participante da conversa e cria um snapshot do conteúdo
+    // no momento da denúncia. Nenhum outro caminho do código acessa o
+    // conteúdo de mensagens privadas.
+    if (data.target_type === "message") {
+      const { data: reportId, error } = await supabase.rpc("report_message_with_snapshot", {
+        _message_id: data.target_id,
+        _reason: data.reason,
+        _details: data.details ?? undefined,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true, id: reportId as string };
+    }
+
     const { error, data: row } = await supabase
       .from("content_reports")
       .insert({
@@ -122,24 +137,18 @@ export const listReports = createServerFn({ method: "GET" })
       profilesMap = new Map((profs ?? []).map((p) => [p.id, p]));
     }
 
-    // Acesso ao conteúdo denunciado é permitido APENAS para moderação,
-    // e somente porque um participante explicitamente nos pediu para
-    // revisar (denúncia voluntária) ou porque o sistema auto-sinalizou
-    // o próprio remetente. Nunca exibimos mensagens fora desse contexto.
-    const messageIds = Array.from(
-      new Set((rows ?? []).filter((r) => r.target_type === "message").map((r) => r.target_id)),
-    );
+    // PRIVACIDADE: o conteúdo de mensagens privadas vem do snapshot
+    // capturado no momento da denúncia (content_reports.evidence_snapshot).
+    // NÃO consultamos a tabela `messages` aqui — o moderador só vê o que
+    // o denunciante explicitamente compartilhou. Conteúdo público (status,
+    // perfis) pode ser consultado normalmente.
     const statusIds = Array.from(
       new Set((rows ?? []).filter((r) => r.target_type === "status").map((r) => r.target_id)),
     );
+    const profileIds = Array.from(
+      new Set((rows ?? []).filter((r) => r.target_type === "profile").map((r) => r.target_id)),
+    );
     const contentMap = new Map<string, any>();
-    if (messageIds.length) {
-      const { data: msgs } = await supabaseAdmin
-        .from("messages")
-        .select("id, content, attachment_url, attachment_type, attachment_name, sender_id, conversation_id, created_at, deleted_for_everyone_at")
-        .in("id", messageIds);
-      for (const m of msgs ?? []) contentMap.set(`message:${m.id}`, m);
-    }
     if (statusIds.length) {
       const { data: sts } = await supabaseAdmin
         .from("statuses")
@@ -147,13 +156,25 @@ export const listReports = createServerFn({ method: "GET" })
         .in("id", statusIds);
       for (const s of sts ?? []) contentMap.set(`status:${s.id}`, s);
     }
+    if (profileIds.length) {
+      const { data: profs2 } = await supabaseAdmin
+        .from("profiles")
+        .select("id, username, display_name, bio, avatar_url")
+        .in("id", profileIds);
+      for (const p of profs2 ?? []) contentMap.set(`profile:${p.id}`, p);
+    }
 
     return {
       reports: (rows ?? []).map((r) => ({
         ...r,
         reporter: profilesMap.get(r.reporter_id) ?? null,
         reported_user: r.reported_user_id ? profilesMap.get(r.reported_user_id) ?? null : null,
-        target_content: contentMap.get(`${r.target_type}:${r.target_id}`) ?? null,
+        // Para mensagens, target_content vem do snapshot (preservado mesmo se a
+        // mensagem for apagada). Para status/perfil, vem do banco diretamente.
+        target_content:
+          r.target_type === "message"
+            ? (r as any).evidence_snapshot ?? null
+            : contentMap.get(`${r.target_type}:${r.target_id}`) ?? null,
       })),
     };
   });
@@ -280,3 +301,119 @@ export const getUserModerationHistory = createServerFn({ method: "GET" })
     ]);
     return { actions: actions.data ?? [], reports: reports.data ?? [] };
   });
+
+// ============================================================================
+// SuperAdmin: pesos de moderação e modo aprendizado
+// ============================================================================
+
+async function assertSuperAdmin(supabase: any, userId: string) {
+  const { data: isSuper } = await supabase.rpc("has_role", { _user_id: userId, _role: "superadmin" });
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+  if (!isSuper && !isAdmin) throw new Error("Forbidden");
+}
+
+export const getModerationWeights = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertModerator(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: weights }, { data: setting }] = await Promise.all([
+      supabaseAdmin.from("moderation_weights").select("*").eq("id", 1).single(),
+      supabaseAdmin.from("app_settings").select("value").eq("key", "moderation_learning_mode").maybeSingle(),
+    ]);
+    return {
+      weights: weights ?? null,
+      learning_mode: setting?.value === true || (setting?.value as any) === "true",
+    };
+  });
+
+const weightsSchema = z.object({
+  weight_report: z.number().int().min(0).max(100).optional(),
+  weight_spam: z.number().int().min(0).max(100).optional(),
+  weight_links: z.number().int().min(0).max(100).optional(),
+  weight_blocks: z.number().int().min(0).max(100).optional(),
+  weight_behavior: z.number().int().min(0).max(100).optional(),
+  threshold_warning: z.number().int().min(0).max(1000).optional(),
+  threshold_restriction: z.number().int().min(0).max(1000).optional(),
+  threshold_suspension: z.number().int().min(0).max(1000).optional(),
+  threshold_ban: z.number().int().min(0).max(1000).optional(),
+});
+
+export const updateModerationWeights = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => weightsSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("moderation_weights")
+      .update({ ...data, updated_at: new Date().toISOString(), updated_by: context.userId })
+      .eq("id", 1);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setLearningMode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ enabled: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert(
+        {
+          key: "moderation_learning_mode",
+          value: data.enabled as any,
+          updated_at: new Date().toISOString(),
+          updated_by: context.userId,
+        },
+        { onConflict: "key" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const assignReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      report_id: z.string().uuid(),
+      status: z.enum(["pending", "in_review", "resolved", "rejected"]).optional(),
+      take: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertModerator(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const update: any = {};
+    if (data.take) {
+      update.assigned_to = context.userId;
+      update.status = "in_review";
+    } else if (data.status) {
+      update.status = data.status;
+    }
+    const { error } = await supabaseAdmin
+      .from("content_reports")
+      .update(update)
+      .eq("id", data.report_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getUserTrustScore = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { user_id: string }) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertModerator(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Recompute on demand to get fresh score.
+    const { data: score } = await supabaseAdmin.rpc("recompute_trust_score", { _user_id: data.user_id });
+    const { data: row } = await supabaseAdmin
+      .from("user_trust_scores")
+      .select("*")
+      .eq("user_id", data.user_id)
+      .maybeSingle();
+    return { score: (score as number) ?? row?.score ?? 50, components: row?.components ?? {} };
+  });
+

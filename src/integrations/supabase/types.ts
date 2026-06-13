@@ -137,6 +137,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       banned_ips: {
         Row: {
           banned_by: string | null
@@ -164,6 +185,39 @@ export type Database = {
           ip_hash?: string
           reason?: string | null
           related_user_id?: string | null
+        }
+        Relationships: []
+      }
+      behavior_signals: {
+        Row: {
+          created_at: string
+          device_hash: string | null
+          id: string
+          ip_hash: string | null
+          kind: string
+          metadata: Json
+          user_id: string | null
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          kind: string
+          metadata?: Json
+          user_id?: string | null
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          kind?: string
+          metadata?: Json
+          user_id?: string | null
+          weight?: number
         }
         Relationships: []
       }
@@ -219,8 +273,10 @@ export type Database = {
       }
       content_reports: {
         Row: {
+          assigned_to: string | null
           created_at: string
           details: string | null
+          evidence_snapshot: Json | null
           id: string
           reason: string
           reported_user_id: string | null
@@ -234,8 +290,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           details?: string | null
+          evidence_snapshot?: Json | null
           id?: string
           reason: string
           reported_user_id?: string | null
@@ -249,8 +307,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           details?: string | null
+          evidence_snapshot?: Json | null
           id?: string
           reason?: string
           reported_user_id?: string | null
@@ -594,6 +654,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      moderation_weights: {
+        Row: {
+          id: number
+          threshold_ban: number
+          threshold_restriction: number
+          threshold_suspension: number
+          threshold_warning: number
+          updated_at: string
+          updated_by: string | null
+          weight_behavior: number
+          weight_blocks: number
+          weight_links: number
+          weight_report: number
+          weight_spam: number
+        }
+        Insert: {
+          id?: number
+          threshold_ban?: number
+          threshold_restriction?: number
+          threshold_suspension?: number
+          threshold_warning?: number
+          updated_at?: string
+          updated_by?: string | null
+          weight_behavior?: number
+          weight_blocks?: number
+          weight_links?: number
+          weight_report?: number
+          weight_spam?: number
+        }
+        Update: {
+          id?: number
+          threshold_ban?: number
+          threshold_restriction?: number
+          threshold_suspension?: number
+          threshold_warning?: number
+          updated_at?: string
+          updated_by?: string | null
+          weight_behavior?: number
+          weight_blocks?: number
+          weight_links?: number
+          weight_report?: number
+          weight_spam?: number
+        }
+        Relationships: []
       }
       native_push_tokens: {
         Row: {
@@ -1601,6 +1706,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_trust_scores: {
+        Row: {
+          components: Json
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          components?: Json
+          score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          components?: Json
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1719,10 +1845,15 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recompute_trust_score: { Args: { _user_id: string }; Returns: number }
       record_profile_view: { Args: { _owner: string }; Returns: undefined }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
       register_boost_click: { Args: { _status_id: string }; Returns: Json }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
+      report_message_with_snapshot: {
+        Args: { _details?: string; _message_id: string; _reason: string }
+        Returns: string
+      }
       request_profile_view: { Args: { _owner: string }; Returns: Json }
       respond_profile_view: {
         Args: { _approve: boolean; _requester: string }
