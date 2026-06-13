@@ -48,7 +48,9 @@ export function MessageActionsDialog({
 }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
   if (!message || !user) return null;
+
 
   const isMine = message.sender_id === user.id;
   const isAlreadyDeletedForAll = !!message.deleted_for_everyone_at;
