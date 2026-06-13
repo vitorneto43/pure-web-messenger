@@ -21,6 +21,7 @@ export const Route = createFileRoute("/descobrir")({
 });
 
 function DiscoverPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
