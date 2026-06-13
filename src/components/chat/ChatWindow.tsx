@@ -351,6 +351,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
       });
       if (error) throw error;
       setText("");
+      // Sending a message implies you've read this conversation (WhatsApp-style):
+      // clear unread badge by bumping last_read_at.
+      void supabase
+        .from("conversation_members")
+        .update({ last_read_at: new Date().toISOString() })
+        .eq("conversation_id", conversationId)
+        .eq("user_id", user.id);
       // clear typing
       await supabase
         .from("typing_indicators")
