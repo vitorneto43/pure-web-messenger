@@ -83,6 +83,51 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const isOwner = !!user && current?.user_id === user.id;
   const [reportOpen, setReportOpen] = useState(false);
   const blockFn = useServerFn(blockUser);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!user || !current || current.user_id === user.id) {
+      setIsFollowing(false);
+      return;
+    }
+    supabase
+      .from("profile_follows")
+      .select("follower_id", { head: true, count: "exact" })
+      .eq("follower_id", user.id)
+      .eq("following_id", current.user_id)
+      .then(({ count }) => {
+        if (mounted) setIsFollowing((count ?? 0) > 0);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id, current?.user_id]);
+
+  async function handleToggleFollow() {
+    if (!user || !current) {
+      toast.error(t("status.loginToFollow", { defaultValue: "Entre para seguir" }));
+      return;
+    }
+    setFollowLoading(true);
+    try {
+      const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", {
+        _target: current.user_id,
+      });
+      if (error) throw error;
+      setIsFollowing(!!nowFollowing);
+      toast.success(
+        nowFollowing
+          ? t("status.followed", { defaultValue: "Seguindo" })
+          : t("status.unfollowed", { defaultValue: "Deixou de seguir" }),
+      );
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro");
+    } finally {
+      setFollowLoading(false);
+    }
+  }
 
   async function handleBlock() {
     if (!current) return;
@@ -302,6 +347,19 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </p>
           <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
         </div>
+        {!isOwner && (
+          <Button
+            size="sm"
+            onClick={handleToggleFollow}
+            disabled={followLoading}
+            variant={isFollowing ? "secondary" : "default"}
+            className={isFollowing ? "h-7 px-3 text-xs rounded-full" : "h-7 px-3 text-xs rounded-full bg-white text-black hover:bg-white/90"}
+          >
+            {isFollowing
+              ? t("status.following", { defaultValue: "Seguindo" })
+              : t("status.follow", { defaultValue: "Seguir" })}
+          </Button>
+        )}
         {!isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
