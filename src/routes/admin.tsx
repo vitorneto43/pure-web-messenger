@@ -46,7 +46,8 @@ import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
 import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
 import { ModerationTab } from "@/components/admin/ModerationTab";
 import { ComplianceTab } from "@/components/admin/ComplianceTab";
-import { ShieldAlert, Scale } from "lucide-react";
+import { SecurityTab } from "@/components/admin/SecurityTab";
+import { ShieldAlert, Scale, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
