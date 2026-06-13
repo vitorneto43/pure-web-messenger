@@ -72,12 +72,40 @@ function AuthPage() {
   const [isHuman, setIsHuman] = useState(false);
   const [honeypot, setHoneypot] = useState(""); // anti-bot: deve ficar vazio
   const [formStartedAt] = useState(() => Date.now());
+  const [focusedOnce, setFocusedOnce] = useState(false);
+  const [filledOnce, setFilledOnce] = useState<{ email: boolean; username: boolean; password: boolean }>({
+    email: false,
+    username: false,
+    password: false,
+  });
   const [form, setForm] = useState({
     username: "",
     displayName: "",
     email: "",
     password: "",
   });
+
+  // Etapa 3 do funil: tela de cadastro realmente aberta
+  useEffect(() => {
+    if (mode === "signup") void track("auth_signup_view");
+  }, [mode]);
+
+  const onFieldFocus = () => {
+    if (mode !== "signup" || focusedOnce) return;
+    setFocusedOnce(true);
+    void track("signup_field_focus");
+  };
+  const onFieldBlurFilled = (field: "email" | "username" | "password", value: string) => {
+    if (mode !== "signup") return;
+    const v = value.trim();
+    if (!v) return;
+    if (field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return;
+    if (field === "password" && v.length < 8) return;
+    if (field === "username" && v.length < 3) return;
+    if (filledOnce[field]) return;
+    setFilledOnce((s) => ({ ...s, [field]: true }));
+    void track(`signup_${field}_filled`);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
