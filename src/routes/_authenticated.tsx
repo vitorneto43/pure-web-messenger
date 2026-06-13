@@ -21,7 +21,7 @@ function AuthGuard() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth" });
+    if (!loading && !session) navigate({ to: "/descobrir" });
   }, [loading, session, navigate]);
 
   if (loading || !session) {
