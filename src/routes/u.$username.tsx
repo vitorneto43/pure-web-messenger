@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X, Eye, UserPlus, Us
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
@@ -49,6 +50,7 @@ const GOAL_LABELS: Record<string, string> = {
 function PublicProfile() {
   const { username } = Route.useParams();
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,11 +76,7 @@ function PublicProfile() {
     });
   }, [data?.id, user?.id]);
 
-  async function toggleFollow() {
-    if (!user) {
-      navigate({ to: "/auth" });
-      return;
-    }
+  async function doToggleFollow() {
     if (!data) return;
     setBusy(true);
     const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: data.id });
@@ -95,12 +93,11 @@ function PublicProfile() {
         : prev,
     );
   }
+  function toggleFollow() {
+    gate("follow", doToggleFollow);
+  }
 
-  async function requestAccess() {
-    if (!user) {
-      navigate({ to: "/auth" });
-      return;
-    }
+  async function doRequestAccess() {
     if (!data) return;
     setBusy(true);
     const { error } = await supabase.rpc("request_profile_view", { _owner: data.id });
@@ -108,6 +105,9 @@ function PublicProfile() {
     if (error) return toast.error(error.message);
     toast.success("Pedido enviado");
     load();
+  }
+  function requestAccess() {
+    gate("follow", doRequestAccess);
   }
 
   if (loading) {
@@ -137,6 +137,8 @@ function PublicProfile() {
   const isPrivate = data.visibility === "private" && !data.can_view_full;
 
   return (
+    <>
+    {GateDialog}
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto">
       <button
         onClick={() => navigate({ to: "/" })}
@@ -281,6 +283,7 @@ function PublicProfile() {
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
+    </>
   );
 }
 
