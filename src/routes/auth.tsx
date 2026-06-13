@@ -69,6 +69,9 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [showConfirmEmail, setShowConfirmEmail] = useState(false);
+  const [isHuman, setIsHuman] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // anti-bot: deve ficar vazio
+  const [formStartedAt] = useState(() => Date.now());
   const [form, setForm] = useState({
     username: "",
     displayName: "",
@@ -119,6 +122,19 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         void track("signup_click", { email: form.email });
+        // Anti-bot: honeypot deve estar vazio + checkbox humano + tempo mínimo no formulário
+        if (honeypot.trim() !== "") {
+          toast.error("Erro de validação. Tente novamente.");
+          return;
+        }
+        if (!isHuman) {
+          toast.error("Confirme que você não é um robô antes de continuar.");
+          return;
+        }
+        if (Date.now() - formStartedAt < 2000) {
+          toast.error("Aguarde um instante antes de enviar o cadastro.");
+          return;
+        }
         const parsed = signupSchema.safeParse({
           ...form,
           username: normalizeUsername(form.username),
@@ -328,7 +344,50 @@ function AuthPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={busy}>
+            {mode === "signup" && (
+              <>
+                {/* Honeypot: invisível para humanos, bots tendem a preencher */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: "-10000px",
+                    top: "auto",
+                    width: "1px",
+                    height: "1px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <label htmlFor="website-url">Website (não preencher)</label>
+                  <input
+                    id="website-url"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
+                <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
+                  <input
+                    type="checkbox"
+                    checked={isHuman}
+                    onChange={(e) => setIsHuman(e.target.checked)}
+                    className="mt-0.5 size-5 accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm text-foreground">
+                    Eu confirmo que sou uma pessoa real e li as{" "}
+                    <Link to="/diretrizes" className="text-primary hover:underline font-medium">
+                      diretrizes da comunidade
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </>
+            )}
+
+            <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !isHuman)}>
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
               {mode === "login" && t("auth.submit.login")}
               {mode === "signup" && t("auth.submit.signup")}
