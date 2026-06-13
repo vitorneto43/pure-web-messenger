@@ -4,57 +4,36 @@ import { z } from "zod";
 import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// ===========================================================================
+// PRIVACIDADE DE MENSAGENS (LEIA ANTES DE EDITAR)
+// ---------------------------------------------------------------------------
+// Este é um aplicativo de mensageria. O TEXTO das mensagens é PRIVADO entre
+// os participantes da conversa. O servidor NÃO pode ler nem armazenar o
+// conteúdo das mensagens para detecção automática.
+//
+// Por isso a detecção de spam roda no CLIENTE (ver src/lib/spam-detector.ts).
+// Este endpoint recebe APENAS:
+//   - a pontuação numérica
+//   - a lista de *categorias* de risco detectadas (sem texto)
+//   - os IDs da mensagem / conversa (para que o usuário possa ser punido
+//     quando reincidente em violações graves)
+//
+// Acesso ao conteúdo da mensagem só é permitido mediante:
+//   - exigência formal de autoridade competente, OU
+//   - denúncia explícita feita pelo próprio participante da conversa.
+// ===========================================================================
+
 const inputSchema = z.object({
   message_id: z.string().uuid().optional(),
   conversation_id: z.string().uuid().optional(),
-  content: z.string().max(8000).optional(),
+  score: z.number().int().min(0).max(100),
+  reasons: z.array(z.string().min(1).max(64)).max(32),
 });
-
-// PRIVACIDADE
-// ---------------------------------------------------------------------------
-// Este aplicativo é um mensageiro: o conteúdo das mensagens é privado.
-// Por isso a detecção de spam:
-//  - NUNCA persiste o conteúdo (nem trecho/excerpt).
-//  - Persiste apenas hashes anonimizados (SHA-256 com pepper) do conteúdo
-//    e do IP, junto com a *categoria* de risco detectada e uma pontuação.
-//  - Análise acontece em memória durante o request e é descartada.
-//  - Apenas moderadores/admins veem os sinais — e só veem hash, categorias
-//    e pontuação, jamais o texto da mensagem.
-// ---------------------------------------------------------------------------
 
 const PEPPER = process.env.SPAM_HASH_PEPPER || "wavechat-default-pepper";
 
 function sha(value: string) {
   return createHash("sha256").update(`${PEPPER}:${value}`).digest("hex");
-}
-
-const PATTERNS: Array<{ re: RegExp; reason: string; score: number }> = [
-  { re: /(https?:\/\/\S+){3,}/i, reason: "many_links", score: 3 },
-  { re: /\b(bit\.ly|tinyurl\.com|t\.co|goo\.gl|cutt\.ly|rebrand\.ly|is\.gd|ow\.ly)\b/i, reason: "shortener_link", score: 2 },
-  { re: /\b(bitcoin|btc|usdt|cripto|investimento garantido|lucro garantido|double your money|invest now)\b/i, reason: "crypto_scam", score: 3 },
-  { re: /\b(cart[aã]o de cr[eé]dito|cvv|senha do banco|pix urgente|c[oó]digo de verifica[cç][aã]o|verification code)\b/i, reason: "credential_phishing", score: 4 },
-  { re: /\b(nudes?|pack\s*\$?\d|onlyfans|porn|xxx|hot\s*girls?|garotas?\s*de\s*programa|acompanhante\s*sexual)\b/i, reason: "adult_content", score: 3 },
-  { re: /\b(ganhe\s*r\$|pr[eê]mio|sorteio|free money|click here to win|voc[eê] ganhou)\b/i, reason: "fake_prize", score: 2 },
-  { re: /\b(aposta(s|r)?|cassino|bet365|blaze|tigrinho|jogo do (bicho|aviator))\b/i, reason: "gambling_promo", score: 2 },
-  { re: /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{20,}/, reason: "shouting", score: 1 },
-  { re: /\b(wa\.me\/|chat\.whatsapp\.com\/|t\.me\/)\S{6,}/i, reason: "external_chat_invite", score: 2 },
-  { re: /\b(menor de idade|child|cp\b|loli|incest)\b/i, reason: "illegal_minor", score: 6 },
-];
-
-function analyzeContent(content: string) {
-  const reasons: string[] = [];
-  let score = 0;
-  for (const p of PATTERNS) {
-    if (p.re.test(content)) {
-      reasons.push(p.reason);
-      score += p.score;
-    }
-  }
-  if (/(.{4,})\1{4,}/i.test(content)) {
-    reasons.push("repeated_pattern");
-    score += 2;
-  }
-  return { score, reasons };
 }
 
 function readClientIp(): string | null {
@@ -70,21 +49,16 @@ function readClientIp(): string | null {
   }
 }
 
-export const analyzeMessageForSpam = createServerFn({ method: "POST" })
+export const reportSpamSignal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const content = (data.content ?? "").trim();
-    if (!content) return { ok: true, score: 0, reasons: [] as string[] };
-
-    // Analyze in-memory — nothing about the actual text is persisted.
-    const { score, reasons } = analyzeContent(content);
+    const { score, reasons } = data;
     if (score < 2) return { ok: true, score, reasons };
 
     const rawIp = readClientIp();
     const ipHash = rawIp ? sha(`ip:${rawIp}`) : null;
-    const contentHash = sha(`msg:${content}`);
     let ua: string | null = null;
     try {
       ua = getRequestHeader("user-agent") ?? null;
@@ -96,9 +70,9 @@ export const analyzeMessageForSpam = createServerFn({ method: "POST" })
       sender_id: userId,
       message_id: data.message_id ?? null,
       conversation_id: data.conversation_id ?? null,
-      content_hash: contentHash,
+      content_hash: null, // privacidade: não rastreamos conteúdo
       ip_hash: ipHash,
-      ip: null, // privacidade: não armazenamos IP em claro
+      ip: null,
       user_agent: ua,
       score,
       reasons,
@@ -109,6 +83,8 @@ export const analyzeMessageForSpam = createServerFn({ method: "POST" })
 
     if (reasons.includes("illegal_minor") || score >= 8) {
       autoAction = "auto_removed_and_suspended";
+      // Soft-delete da mensagem (apaga para todos), sem que o servidor leia
+      // o conteúdo — apenas limpa os campos.
       if (data.message_id) {
         await supabaseAdmin
           .from("messages")
@@ -123,10 +99,16 @@ export const analyzeMessageForSpam = createServerFn({ method: "POST" })
       }
       const until = new Date(Date.now() + 7 * 86400_000).toISOString();
       await supabaseAdmin.from("profiles").update({ suspended_until: until }).eq("id", userId);
-      const { data: p } = await supabaseAdmin.from("profiles").select("strike_count").eq("id", userId).single();
-      await supabaseAdmin.from("profiles").update({ strike_count: (p?.strike_count ?? 0) + 1 }).eq("id", userId);
+      const { data: p } = await supabaseAdmin
+        .from("profiles")
+        .select("strike_count")
+        .eq("id", userId)
+        .single();
+      await supabaseAdmin
+        .from("profiles")
+        .update({ strike_count: (p?.strike_count ?? 0) + 1 })
+        .eq("id", userId);
 
-      // Hard violation: também bane o IP (apenas o hash) para impedir novas contas.
       if (ipHash) {
         await supabaseAdmin
           .from("banned_ips")
@@ -155,7 +137,7 @@ export const analyzeMessageForSpam = createServerFn({ method: "POST" })
         target_type: "message",
         target_id: data.message_id ?? "",
         reason: "spam_auto",
-        // detalhes ficam com a categoria — sem texto da mensagem
+        // Só categorias — nunca o texto.
         details: `Auto-detect: ${reasons.join(", ")} (score=${score})`,
       });
       await supabaseAdmin.from("notifications").insert({
@@ -209,7 +191,9 @@ export const listSpamSignals = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("spam_signals")
-      .select("id, sender_id, message_id, conversation_id, content_hash, ip_hash, score, reasons, auto_action, created_at")
+      .select(
+        "id, sender_id, message_id, conversation_id, ip_hash, score, reasons, auto_action, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(200);
 
@@ -233,8 +217,6 @@ export const listSpamSignals = createServerFn({ method: "GET" })
 
     return { signals: rows ?? [], topIps };
   });
-
-// --- Admin: gerenciar IPs banidos (sempre via hash) ---
 
 export const banIpHash = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -43,7 +43,8 @@ import {
 import { formatFullTime } from "@/lib/format-time";
 import { playNotification } from "@/lib/notification-sound";
 import { sendMessagePush } from "@/lib/push.functions";
-import { analyzeMessageForSpam as analyzeSpam } from "@/lib/spam.functions";
+import { reportSpamSignal } from "@/lib/spam.functions";
+import { analyzeMessageLocally } from "@/lib/spam-detector";
 import { MessageContent } from "./MessageContent";
 import { SendPixDialog } from "./SendPixDialog";
 import { ForwardMessageDialog, type ForwardableMessage } from "./ForwardMessageDialog";
@@ -361,15 +362,20 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         attachment_name: attachment?.name ?? null,
       }).select("id").single();
       if (error) throw error;
-      // Spam detection (fire-and-forget) — logs IP server-side and may auto-act
+      // Spam detection — análise feita NO CLIENTE; o servidor só recebe
+      // a pontuação e as categorias, nunca o texto da mensagem.
       if (content.trim()) {
-        void analyzeSpam({
-          data: {
-            message_id: inserted?.id,
-            conversation_id: conversationId,
-            content: content.trim(),
-          },
-        }).catch(() => {});
+        const local = analyzeMessageLocally(content.trim());
+        if (local.score >= 2) {
+          void reportSpamSignal({
+            data: {
+              message_id: inserted?.id,
+              conversation_id: conversationId,
+              score: local.score,
+              reasons: local.reasons,
+            },
+          }).catch(() => {});
+        }
       }
       setText("");
       // Sending a message implies you've read this conversation (WhatsApp-style):
