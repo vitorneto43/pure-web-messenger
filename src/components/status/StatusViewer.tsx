@@ -348,6 +348,19 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
         </div>
         {!isOwner && (
+          <Button
+            size="sm"
+            onClick={handleToggleFollow}
+            disabled={followLoading}
+            variant={isFollowing ? "secondary" : "default"}
+            className={isFollowing ? "h-7 px-3 text-xs rounded-full" : "h-7 px-3 text-xs rounded-full bg-white text-black hover:bg-white/90"}
+          >
+            {isFollowing
+              ? t("status.following", { defaultValue: "Seguindo" })
+              : t("status.follow", { defaultValue: "Seguir" })}
+          </Button>
+        )}
+        {!isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
