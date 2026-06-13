@@ -25,6 +25,13 @@ const normalizeUsername = (value: string) => value.trim().replace(/\s+/g, "_").r
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    mode:
+      search.mode === "signup" || search.mode === "login" || search.mode === "forgot"
+        ? (search.mode as Mode)
+        : undefined,
+  }),
 });
 
 const signupSchema = z.object({
