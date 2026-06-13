@@ -1080,6 +1080,48 @@ export type Database = {
         }
         Relationships: []
       }
+      spam_signals: {
+        Row: {
+          auto_action: string | null
+          content_excerpt: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          ip: string | null
+          message_id: string | null
+          reasons: string[]
+          score: number
+          sender_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          auto_action?: string | null
+          content_excerpt?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          message_id?: string | null
+          reasons?: string[]
+          score?: number
+          sender_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          auto_action?: string | null
+          content_excerpt?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          message_id?: string | null
+          reasons?: string[]
+          score?: number
+          sender_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       status_boost_clicks: {
         Row: {
           boost_id: string
