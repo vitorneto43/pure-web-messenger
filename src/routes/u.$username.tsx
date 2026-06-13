@@ -50,6 +50,7 @@ const GOAL_LABELS: Record<string, string> = {
 function PublicProfile() {
   const { username } = Route.useParams();
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
