@@ -158,6 +158,51 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          device_hash: string | null
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          target_id: string | null
+          target_type: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       banned_ips: {
         Row: {
           banned_by: string | null
@@ -270,6 +315,128 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      compliance_access_logs: {
+        Row: {
+          accessor_email: string | null
+          accessor_id: string | null
+          created_at: string
+          data_accessed: string
+          data_summary: Json
+          id: string
+          ip_hash: string | null
+          process_number: string | null
+          reason: string
+          request_id: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accessor_email?: string | null
+          accessor_id?: string | null
+          created_at?: string
+          data_accessed: string
+          data_summary?: Json
+          id?: string
+          ip_hash?: string | null
+          process_number?: string | null
+          reason: string
+          request_id?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accessor_email?: string | null
+          accessor_id?: string | null
+          created_at?: string
+          data_accessed?: string
+          data_summary?: Json
+          id?: string
+          ip_hash?: string | null
+          process_number?: string | null
+          reason?: string
+          request_id?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_access_logs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attachments: Json | null
+          created_at: string
+          created_by: string | null
+          date_range_end: string | null
+          date_range_start: string | null
+          fulfilled_at: string | null
+          id: string
+          legal_basis: string | null
+          notes: string | null
+          process_number: string
+          reason: string
+          requester_contact: string | null
+          requester_name: string | null
+          requesting_authority: string
+          status: string
+          target_user_id: string | null
+          target_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachments?: Json | null
+          created_at?: string
+          created_by?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          legal_basis?: string | null
+          notes?: string | null
+          process_number: string
+          reason: string
+          requester_contact?: string | null
+          requester_name?: string | null
+          requesting_authority: string
+          status?: string
+          target_user_id?: string | null
+          target_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachments?: Json | null
+          created_at?: string
+          created_by?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          legal_basis?: string | null
+          notes?: string | null
+          process_number?: string
+          reason?: string
+          requester_contact?: string | null
+          requester_name?: string | null
+          requesting_authority?: string
+          status?: string
+          target_user_id?: string | null
+          target_username?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       content_reports: {
         Row: {
@@ -1828,6 +1995,18 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      log_compliance_access: {
+        Args: {
+          _data_accessed: string
+          _data_summary?: Json
+          _ip_hash?: string
+          _reason: string
+          _request_id: string
+          _target_user_id: string
+          _user_agent?: string
+        }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1877,6 +2056,19 @@ export type Database = {
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
+      }
+      write_audit_log: {
+        Args: {
+          _action: string
+          _device_hash?: string
+          _ip_hash?: string
+          _metadata?: Json
+          _target_id?: string
+          _target_type?: string
+          _target_user_id?: string
+          _user_agent?: string
+        }
+        Returns: string
       }
     }
     Enums: {
