@@ -283,6 +283,7 @@ function PublicProfile() {
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
+    </>
   );
 }
 
