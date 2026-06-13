@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import "@/i18n";
+import { useTranslation } from "react-i18next";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -10,17 +19,17 @@ import { submitReport } from "@/lib/moderation.functions";
 import { toast } from "sonner";
 import { Flag, Loader2 } from "lucide-react";
 
-const REASONS = [
-  { value: "nudity", label: "Nudez explícita" },
-  { value: "sexual", label: "Conteúdo sexual / prostituição" },
-  { value: "violence", label: "Violência gráfica ou gore" },
-  { value: "threat", label: "Ameaça ou assédio" },
-  { value: "hate", label: "Discurso de ódio" },
-  { value: "spam", label: "Spam ou propaganda enganosa" },
-  { value: "scam", label: "Golpe, fraude ou link suspeito" },
-  { value: "illegal", label: "Conteúdo ilegal" },
-  { value: "minor", label: "Exploração de menor" },
-  { value: "other", label: "Outro" },
+const REASONS: Array<{ value: string; key: string }> = [
+  { value: "nudity", key: "report.reason.nudity" },
+  { value: "sexual", key: "report.reason.sexual" },
+  { value: "violence", key: "report.reason.violence" },
+  { value: "threat", key: "report.reason.threat" },
+  { value: "hate", key: "report.reason.hate" },
+  { value: "spam", key: "report.reason.spam" },
+  { value: "scam", key: "report.reason.scam" },
+  { value: "illegal", key: "report.reason.illegal" },
+  { value: "minor", key: "report.reason.minor" },
+  { value: "other", key: "report.reason.other" },
 ];
 
 interface Props {
@@ -32,6 +41,7 @@ interface Props {
 }
 
 export function ReportContentDialog({ open, onOpenChange, targetType, targetId, reportedUserId }: Props) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState<string>("");
   const [details, setDetails] = useState<string>("");
   const submit = useServerFn(submitReport);
@@ -47,27 +57,30 @@ export function ReportContentDialog({ open, onOpenChange, targetType, targetId, 
         },
       }),
     onSuccess: () => {
-      toast.success("Denúncia enviada. Nossa equipe vai analisar.");
+      toast.success(t("report.success"));
       setReason("");
       setDetails("");
       onOpenChange(false);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Falha ao enviar denúncia"),
+    onError: (e: any) => toast.error(e?.message ?? t("report.fail")),
   });
+
+  const desc = t("report.description", { link: "__LINK__" });
+  const [before, after] = desc.split("__LINK__");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Flag className="size-4" /> Denunciar conteúdo
+            <Flag className="size-4" /> {t("report.title")}
           </DialogTitle>
           <DialogDescription>
-            Denúncias são anônimas. Use somente para conteúdo que viola as{" "}
+            {before}
             <a href="/diretrizes" target="_blank" className="underline">
-              Diretrizes da Comunidade
+              {t("report.guidelinesLink")}
             </a>
-            .
+            {after}
           </DialogDescription>
         </DialogHeader>
         <RadioGroup value={reason} onValueChange={setReason} className="space-y-1.5 max-h-72 overflow-y-auto">
@@ -75,13 +88,13 @@ export function ReportContentDialog({ open, onOpenChange, targetType, targetId, 
             <div key={r.value} className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/30">
               <RadioGroupItem value={r.value} id={`r-${r.value}`} />
               <Label htmlFor={`r-${r.value}`} className="flex-1 cursor-pointer text-sm">
-                {r.label}
+                {t(r.key)}
               </Label>
             </div>
           ))}
         </RadioGroup>
         <Textarea
-          placeholder="Detalhes (opcional)"
+          placeholder={t("report.detailsPlaceholder")}
           value={details}
           onChange={(e) => setDetails(e.target.value)}
           maxLength={1000}
@@ -89,10 +102,10 @@ export function ReportContentDialog({ open, onOpenChange, targetType, targetId, 
         />
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {t("report.cancel")}
           </Button>
           <Button onClick={() => mutation.mutate()} disabled={!reason || mutation.isPending}>
-            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Enviar denúncia"}
+            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : t("report.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
