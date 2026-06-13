@@ -9,6 +9,7 @@ import {
   Loader2,
   UserPlus,
   HelpCircle,
+  BookOpen,
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -360,6 +361,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+            <Link to="/diretrizes" title={t("nav.guidelines")}>
+              <BookOpen className="size-4" />
+            </Link>
+          </Button>
           <Button size="icon" variant="ghost" className="rounded-full" asChild>
             <Link to="/guide" title={t("chat.help")}>
               <HelpCircle className="size-4" />
