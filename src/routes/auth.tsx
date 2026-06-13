@@ -344,7 +344,50 @@ function AuthPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={busy}>
+            {mode === "signup" && (
+              <>
+                {/* Honeypot: invisível para humanos, bots tendem a preencher */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: "-10000px",
+                    top: "auto",
+                    width: "1px",
+                    height: "1px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <label htmlFor="website-url">Website (não preencher)</label>
+                  <input
+                    id="website-url"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
+                <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
+                  <input
+                    type="checkbox"
+                    checked={isHuman}
+                    onChange={(e) => setIsHuman(e.target.checked)}
+                    className="mt-0.5 size-5 accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm text-foreground">
+                    Eu confirmo que sou uma pessoa real e li as{" "}
+                    <Link to="/diretrizes" className="text-primary hover:underline font-medium">
+                      diretrizes da comunidade
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </>
+            )}
+
+            <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !isHuman)}>
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
               {mode === "login" && t("auth.submit.login")}
               {mode === "signup" && t("auth.submit.signup")}
