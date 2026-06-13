@@ -276,6 +276,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       )
       .on(
         "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
+        () => loadConversations()
+      )
+      .on(
+        "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           const n = payload.new as { title: string; body: string | null };
