@@ -238,8 +238,7 @@ export const setIpRiskLevel = createServerFn({ method: "POST" })
       action: "ip_risk_set",
       target_type: "ip",
       target_id: data.ip_hash,
-      reason: data.notes ?? null,
-      metadata: { risk_level: data.risk_level },
+      metadata: { risk_level: data.risk_level, notes: data.notes ?? null },
     });
     return { ok: true };
   });
