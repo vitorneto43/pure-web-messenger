@@ -1,11 +1,20 @@
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send, MoreVertical, Flag, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useServerFn } from "@tanstack/react-start";
+import { blockUser } from "@/lib/moderation.functions";
+import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { formatTime } from "@/lib/format-time";
 import { downloadFile } from "@/lib/download";
 import { shareMessageExternally } from "@/lib/share-message";
@@ -72,6 +81,20 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const statuses = currentGroup?.statuses ?? [];
   const current = statuses[index];
   const isOwner = !!user && current?.user_id === user.id;
+  const [reportOpen, setReportOpen] = useState(false);
+  const blockFn = useServerFn(blockUser);
+
+  async function handleBlock() {
+    if (!current) return;
+    if (!confirm(t("moderation.confirmBlock", { defaultValue: "Bloquear este usuário? Você não verá mais o conteúdo dele." }))) return;
+    try {
+      await blockFn({ data: { user_id: current.user_id } });
+      toast.success(t("moderation.blockSuccess", { defaultValue: "Usuário bloqueado" }));
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro");
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -279,6 +302,29 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </p>
           <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
         </div>
+        {!isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+                onClick={() => setPaused(true)}
+                aria-label={t("moderation.menu", { defaultValue: "Mais opções" })}
+              >
+                <MoreVertical className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onCloseAutoFocus={() => setPaused(false)}>
+              <DropdownMenuItem onClick={() => { setPaused(true); setReportOpen(true); }}>
+                <Flag className="size-4 mr-2" /> {t("moderation.report", { defaultValue: "Denunciar" })}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBlock} className="text-destructive focus:text-destructive">
+                <Ban className="size-4 mr-2" /> {t("moderation.block", { defaultValue: "Bloquear usuário" })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={onClose}>
           <X className="size-5" />
         </Button>
@@ -480,6 +526,16 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           open={boostOpen}
           onOpenChange={setBoostOpen}
           statusId={current.id}
+        />
+      )}
+
+      {!isOwner && current && (
+        <ReportContentDialog
+          open={reportOpen}
+          onOpenChange={(o) => { setReportOpen(o); if (!o) setPaused(false); }}
+          targetType="status"
+          targetId={current.id}
+          reportedUserId={current.user_id}
         />
       )}
     </div>
