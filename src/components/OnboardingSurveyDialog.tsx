@@ -95,6 +95,22 @@ const QUESTIONS: Q[] = [
   },
 ];
 
+const SNOOZE_KEY = "wc.survey.snoozedUntil";
+const FIRST_DELAY_MS = 20_000; // 20s after name onboarding
+const SNOOZE_DAYS = 7;
+
+function getSnoozeUntil(): number | null {
+  const raw = localStorage.getItem(SNOOZE_KEY);
+  if (!raw) return null;
+  const ts = Number(raw);
+  return Number.isFinite(ts) ? ts : null;
+}
+
+function setSnooze(days = SNOOZE_DAYS) {
+  const until = Date.now() + days * 24 * 60 * 60 * 1000;
+  localStorage.setItem(SNOOZE_KEY, String(until));
+}
+
 export function OnboardingSurveyDialog() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -106,7 +122,12 @@ export function OnboardingSurveyDialog() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const check = async () => {
+      const snoozed = getSnoozeUntil();
+      if (snoozed && Date.now() < snoozed) return;
+
       const { data: prof } = await supabase
         .from("profiles")
         .select("onboarded")
@@ -119,13 +140,18 @@ export function OnboardingSurveyDialog() {
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
-      if (!survey) setOpen(true);
+      if (!survey) {
+        timer = setTimeout(() => {
+          if (!cancelled) setOpen(true);
+        }, FIRST_DELAY_MS);
+      }
     };
     void check();
     const onNameDone = () => { void check(); };
     window.addEventListener("onboarding:name-completed", onNameDone);
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
       window.removeEventListener("onboarding:name-completed", onNameDone);
     };
   }, [user]);
@@ -165,15 +191,20 @@ export function OnboardingSurveyDialog() {
     }
   }
 
+  function skip() {
+    setSnooze();
+    setOpen(false);
+    setStep(0);
+    setAnswers({});
+  }
+
   const selected = answers[current.key];
   const progress = ((step + (selected ? 1 : 0)) / QUESTIONS.length) * 100;
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* obrigatório */ }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) skip(); }}>
       <DialogContent
         className="sm:max-w-lg max-h-[92vh] overflow-y-auto"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <div className="mx-auto size-12 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center mb-2">
@@ -228,19 +259,24 @@ export function OnboardingSurveyDialog() {
           >
             <ChevronLeft className="size-4 mr-1" /> {t("onboarding.back")}
           </Button>
-          {isLast ? (
-            <Button onClick={submit} disabled={!selected || busy}>
-              {busy && <Loader2 className="size-4 animate-spin mr-2" />}
-              {t("onboarding.finish")}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={skip} disabled={busy}>
+              {t("onboarding.skip")}
             </Button>
-          ) : (
-            <Button
-              onClick={() => selected && setStep((s) => s + 1)}
-              disabled={!selected}
-            >
-              {t("onboarding.continue")}
-            </Button>
-          )}
+            {isLast ? (
+              <Button onClick={submit} disabled={!selected || busy}>
+                {busy && <Loader2 className="size-4 animate-spin mr-2" />}
+                {t("onboarding.finish")}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => selected && setStep((s) => s + 1)}
+                disabled={!selected}
+              >
+                {t("onboarding.continue")}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
