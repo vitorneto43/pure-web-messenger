@@ -30,10 +30,21 @@ export function useAppBadgeSync() {
             .from("messages")
             .select("conversation_id, sender_id, created_at")
             .in("conversation_id", convIds)
-            .neq("sender_id", user.id)
             .order("created_at", { ascending: false })
-            .limit(500);
+            .limit(1000);
+          // Latest message per conversation — if it's mine, conv is read.
+          const latestByConv = new Map<string, { sender_id: string; created_at: string }>();
           for (const m of msgs ?? []) {
+            if (!latestByConv.has(m.conversation_id))
+              latestByConv.set(m.conversation_id, m);
+          }
+          const skipConvs = new Set<string>();
+          for (const [cid, latest] of latestByConv.entries()) {
+            if (latest.sender_id === user.id) skipConvs.add(cid);
+          }
+          for (const m of msgs ?? []) {
+            if (m.sender_id === user.id) continue;
+            if (skipConvs.has(m.conversation_id)) continue;
             const last = readMap.get(m.conversation_id);
             if (!last || new Date(m.created_at) > new Date(last as string)) unreadMsgs += 1;
           }

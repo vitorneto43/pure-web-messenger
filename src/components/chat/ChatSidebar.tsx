@@ -133,7 +133,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       if (!lastMap.has(m.conversation_id)) lastMap.set(m.conversation_id, m);
     }
 
-    // unread counts
+    // unread counts — WhatsApp rule: if the latest message in a conversation
+    // was sent by ME, the conversation is read (sending implies reading).
     const unreadMap = new Map<string, number>();
     for (const m of lastMsgs ?? []) {
       const last = readMap.get(m.conversation_id);
@@ -141,6 +142,12 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         unreadMap.set(m.conversation_id, (unreadMap.get(m.conversation_id) ?? 0) + 1);
       }
     }
+    // Override: any conv whose latest message is mine has unread = 0.
+    for (const [convId, latest] of lastMap.entries()) {
+      if (latest.sender_id === user.id) unreadMap.set(convId, 0);
+    }
+    // Also clear for the currently-open conversation.
+    if (activeConversationId) unreadMap.set(activeConversationId, 0);
 
     const items: ConversationItem[] = (convs ?? []).map((c) => {
       const otherMember = (allMembers ?? []).find(
@@ -265,6 +272,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
+        () => loadConversations()
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
         () => loadConversations()
       )
       .on(
