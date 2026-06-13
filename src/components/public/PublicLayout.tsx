@@ -36,7 +36,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
               {t("nav.howItWorks")}
             </Link>
             <Link to="/diretrizes" className="hidden sm:inline-flex px-3 py-1.5 rounded-md hover:bg-accent/30 transition items-center gap-1.5" title={t("nav.guidelines")}>
-              <Shield className="size-4" />
+              <HelpCircle className="size-4" />
               <span>{t("nav.guidelines")}</span>
             </Link>
             <Link
