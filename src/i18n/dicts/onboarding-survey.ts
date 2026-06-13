@@ -14,6 +14,7 @@ const K = {
   answerAll: "onboarding.answerAll",
   thanks: "onboarding.thanks",
   sendError: "onboarding.sendError",
+  skip: "onboarding.skip",
 };
 
 const pt: Dict = {
