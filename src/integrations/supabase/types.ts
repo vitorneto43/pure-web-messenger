@@ -187,6 +187,54 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string
+          resolved_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_user_id?: string | null
+          reporter_id: string
+          resolved_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolved_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversation_members: {
         Row: {
           conversation_id: string
@@ -463,6 +511,56 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_actions: {
+        Row: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          created_at: string
+          duration_days: number | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          moderator_id: string | null
+          reason: string | null
+          report_id: string | null
+          severity: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["moderation_action_type"]
+          created_at?: string
+          duration_days?: number | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id?: string | null
+          reason?: string | null
+          report_id?: string | null
+          severity?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["moderation_action_type"]
+          created_at?: string
+          duration_days?: number | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          moderator_id?: string | null
+          reason?: string | null
+          report_id?: string | null
+          severity?: string
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "content_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -746,6 +844,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned_at: string | null
           bio: string | null
           created_at: string
           display_name: string
@@ -753,6 +852,7 @@ export type Database = {
           id: string
           invited_by: string | null
           last_seen: string
+          moderation_note: string | null
           onboarded: boolean
           show_city: boolean
           signup_campaign: string | null
@@ -761,12 +861,15 @@ export type Database = {
           signup_referrer: string | null
           signup_source: string | null
           social_links: Json
+          strike_count: number
+          suspended_until: string | null
           updated_at: string
           username: string
           visibility: string
         }
         Insert: {
           avatar_url?: string | null
+          banned_at?: string | null
           bio?: string | null
           created_at?: string
           display_name: string
@@ -774,6 +877,7 @@ export type Database = {
           id: string
           invited_by?: string | null
           last_seen?: string
+          moderation_note?: string | null
           onboarded?: boolean
           show_city?: boolean
           signup_campaign?: string | null
@@ -782,12 +886,15 @@ export type Database = {
           signup_referrer?: string | null
           signup_source?: string | null
           social_links?: Json
+          strike_count?: number
+          suspended_until?: string | null
           updated_at?: string
           username: string
           visibility?: string
         }
         Update: {
           avatar_url?: string | null
+          banned_at?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string
@@ -795,6 +902,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           last_seen?: string
+          moderation_note?: string | null
           onboarded?: boolean
           show_city?: boolean
           signup_campaign?: string | null
@@ -803,6 +911,8 @@ export type Database = {
           signup_referrer?: string | null
           signup_source?: string | null
           social_links?: Json
+          strike_count?: number
+          suspended_until?: string | null
           updated_at?: string
           username?: string
           visibility?: string
@@ -1341,6 +1451,27 @@ export type Database = {
           },
         ]
       }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_onboarding_survey: {
         Row: {
           age_range: string
@@ -1442,6 +1573,7 @@ export type Database = {
       }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
       get_invite_stats: { Args: never; Returns: Json }
+      get_my_restrictions: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_people_you_may_know: {
         Args: { _limit?: number }
@@ -1489,6 +1621,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_user_restricted: { Args: { _user_id: string }; Returns: Json }
       is_wavechat_official_account: {
         Args: { _user_id: string }
         Returns: boolean
@@ -1541,6 +1674,22 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "moderator" | "superadmin"
+      moderation_action_type:
+        | "warning"
+        | "content_removed"
+        | "suspended"
+        | "banned"
+        | "content_hidden"
+        | "report_rejected"
+        | "unsuspended"
+        | "unbanned"
+      report_status: "pending" | "in_review" | "resolved" | "rejected"
+      report_target_type:
+        | "profile"
+        | "status"
+        | "message"
+        | "group"
+        | "conversation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1669,6 +1818,24 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "superadmin"],
+      moderation_action_type: [
+        "warning",
+        "content_removed",
+        "suspended",
+        "banned",
+        "content_hidden",
+        "report_rejected",
+        "unsuspended",
+        "unbanned",
+      ],
+      report_status: ["pending", "in_review", "resolved", "rejected"],
+      report_target_type: [
+        "profile",
+        "status",
+        "message",
+        "group",
+        "conversation",
+      ],
     },
   },
 } as const
