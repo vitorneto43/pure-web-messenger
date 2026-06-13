@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send, MoreVertical, Flag, Ban } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send, MoreVertical, Flag, Ban, MessageCircle } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
