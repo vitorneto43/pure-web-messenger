@@ -212,11 +212,22 @@ export const sendMessagePush = createServerFn({ method: "POST" })
               .from("messages")
               .select("conversation_id, sender_id, created_at")
               .in("conversation_id", convIds)
-              .neq("sender_id", rid)
               .order("created_at", { ascending: false })
-              .limit(500);
+              .limit(1000);
+            // WhatsApp rule: skip conversations whose latest message was sent
+            // by the recipient themself — sending implies reading.
+            const latestByConv = new Map<string, { sender_id: string }>();
+            for (const m of msgs ?? []) {
+              if (!latestByConv.has(m.conversation_id)) latestByConv.set(m.conversation_id, m);
+            }
+            const skipConvs = new Set<string>();
+            for (const [cid, latest] of latestByConv.entries()) {
+              if (latest.sender_id === rid) skipConvs.add(cid);
+            }
             const readMap = new Map(mems.map((m) => [m.conversation_id, m.last_read_at]));
             for (const m of msgs ?? []) {
+              if (m.sender_id === rid) continue;
+              if (skipConvs.has(m.conversation_id)) continue;
               const last = readMap.get(m.conversation_id);
               if (!last || new Date(m.created_at) > new Date(last as string)) unread += 1;
             }
