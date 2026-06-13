@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
+import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
 export const Route = createFileRoute("/descobrir")({
@@ -27,6 +28,7 @@ function DiscoverPage() {
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
 
   useEffect(() => {
+    void track("discover_list_view");
     getRecommendedProfilesPublic({ data: { limit: 30 } })
       .then((r) => setProfiles(r.profiles))
       .catch(() => setProfiles([]));
