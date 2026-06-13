@@ -40,11 +40,12 @@ function tz(): string {
 }
 
 async function nativeDeviceId(): Promise<string | null> {
+  // @capacitor/device é opcional. Se não estiver instalado, retornamos null.
   try {
     if (!Capacitor.isNativePlatform()) return null;
-    const mod = await import("@capacitor/device").catch(() => null);
-    if (!mod) return null;
-    const info = await (mod as any).Device.getId();
+    const mod: any = await import(/* @vite-ignore */ "@capacitor/device" as string).catch(() => null);
+    if (!mod?.Device?.getId) return null;
+    const info = await mod.Device.getId();
     return info?.identifier ?? null;
   } catch {
     return null;
