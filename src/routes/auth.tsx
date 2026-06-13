@@ -25,6 +25,13 @@ const normalizeUsername = (value: string) => value.trim().replace(/\s+/g, "_").r
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    mode:
+      search.mode === "signup" || search.mode === "login" || search.mode === "forgot"
+        ? (search.mode as Mode)
+        : undefined,
+  }),
 });
 
 const signupSchema = z.object({
@@ -47,7 +54,17 @@ function AuthPage() {
   const { t } = useTranslation();
   const { session, loading } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("login");
+  const search = Route.useSearch();
+  const redirectTo = search.redirect && search.redirect.startsWith("/") ? search.redirect : null;
+  const goAfterAuth = () => {
+    if (redirectTo) {
+      // Use full assign for arbitrary paths to bypass typed router constraints.
+      window.location.assign(redirectTo);
+    } else {
+      navigate({ to: "/chat" });
+    }
+  };
+  const [mode, setMode] = useState<Mode>(search.mode ?? "login");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
@@ -90,8 +107,9 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/chat" });
-  }, [loading, session, navigate]);
+    if (!loading && session) goAfterAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, session]);
 
   const update = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 

@@ -39,7 +39,7 @@ export function AuthGateDialog({ open, onOpenChange, action = "default" }: Props
   const go = (mode: "signup" | "login") => {
     const redirect = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/";
     onOpenChange(false);
-    navigate({ to: "/auth", search: { redirect, mode } as never });
+    navigate({ to: "/auth", search: { redirect, mode } });
   };
 
   return (
