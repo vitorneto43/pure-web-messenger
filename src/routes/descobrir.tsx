@@ -40,14 +40,19 @@ function DiscoverPage() {
             <img src={wavechatLogo.url} alt="WaveChat" className="size-7 rounded-lg" />
             <span className="font-bold">WaveChat</span>
           </Link>
-          {user ? (
-            <Button size="sm" onClick={() => navigate({ to: "/chat" })}>Ir para chat</Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
-              <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Criar conta</Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Link to="/diretrizes" className="text-muted-foreground hover:text-foreground transition" title={t("nav.guidelines")}>
+              <HelpCircle className="size-5" />
+            </Link>
+            {user ? (
+              <Button size="sm" onClick={() => navigate({ to: "/chat" })}>Ir para chat</Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+                <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Criar conta</Button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
