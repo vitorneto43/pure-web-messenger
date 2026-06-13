@@ -800,6 +800,20 @@ Object.assign(hi, BOOST_REPORT_DICT.hi);
 Object.assign(zh, BOOST_REPORT_DICT.zh);
 Object.assign(ja, BOOST_REPORT_DICT.ja);
 
+// Moderation / community guidelines — fully translated across all supported locales.
+Object.assign(pt, MODERATION_DICT.pt);
+Object.assign(en, MODERATION_DICT.en);
+Object.assign(es, MODERATION_DICT.es);
+Object.assign(fr, MODERATION_DICT.fr);
+Object.assign(de, MODERATION_DICT.de);
+Object.assign(it, MODERATION_DICT.it);
+Object.assign(ar, MODERATION_DICT.ar);
+Object.assign(hi, MODERATION_DICT.hi);
+Object.assign(zh, MODERATION_DICT.zh);
+Object.assign(ja, MODERATION_DICT.ja);
+
+
+
 
 
 export const RESOURCES: Record<Locale, { translation: Dict }> = {
