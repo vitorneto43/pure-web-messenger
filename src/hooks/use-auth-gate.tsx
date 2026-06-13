@@ -18,7 +18,7 @@ export function useAuthGate() {
   const [action, setAction] = useState<AuthGateAction>("default");
 
   const gate = useCallback(
-    (act: AuthGateAction, fn: () => void | Promise<void>) => {
+    (act: AuthGateAction, fn: () => unknown) => {
       if (user) return fn();
       setAction(act);
       setOpen(true);
