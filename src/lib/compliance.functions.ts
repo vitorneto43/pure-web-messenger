@@ -158,7 +158,13 @@ export const updateComplianceRequestStatus = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertSuperadmin(supabase, userId);
 
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: {
+      status: typeof data.status;
+      approved_by?: string;
+      approved_at?: string;
+      fulfilled_at?: string;
+      notes?: string;
+    } = { status: data.status };
     if (data.status === "approved") {
       patch.approved_by = userId;
       patch.approved_at = new Date().toISOString();
