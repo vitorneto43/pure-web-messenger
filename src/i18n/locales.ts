@@ -758,6 +758,7 @@ import { APP_PT, APP_EN } from "./dicts";
 import { ONBOARDING_SURVEY_DICT } from "./dicts/onboarding-survey";
 import { BOOST_DICT } from "./dicts/boost";
 import { BOOST_REPORT_DICT } from "./dicts/boost-report";
+import { MODERATION_DICT } from "./dicts/moderation";
 
 // App-interior keys (PT + EN); other locales fall back to EN automatically.
 Object.assign(pt, APP_PT);
