@@ -389,16 +389,19 @@ function ProfileActionsMenu({ profileId, username }: { profileId: string; userna
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const blockFn = useServerFn(blockUser);
+  // Lazy require to avoid changing many imports above
+  const { useTranslation } = require("react-i18next") as typeof import("react-i18next");
+  const { t } = useTranslation();
   const handleBlock = async () => {
     if (!user) {
-      toast.info("Faça login para bloquear");
+      toast.info("Login");
       return;
     }
     try {
       await blockFn({ data: { user_id: profileId } });
-      toast.success(`@${username} bloqueado`);
+      toast.success(`@${username} ✓`);
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao bloquear");
+      toast.error(e?.message ?? t("report.fail"));
     }
   };
   return (
@@ -411,14 +414,15 @@ function ProfileActionsMenu({ profileId, username }: { profileId: string; userna
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setReportOpen(true)}>
-            <Flag className="size-4 mr-2" /> Denunciar
+            <Flag className="size-4 mr-2" /> {t("moderation.report")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-            <Ban className="size-4 mr-2" /> Bloquear usuário
+            <Ban className="size-4 mr-2" /> {t("moderation.block")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
       <ReportContentDialog
         open={reportOpen}
         onOpenChange={setReportOpen}
