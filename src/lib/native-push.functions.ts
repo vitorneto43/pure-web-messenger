@@ -147,7 +147,11 @@ async function sendNativePayloadToUser(
             ...(notification
               ? {
                   notification: {
-                    channel_id: "messages",
+                    // MUST match the channel created in JS (ensureMessageChannel).
+                    // The old "messages" channel was deleted on devices — targeting
+                    // a deleted channel makes Android drop sound and bury the
+                    // notification (the "59 novas mensagens" silent pile-up).
+                    channel_id: "messages_v4",
                     default_sound: true,
                     default_vibrate_timings: true,
                     notification_priority: "PRIORITY_HIGH",
