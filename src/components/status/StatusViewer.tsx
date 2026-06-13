@@ -531,6 +531,17 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               <Send className="size-5" />
             </Button>
             <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              aria-label={t("status.openPublic", { defaultValue: "Comentários" })}
+            >
+              <Link to="/s/$statusId" params={{ statusId: current.id }} onClick={onClose}>
+                <MessageCircle className="size-5" />
+              </Link>
+            </Button>
+            <Button
               size="icon"
               variant="ghost"
               className="text-white hover:bg-white/10 shrink-0"
