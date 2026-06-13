@@ -137,7 +137,7 @@ export const createComplianceRequest = createServerFn({ method: "POST" })
       _action: "compliance.request_created",
       _target_type: "compliance_request",
       _target_id: row.id,
-      _target_user_id: data.target_user_id ?? null,
+      _target_user_id: data.target_user_id ?? undefined,
       _metadata: { process_number: data.process_number, authority: data.requesting_authority },
       _ip_hash: getClientIpHash(),
       _user_agent: getUserAgent(),
