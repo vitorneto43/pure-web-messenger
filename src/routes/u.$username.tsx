@@ -188,23 +188,34 @@ function PublicProfile() {
           )}
         </div>
 
-        {!isOwn && user && (
-          <Button
-            onClick={toggleFollow}
-            disabled={busy}
-            variant={data.is_following ? "secondary" : "default"}
-            className="mt-4 w-full sm:w-auto"
-          >
-            {data.is_following ? (
-              <>
-                <UserCheck className="size-4 mr-2" /> Seguindo
-              </>
-            ) : (
-              <>
-                <UserPlus className="size-4 mr-2" /> Seguir
-              </>
-            )}
-          </Button>
+        {!isOwn && (
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={toggleFollow}
+              disabled={busy}
+              variant={data.is_following ? "secondary" : "default"}
+              className="w-full sm:w-auto"
+            >
+              {data.is_following ? (
+                <>
+                  <UserCheck className="size-4 mr-2" /> Seguindo
+                </>
+              ) : (
+                <>
+                  <UserPlus className="size-4 mr-2" /> Seguir
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() =>
+                gate("message", () => navigate({ to: "/chat" }))
+              }
+            >
+              Mensagem
+            </Button>
+          </div>
         )}
 
         {isPrivate ? (
