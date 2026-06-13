@@ -758,6 +758,7 @@ import { APP_PT, APP_EN } from "./dicts";
 import { ONBOARDING_SURVEY_DICT } from "./dicts/onboarding-survey";
 import { BOOST_DICT } from "./dicts/boost";
 import { BOOST_REPORT_DICT } from "./dicts/boost-report";
+import { MODERATION_DICT } from "./dicts/moderation";
 
 // App-interior keys (PT + EN); other locales fall back to EN automatically.
 Object.assign(pt, APP_PT);
@@ -798,6 +799,20 @@ Object.assign(ar, BOOST_REPORT_DICT.ar);
 Object.assign(hi, BOOST_REPORT_DICT.hi);
 Object.assign(zh, BOOST_REPORT_DICT.zh);
 Object.assign(ja, BOOST_REPORT_DICT.ja);
+
+// Moderation / community guidelines — fully translated across all supported locales.
+Object.assign(pt, MODERATION_DICT.pt);
+Object.assign(en, MODERATION_DICT.en);
+Object.assign(es, MODERATION_DICT.es);
+Object.assign(fr, MODERATION_DICT.fr);
+Object.assign(de, MODERATION_DICT.de);
+Object.assign(it, MODERATION_DICT.it);
+Object.assign(ar, MODERATION_DICT.ar);
+Object.assign(hi, MODERATION_DICT.hi);
+Object.assign(zh, MODERATION_DICT.zh);
+Object.assign(ja, MODERATION_DICT.ja);
+
+
 
 
 

@@ -1,43 +1,46 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import "@/i18n";
+import { Trans, useTranslation } from "react-i18next";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import { CheckCircle2, XCircle, Shield, AlertTriangle, Flag } from "lucide-react";
+import i18n from "@/i18n";
 
 export const Route = createFileRoute("/diretrizes")({
   component: GuidelinesPage,
-  head: () => ({
-    meta: [
-      { title: "Diretrizes da Comunidade · WaveChat" },
-      {
-        name: "description",
-        content:
-          "Conheça as Diretrizes da Comunidade do WaveChat: o que é permitido, o que é proibido e como mantemos o app seguro para todos.",
-      },
-    ],
-  }),
+  head: () => {
+    const t = i18n.getFixedT(i18n.language || "en");
+    return {
+      meta: [
+        { title: t("guidelines.metaTitle") },
+        { name: "description", content: t("guidelines.metaDesc") },
+      ],
+    };
+  },
 });
 
-const ALLOWED = [
-  "Fotos pessoais, lifestyle, viagens e bastidores",
-  "Humor, memes e entretenimento respeitoso",
-  "Conteúdo educacional, dicas e tutoriais",
-  "Música, arte, esportes e cultura",
-  "Negócios, marketing pessoal e divulgação legal de serviços",
-  "Conversas e amizades respeitosas",
-];
+const ALLOWED_KEYS = [
+  "guidelines.allowed.1",
+  "guidelines.allowed.2",
+  "guidelines.allowed.3",
+  "guidelines.allowed.4",
+  "guidelines.allowed.5",
+  "guidelines.allowed.6",
+] as const;
 
-const FORBIDDEN = [
-  "Nudez explícita ou conteúdo sexual",
-  "Prostituição, aliciamento ou venda de conteúdo adulto",
-  "Violência gráfica, gore ou tortura",
-  "Ameaças, intimidação ou assédio",
-  "Discurso de ódio (raça, gênero, religião, orientação sexual, etc.)",
-  "Spam em massa, propaganda enganosa ou links maliciosos",
-  "Golpes, fraudes ou esquemas financeiros",
-  "Exploração de menores ou qualquer conteúdo ilegal",
-  "Incitação à violência ou autoagressão",
-];
+const FORBIDDEN_KEYS = [
+  "guidelines.forbidden.1",
+  "guidelines.forbidden.2",
+  "guidelines.forbidden.3",
+  "guidelines.forbidden.4",
+  "guidelines.forbidden.5",
+  "guidelines.forbidden.6",
+  "guidelines.forbidden.7",
+  "guidelines.forbidden.8",
+  "guidelines.forbidden.9",
+] as const;
 
 function GuidelinesPage() {
+  const { t } = useTranslation();
   return (
     <PublicLayout>
       <article className="max-w-3xl mx-auto px-4 py-12">
@@ -45,22 +48,19 @@ function GuidelinesPage() {
           <div className="size-10 rounded-xl bg-primary/15 text-primary grid place-items-center">
             <Shield className="size-5" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Diretrizes da Comunidade</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t("guidelines.title")}</h1>
         </div>
-        <p className="text-muted-foreground text-lg">
-          O WaveChat é um espaço para conexão real e segura. Para que todos se sintam bem aqui, seguimos algumas regras
-          simples e claras.
-        </p>
+        <p className="text-muted-foreground text-lg">{t("guidelines.subtitle")}</p>
 
         <section className="mt-10">
           <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2 text-emerald-500">
-            <CheckCircle2 className="size-5" /> O que é permitido
+            <CheckCircle2 className="size-5" /> {t("guidelines.allowedTitle")}
           </h2>
           <ul className="space-y-2">
-            {ALLOWED.map((it) => (
-              <li key={it} className="flex gap-3 items-start">
+            {ALLOWED_KEYS.map((k) => (
+              <li key={k} className="flex gap-3 items-start">
                 <CheckCircle2 className="size-4 mt-1 text-emerald-500 shrink-0" />
-                <span>{it}</span>
+                <span>{t(k)}</span>
               </li>
             ))}
           </ul>
@@ -68,13 +68,13 @@ function GuidelinesPage() {
 
         <section className="mt-10">
           <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2 text-destructive">
-            <XCircle className="size-5" /> O que NÃO é permitido
+            <XCircle className="size-5" /> {t("guidelines.forbiddenTitle")}
           </h2>
           <ul className="space-y-2">
-            {FORBIDDEN.map((it) => (
-              <li key={it} className="flex gap-3 items-start">
+            {FORBIDDEN_KEYS.map((k) => (
+              <li key={k} className="flex gap-3 items-start">
                 <XCircle className="size-4 mt-1 text-destructive shrink-0" />
-                <span>{it}</span>
+                <span>{t(k)}</span>
               </li>
             ))}
           </ul>
@@ -82,47 +82,54 @@ function GuidelinesPage() {
 
         <section className="mt-10 rounded-xl border border-border bg-card p-5">
           <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-            <AlertTriangle className="size-5 text-amber-500" /> Sistema de penalidades
+            <AlertTriangle className="size-5 text-amber-500" /> {t("guidelines.penaltiesTitle")}
           </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Aplicamos penalidades progressivas. Casos graves resultam em ações imediatas.
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{t("guidelines.penaltiesIntro")}</p>
           <div className="grid gap-3 sm:grid-cols-3 text-sm">
             <div className="rounded-lg border border-border p-3">
-              <p className="font-semibold text-emerald-500">Infração leve</p>
-              <p className="text-muted-foreground mt-1">Aviso → Aviso forte → Suspensão temporária</p>
+              <p className="font-semibold text-emerald-500">{t("guidelines.penalty.light")}</p>
+              <p className="text-muted-foreground mt-1">{t("guidelines.penalty.lightDesc")}</p>
             </div>
             <div className="rounded-lg border border-border p-3">
-              <p className="font-semibold text-amber-500">Infração grave</p>
-              <p className="text-muted-foreground mt-1">
-                Suspensão imediata (nudez, violência, golpes, ameaças, assédio)
-              </p>
+              <p className="font-semibold text-amber-500">{t("guidelines.penalty.grave")}</p>
+              <p className="text-muted-foreground mt-1">{t("guidelines.penalty.graveDesc")}</p>
             </div>
             <div className="rounded-lg border border-border p-3">
-              <p className="font-semibold text-destructive">Infração gravíssima</p>
-              <p className="text-muted-foreground mt-1">
-                Banimento imediato (conteúdo ilegal, exploração, incitação à violência)
-              </p>
+              <p className="font-semibold text-destructive">{t("guidelines.penalty.severe")}</p>
+              <p className="text-muted-foreground mt-1">{t("guidelines.penalty.severeDesc")}</p>
             </div>
           </div>
         </section>
 
         <section className="mt-10">
           <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2">
-            <Flag className="size-5 text-primary" /> Como denunciar
+            <Flag className="size-5 text-primary" /> {t("guidelines.howReportTitle")}
           </h2>
           <p>
-            Em qualquer perfil, status, mensagem ou grupo, toque no menu de três pontos e selecione{" "}
-            <strong>Denunciar</strong>. Sua denúncia é anônima e analisada pela nossa equipe de moderação. Você também
-            pode <strong>bloquear</strong> o usuário para interromper qualquer contato.
+            <Trans
+              i18nKey="guidelines.howReportBody"
+              values={{
+                report: t("guidelines.reportWord"),
+                block: t("guidelines.blockWord"),
+              }}
+              components={{ 1: <strong />, 2: <strong /> }}
+            />
           </p>
         </section>
 
         <section className="mt-10 text-sm text-muted-foreground">
           <p>
-            Estas diretrizes podem ser atualizadas a qualquer momento. Ao usar o WaveChat, você concorda em segui-las
-            junto com nossos <a href="/terms" className="underline">Termos</a> e{" "}
-            <a href="/privacy" className="underline">Política de Privacidade</a>.
+            <Trans
+              i18nKey="guidelines.footer"
+              values={{ terms: t("guidelines.terms"), privacy: t("guidelines.privacy") }}
+            />{" "}
+            <Link to="/terms" className="underline">
+              {t("guidelines.terms")}
+            </Link>{" "}
+            ·{" "}
+            <Link to="/privacy" className="underline">
+              {t("guidelines.privacy")}
+            </Link>
           </p>
         </section>
       </article>
