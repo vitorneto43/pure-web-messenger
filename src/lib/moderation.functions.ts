@@ -15,6 +15,21 @@ export const submitReport = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => reportSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // PRIVACIDADE: denúncias de mensagens passam por um RPC que valida que o
+    // denunciante é participante da conversa e cria um snapshot do conteúdo
+    // no momento da denúncia. Nenhum outro caminho do código acessa o
+    // conteúdo de mensagens privadas.
+    if (data.target_type === "message") {
+      const { data: reportId, error } = await supabase.rpc("report_message_with_snapshot", {
+        _message_id: data.target_id,
+        _reason: data.reason,
+        _details: data.details ?? null,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true, id: reportId as string };
+    }
+
     const { error, data: row } = await supabase
       .from("content_reports")
       .insert({
