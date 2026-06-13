@@ -176,10 +176,21 @@ export const sendMessagePush = createServerFn({ method: "POST" })
 
     const { data: subs, error } = await supabaseAdmin
       .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth, user_id")
+      .select("id, endpoint, p256dh, auth, user_id, user_agent")
       .in("user_id", recipientIds);
     if (error) throw new Error(error.message);
-    if (!subs || subs.length === 0) return { sent: 0 };
+
+    // WhatsApp logic: if the recipient has the native app installed, do NOT
+    // also send a Chrome/web push to their Android phone — that's what causes
+    // the duplicate "Chrome • webconnectchat" notification.
+    const { data: nativeRows } = await (supabaseAdmin as any)
+      .from("native_push_tokens")
+      .select("user_id")
+      .in("user_id", recipientIds);
+    const nativeUsers = new Set((nativeRows ?? []).map((r: { user_id: string }) => r.user_id));
+    const filteredSubs = (subs ?? []).filter(
+      (s) => !(nativeUsers.has(s.user_id) && /Android|Mobile/i.test(s.user_agent ?? "")),
+    );
 
     const senderName = sender?.display_name || sender?.username || "Nova mensagem";
     const title = conv?.is_group ? `${conv.name ?? "Grupo"} • ${senderName}` : senderName;
@@ -227,7 +238,7 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     const toRemove: string[] = [];
     const logs: Array<Record<string, unknown>> = [];
     await Promise.all(
-      subs.map(async (s) => {
+      filteredSubs.map(async (s) => {
         const badge = badgeByUser.get(s.user_id) ?? 0;
         const payload = JSON.stringify({
           type: "message",

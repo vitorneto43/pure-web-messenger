@@ -177,6 +177,16 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id);
 
+      // WhatsApp behavior: opening the chat clears its system notifications
+      void (async () => {
+        try {
+          const { isNativeApp } = await import("@/integrations/native-call");
+          if (!isNativeApp()) return;
+          const { PushNotifications } = await import("@capacitor/push-notifications");
+          await PushNotifications.removeAllDeliveredNotifications();
+        } catch { /* ignore */ }
+      })();
+
       void supabase
         .from("notifications")
         .update({ read_at: new Date().toISOString() })
