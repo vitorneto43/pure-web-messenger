@@ -81,6 +81,20 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const statuses = currentGroup?.statuses ?? [];
   const current = statuses[index];
   const isOwner = !!user && current?.user_id === user.id;
+  const [reportOpen, setReportOpen] = useState(false);
+  const blockFn = useServerFn(blockUser);
+
+  async function handleBlock() {
+    if (!current) return;
+    if (!confirm(t("moderation.confirmBlock", { defaultValue: "Bloquear este usuário? Você não verá mais o conteúdo dele." }))) return;
+    try {
+      await blockFn({ data: { user_id: current.user_id } });
+      toast.success(t("moderation.blockSuccess", { defaultValue: "Usuário bloqueado" }));
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro");
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
