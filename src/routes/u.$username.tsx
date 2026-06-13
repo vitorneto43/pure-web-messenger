@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X, Eye, UserPlus, Us
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
@@ -74,11 +75,7 @@ function PublicProfile() {
     });
   }, [data?.id, user?.id]);
 
-  async function toggleFollow() {
-    if (!user) {
-      navigate({ to: "/auth" });
-      return;
-    }
+  async function doToggleFollow() {
     if (!data) return;
     setBusy(true);
     const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: data.id });
@@ -95,12 +92,11 @@ function PublicProfile() {
         : prev,
     );
   }
+  function toggleFollow() {
+    gate("follow", doToggleFollow);
+  }
 
-  async function requestAccess() {
-    if (!user) {
-      navigate({ to: "/auth" });
-      return;
-    }
+  async function doRequestAccess() {
     if (!data) return;
     setBusy(true);
     const { error } = await supabase.rpc("request_profile_view", { _owner: data.id });
@@ -108,6 +104,9 @@ function PublicProfile() {
     if (error) return toast.error(error.message);
     toast.success("Pedido enviado");
     load();
+  }
+  function requestAccess() {
+    gate("follow", doRequestAccess);
   }
 
   if (loading) {
