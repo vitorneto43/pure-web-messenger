@@ -12,6 +12,7 @@ import { useLiveLocationBroadcast } from "@/hooks/use-live-location-broadcast";
 import { useMessageNotificationIntent } from "@/hooks/use-message-notification-intent";
 import { OnboardingNameDialog } from "@/components/OnboardingNameDialog";
 import { OnboardingSurveyDialog } from "@/components/OnboardingSurveyDialog";
+import { ModerationGate } from "@/components/ModerationGate";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
@@ -34,11 +35,13 @@ function AuthGuard() {
   return (
     <CallProvider>
       <PushBootstrap />
-      <OnboardingNameDialog />
-      <OnboardingSurveyDialog />
-      <Outlet />
-      <CallScreen />
-      <IncomingCallDialog />
+      <ModerationGate>
+        <OnboardingNameDialog />
+        <OnboardingSurveyDialog />
+        <Outlet />
+        <CallScreen />
+        <IncomingCallDialog />
+      </ModerationGate>
     </CallProvider>
   );
 }

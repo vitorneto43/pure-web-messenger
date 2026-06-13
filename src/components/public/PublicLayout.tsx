@@ -97,6 +97,11 @@ export function PublicFooter() {
                 {t("footer.terms")}
               </Link>
             </li>
+            <li>
+              <Link to="/diretrizes" className="hover:text-foreground">
+                Diretrizes da Comunidade
+              </Link>
+            </li>
           </ul>
         </div>
 
