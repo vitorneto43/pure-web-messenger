@@ -24,7 +24,7 @@ export const submitReport = createServerFn({ method: "POST" })
       const { data: reportId, error } = await supabase.rpc("report_message_with_snapshot", {
         _message_id: data.target_id,
         _reason: data.reason,
-        _details: data.details ?? null,
+        _details: data.details ?? undefined,
       });
       if (error) throw new Error(error.message);
       return { ok: true, id: reportId as string };
