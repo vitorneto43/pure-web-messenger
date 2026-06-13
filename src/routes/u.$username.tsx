@@ -13,6 +13,8 @@ import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { blockUser } from "@/lib/moderation.functions";
 import type { SocialLinks } from "@/lib/social-links";
+import "@/i18n";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/u/$username")({
   component: PublicProfile,
