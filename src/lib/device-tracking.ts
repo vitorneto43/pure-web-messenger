@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Capacitor } from "@capacitor/core";
+import { collectDeviceFingerprintRaw } from "./device-fingerprint";
+import { recordDeviceFingerprint } from "./security.functions";
 
 let recordedThisSession = false;
 
@@ -51,8 +53,6 @@ export async function recordDeviceInfo(userId: string) {
 
     // Registra fingerprint do dispositivo + IP no sistema de segurança
     try {
-      const { collectDeviceFingerprintRaw } = await import("./device-fingerprint");
-      const { recordDeviceFingerprint } = await import("./security.functions");
       const raw = await collectDeviceFingerprintRaw();
       await recordDeviceFingerprint({ data: raw });
     } catch (e) {
