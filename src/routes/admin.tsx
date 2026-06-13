@@ -47,7 +47,8 @@ import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
 import { ModerationTab } from "@/components/admin/ModerationTab";
 import { ComplianceTab } from "@/components/admin/ComplianceTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
-import { ShieldAlert, Scale, ShieldCheck } from "lucide-react";
+import { ShieldAlert, Scale, ShieldCheck, TrendingDown } from "lucide-react";
+import { ConversionFunnelTab } from "@/components/admin/ConversionFunnelTab";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -226,6 +227,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin -mx-1 px-1">
             <TabsList className="w-max flex">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
+              <TabsTrigger value="funnel"><TrendingDown className="size-4 mr-1.5" />Funil</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="invites"><Gift className="size-4 mr-1.5" />Convites</TabsTrigger>
               <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
@@ -255,6 +257,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           </div>
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
+          <TabsContent value="funnel" className="mt-4"><ConversionFunnelTab /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="invites" className="mt-4"><InvitesTab /></TabsContent>
           <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>

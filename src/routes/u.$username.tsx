@@ -13,6 +13,7 @@ import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { blockUser } from "@/lib/moderation.functions";
 import type { SocialLinks } from "@/lib/social-links";
+import { track } from "@/lib/track";
 import "@/i18n";
 import { useTranslation } from "react-i18next";
 
@@ -71,6 +72,7 @@ function PublicProfile() {
   }
 
   useEffect(() => {
+    void track("public_profile_view", { username });
     load();
   }, [username]);
 
