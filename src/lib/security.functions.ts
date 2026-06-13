@@ -210,7 +210,7 @@ export const blockDeviceFingerprint = createServerFn({ method: "POST" })
       action: data.block ? "device_blocked" : "device_unblocked",
       target_type: "device",
       target_id: data.fingerprint_hash,
-      reason: data.reason ?? null,
+      metadata: { reason: data.reason ?? null },
     });
     return { ok: true };
   });
