@@ -14,6 +14,7 @@ const K = {
   answerAll: "onboarding.answerAll",
   thanks: "onboarding.thanks",
   sendError: "onboarding.sendError",
+  skip: "onboarding.skip",
 };
 
 const pt: Dict = {
@@ -27,6 +28,7 @@ const pt: Dict = {
   [K.answerAll]: "Responda todas as perguntas",
   [K.thanks]: "Obrigado! Vamos personalizar sua experiência.",
   [K.sendError]: "Erro ao enviar",
+  [K.skip]: "Responder depois",
 
   "onboarding.q.reason_joined.title": "O que trouxe você ao WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conhecer novas pessoas",
@@ -89,6 +91,7 @@ const en: Dict = {
   [K.answerAll]: "Please answer every question",
   [K.thanks]: "Thanks! We'll personalize your experience.",
   [K.sendError]: "Failed to submit",
+  [K.skip]: "Answer later",
 
   "onboarding.q.reason_joined.title": "What brought you to WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Meet new people",
@@ -151,6 +154,7 @@ const es: Dict = {
   [K.answerAll]: "Responde todas las preguntas",
   [K.thanks]: "¡Gracias! Vamos a personalizar tu experiencia.",
   [K.sendError]: "Error al enviar",
+  [K.skip]: "Responder después",
 
   "onboarding.q.reason_joined.title": "¿Qué te trajo a WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conocer gente nueva",
@@ -213,6 +217,7 @@ const fr: Dict = {
   [K.answerAll]: "Répondez à toutes les questions",
   [K.thanks]: "Merci ! Nous allons personnaliser votre expérience.",
   [K.sendError]: "Échec de l'envoi",
+  [K.skip]: "Répondre plus tard",
 
   "onboarding.q.reason_joined.title": "Qu'est-ce qui vous amène sur WaveChat ?",
   "onboarding.q.reason_joined.meet_people": "Rencontrer de nouvelles personnes",
@@ -275,6 +280,7 @@ const de: Dict = {
   [K.answerAll]: "Bitte beantworte alle Fragen",
   [K.thanks]: "Danke! Wir personalisieren dein Erlebnis.",
   [K.sendError]: "Senden fehlgeschlagen",
+  [K.skip]: "Später beantworten",
 
   "onboarding.q.reason_joined.title": "Was hat dich zu WaveChat gebracht?",
   "onboarding.q.reason_joined.meet_people": "Neue Leute kennenlernen",
@@ -337,6 +343,7 @@ const it: Dict = {
   [K.answerAll]: "Rispondi a tutte le domande",
   [K.thanks]: "Grazie! Personalizzeremo la tua esperienza.",
   [K.sendError]: "Invio non riuscito",
+  [K.skip]: "Rispondi dopo",
 
   "onboarding.q.reason_joined.title": "Cosa ti ha portato su WaveChat?",
   "onboarding.q.reason_joined.meet_people": "Conoscere persone nuove",
@@ -399,6 +406,7 @@ const ar: Dict = {
   [K.answerAll]: "يرجى الإجابة على جميع الأسئلة",
   [K.thanks]: "شكرًا لك! سنخصص لك تجربتك.",
   [K.sendError]: "فشل الإرسال",
+  [K.skip]: "الرد لاحقًا",
 
   "onboarding.q.reason_joined.title": "ما الذي جلبك إلى WaveChat؟",
   "onboarding.q.reason_joined.meet_people": "التعرف على أشخاص جدد",
@@ -461,6 +469,7 @@ const hi: Dict = {
   [K.answerAll]: "कृपया सभी प्रश्नों के उत्तर दें",
   [K.thanks]: "धन्यवाद! हम आपके अनुभव को निजीकृत करेंगे।",
   [K.sendError]: "भेजने में विफल",
+  [K.skip]: "बाद में जवाब दें",
 
   "onboarding.q.reason_joined.title": "आप WaveChat पर क्यों आए?",
   "onboarding.q.reason_joined.meet_people": "नए लोगों से मिलना",
@@ -522,6 +531,7 @@ const zh: Dict = {
   [K.answerAll]: "请回答所有问题",
   [K.thanks]: "感谢！我们会为你个性化体验。",
   [K.sendError]: "提交失败",
+  [K.skip]: "稍后回答",
 
   "onboarding.q.reason_joined.title": "什么吸引你来到 WaveChat？",
   "onboarding.q.reason_joined.meet_people": "认识新朋友",
@@ -584,6 +594,7 @@ const ja: Dict = {
   [K.answerAll]: "すべての質問にお答えください",
   [K.thanks]: "ありがとうございます！体験をパーソナライズします。",
   [K.sendError]: "送信に失敗しました",
+  [K.skip]: "後で答える",
 
   "onboarding.q.reason_joined.title": "WaveChat に来た理由は？",
   "onboarding.q.reason_joined.meet_people": "新しい人と出会う",
