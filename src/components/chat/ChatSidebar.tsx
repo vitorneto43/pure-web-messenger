@@ -9,6 +9,7 @@ import {
   Loader2,
   UserPlus,
   HelpCircle,
+  BookOpen,
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
