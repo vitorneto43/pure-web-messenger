@@ -1,4 +1,5 @@
-import { Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
+import { Flag, Forward, Languages, MessageSquareReply, Share2, Trash2, Users } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { shareMessageExternally } from "@/lib/share-message";
 import { useTranslation } from "react-i18next";
+import { ReportContentDialog } from "@/components/ReportContentDialog";
+
 
 export interface ActionableMessage {
   id: string;
@@ -45,7 +48,9 @@ export function MessageActionsDialog({
 }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
   if (!message || !user) return null;
+
 
   const isMine = message.sender_id === user.id;
   const isAlreadyDeletedForAll = !!message.deleted_for_everyone_at;
@@ -160,8 +165,30 @@ export function MessageActionsDialog({
               {t("chat.deleteForEveryoneExpired")}
             </p>
           )}
+          {!isMine && !isAlreadyDeletedForAll && (
+            <Button
+              variant="ghost"
+              className="justify-start h-12 text-destructive hover:text-destructive"
+              onClick={() => setReportOpen(true)}
+            >
+              <Flag className="size-4 mr-3" /> {t("moderation.report") || "Denunciar"}
+            </Button>
+          )}
         </div>
       </DialogContent>
+      {!isMine && (
+        <ReportContentDialog
+          open={reportOpen}
+          onOpenChange={(v) => {
+            setReportOpen(v);
+            if (!v) onOpenChange(false);
+          }}
+          targetType="message"
+          targetId={message.id}
+          reportedUserId={message.sender_id}
+        />
+      )}
     </Dialog>
   );
 }
+
