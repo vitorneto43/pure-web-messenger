@@ -122,6 +122,19 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         void track("signup_click", { email: form.email });
+        // Anti-bot: honeypot deve estar vazio + checkbox humano + tempo mínimo no formulário
+        if (honeypot.trim() !== "") {
+          toast.error("Erro de validação. Tente novamente.");
+          return;
+        }
+        if (!isHuman) {
+          toast.error("Confirme que você não é um robô antes de continuar.");
+          return;
+        }
+        if (Date.now() - formStartedAt < 2000) {
+          toast.error("Aguarde um instante antes de enviar o cadastro.");
+          return;
+        }
         const parsed = signupSchema.safeParse({
           ...form,
           username: normalizeUsername(form.username),
