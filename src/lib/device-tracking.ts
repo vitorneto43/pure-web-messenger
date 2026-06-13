@@ -48,6 +48,16 @@ export async function recordDeviceInfo(userId: string) {
         ...(geo.region ? { region: geo.region } : {}),
         ...(geo.city ? { city: geo.city } : {}),
       }, { onConflict: "user_id" });
+
+    // Registra fingerprint do dispositivo + IP no sistema de segurança
+    try {
+      const { collectDeviceFingerprintRaw } = await import("@/lib/device-fingerprint");
+      const { recordDeviceFingerprint } = await import("@/lib/security.functions");
+      const raw = await collectDeviceFingerprintRaw();
+      await recordDeviceFingerprint({ data: raw });
+    } catch (e) {
+      console.warn("recordDeviceFingerprint failed", e);
+    }
   } catch (e) {
     console.warn("recordDeviceInfo failed", e);
   }
