@@ -294,7 +294,7 @@ export const exportUserDataForRequest = createServerFn({ method: "POST" })
       await supabase.from("compliance_requests").update({ fulfilled_at: new Date().toISOString(), status: "fulfilled" }).eq("id", req.id);
     }
 
-    return { ok: true, payload };
+    return { ok: true, payload_json: JSON.stringify(payload) };
   });
 
 // ============================================================================
