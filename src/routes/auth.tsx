@@ -421,6 +421,13 @@ function AuthPage() {
               Explorar sem cadastro →
             </Link>
           </div>
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            {t("auth.guidelinesNotice")}{" "}
+            <Link to="/diretrizes" className="text-primary hover:underline font-medium">
+              {t("auth.guidelinesLink")}
+            </Link>
+          </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
