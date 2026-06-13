@@ -130,6 +130,24 @@ function AuthPage() {
           );
           return;
         }
+        // Bloqueio de cadastro a partir de IPs previamente banidos por abuso.
+        // Privacidade: o servidor compara apenas o *hash* anonimizado do IP;
+        // o IP em si nunca é retornado nem armazenado em claro.
+        try {
+          const res = await fetch("/api/public/auth/check-signup-ip", { method: "GET" });
+          if (res.ok) {
+            const j = (await res.json()) as { allowed?: boolean };
+            if (j.allowed === false) {
+              toast.error(
+                t("auth.toast.ipBanned", {
+                  defaultValue:
+                    "Não é possível criar uma conta a partir desta rede. Se você acha que é um engano, fale com o suporte.",
+                }),
+              );
+              return;
+            }
+          }
+        } catch {}
         const attribution = getSignupAttributionForSignup();
         const { data: signUpData, error } = await supabase.auth.signUp({
           email: parsed.data.email,

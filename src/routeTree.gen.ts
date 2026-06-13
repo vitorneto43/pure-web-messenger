@@ -36,6 +36,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
 import { Route as ApiPublicHooksUnreadMessageEmailsRouteImport } from './routes/api/public/hooks/unread-message-emails'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
+import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/public/auth/check-signup-ip'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -178,6 +179,12 @@ const ApiPublicCallsStatusRoute = ApiPublicCallsStatusRouteImport.update({
   path: '/api/public/calls/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAuthCheckSignupIpRoute =
+  ApiPublicAuthCheckSignupIpRouteImport.update({
+    id: '/api/public/auth/check-signup-ip',
+    path: '/api/public/auth/check-signup-ip',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
+    | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
+    | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
@@ -344,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
     | '/lovable/email/suppression'
+    | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
@@ -370,6 +383,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   UUsernameRoute: typeof UUsernameRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
   ApiPublicHooksUnreadMessageEmailsRoute: typeof ApiPublicHooksUnreadMessageEmailsRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
@@ -570,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCallsStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/auth/check-signup-ip': {
+      id: '/api/public/auth/check-signup-ip'
+      path: '/api/public/auth/check-signup-ip'
+      fullPath: '/api/public/auth/check-signup-ip'
+      preLoaderRoute: typeof ApiPublicAuthCheckSignupIpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -617,6 +638,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   UUsernameRoute: UUsernameRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
   ApiPublicHooksUnreadMessageEmailsRoute:
     ApiPublicHooksUnreadMessageEmailsRoute,

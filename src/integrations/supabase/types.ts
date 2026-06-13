@@ -137,6 +137,36 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_ips: {
+        Row: {
+          banned_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          ip_hash: string
+          reason: string | null
+          related_user_id: string | null
+        }
+        Insert: {
+          banned_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip_hash: string
+          reason?: string | null
+          related_user_id?: string | null
+        }
+        Update: {
+          banned_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip_hash?: string
+          reason?: string | null
+          related_user_id?: string | null
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           callee_id: string
@@ -1083,11 +1113,12 @@ export type Database = {
       spam_signals: {
         Row: {
           auto_action: string | null
-          content_excerpt: string | null
+          content_hash: string | null
           conversation_id: string | null
           created_at: string
           id: string
           ip: string | null
+          ip_hash: string | null
           message_id: string | null
           reasons: string[]
           score: number
@@ -1096,11 +1127,12 @@ export type Database = {
         }
         Insert: {
           auto_action?: string | null
-          content_excerpt?: string | null
+          content_hash?: string | null
           conversation_id?: string | null
           created_at?: string
           id?: string
           ip?: string | null
+          ip_hash?: string | null
           message_id?: string | null
           reasons?: string[]
           score?: number
@@ -1109,11 +1141,12 @@ export type Database = {
         }
         Update: {
           auto_action?: string | null
-          content_excerpt?: string | null
+          content_hash?: string | null
           conversation_id?: string | null
           created_at?: string
           id?: string
           ip?: string | null
+          ip_hash?: string | null
           message_id?: string | null
           reasons?: string[]
           score?: number
@@ -1659,6 +1692,7 @@ export type Database = {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
+      is_ip_hash_banned: { Args: { _ip_hash: string }; Returns: boolean }
       is_protected_superadmin_email: {
         Args: { _user_id: string }
         Returns: boolean
