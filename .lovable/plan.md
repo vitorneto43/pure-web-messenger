@@ -1,110 +1,123 @@
-# Revisão completa do sistema de moderação do WaveChat
+# Sistema Avançado de Segurança, Reputação e Anti-Abuso
 
-Vou reorganizar a moderação em camadas separadas, com privacidade absoluta para conversas privadas e foco automático apenas em conteúdo público e comportamento.
+Construir um sistema em camadas que protege o WaveChat contra spam, golpes, bots, contas descartáveis e reincidentes — sem bloqueio permanente de IP e sem ler conversas privadas.
 
 ## Princípios
 
-1. **Conversas privadas são intocáveis**: o servidor não lê, não analisa, não armazena conteúdo de mensagens entre usuários.
-2. **Moderação automática só atua em**: status, perfis (bio, nome, foto), grupos públicos, e *metadados* de comportamento (taxa de envio, repetição, IPs, dispositivos).
-3. **Mensagens privadas só vão para moderação quando denunciadas pelo participante** — e só essa mensagem específica.
+- **IPs nunca são banidos permanentemente.** São apenas *classificados* (baixo/médio/alto/crítico) e usados como sinal de risco.
+- **Dispositivos podem ser bloqueados** (fingerprint), pois identificam o aparelho, não a rede.
+- **Conversas privadas continuam privadas.** Toda análise é sobre metadados, comportamento e conteúdo denunciado/público.
+- **Hash com pepper** em todos os identificadores sensíveis (IP, fingerprint). O valor cru nunca fica em texto puro no banco.
 
-## Mudanças por área
+## Camadas
 
-### 1. Remover análise automática de conteúdo de mensagens
-- Desativar o `spam-detector` rodando no `ChatWindow` para mensagens privadas 1-a-1.
-- Remover envio automático de `score`/`reasons` ao servidor por mensagem privada.
-- Manter o detector apenas como hint local (UI: "essa mensagem parece phishing, tem certeza?") sem enviar nada.
+### 1. Conta banida → registro completo
+Estender `moderation_actions` (já existe) e garantir snapshot de: motivo, data, evidências (snapshots já criados), denúncias vinculadas, histórico. Quando um usuário é banido, marcar `profiles.banned_at` e desativar sessão.
 
-### 2. Detecção comportamental (sem ler conteúdo)
-Novo módulo server-side baseado puramente em metadados:
-- **Rate limiting**: nº de mensagens/minuto por usuário, nº de destinatários distintos/hora, nº de mensagens iguais (hash do tamanho + timestamp, não do texto) para muitos destinatários.
-- **IP/Device fingerprint**: contagem de contas criadas pelo mesmo `ip_hash` ou `device_id` (já temos `device-tracking`).
-- **Sinal de bot**: cadência regular, ausência de digitação, criação imediata pós-cadastro.
-Gera `behavior_signals` (não `spam_signals` de conteúdo).
+### 2. Fingerprint de dispositivo
+Nova tabela `device_fingerprints`:
+- `fingerprint_hash` (hash de UA + plataforma + screen + tz + device_id nativo)
+- `user_id`, `first_seen_at`, `last_seen_at`, `account_count`, `banned_account_count`
+- `risk_level` (low/medium/high/critical), `is_blocked` (bool, gravíssimo apenas)
 
-### 3. Trust Score
-Nova tabela `user_trust_scores`:
-- `score` (0-100), recalculado por trigger/cron.
-- Positivos: idade da conta, perfil completo, sem denúncias confirmadas, sem bloqueios recebidos.
-- Negativos: denúncias confirmadas, bloqueios recebidos, sinais comportamentais, reincidência.
-- Função `recompute_trust_score(user_id)` + view `user_trust_view`.
+Gerado no cliente em `src/lib/device-fingerprint.ts` (combina sinais já permitidos). Reportado via serverFn `recordDeviceFingerprint`.
 
-### 4. Moderação de conteúdo público (mais forte)
-Apenas nestes alvos:
-- `statuses` (texto, mídia, caption)
-- `profiles` (display_name, username, bio, avatar)
-- grupos públicos (nome, descrição, foto)
-Hooks no `INSERT`/`UPDATE` chamam server fn que avalia score (regex de nudez explícita / golpe / link suspeito / repetição), e em casos graves move para fila de revisão automática.
+Na criação de conta e login: serverFn `checkDeviceFingerprint` retorna `{ allowed, requires_verification, risk }`. Se `is_blocked=true` → bloqueia. Se reincidente (já vinculado a conta banida) → exige verificação adicional / restringe.
 
-### 5. Sistema de denúncias (já existe, refinar)
-- Garantir que toda denúncia de mensagem armazene: mensagem + anexo + remetente + destinatário + motivo, em snapshot imutável dentro do próprio `content_reports` (snapshot JSON `evidence_snapshot`), para que mesmo se a mensagem for apagada o moderador ainda veja.
-- Mensagens privadas **só** entram em `content_reports` por denúncia explícita.
+### 3. Monitoramento de IP (classificação, não bloqueio)
+Nova tabela `ip_reputation`:
+- `ip_hash`, `country`, `region`, `accounts_created`, `accounts_banned`, `risk_level`, `last_seen_at`
+- Função `recompute_ip_risk(ip_hash)` atualiza `risk_level` baseado em ratio banidos/criados e volume.
 
-### 6. Painel de moderação
-Novas abas/filtros em `ModerationTab`:
-- Pendentes / Em análise / Resolvidas / Rejeitadas
-- Por tipo: mensagem (denunciada) / status / perfil / grupo / comportamento
-- Para cada item: histórico do denunciado (denúncias anteriores, strikes, trust score, bloqueios recebidos)
-- Ações: avisar, restringir 24h, suspender 7d, suspender 30d, banir, banir + IP.
+Substituir a lógica atual de banimento de IP (`banned_ips` + `check-signup-ip`) por classificação. IPs "crítico" exigem captcha/verificação; nunca bloqueiam de cara. Manter `banned_ips` apenas para casos gravíssimos (camada 8).
 
-### 7. Punições graduadas
-Função `apply_moderation_action`:
-- `warning` → nota + notificação
-- `restriction` → não envia para não-contatos por X horas
-- `suspension_short` (24h), `suspension_long` (7-30d)
-- `ban` permanente
-- `ban_with_ip` para gravíssimos (CSAM, golpe grave, ameaça)
-Reincidência sobe automaticamente a próxima ação.
+### 4. Trust Score (já existe `user_trust_scores`)
+Estender `recompute_trust_score(user_id)`:
+- **+**: idade da conta, perfil completo, sem denúncias, sem bloqueios recebidos, atividade saudável (mensagens recíprocas).
+- **−**: denúncias confirmadas, spam reportado, golpes, múltiplas contas do mesmo fingerprint, múltiplas contas do mesmo IP, comportamento bot (rate alto, repetição).
 
-### 8. Modo Aprendizado
-Flag global `moderation_learning_mode` em `app_settings`:
-- Quando `true`, ações automáticas viram apenas `proposed_action` (vão pra fila de revisão humana, não executam).
-- SuperAdmin liga/desliga no painel.
+Score 0–100. Usado pelas camadas 5 e 6.
 
-### 9. Configuração por SuperAdmin
-Nova tabela `moderation_weights` (singleton) com pesos editáveis:
-- `weight_report`, `weight_spam`, `weight_links`, `weight_blocks`, `weight_behavior`
-- `threshold_warning`, `threshold_restriction`, `threshold_suspension`, `threshold_ban`
-- UI em `ModerationTab > Configurações`.
+### 5. Restrições para contas novas
+ServerFn `checkRateLimit(action)` consulta:
+- Idade da conta + trust score.
+- Limites por dia: mensagens, convites, grupos criados, links enviados.
+
+Aplicada nos hooks de envio (mensagens / convites / criar grupo). Limites configuráveis em `moderation_weights` (estender com `limit_*` colunas).
+
+### 6. Detecção de comportamento suspeito
+Estender `behavior_signals` (já existe) com tipos:
+- `mass_account_creation` (mesmo fp/ip)
+- `high_send_rate`
+- `repeated_content_hash` (hash de mensagem, NÃO conteúdo)
+- `bot_pattern` (timing constante)
+
+Trigger/cron `detect_suspicious_behavior()` roda a cada N min, gera sinais e ajusta trust score.
+
+### 7. Painel de Segurança (SuperAdmin)
+Novo tab `SecurityTab.tsx` em `admin.tsx`:
+- **Usuários de alto risco**: lista ordenada por trust score asc.
+- **Dispositivos reincidentes**: `device_fingerprints` com `banned_account_count > 0`.
+- **IPs de alto risco**: `ip_reputation` ordenado por risk_level/ratio.
+- **Histórico**: links para denúncias e ações de moderação por entidade.
+- Ações: bloquear fingerprint, marcar IP como crítico, forçar verificação.
+
+### 8. Casos graves
+Quando ação de moderação é `banned` com severidade `gravissima` (CSAM, golpes graves, etc.):
+- Banir conta.
+- Marcar todos fingerprints vinculados como `is_blocked=true`.
+- Marcar IPs vinculados como `risk_level='critical'`.
+- Preservar snapshots (já existem via `evidence_snapshot`).
+- Registrar em `audit_logs` (já existe).
+
+Implementado em `apply_moderation_action` (estender RPC).
+
+## Arquivos
+
+### Migration (uma só)
+- `device_fingerprints` (CREATE + GRANT + RLS)
+- `ip_reputation` (CREATE + GRANT + RLS) — apenas SuperAdmin lê; serverFns escrevem via service role
+- Estender `user_trust_scores`: adicionar colunas `device_signal`, `ip_signal`, `behavior_signal`
+- Estender `moderation_weights`: `limit_messages_per_day_new`, `limit_invites_per_day_new`, `limit_groups_per_day_new`, `limit_links_per_day_new`, `new_account_days`
+- RPC `recompute_ip_risk(ip_hash text)`
+- RPC `recompute_device_risk(fp_hash text)`
+- RPC estendida `recompute_trust_score(user_id uuid)`
+- Trigger em `moderation_actions` para propagar bans gravíssimos a fingerprints/IPs
+
+### Cliente
+- `src/lib/device-fingerprint.ts` — gera hash do dispositivo (sem invasivo: UA, plataforma, screen, tz, device id nativo do Capacitor quando disponível).
+- Chamar `recordDeviceFingerprint` no login/signup (já temos `recordDeviceInfo`, estender).
+
+### Server functions
+- `src/lib/security.functions.ts`:
+  - `recordDeviceFingerprint` (auth)
+  - `checkSignupRisk` (public — recebe fp_hash, retorna { allowed, requires_verification })
+  - `checkRateLimit` (auth)
+  - `listHighRiskUsers`, `listSuspiciousDevices`, `listHighRiskIps` (superadmin)
+  - `blockDeviceFingerprint`, `setIpRiskLevel` (superadmin)
+- Estender `src/lib/moderation.functions.ts.applyModerationAction` → propagar gravíssima.
+
+### Rota pública
+- Estender `/api/public/auth/check-signup-ip` para retornar classificação (allowed sempre true exceto crítico/bloqueio explícito) e atualizar `ip_reputation`.
+
+### UI
+- `src/components/admin/SecurityTab.tsx` (novo)
+- Integrar no `src/routes/admin.tsx` (visível apenas para SuperAdmin)
+- Aplicar `checkRateLimit` nos pontos de envio (mensagens, convites, criar grupo)
+
+## Privacidade
+
+- IP e fingerprint **sempre** com `sha256(pepper + valor)`. Cru jamais persistido.
+- Conversas privadas: nenhuma análise automática (já garantido).
+- Cliente envia apenas hashes e métricas agregadas.
 
 ## Detalhes técnicos
 
-### Migrações
-- `user_trust_scores` (user_id PK, score, components jsonb, updated_at)
-- `behavior_signals` (id, user_id, kind, weight, metadata jsonb, ip_hash, device_hash, created_at)
-- `moderation_weights` (singleton row)
-- `app_settings` se ainda não existir (key/value jsonb)
-- `content_reports`: adicionar `evidence_snapshot jsonb`, `status` enum estendido (`pending|in_review|resolved|rejected`), `assigned_to uuid`
-- Função `recompute_trust_score(uuid)`, `apply_moderation_action(...)`, `report_message(...)` (snapshot atômico)
-- Todas com GRANTs + RLS
+- Pepper: `process.env.SPAM_HASH_PEPPER` (já existe).
+- Fingerprint = `sha256(pepper + JSON.stringify({platform, ua_class, screen_bucket, tz, native_device_id?}))`. Buckets para evitar identificação 1:1 desnecessária.
+- Limites default (novos por dia, conta <7d, trust<30): 30 msgs, 5 convites, 1 grupo, 5 links.
+- Risk IP: ratio banidos/criados ≥0.5 e total ≥5 → high; ≥0.8 e ≥10 → critical.
 
-### Server fns
-- `src/lib/trust.functions.ts` — getMyTrust, recomputeTrust (admin)
-- `src/lib/behavior.functions.ts` — recordBehaviorSignal (chamado por outros fns server-side em send_message wrapper / signup / etc., **nunca recebe texto**)
-- `src/lib/moderation.functions.ts` — estender com listReportsByStatus, assignReport, resolveReport, rejectReport, applyAction, getModerationWeights, updateModerationWeights, toggleLearningMode
-- `src/lib/public-content-moderation.functions.ts` — scanStatus, scanProfile (chamados em update de status/profile)
+## Tamanho
 
-### Cliente
-- `ChatWindow`: remover chamada de `reportSpamSignal` automática. Manter só hint visual local.
-- `ReportContentDialog`: ao denunciar mensagem, chamar `report_message` que faz snapshot.
-- `ModerationTab`: novas abas (status filters), exibir trust score, histórico, ações graduadas, painel de pesos + toggle modo aprendizado.
-- `CreateStatusDialog` / edição de perfil: chamar `scanStatus`/`scanProfile` no salvar.
-
-### Privacidade — invariante
-Grep final garantirá que `messages.content` **só** é lido por:
-- o próprio remetente/destinatário (RLS),
-- `report_message` (snapshot no momento da denúncia, autorizada pelo participante),
-- moderador via `content_reports.evidence_snapshot` (já é cópia).
-Nada de leitura em massa, nada de scan automático.
-
-## Escopo desta entrega
-
-Vou implementar tudo acima em uma sequência de edits. Como é grande, vou:
-1. Criar a migração consolidada primeiro (uma só, aprovada de uma vez).
-2. Em seguida, escrever as server fns novas + atualizar as existentes.
-3. Atualizar `ChatWindow` para parar a análise automática.
-4. Atualizar `ModerationTab` com abas, pesos, learning mode.
-5. Atualizar `ReportContentDialog` / fluxo de denúncia de mensagem com snapshot.
-6. Atualizar criação/edição de status e perfil para chamar scan público.
-
-Confirma que posso prosseguir? Se quiser podar algo (ex.: deixar Trust Score pra depois, ou pular o painel de pesos por agora), me diga antes de eu começar a migração.
+~1 migration grande, ~3 novos arquivos client/server, ~2 arquivos editados, 1 UI tab. Implementação direta — sem dependências externas novas.
