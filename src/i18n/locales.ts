@@ -88,6 +88,7 @@ const pt: Dict = {
   "nav.support": "Suporte",
   "nav.signIn": "Entrar",
   "nav.contact": "Contato",
+  "nav.guidelines": "Diretrizes",
   "footer.tagline": "Grupos, mensagens, chamadas de áudio e vídeo e IA — tudo em um só lugar.",
   "footer.institutional": "Institucional",
   "footer.help": "Ajuda",
