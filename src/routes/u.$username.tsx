@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X, Eye, UserPlus, UserCheck } from "lucide-react";
+import { ArrowLeft, Lock, MapPin, Calendar, Loader2, Check, X, Eye, UserPlus, UserCheck, MoreVertical, Flag, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,6 +8,10 @@ import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { ReportContentDialog } from "@/components/ReportContentDialog";
+import { useServerFn } from "@tanstack/react-start";
+import { blockUser } from "@/lib/moderation.functions";
 import type { SocialLinks } from "@/lib/social-links";
 
 export const Route = createFileRoute("/u/$username")({
