@@ -528,6 +528,16 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           statusId={current.id}
         />
       )}
+
+      {!isOwner && current && (
+        <ReportContentDialog
+          open={reportOpen}
+          onOpenChange={(o) => { setReportOpen(o); if (!o) setPaused(false); }}
+          targetType="status"
+          targetId={current.id}
+          reportedUserId={current.user_id}
+        />
+      )}
     </div>
   );
 }
