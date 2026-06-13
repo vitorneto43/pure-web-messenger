@@ -302,6 +302,29 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </p>
           <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
         </div>
+        {!isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+                onClick={() => setPaused(true)}
+                aria-label={t("moderation.menu", { defaultValue: "Mais opções" })}
+              >
+                <MoreVertical className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onCloseAutoFocus={() => setPaused(false)}>
+              <DropdownMenuItem onClick={() => { setPaused(true); setReportOpen(true); }}>
+                <Flag className="size-4 mr-2" /> {t("moderation.report", { defaultValue: "Denunciar" })}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBlock} className="text-destructive focus:text-destructive">
+                <Ban className="size-4 mr-2" /> {t("moderation.block", { defaultValue: "Bloquear usuário" })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={onClose}>
           <X className="size-5" />
         </Button>
