@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, Phone, Shield } from "lucide-react";
+import { Mail, Phone, Shield, HelpCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
