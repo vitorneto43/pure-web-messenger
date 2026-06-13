@@ -86,8 +86,6 @@ export const recordDeviceFingerprint = createServerFn({ method: "POST" })
       await supabaseAdmin.rpc("register_ip_seen", {
         _user_id: userId,
         _ip_hash: ip_hash,
-        _country: null,
-        _region: null,
       });
     }
 
