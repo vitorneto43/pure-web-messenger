@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, Phone } from "lucide-react";
+import { Mail, Phone, Shield, HelpCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
@@ -34,6 +34,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             </Link>
             <Link to="/guide" className="hidden sm:inline-flex px-3 py-1.5 rounded-md hover:bg-accent/30 transition">
               {t("nav.howItWorks")}
+            </Link>
+            <Link to="/diretrizes" className="hidden sm:inline-flex px-3 py-1.5 rounded-md hover:bg-accent/30 transition items-center gap-1.5" title={t("nav.guidelines")}>
+              <HelpCircle className="size-4" />
+              <span>{t("nav.guidelines")}</span>
             </Link>
             <Link
               to="/support"

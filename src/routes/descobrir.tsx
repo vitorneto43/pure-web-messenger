@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ArrowLeft, Users, MessageCircle, Phone, Heart, Sparkles } from "lucide-react";
+import { Loader2, ArrowLeft, Users, MessageCircle, Phone, Heart, Sparkles, HelpCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/descobrir")({
 });
 
 function DiscoverPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
@@ -38,14 +40,19 @@ function DiscoverPage() {
             <img src={wavechatLogo.url} alt="WaveChat" className="size-7 rounded-lg" />
             <span className="font-bold">WaveChat</span>
           </Link>
-          {user ? (
-            <Button size="sm" onClick={() => navigate({ to: "/chat" })}>Ir para chat</Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
-              <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Criar conta</Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Link to="/diretrizes" className="text-muted-foreground hover:text-foreground transition" title={t("nav.guidelines")}>
+              <HelpCircle className="size-5" />
+            </Link>
+            {user ? (
+              <Button size="sm" onClick={() => navigate({ to: "/chat" })}>Ir para chat</Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+                <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Criar conta</Button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
