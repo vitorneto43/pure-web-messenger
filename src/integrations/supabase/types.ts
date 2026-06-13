@@ -557,6 +557,80 @@ export type Database = {
         }
         Relationships: []
       }
+      device_fingerprints: {
+        Row: {
+          account_count: number
+          banned_account_count: number
+          blocked_at: string | null
+          blocked_reason: string | null
+          fingerprint_hash: string
+          first_seen_at: string
+          is_blocked: boolean
+          last_seen_at: string
+          metadata: Json
+          risk_level: string
+        }
+        Insert: {
+          account_count?: number
+          banned_account_count?: number
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          fingerprint_hash: string
+          first_seen_at?: string
+          is_blocked?: boolean
+          last_seen_at?: string
+          metadata?: Json
+          risk_level?: string
+        }
+        Update: {
+          account_count?: number
+          banned_account_count?: number
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          fingerprint_hash?: string
+          first_seen_at?: string
+          is_blocked?: boolean
+          last_seen_at?: string
+          metadata?: Json
+          risk_level?: string
+        }
+        Relationships: []
+      }
+      device_user_links: {
+        Row: {
+          fingerprint_hash: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          seen_count: number
+          user_id: string
+        }
+        Insert: {
+          fingerprint_hash: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          seen_count?: number
+          user_id: string
+        }
+        Update: {
+          fingerprint_hash?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          seen_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_user_links_fingerprint_hash_fkey"
+            columns: ["fingerprint_hash"]
+            isOneToOne: false
+            referencedRelation: "device_fingerprints"
+            referencedColumns: ["fingerprint_hash"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -673,6 +747,77 @@ export type Database = {
           views_amount?: number
         }
         Relationships: []
+      }
+      ip_reputation: {
+        Row: {
+          accounts_banned: number
+          accounts_created: number
+          country: string | null
+          first_seen_at: string
+          ip_hash: string
+          last_seen_at: string
+          notes: string | null
+          region: string | null
+          risk_level: string
+          updated_at: string
+        }
+        Insert: {
+          accounts_banned?: number
+          accounts_created?: number
+          country?: string | null
+          first_seen_at?: string
+          ip_hash: string
+          last_seen_at?: string
+          notes?: string | null
+          region?: string | null
+          risk_level?: string
+          updated_at?: string
+        }
+        Update: {
+          accounts_banned?: number
+          accounts_created?: number
+          country?: string | null
+          first_seen_at?: string
+          ip_hash?: string
+          last_seen_at?: string
+          notes?: string | null
+          region?: string | null
+          risk_level?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ip_user_links: {
+        Row: {
+          first_seen_at: string
+          id: string
+          ip_hash: string
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          ip_hash: string
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ip_user_links_ip_hash_fkey"
+            columns: ["ip_hash"]
+            isOneToOne: false
+            referencedRelation: "ip_reputation"
+            referencedColumns: ["ip_hash"]
+          },
+        ]
       }
       live_locations: {
         Row: {
@@ -825,6 +970,12 @@ export type Database = {
       moderation_weights: {
         Row: {
           id: number
+          limit_groups_per_day_new: number
+          limit_invites_per_day_new: number
+          limit_links_per_day_new: number
+          limit_messages_per_day_new: number
+          new_account_days: number
+          new_account_trust_threshold: number
           threshold_ban: number
           threshold_restriction: number
           threshold_suspension: number
@@ -839,6 +990,12 @@ export type Database = {
         }
         Insert: {
           id?: number
+          limit_groups_per_day_new?: number
+          limit_invites_per_day_new?: number
+          limit_links_per_day_new?: number
+          limit_messages_per_day_new?: number
+          new_account_days?: number
+          new_account_trust_threshold?: number
           threshold_ban?: number
           threshold_restriction?: number
           threshold_suspension?: number
@@ -853,6 +1010,12 @@ export type Database = {
         }
         Update: {
           id?: number
+          limit_groups_per_day_new?: number
+          limit_invites_per_day_new?: number
+          limit_links_per_day_new?: number
+          limit_messages_per_day_new?: number
+          new_account_days?: number
+          new_account_trust_threshold?: number
           threshold_ban?: number
           threshold_restriction?: number
           threshold_suspension?: number
@@ -1911,6 +2074,10 @@ export type Database = {
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       can_view_full_profile: { Args: { _owner: string }; Returns: boolean }
+      check_account_rate_limit: {
+        Args: { _action: string; _user_id: string }
+        Returns: Json
+      }
       claim_invite_reward: { Args: never; Returns: Json }
       complete_onboarding: {
         Args: { _display_name: string; _username: string }
@@ -2016,6 +2183,10 @@ export type Database = {
         }
         Returns: number
       }
+      propagate_severe_ban: {
+        Args: { _reason: string; _user_id: string }
+        Returns: undefined
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -2024,10 +2195,26 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recompute_device_risk: { Args: { _fp_hash: string }; Returns: string }
+      recompute_ip_risk: { Args: { _ip_hash: string }; Returns: string }
       recompute_trust_score: { Args: { _user_id: string }; Returns: number }
       record_profile_view: { Args: { _owner: string }; Returns: undefined }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
+      register_ban: { Args: { _user_id: string }; Returns: undefined }
       register_boost_click: { Args: { _status_id: string }; Returns: Json }
+      register_device_seen: {
+        Args: { _fp_hash: string; _user_id: string }
+        Returns: undefined
+      }
+      register_ip_seen: {
+        Args: {
+          _country?: string
+          _ip_hash: string
+          _region?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       register_status_view: { Args: { _status_id: string }; Returns: Json }
       report_message_with_snapshot: {
         Args: { _details?: string; _message_id: string; _reason: string }
