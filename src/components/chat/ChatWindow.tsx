@@ -351,15 +351,25 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     if (!content.trim() && !attachment) return;
     setSending(true);
     try {
-      const { error } = await supabase.from("messages").insert({
+      const { data: inserted, error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: user.id,
         content: content.trim() || null,
         attachment_url: attachment?.url ?? null,
         attachment_type: attachment?.type ?? null,
         attachment_name: attachment?.name ?? null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      // Spam detection (fire-and-forget) — logs IP server-side and may auto-act
+      if (content.trim()) {
+        void analyzeSpam({
+          data: {
+            message_id: inserted?.id,
+            conversation_id: conversationId,
+            content: content.trim(),
+          },
+        }).catch(() => {});
+      }
       setText("");
       // Sending a message implies you've read this conversation (WhatsApp-style):
       // clear unread badge by bumping last_read_at.
