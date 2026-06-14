@@ -166,7 +166,10 @@ function PublicProfile() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-semibold truncate">{data.display_name}</h1>
+            <h1 className="text-2xl font-semibold truncate flex items-center gap-2 flex-wrap">
+              <span className="truncate">{data.display_name}</span>
+              <UserBadges userId={data.id} max={4} />
+            </h1>
             <p className="text-muted-foreground">@{data.username}</p>
             {data.visibility === "private" && (
               <span className="inline-flex items-center gap-1 mt-1 text-xs text-muted-foreground">
@@ -301,6 +304,8 @@ function PublicProfile() {
         )}
 
       </div>
+
+      <AchievementsCard userId={data.id} />
 
       {(!isPrivate || isOwn) && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
 
