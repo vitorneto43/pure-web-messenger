@@ -178,6 +178,7 @@ function StatusPublicPage() {
     const rows = (data ?? []) as CommentRow[];
     if (rows.length === 0) {
       setComments([]);
+      setReactionsByComment({});
       return;
     }
     const ids = Array.from(new Set(rows.map((r) => r.user_id)));
@@ -192,7 +193,44 @@ function StatusPublicPage() {
       ]),
     );
     setComments(rows.map((r) => ({ ...r, author: map.get(r.user_id) ?? null })));
+
+    const commentIds = rows.map((r) => r.id);
+    const { data: reacts } = await supabase
+      .from("status_comment_reactions" as any)
+      .select("comment_id,emoji,user_id")
+      .in("comment_id", commentIds);
+    const byComment: Record<string, CommentReaction[]> = {};
+    for (const r of (reacts ?? []) as any[]) {
+      (byComment[r.comment_id] ||= []).push({ emoji: r.emoji, user_id: r.user_id });
+    }
+    setReactionsByComment(byComment);
   }
+
+  async function toggleCommentReaction(commentId: string, emoji: string) {
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    const existing = (reactionsByComment[commentId] ?? []).find(
+      (r) => r.user_id === user.id && r.emoji === emoji,
+    );
+    if (existing) {
+      const { error } = await supabase
+        .from("status_comment_reactions" as any)
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id)
+        .eq("emoji", emoji);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("status_comment_reactions" as any)
+        .insert({ comment_id: commentId, user_id: user.id, emoji });
+      if (error) return toast.error(error.message);
+    }
+    loadComments();
+  }
+
 
   useEffect(() => {
     load();
