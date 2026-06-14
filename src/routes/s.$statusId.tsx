@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { sendStatusPush } from "@/lib/status-push.functions";
+import { UserBadges } from "@/components/badges/UserBadges";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
@@ -630,7 +631,10 @@ function StatusPublicPage() {
             ) : (
               <p className="font-medium truncate">{author?.display_name ?? "..."}</p>
             )}
-            <p className="text-xs text-muted-foreground">{formatTime(status.created_at)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">{formatTime(status.created_at)}</p>
+              {status?.user_id && <UserBadges userId={status.user_id} max={3} />}
+            </div>
           </div>
           {!isOwner && author && (
             <Button size="sm" variant="outline" onClick={() => startChat(author.id)}>
