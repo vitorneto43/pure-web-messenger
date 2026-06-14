@@ -388,10 +388,11 @@ function StatusPublicPage() {
     );
   }
 
-  const renderComment = (c: Comment, depth = 0) => {
+  const REPLY_PREVIEW_COUNT = 2;
+
+  const renderCommentBody = (c: Comment, isReply: boolean) => {
     const canDelete = !!user && (c.user_id === user.id || status.user_id === user.id);
     const canReport = !!user && c.user_id !== user.id;
-    const childReplies = repliesByParent[c.id] ?? [];
     const reactions = reactionsByComment[c.id] ?? [];
     const counts: Record<string, { count: number; mine: boolean }> = {};
     for (const r of reactions) {
@@ -401,134 +402,191 @@ function StatusPublicPage() {
     }
     const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
 
+    // If this is a reply to another reply, prefix the body with @parentAuthor mention
+    let mention: string | null = null;
+    if (isReply && c.parent_id) {
+      const parent = commentById.get(c.parent_id);
+      if (parent && !parent.parent_id ? false : parent) {
+        // only show mention when parent is itself a reply (not the root)
+        if (parent.parent_id) {
+          mention = parent.author?.display_name ?? "alguém";
+        }
+      }
+    }
+
     return (
-      <li key={c.id} className={depth > 0 && depth <= 1 ? "ml-6 sm:ml-10" : ""}>
-        <div className="flex items-start gap-2.5">
-          <Avatar className="size-8">
-            <AvatarImage src={c.author?.avatar_url ?? undefined} />
-            <AvatarFallback>{c.author?.display_name?.[0] ?? "?"}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="rounded-2xl bg-muted px-3 py-2">
-              <div className="flex items-center gap-2 mb-0.5">
-                {c.author?.username ? (
-                  <Link
-                    to="/u/$username"
-                    params={{ username: c.author.username }}
-                    className="text-sm font-medium hover:underline truncate"
-                  >
-                    {c.author?.display_name ?? "Usuário"}
-                  </Link>
-                ) : (
-                  <span className="text-sm font-medium truncate">
-                    {c.author?.display_name ?? "Usuário"}
-                  </span>
-                )}
-                <span className="text-[11px] text-muted-foreground">
-                  {formatTime(c.created_at)}
+      <div className="flex items-start gap-2.5 w-full min-w-0">
+        <Avatar className={isReply ? "size-7 shrink-0" : "size-8 shrink-0"}>
+          <AvatarImage src={c.author?.avatar_url ?? undefined} />
+          <AvatarFallback>{c.author?.display_name?.[0] ?? "?"}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="rounded-2xl bg-muted px-3 py-2">
+            <div className="flex items-center gap-2 mb-0.5 min-w-0">
+              {c.author?.username ? (
+                <Link
+                  to="/u/$username"
+                  params={{ username: c.author.username }}
+                  className="text-sm font-medium hover:underline truncate"
+                >
+                  {c.author?.display_name ?? "Usuário"}
+                </Link>
+              ) : (
+                <span className="text-sm font-medium truncate">
+                  {c.author?.display_name ?? "Usuário"}
                 </span>
-              </div>
-              <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
+              )}
+              <span className="text-[11px] text-muted-foreground shrink-0">
+                {formatTime(c.created_at)}
+              </span>
             </div>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {mention && (
+                <span className="text-primary font-medium">@{mention} </span>
+              )}
+              {c.content}
+            </p>
+          </div>
 
-            {sortedEmojis.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1 px-1">
-                {sortedEmojis.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => toggleCommentReaction(c.id, emoji)}
-                    className={`text-xs rounded-full border px-2 py-0.5 flex items-center gap-1 transition ${
-                      counts[emoji].mine
-                        ? "bg-primary/15 border-primary/40 text-foreground"
-                        : "bg-muted/60 border-border hover:bg-muted"
-                    }`}
-                  >
-                    <span>{emoji}</span>
-                    <span className="tabular-nums">{counts[emoji].count}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          {sortedEmojis.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1 px-1">
+              {sortedEmojis.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => toggleCommentReaction(c.id, emoji)}
+                  className={`text-xs rounded-full border px-2 py-0.5 flex items-center gap-1 transition ${
+                    counts[emoji].mine
+                      ? "bg-primary/15 border-primary/40 text-foreground"
+                      : "bg-muted/60 border-border hover:bg-muted"
+                  }`}
+                >
+                  <span>{emoji}</span>
+                  <span className="tabular-nums">{counts[emoji].count}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-            <div className="flex items-center gap-3 mt-1 px-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                    aria-label="Reagir"
-                  >
-                    <SmilePlus className="size-3.5" /> Reagir
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-1.5" align="start">
-                  <div className="flex gap-0.5">
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        className="text-xl hover:scale-125 transition px-1.5 py-1"
-                        onClick={() => toggleCommentReaction(c.id, emoji)}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-              {user && (
-
+          <div className="flex items-center gap-3 mt-1 px-2 flex-wrap">
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  onClick={() => {
-                    setReplyTo(c);
-                    setTimeout(() => {
-                      document.getElementById("comment-input")?.focus();
-                    }, 0);
-                  }}
+                  aria-label="Reagir"
                 >
-                  <Reply className="size-3" /> Responder
+                  <SmilePlus className="size-3.5" /> Reagir
                 </button>
-              )}
-              {user && c.user_id !== user.id && (
-                <button
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => startChat(c.user_id)}
-                >
-                  Conversar
-                </button>
-              )}
-              {(canDelete || canReport) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="text-xs text-muted-foreground hover:text-foreground">
-                      Mais
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-1.5" align="start">
+                <div className="flex gap-0.5">
+                  {REACTION_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      className="text-xl hover:scale-125 transition px-1.5 py-1"
+                      onClick={() => toggleCommentReaction(c.id, emoji)}
+                    >
+                      {emoji}
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    {canReport && (
-                      <DropdownMenuItem onClick={() => setReportTarget(c)}>
-                        <Flag className="size-3.5 mr-2" /> Denunciar
-                      </DropdownMenuItem>
-                    )}
-                    {canDelete && (
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => deleteComment(c.id)}
-                      >
-                        <Trash2 className="size-3.5 mr-2" /> Apagar
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-
-            {childReplies.length > 0 && (
-              <ul className="mt-2 space-y-3">
-                {childReplies.map((r) => renderComment(r, depth + 1))}
-              </ul>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            {user && (
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                onClick={() => {
+                  setReplyTo(c);
+                  setTimeout(() => {
+                    document.getElementById("comment-input")?.focus();
+                  }, 0);
+                }}
+              >
+                <Reply className="size-3" /> Responder
+              </button>
+            )}
+            {user && c.user_id !== user.id && (
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => startChat(c.user_id)}
+              >
+                Conversar
+              </button>
+            )}
+            {(canDelete || canReport) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-xs text-muted-foreground hover:text-foreground">
+                    Mais
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {canReport && (
+                    <DropdownMenuItem onClick={() => setReportTarget(c)}>
+                      <Flag className="size-3.5 mr-2" /> Denunciar
+                    </DropdownMenuItem>
+                  )}
+                  {canDelete && (
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => deleteComment(c.id)}
+                    >
+                      <Trash2 className="size-3.5 mr-2" /> Apagar
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const renderThread = (root: Comment) => {
+    const replies = repliesByRoot[root.id] ?? [];
+    const expanded = !!expandedThreads[root.id];
+    const visibleReplies =
+      replies.length <= REPLY_PREVIEW_COUNT || expanded
+        ? replies
+        : replies.slice(replies.length - REPLY_PREVIEW_COUNT);
+    const hidden = replies.length - visibleReplies.length;
+
+    return (
+      <li key={root.id} className="w-full min-w-0">
+        {renderCommentBody(root, false)}
+        {replies.length > 0 && (
+          <ul className="mt-2 space-y-3 ml-6 sm:ml-10 border-l border-border/60 pl-3 sm:pl-4">
+            {hidden > 0 && !expanded && (
+              <li>
+                <button
+                  className="text-xs font-medium text-primary hover:underline"
+                  onClick={() =>
+                    setExpandedThreads((s) => ({ ...s, [root.id]: true }))
+                  }
+                >
+                  Ver {hidden} {hidden === 1 ? "resposta anterior" : "respostas anteriores"}
+                </button>
+              </li>
+            )}
+            {visibleReplies.map((r) => (
+              <li key={r.id} className="w-full min-w-0">
+                {renderCommentBody(r, true)}
+              </li>
+            ))}
+            {expanded && replies.length > REPLY_PREVIEW_COUNT && (
+              <li>
+                <button
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                  onClick={() =>
+                    setExpandedThreads((s) => ({ ...s, [root.id]: false }))
+                  }
+                >
+                  Ocultar respostas
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
       </li>
     );
   };
