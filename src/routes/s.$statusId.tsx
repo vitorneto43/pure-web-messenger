@@ -360,6 +360,15 @@ function StatusPublicPage() {
     const canDelete = !!user && (c.user_id === user.id || status.user_id === user.id);
     const canReport = !!user && c.user_id !== user.id;
     const childReplies = repliesByParent[c.id] ?? [];
+    const reactions = reactionsByComment[c.id] ?? [];
+    const counts: Record<string, { count: number; mine: boolean }> = {};
+    for (const r of reactions) {
+      const entry = (counts[r.emoji] ||= { count: 0, mine: false });
+      entry.count += 1;
+      if (user && r.user_id === user.id) entry.mine = true;
+    }
+    const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
+
     return (
       <li key={c.id} className={depth > 0 ? "ml-10" : ""}>
         <div className="flex items-start gap-2.5">
