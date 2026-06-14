@@ -2285,6 +2285,34 @@ export type Database = {
           username: string
         }[]
       }
+      discover_public_statuses: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          avatar_url: string
+          background: string
+          caption: string
+          city: string
+          comments_count: number
+          content: string
+          created_at: string
+          cta_label: string
+          cta_url: string
+          display_name: string
+          expires_at: string
+          is_boosted: boolean
+          is_official: boolean
+          kind: string
+          media_url: string
+          reactions_count: number
+          score: number
+          status_id: string
+          user_id: string
+          username: string
+          viewer_already_follows: boolean
+          viewer_already_liked: boolean
+          views_count: number
+        }[]
+      }
       dispatch_status_push: {
         Args: {
           _comment_id: string

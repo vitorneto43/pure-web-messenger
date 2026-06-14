@@ -1,94 +1,80 @@
+# Descoberta de Status Públicos
 
-# Sistema de Selos e Emblemas
+Transformar o WaveChat de "entrar → não ver nada → sair" para "entrar → ver status → comentar → seguir → conversar".
 
-Sistema completo de badges (selos) para gamificar e aumentar a confiança/engajamento no WaveChat. Implementação no backend (Lovable Cloud) + frontend, **sem necessidade de nova versão Android** — tudo via web/PWA já embarcado.
+## 1. Banco de dados (1 migração)
 
-## 1. Banco de dados (migração)
+**`profiles`**: adicionar coluna `is_public_profile boolean default true`. Quando true:
+- Aparece em Descobrir
+- Status `visibility='public'` ficam visíveis para qualquer logado
+- Recebe comentários e seguidores de qualquer um
 
-**Tabela `badges`** (catálogo de selos disponíveis):
-- `code` (slug único: `verified`, `creator_starter`, `founder`, etc.)
-- `name`, `description`, `icon` (emoji), `color` (hex/token)
-- `category` (`verification` | `followers` | `invites` | `profile` | `historical` | `activity`)
-- `tier` (ordem dentro da categoria — usado para "exibir apenas o maior")
-- `criteria` (jsonb com regra: ex. `{type:'followers', min:1000}`)
-- `is_automatic` (boolean — falso para "Verificado", verdadeiro para os demais)
+**`statuses`**: já tem `visibility`. Garantir índice em `(visibility, created_at desc, expires_at)`.
 
-**Tabela `user_badges`** (selos conquistados):
-- `user_id`, `badge_id`, `awarded_at`, `awarded_by` (admin id, opcional)
-- UNIQUE (user_id, badge_id)
-- RLS: leitura pública (selos são públicos); escrita só via funções SECURITY DEFINER ou admin
+**RPC `discover_public_statuses(_limit int, _offset int)`** — retorna status públicos para descoberta com mix ponderado:
+- 40% recentes (últimas 24h, visibility='public', autor is_public_profile=true, não-seguidos, não-bloqueados, não próprio)
+- 30% mesma cidade (join profiles_private do viewer)
+- 20% com mais interação (comentários + reações últimos 3 dias)
+- 10% impulsionados (status_boosts ativos)
+- Excluir: já visualizados pelo viewer, autores bloqueados, autores que bloquearam o viewer
+- Para usuário sem seguidos: relaxar filtros, priorizar perfis completos + verificados + fundadores
 
-**Função `recompute_user_badges(_user_id uuid)`** — recalcula todos os selos automáticos do usuário:
-- Conta seguidores → atribui maior tier de Criador
-- Conta convidados confirmados → atribui maior tier de Convite
-- Verifica perfil completo (avatar, display_name, bio, cidade, interesses)
-- Conta mensagens, chamadas, status, comentários, cidades conversadas → selos de atividade
-- Membro Fundador: se está entre os 500 primeiros `profiles.created_at` → concede e nunca remove
-- Para selos hierárquicos (followers/invites): remove tiers menores, mantém só o maior
+Retorna: `status_id, user_id, username, display_name, avatar_url, media_url, caption, reactions_count, comments_count, views_count, is_boosted, viewer_already_liked, viewer_already_follows, created_at`.
 
-**Triggers** que chamam `recompute_user_badges`:
-- AFTER INSERT/DELETE em `profile_follows` (recalcula o seguido)
-- AFTER INSERT em `profiles` com `invited_by` not null (recalcula o convidador)
-- AFTER UPDATE em `profiles` (avatar/display_name/bio) e `profiles_private` (cidade) — perfil completo
-- AFTER INSERT em `messages`, `calls`, `statuses`, `status_comments` — selos de atividade
+**RPC `discover_public_profiles(_limit)`** — perfis públicos para "Pessoas para descobrir" (mesma cidade, interesses, novos, ativos). Já existe `discover_people`/`get_people_you_may_know` — estender ou criar nova focada em is_public_profile.
 
-**Seed** do catálogo `badges` com todos os 17 selos descritos (categorias 1–6).
+## 2. Nova rota `src/routes/_authenticated/descobrir-status.tsx`
 
-**Função `admin_award_badge(_user_id, _badge_code)` / `admin_revoke_badge(...)`** — SECURITY DEFINER, apenas admin/superadmin. Útil para conceder "Verificado" manualmente.
+Aba "🌎 Descobrir" acessível pelo `StatusBar` e pela navegação principal. Conteúdo:
 
-## 2. Frontend — componentes reutilizáveis
+- **Feed vertical full-screen** (mobile-first, similar ao Reels/TikTok mas para status WaveChat)
+- Cada card mostra: mídia/texto do status, avatar + nome + cidade do autor, badges (`UserBadges inline`), tempo
+- Ações em coluna à direita (mobile) ou abaixo (desktop):
+  - ❤️ Curtir (toggle, otimista)
+  - 💬 Comentar → abre bottom sheet com comentários do status
+  - 👤 Ver perfil → `/u/$username`
+  - 💬 Conversar → cria/abre conversa direta
+  - ⭐ Seguir → toggle follow
+- Swipe vertical / scroll snap para próximo
+- Paginação infinita via `useInfiniteQuery` chamando `discover_public_statuses`
+- Registra view via `register_status_view` ao entrar na tela do card
 
-**`src/components/badges/UserBadges.tsx`**
-- Props: `userId`, `variant` (`inline` = só ícone ao lado do nome | `full` = ícone + nome no tooltip | `list` = grid completo)
-- Busca selos via query única cacheada
-- Inline mostra até 3 mais importantes (Verificado → Histórico → maior tier de cada categoria)
-- Tooltip / popover ao tocar mostra nome + descrição
+## 3. Privacidade no perfil
 
-**`src/components/badges/BadgeIcon.tsx`** — renderiza emoji/ícone colorido.
+Em `src/routes/_authenticated/profile.tsx` adicionar toggle "🔓 Perfil público / 🔒 Perfil privado" que atualiza `profiles.is_public_profile`. Texto explicativo das implicações (aparece em descoberta, recebe comentários/seguidores).
 
-**Hook `useUserBadges(userId)`** — react-query, cache compartilhado.
+## 4. Pontos de entrada
 
-## 3. Pontos de exibição
+- `StatusBar`: adicionar um card de destaque "Descobrir" no início da lista (ícone globo)
+- `EmptyChat` / quando usuário tem 0 conversas: CTA "Descobrir status públicos"
+- Sidebar do chat: link "🌎 Descobrir"
 
-Adicionar `<UserBadges userId={...} variant="inline" />` ao lado do nome em:
-- Perfil público (`src/routes/u.$username.tsx`) — versão `full`
-- Status viewer (`StatusViewer`, `StatusBar`)
-- Comentários e respostas em `src/routes/s.$statusId.tsx`
-- Reações de status (autor)
-- Lista de seguidores/seguindo no perfil
-- `PeopleYouMayKnow` (descoberta)
-- `descobrir.tsx` (cards)
-- Cabeçalho de conversas privadas (`ChatWindow`) e grupos (`GroupSettingsDialog`)
-- Sidebar do chat (lista de conversas)
+## 5. Algoritmo para novo usuário
 
-## 4. Nova seção "Conquistas" no perfil
+Detectar `following_count = 0` no servidor. Quando zero: a RPC já relaxa filtros automaticamente e prioriza perfis completos, verificados (selo `verified`), fundadores (selo `founder`), criadores (selo de tier alto). Sem necessidade de UI extra.
 
-Em `src/routes/_authenticated/profile.tsx` e no perfil público `u.$username.tsx`:
-- Card "Conquistas" com grid de todos os selos do usuário
-- Cada selo: ícone grande, nome, descrição, data de conquista
-- Selos ainda não conquistados aparecem em cinza com "como obter" (apenas no próprio perfil)
+## 6. Detalhes técnicos
 
-## 5. Filtros em Descoberta
+- Reutilizar `UserBadges` (selos), `StatusReactions`, comentários do `s.$statusId.tsx`
+- Manter respeito a `user_blocks` e `is_user_restricted`
+- Realtime opcional: apenas update otimista no client (não subscrever para evitar custo)
+- Performance: RPC com `LIMIT/OFFSET`, índices apropriados, mídia lazy-loaded
+- Mobile: scroll-snap-y mandatory, altura `100dvh`
 
-Em `src/routes/descobrir.tsx` adicionar chips de filtro:
-- "Apenas verificados", "Criadores populares" (10k+ seguidores), "Embaixadores" (10+ convites), "Membros fundadores"
-- Filtros aplicados via RPC `get_people_you_may_know` estendido ou nova RPC `discover_users(filter)`
+## Arquivos a criar/editar
 
-## 6. Aba Admin → Selos
+**Criar:**
+- `supabase/migrations/...` (coluna + índice + RPC `discover_public_statuses` + extensão de `discover_public_profiles`)
+- `src/routes/_authenticated/descobrir-status.tsx`
+- `src/components/status/DiscoverStatusCard.tsx` (card de feed com ações)
+- `src/hooks/use-discover-status.tsx` (`useInfiniteQuery`)
 
-Novo componente `src/components/admin/BadgesTab.tsx` + entrada em `admin.tsx`:
-- Listar catálogo de selos
-- Buscar usuário e conceder/remover selo (chama `admin_award_badge`/`admin_revoke_badge`)
-- Listar quem possui cada selo (com paginação)
-- Para o selo "Verificado": fluxo manual; demais são read-only (automáticos)
-
-## 7. Regras finais
-
-- Selos hierárquicos (followers/invites): apenas o **maior** é exibido inline; todos aparecem na seção Conquistas com o ativo destacado.
-- "Membro Fundador" e "Verificado" são prioritários na exibição inline.
-- Recompute idempotente — pode ser chamado quantas vezes for necessário.
-- Performance: query única por usuário cacheada em react-query; selos raramente mudam.
+**Editar:**
+- `src/routes/_authenticated/profile.tsx` (toggle público/privado)
+- `src/components/status/StatusBar.tsx` (card "Descobrir" no início)
+- `src/components/chat/EmptyChat.tsx` (CTA descobrir)
+- `src/components/chat/ChatSidebar.tsx` (link descobrir)
 
 ## Resultado
 
-Plataforma gamificada com símbolos visuais de reputação ao lado de todo nome de usuário, seção de Conquistas no perfil, filtros de descoberta por selo, e painel admin para conceder verificação manual. Tudo no backend + web — sem rebuild Android.
+Novos usuários abrem o app e imediatamente veem um feed de status reais de pessoas próximas/relevantes, podendo curtir/comentar/seguir/conversar em 1 toque — sem precisar saber quem seguir antes.
