@@ -1876,6 +1876,8 @@ export type Database = {
           is_official: boolean
           kind: string
           media_url: string | null
+          pinned: boolean
+          pinned_at: string | null
           user_id: string
         }
         Insert: {
@@ -1890,6 +1892,8 @@ export type Database = {
           is_official?: boolean
           kind: string
           media_url?: string | null
+          pinned?: boolean
+          pinned_at?: string | null
           user_id: string
         }
         Update: {
@@ -1904,6 +1908,8 @@ export type Database = {
           is_official?: boolean
           kind?: string
           media_url?: string | null
+          pinned?: boolean
+          pinned_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2173,6 +2179,25 @@ export type Database = {
         }[]
       }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
+      get_user_status_archive: {
+        Args: { _user_id: string }
+        Returns: {
+          background: string
+          caption: string
+          comment_count: number
+          content: string
+          created_at: string
+          expires_at: string
+          id: string
+          kind: string
+          media_url: string
+          pinned: boolean
+          pinned_at: string
+          reaction_count: number
+          user_id: string
+          view_count: number
+        }[]
+      }
       has_min_role: {
         Args: {
           _min: Database["public"]["Enums"]["app_role"]
@@ -2283,6 +2308,7 @@ export type Database = {
       }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       toggle_follow: { Args: { _target: string }; Returns: boolean }
+      toggle_status_pin: { Args: { _status_id: string }; Returns: boolean }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
