@@ -150,18 +150,12 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     supabase.rpc("register_status_view", { _status_id: current.id }).then(({ error }) => {
       if (error) console.warn("register view:", error.message);
     });
-    // load viewer count if owner
-    if (user?.id === current.user_id) {
-      supabase
-        .from("status_views")
-        .select("viewer_id", { count: "exact", head: true })
-        .eq("status_id", current.id)
-        .then(({ count }) => {
-          if (mounted) setViewerCount(count ?? 0);
-        });
-    } else {
-      setViewerCount(null);
-    }
+    // load public view count (visible to everyone, like reels/shorts)
+    supabase
+      .rpc("get_status_view_count", { _status_id: current.id })
+      .then(({ data }) => {
+        if (mounted) setViewerCount(typeof data === "number" ? data : 0);
+      });
     return () => {
       mounted = false;
     };
@@ -346,7 +340,13 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               </span>
             )}
           </p>
-          <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
+          <p className="text-[11px] text-white/60 flex items-center gap-1.5">
+            <span>{formatTime(current.created_at)}</span>
+            <span className="inline-flex items-center gap-1">
+              <Eye className="size-3" />
+              {viewerCount ?? 0}
+            </span>
+          </p>
         </div>
         {!isOwner && (
           <Button
