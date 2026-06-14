@@ -31,6 +31,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { sendStatusPush } from "@/lib/status-push.functions";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
