@@ -84,7 +84,7 @@ function DiscoverStatusPage() {
   useEffect(() => {
     const current = items[activeIndex];
     if (!current) return;
-    void (supabase as any).rpc("register_status_view", { _status_id: current.status_id }).catch(() => {});
+    Promise.resolve((supabase as any).rpc("register_status_view", { _status_id: current.status_id })).catch(() => {});
   }, [activeIndex, items]);
 
   function patch(statusId: string, partial: Partial<DiscoverStatus>) {
