@@ -92,6 +92,10 @@ export function StatusReactions({
         { status_id: statusId, user_id: user.id, emoji },
         { onConflict: "status_id,user_id" },
       );
+    // Fire-and-forget push to the status owner
+    sendStatusPush({
+      data: { statusId, kind: "status_reaction", emoji },
+    }).catch(() => {});
   }
 
   const totals = Object.entries(counts).filter(([, n]) => n > 0);
