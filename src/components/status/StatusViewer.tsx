@@ -340,7 +340,13 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               </span>
             )}
           </p>
-          <p className="text-[11px] text-white/60">{formatTime(current.created_at)}</p>
+          <p className="text-[11px] text-white/60 flex items-center gap-1.5">
+            <span>{formatTime(current.created_at)}</span>
+            <span className="inline-flex items-center gap-1">
+              <Eye className="size-3" />
+              {viewerCount ?? 0}
+            </span>
+          </p>
         </div>
         {!isOwner && (
           <Button
