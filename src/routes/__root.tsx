@@ -10,6 +10,7 @@ import {
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { NewsletterWidget } from "@/components/NewsletterWidget";
+import { PlayStorePromoBanner } from "@/components/PlayStorePromoBanner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { hideSplashScreen } from "@/integrations/splash-screen";
@@ -241,6 +242,7 @@ function RootComponent() {
         <SplashScreenHider />
         <UtmCapture />
         <PageViewTracker />
+        <PlayStorePromoBanner />
         <Outlet />
         <NewsletterWidget />
         <Toaster richColors position="top-right" />
