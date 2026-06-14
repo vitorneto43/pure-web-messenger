@@ -143,5 +143,24 @@ export const sendStatusPush = createServerFn({ method: "POST" })
       await supabaseAdmin.from("push_subscriptions").delete().in("id", toRemove);
     }
 
-    return { sent };
+    // Also send native (FCM) push so Android/iOS show a system notification
+    // outside the app — the user explicitly wants OS-level notifications.
+    let nativeSent = 0;
+    try {
+      const { sendNativeStatusInteraction } = await import("./native-push.functions");
+      const r = await sendNativeStatusInteraction({
+        recipientId: recipientId,
+        senderId: userId,
+        statusId: data.statusId,
+        title,
+        body: body || title,
+        kind: data.kind,
+      });
+      nativeSent = r.sent ?? 0;
+    } catch (e) {
+      console.error("native status push failed", e);
+    }
+
+    return { sent: sent + nativeSent };
   });
+
