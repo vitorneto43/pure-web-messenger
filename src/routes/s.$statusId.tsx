@@ -749,7 +749,7 @@ function StatusPublicPage() {
                 Seja o primeiro a comentar.
               </li>
             )}
-            {roots.map((c) => renderComment(c, 0))}
+            {roots.map((c) => renderThread(c))}
           </ul>
         </section>
       </main>
