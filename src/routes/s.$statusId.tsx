@@ -103,17 +103,34 @@ function StatusPublicPage() {
 
   const isOwner = !!user && status?.user_id === user.id;
 
-  const { roots, repliesByParent } = useMemo(() => {
+  const [expandedThreads, setExpandedThreads] = useState<Record<string, boolean>>({});
+
+  // Flatten threads: every non-root comment is grouped under its ROOT ancestor,
+  // so replies never cascade visually (Facebook/LinkedIn/Reddit style).
+  const { roots, repliesByRoot, commentById } = useMemo(() => {
+    const byId = new Map<string, Comment>();
+    for (const c of comments) byId.set(c.id, c);
+
+    const rootOf = (c: Comment): string => {
+      let cur: Comment | undefined = c;
+      const seen = new Set<string>();
+      while (cur && cur.parent_id && !seen.has(cur.id)) {
+        seen.add(cur.id);
+        const parent = byId.get(cur.parent_id);
+        if (!parent) break;
+        cur = parent;
+      }
+      return cur ? cur.id : c.id;
+    };
+
     const r: Comment[] = [];
     const map: Record<string, Comment[]> = {};
     for (const c of comments) {
-      if (c.parent_id) {
-        (map[c.parent_id] ||= []).push(c);
-      } else {
-        r.push(c);
-      }
+      if (!c.parent_id) r.push(c);
+      else (map[rootOf(c)] ||= []).push(c);
     }
-    return { roots: r, repliesByParent: map };
+    // sort replies oldest → newest (already sorted from query, keep stable)
+    return { roots: r, repliesByRoot: map, commentById: byId };
   }, [comments]);
 
   async function loadViewCount() {
