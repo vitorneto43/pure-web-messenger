@@ -24,6 +24,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -110,6 +111,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SStatusIdRoute = SStatusIdRouteImport.update({
+  id: '/s/$statusId',
+  path: '/s/$statusId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
+    | '/s/$statusId'
     | '/u/$username'
     | '/chat/$conversationId'
     | '/lovable/email/suppression'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/profile'
     | '/email/unsubscribe'
+    | '/s/$statusId'
     | '/u/$username'
     | '/'
     | '/chat/$conversationId'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
+    | '/s/$statusId'
     | '/u/$username'
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
@@ -498,6 +511,13 @@ declare module '@tanstack/react-router' {
       path: '/u/$username'
       fullPath: '/u/$username'
       preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$statusId': {
+      id: '/s/$statusId'
+      path: '/s/$statusId'
+      fullPath: '/s/$statusId'
+      preLoaderRoute: typeof SStatusIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -636,6 +656,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,

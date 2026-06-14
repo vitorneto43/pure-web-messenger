@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send, MoreVertical, Flag, Ban } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Rocket, Eye, Trash2, Download, Share2, Send, MoreVertical, Flag, Ban, MessageCircle } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -481,6 +482,11 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               {t("status.views", { count: viewerCount ?? "—" })}
             </div>
             <div className="flex-1" />
+            <Button asChild size="sm" variant="ghost" className="text-white hover:bg-white/10">
+              <Link to="/s/$statusId" params={{ statusId: current.id }} onClick={onClose}>
+                <MessageCircle className="size-4 mr-1" /> {t("status.openPublic", { defaultValue: "Comentários" })}
+              </Link>
+            </Button>
             <Button
               size="sm"
               variant="ghost"
@@ -523,6 +529,17 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
               aria-label={t("status.sendReply")}
             >
               <Send className="size-5" />
+            </Button>
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              className="text-white hover:bg-white/10 shrink-0"
+              aria-label={t("status.openPublic", { defaultValue: "Comentários" })}
+            >
+              <Link to="/s/$statusId" params={{ statusId: current.id }} onClick={onClose}>
+                <MessageCircle className="size-5" />
+              </Link>
             </Button>
             <Button
               size="icon"
