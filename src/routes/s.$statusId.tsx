@@ -433,6 +433,7 @@ function StatusPublicPage() {
                   {c.author?.display_name ?? "Usuário"}
                 </span>
               )}
+              <UserBadges userId={c.user_id} max={2} />
               <span className="text-[11px] text-muted-foreground shrink-0">
                 {formatTime(c.created_at)}
               </span>
