@@ -228,6 +228,10 @@ function StatusPublicPage() {
         .from("status_comment_reactions" as any)
         .insert({ comment_id: commentId, user_id: user.id, emoji });
       if (error) return toast.error(error.message);
+      // Fire-and-forget push to the comment author
+      sendStatusPush({
+        data: { statusId, kind: "comment_reaction", commentId, emoji },
+      }).catch(() => {});
     }
     loadComments();
   }
