@@ -447,6 +447,50 @@ export const adminReplyFeedback = createServerFn({ method: "POST" })
       });
     }
 
+    // Reply email to user (if email provided)
+    if (fb.email) {
+      try {
+        const React = await import("react");
+        const { render } = await import("@react-email/components");
+        const { template } = await import("@/lib/email-templates/support-reply");
+        const messageId = crypto.randomUUID();
+        const element = React.createElement(template.component, {
+          originalMessage: fb.message,
+          replyMessage: data.reply,
+        });
+        const html = await render(element);
+        const plainText = await render(element, { plainText: true });
+        await supabaseAdmin.from("email_send_log").insert({
+          message_id: messageId,
+          template_name: "support-reply",
+          recipient_email: fb.email.toLowerCase(),
+          status: "pending",
+        });
+        const subjectRaw: unknown = template.subject;
+        const subject = typeof subjectRaw === "function"
+          ? (subjectRaw as (d: Record<string, any>) => string)({})
+          : (subjectRaw as string);
+        await supabaseAdmin.rpc("enqueue_email", {
+          queue_name: "transactional_emails",
+          payload: {
+            message_id: messageId,
+            to: fb.email.toLowerCase(),
+            from: "WaveChat <noreply@notify.webconnectchat.com>",
+            sender_domain: "notify.webconnectchat.com",
+            subject,
+            html,
+            text: plainText,
+            purpose: "transactional",
+            label: "newsletter-feedback-reply",
+            idempotency_key: `nl-fb-reply-${fb.id}-${Date.now()}`,
+            queued_at: new Date().toISOString(),
+          },
+        });
+      } catch (e) {
+        console.error("[newsletter] reply email failed", e);
+      }
+    }
+
     return { ok: true, notified: !!fb.user_id };
   });
 
