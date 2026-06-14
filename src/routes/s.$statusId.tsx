@@ -70,9 +70,14 @@ type CommentRow = {
   parent_id: string | null;
 };
 
+type CommentReaction = { emoji: string; user_id: string };
+
 type Comment = CommentRow & {
   author: { display_name: string; username: string | null; avatar_url: string | null } | null;
 };
+
+const REACTION_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🔥", "🎉", "👏"];
+
 
 function StatusPublicPage() {
   const { statusId } = Route.useParams();
