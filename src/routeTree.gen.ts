@@ -27,6 +27,7 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
@@ -130,6 +131,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDescobrirStatusRoute =
+  AuthenticatedDescobrirStatusRouteImport.update({
+    id: '/descobrir-status',
+    path: '/descobrir-status',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
+  '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -250,6 +258,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
+  '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -284,6 +293,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
+  '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/chat'
+    | '/descobrir-status'
     | '/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/chat'
+    | '/descobrir-status'
     | '/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -383,6 +395,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/_authenticated/chat'
+    | '/_authenticated/descobrir-status'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -560,6 +573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/descobrir-status': {
+      id: '/_authenticated/descobrir-status'
+      path: '/descobrir-status'
+      fullPath: '/descobrir-status'
+      preLoaderRoute: typeof AuthenticatedDescobrirStatusRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/chat': {
       id: '/_authenticated/chat'
       path: '/chat'
@@ -667,12 +687,14 @@ const AuthenticatedChatRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
+  AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
+  AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
