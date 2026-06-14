@@ -479,6 +479,7 @@ function ProfilePage() {
       </div>
 
       <div className="mt-6">
+        {user?.id && <ProfileStatusArchive userId={user.id} isOwner={true} />}
         <InviteRewardsCard />
         <BoostHistory />
       </div>
