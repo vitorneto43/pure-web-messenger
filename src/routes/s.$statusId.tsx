@@ -1,6 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply, Share2 } from "lucide-react";
+import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply, Share2, SmilePlus } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 import { shareMessageExternally } from "@/lib/share-message";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
