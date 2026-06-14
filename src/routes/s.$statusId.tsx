@@ -1,18 +1,33 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Send, Trash2, MessageCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
-  head: ({ params }) => ({
+  head: () => ({
     meta: [
       { title: `Publicação no WaveChat` },
       { name: "description", content: `Veja e comente esta publicação no WaveChat.` },
@@ -40,11 +55,15 @@ type Author = {
   avatar_url: string | null;
 };
 
-type Comment = {
+type CommentRow = {
   id: string;
   user_id: string;
   content: string;
   created_at: string;
+  parent_id: string | null;
+};
+
+type Comment = CommentRow & {
   author: { display_name: string; username: string | null; avatar_url: string | null } | null;
 };
 
@@ -55,20 +74,44 @@ function StatusPublicPage() {
   const [status, setStatus] = useState<StatusRow | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [viewCount, setViewCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [reportTarget, setReportTarget] = useState<Comment | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   const isOwner = !!user && status?.user_id === user.id;
 
+  const { roots, repliesByParent } = useMemo(() => {
+    const r: Comment[] = [];
+    const map: Record<string, Comment[]> = {};
+    for (const c of comments) {
+      if (c.parent_id) {
+        (map[c.parent_id] ||= []).push(c);
+      } else {
+        r.push(c);
+      }
+    }
+    return { roots: r, repliesByParent: map };
+  }, [comments]);
+
+  async function loadViewCount() {
+    const { data } = await supabase.rpc("get_status_view_count", { _status_id: statusId });
+    if (typeof data === "number") setViewCount(data);
+  }
+
   async function load() {
     setLoading(true);
-    const { data: s, error } = await supabase
+    const { data: s } = await supabase
       .from("statuses")
       .select("id,user_id,kind,content,media_url,caption,background,created_at")
       .eq("id", statusId)
       .maybeSingle();
-    if (error || !s) {
+    if (!s) {
       setStatus(null);
       setLoading(false);
       return;
@@ -80,17 +123,17 @@ function StatusPublicPage() {
       .eq("id", s.user_id)
       .maybeSingle();
     setAuthor((p as Author) ?? null);
-    await loadComments();
+    await Promise.all([loadComments(), loadViewCount()]);
     setLoading(false);
   }
 
   async function loadComments() {
     const { data } = await supabase
       .from("status_comments")
-      .select("id,user_id,content,created_at")
+      .select("id,user_id,content,created_at,parent_id")
       .eq("status_id", statusId)
       .order("created_at", { ascending: true });
-    const rows = (data ?? []) as Omit<Comment, "author">[];
+    const rows = (data ?? []) as CommentRow[];
     if (rows.length === 0) {
       setComments([]);
       return;
@@ -101,19 +144,25 @@ function StatusPublicPage() {
       .select("id,display_name,username,avatar_url")
       .in("id", ids);
     const map = new Map<string, Comment["author"]>(
-      (profs ?? []).map((p: any) => [p.id, { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url }]),
+      (profs ?? []).map((p: any) => [
+        p.id,
+        { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
+      ]),
     );
     setComments(rows.map((r) => ({ ...r, author: map.get(r.user_id) ?? null })));
   }
 
   useEffect(() => {
     load();
-    // realtime: refresh on new/deleted comments
     const ch = supabase
       .channel(`status_comments:${statusId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "status_comments", filter: `status_id=eq.${statusId}` }, () => {
-        loadComments();
-      })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "status_comments", filter: `status_id=eq.${statusId}` },
+        () => {
+          loadComments();
+        },
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -133,6 +182,7 @@ function StatusPublicPage() {
       status_id: statusId,
       user_id: user.id,
       content: value.slice(0, 1000),
+      parent_id: replyTo?.id ?? null,
     });
     setSending(false);
     if (error) {
@@ -140,6 +190,7 @@ function StatusPublicPage() {
       return;
     }
     setText("");
+    setReplyTo(null);
     loadComments();
   }
 
@@ -175,6 +226,32 @@ function StatusPublicPage() {
     }
   }
 
+  async function submitReport() {
+    if (!user || !reportTarget) return;
+    if (reportReason.trim().length < 3) {
+      toast.error("Selecione um motivo");
+      return;
+    }
+    setReporting(true);
+    const { error } = await supabase.from("content_reports").insert({
+      reporter_id: user.id,
+      reported_user_id: reportTarget.user_id,
+      target_type: "status_comment" as any,
+      target_id: reportTarget.id,
+      reason: reportReason,
+      details: reportDetails.slice(0, 1000) || null,
+    });
+    setReporting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Denúncia enviada. Nossa moderação vai analisar.");
+    setReportTarget(null);
+    setReportReason("");
+    setReportDetails("");
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center">
@@ -199,11 +276,108 @@ function StatusPublicPage() {
     );
   }
 
+  const renderComment = (c: Comment, depth = 0) => {
+    const canDelete = !!user && (c.user_id === user.id || status.user_id === user.id);
+    const canReport = !!user && c.user_id !== user.id;
+    const childReplies = repliesByParent[c.id] ?? [];
+    return (
+      <li key={c.id} className={depth > 0 ? "ml-10" : ""}>
+        <div className="flex items-start gap-2.5">
+          <Avatar className="size-8">
+            <AvatarImage src={c.author?.avatar_url ?? undefined} />
+            <AvatarFallback>{c.author?.display_name?.[0] ?? "?"}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="rounded-2xl bg-muted px-3 py-2">
+              <div className="flex items-center gap-2 mb-0.5">
+                {c.author?.username ? (
+                  <Link
+                    to="/u/$username"
+                    params={{ username: c.author.username }}
+                    className="text-sm font-medium hover:underline truncate"
+                  >
+                    {c.author?.display_name ?? "Usuário"}
+                  </Link>
+                ) : (
+                  <span className="text-sm font-medium truncate">
+                    {c.author?.display_name ?? "Usuário"}
+                  </span>
+                )}
+                <span className="text-[11px] text-muted-foreground">
+                  {formatTime(c.created_at)}
+                </span>
+              </div>
+              <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
+            </div>
+            <div className="flex items-center gap-3 mt-1 px-2">
+              {user && (
+                <button
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  onClick={() => {
+                    setReplyTo(c);
+                    setTimeout(() => {
+                      document.getElementById("comment-input")?.focus();
+                    }, 0);
+                  }}
+                >
+                  <Reply className="size-3" /> Responder
+                </button>
+              )}
+              {user && c.user_id !== user.id && (
+                <button
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => startChat(c.user_id)}
+                >
+                  Conversar
+                </button>
+              )}
+              {(canDelete || canReport) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="text-xs text-muted-foreground hover:text-foreground">
+                      Mais
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {canReport && (
+                      <DropdownMenuItem onClick={() => setReportTarget(c)}>
+                        <Flag className="size-3.5 mr-2" /> Denunciar
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => deleteComment(c.id)}
+                      >
+                        <Trash2 className="size-3.5 mr-2" /> Apagar
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            {childReplies.length > 0 && (
+              <ul className="mt-2 space-y-3">
+                {childReplies.map((r) => renderComment(r, depth + 1))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b">
         <div className="max-w-2xl mx-auto flex items-center gap-2 px-4 py-3">
-          <Button size="icon" variant="ghost" onClick={() => navigate({ to: "/" })} aria-label="Voltar">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => navigate({ to: "/" })}
+            aria-label="Voltar"
+          >
             <ArrowLeft className="size-5" />
           </Button>
           <h1 className="text-base font-semibold">Publicação</h1>
@@ -219,7 +393,11 @@ function StatusPublicPage() {
           </Avatar>
           <div className="flex-1 min-w-0">
             {author?.username ? (
-              <Link to="/u/$username" params={{ username: author.username }} className="font-medium hover:underline truncate block">
+              <Link
+                to="/u/$username"
+                params={{ username: author.username }}
+                className="font-medium hover:underline truncate block"
+              >
                 {author?.display_name ?? "..."}
               </Link>
             ) : (
@@ -244,13 +422,19 @@ function StatusPublicPage() {
           {status.kind === "text" && (
             <div
               className="p-8 min-h-[280px] grid place-items-center text-center text-white text-xl font-semibold break-words"
-              style={{ background: status.background ?? "linear-gradient(135deg,#7c3aed,#ec4899)" }}
+              style={{
+                background: status.background ?? "linear-gradient(135deg,#7c3aed,#ec4899)",
+              }}
             >
               {status.content}
             </div>
           )}
           {status.kind === "image" && status.media_url && (
-            <img src={status.media_url} className="w-full max-h-[70vh] object-contain bg-black" alt="" />
+            <img
+              src={status.media_url}
+              className="w-full max-h-[70vh] object-contain bg-black"
+              alt=""
+            />
           )}
           {status.kind === "video" && status.media_url && (
             <video src={status.media_url} controls playsInline className="w-full max-h-[70vh] bg-black" />
@@ -260,95 +444,133 @@ function StatusPublicPage() {
           )}
         </div>
 
+        {/* Stats bar */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <Eye className="size-4" /> {viewCount} {viewCount === 1 ? "visualização" : "visualizações"}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <MessageCircle className="size-4" /> {comments.length}{" "}
+            {comments.length === 1 ? "comentário" : "comentários"}
+          </span>
+        </div>
+
         {/* Comments */}
         <section className="space-y-3">
-          <h2 className="font-semibold text-sm text-muted-foreground">
-            Comentários ({comments.length})
-          </h2>
+          <h2 className="font-semibold text-sm text-muted-foreground">Comentários</h2>
 
           {user ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    postComment();
+            <div className="space-y-1.5">
+              {replyTo && (
+                <div className="flex items-center justify-between text-xs bg-muted/60 rounded-md px-2 py-1">
+                  <span className="truncate">
+                    Respondendo a{" "}
+                    <strong>{replyTo.author?.display_name ?? "Usuário"}</strong>
+                  </span>
+                  <button
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => setReplyTo(null)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  id="comment-input"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      postComment();
+                    }
+                  }}
+                  placeholder={
+                    replyTo
+                      ? `Responder a ${replyTo.author?.display_name ?? "comentário"}...`
+                      : "Escreva um comentário..."
                   }
-                }}
-                placeholder="Escreva um comentário..."
-                maxLength={1000}
-                disabled={sending}
-              />
-              <Button size="icon" onClick={postComment} disabled={sending || !text.trim()} aria-label="Enviar">
-                <Send className="size-4" />
-              </Button>
+                  maxLength={1000}
+                  disabled={sending}
+                />
+                <Button
+                  size="icon"
+                  onClick={postComment}
+                  disabled={sending || !text.trim()}
+                  aria-label="Enviar"
+                >
+                  <Send className="size-4" />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="rounded-lg border bg-muted/40 p-3 text-sm flex items-center justify-between gap-3">
               <span>Entre para comentar e conversar com o autor.</span>
-              <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+              <Button size="sm" onClick={() => navigate({ to: "/auth" })}>
+                Entrar
+              </Button>
             </div>
           )}
 
           <ul className="space-y-3">
-            {comments.length === 0 && (
+            {roots.length === 0 && (
               <li className="text-sm text-muted-foreground text-center py-6">
                 Seja o primeiro a comentar.
               </li>
             )}
-            {comments.map((c) => {
-              const canDelete = !!user && (c.user_id === user.id || status.user_id === user.id);
-              return (
-                <li key={c.id} className="flex items-start gap-2.5">
-                  <Avatar className="size-8">
-                    <AvatarImage src={c.author?.avatar_url ?? undefined} />
-                    <AvatarFallback>{c.author?.display_name?.[0] ?? "?"}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="rounded-2xl bg-muted px-3 py-2">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        {c.author?.username ? (
-                          <Link
-                            to="/u/$username"
-                            params={{ username: c.author.username }}
-                            className="text-sm font-medium hover:underline truncate"
-                          >
-                            {c.author?.display_name ?? "Usuário"}
-                          </Link>
-                        ) : (
-                          <span className="text-sm font-medium truncate">{c.author?.display_name ?? "Usuário"}</span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">{formatTime(c.created_at)}</span>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 px-2">
-                      {user && c.user_id !== user.id && (
-                        <button
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => startChat(c.user_id)}
-                        >
-                          Conversar
-                        </button>
-                      )}
-                      {canDelete && (
-                        <button
-                          className="text-xs text-destructive hover:underline"
-                          onClick={() => deleteComment(c.id)}
-                        >
-                          Apagar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            {roots.map((c) => renderComment(c, 0))}
           </ul>
         </section>
       </main>
+
+      <Dialog open={!!reportTarget} onOpenChange={(o) => !o && setReportTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Denunciar comentário</DialogTitle>
+            <DialogDescription>
+              Conte para a moderação o que há de errado. Denúncias são anônimas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "spam",
+                "assédio",
+                "discurso de ódio",
+                "conteúdo sexual",
+                "violência",
+                "outro",
+              ].map((r) => (
+                <Button
+                  key={r}
+                  type="button"
+                  variant={reportReason === r ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setReportReason(r)}
+                >
+                  {r}
+                </Button>
+              ))}
+            </div>
+            <Textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Detalhes (opcional)"
+              rows={3}
+              maxLength={1000}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReportTarget(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={submitReport} disabled={reporting || !reportReason}>
+              Enviar denúncia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
