@@ -2122,6 +2122,10 @@ export type Database = {
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
       can_view_full_profile: { Args: { _owner: string }; Returns: boolean }
+      can_view_profile: {
+        Args: { _owner: string; _viewer: string }
+        Returns: boolean
+      }
       check_account_rate_limit: {
         Args: { _action: string; _user_id: string }
         Returns: Json
