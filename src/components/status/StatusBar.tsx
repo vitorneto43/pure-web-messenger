@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Globe2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
