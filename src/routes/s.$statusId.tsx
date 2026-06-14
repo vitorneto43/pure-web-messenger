@@ -474,15 +474,25 @@ function StatusPublicPage() {
         </div>
 
         {/* Stats bar */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Eye className="size-4" /> {viewCount} {viewCount === 1 ? "visualização" : "visualizações"}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <MessageCircle className="size-4" /> {comments.length}{" "}
-            {comments.length === 1 ? "comentário" : "comentários"}
-          </span>
+        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="flex items-center gap-1.5">
+              <Eye className="size-4" /> {viewCount} {viewCount === 1 ? "visualização" : "visualizações"}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MessageCircle className="size-4" /> {comments.length}{" "}
+              {comments.length === 1 ? "comentário" : "comentários"}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Share2 className="size-4" /> {shareCount}{" "}
+              {shareCount === 1 ? "compartilhamento" : "compartilhamentos"}
+            </span>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleShare} disabled={sharing}>
+            <Share2 className="size-4 mr-1.5" /> Compartilhar
+          </Button>
         </div>
+
 
         {/* Comments */}
         <section className="space-y-3">
