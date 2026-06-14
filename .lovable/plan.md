@@ -1,92 +1,94 @@
-# Funil de Conversão — SuperAdmin
 
-Nova aba no painel admin que mostra, em tempo real, onde os usuários abandonam o cadastro do WaveChat. Hoje só sabemos quem clicou em "Cadastrar"; depois disso é caixa preta. Esse plano fecha o funil ponta a ponta usando a tabela `analytics_events` que já existe e o helper `track()` em `src/lib/track.ts`.
+# Sistema de Selos e Emblemas
 
-## O que o usuário verá
+Sistema completo de badges (selos) para gamificar e aumentar a confiança/engajamento no WaveChat. Implementação no backend (Lovable Cloud) + frontend, **sem necessidade de nova versão Android** — tudo via web/PWA já embarcado.
 
-Aba **Funil de Conversão** no `/admin`, com:
+## 1. Banco de dados (migração)
 
-1. **Seletor de período**: Hoje · 7d · 30d · 90d.
-2. **Gráfico de funil vertical** com as 12 etapas, contagem absoluta e % de perda entre cada uma.
-3. **Cards de abandono** (8 cards) mostrando quantos e qual % desistiram em cada gargalo.
-4. **Bloco "Exploração sem cadastro"** com 5 métricas do modo visitante.
-5. **Alertas inteligentes** gerados automaticamente quando uma etapa perde mais que um limite (configurável, default 40%) — frases prontas em PT-BR.
+**Tabela `badges`** (catálogo de selos disponíveis):
+- `code` (slug único: `verified`, `creator_starter`, `founder`, etc.)
+- `name`, `description`, `icon` (emoji), `color` (hex/token)
+- `category` (`verification` | `followers` | `invites` | `profile` | `historical` | `activity`)
+- `tier` (ordem dentro da categoria — usado para "exibir apenas o maior")
+- `criteria` (jsonb com regra: ex. `{type:'followers', min:1000}`)
+- `is_automatic` (boolean — falso para "Verificado", verdadeiro para os demais)
 
-## As 12 etapas do funil
+**Tabela `user_badges`** (selos conquistados):
+- `user_id`, `badge_id`, `awarded_at`, `awarded_by` (admin id, opcional)
+- UNIQUE (user_id, badge_id)
+- RLS: leitura pública (selos são públicos); escrita só via funções SECURITY DEFINER ou admin
 
-| # | Etapa | Evento rastreado |
-|---|---|---|
-| 1 | Visitas únicas | `page_view` (já existe) — distinct `session_id` |
-| 2 | Clique em "Cadastrar" | `signup_cta_click` (novo) |
-| 3 | Tela de cadastro aberta | `auth_signup_view` (novo) |
-| 4 | Início do preenchimento | `signup_field_focus` (novo, 1x por sessão) |
-| 5 | E-mail preenchido | `signup_email_filled` (novo) |
-| 6 | Usuário/Nome preenchido | `signup_username_filled` (novo) |
-| 7 | Senha preenchida | `signup_password_filled` (novo) |
-| 8 | Botão "Criar conta" clicado | `signup_submit_click` (novo) |
-| 9 | Cadastro concluído | `signup_success` (novo) |
-| 10 | Primeiro login | derivado de `profiles.created_at` + primeiro `login_success` |
-| 11 | Primeira conversa | primeiro `message_sent` (novo) por usuário |
-| 12 | Primeiro status | primeiro `status_published` (novo) por usuário |
+**Função `recompute_user_badges(_user_id uuid)`** — recalcula todos os selos automáticos do usuário:
+- Conta seguidores → atribui maior tier de Criador
+- Conta convidados confirmados → atribui maior tier de Convite
+- Verifica perfil completo (avatar, display_name, bio, cidade, interesses)
+- Conta mensagens, chamadas, status, comentários, cidades conversadas → selos de atividade
+- Membro Fundador: se está entre os 500 primeiros `profiles.created_at` → concede e nunca remove
+- Para selos hierárquicos (followers/invites): remove tiers menores, mantém só o maior
 
-Cada etapa é deduplicada por `session_id` (etapas 1–8) ou por `user_id` (9–12) para não inflar com recliques.
+**Triggers** que chamam `recompute_user_badges`:
+- AFTER INSERT/DELETE em `profile_follows` (recalcula o seguido)
+- AFTER INSERT em `profiles` com `invited_by` not null (recalcula o convidador)
+- AFTER UPDATE em `profiles` (avatar/display_name/bio) e `profiles_private` (cidade) — perfil completo
+- AFTER INSERT em `messages`, `calls`, `statuses`, `status_comments` — selos de atividade
 
-## Modo visitante (exploração sem cadastro)
+**Seed** do catálogo `badges` com todos os 17 selos descritos (categorias 1–6).
 
-- Visitantes únicos que entraram em `/descobrir` sem sessão autenticada.
-- Abriram perfil público (`/u/$username`) → evento `public_profile_view`.
-- Visualizaram lista de usuários → evento `discover_list_view`.
-- Voltaram depois e criaram conta → join entre `session_id` visitante × `signup_success`.
-- Taxa de conversão visitante → cadastro.
+**Função `admin_award_badge(_user_id, _badge_code)` / `admin_revoke_badge(...)`** — SECURITY DEFINER, apenas admin/superadmin. Útil para conceder "Verificado" manualmente.
 
-## Implementação
+## 2. Frontend — componentes reutilizáveis
 
-### 1. Instrumentação de eventos (frontend)
+**`src/components/badges/UserBadges.tsx`**
+- Props: `userId`, `variant` (`inline` = só ícone ao lado do nome | `full` = ícone + nome no tooltip | `list` = grid completo)
+- Busca selos via query única cacheada
+- Inline mostra até 3 mais importantes (Verificado → Histórico → maior tier de cada categoria)
+- Tooltip / popover ao tocar mostra nome + descrição
 
-Editar:
-- `src/routes/index.tsx` (landing) — disparar `signup_cta_click` no botão principal.
-- `src/routes/auth.tsx` — disparar `auth_signup_view` no mount, `signup_field_focus` no primeiro `onFocus`, `signup_email_filled` / `signup_username_filled` / `signup_password_filled` em `onBlur` quando válido, `signup_submit_click` no submit, `signup_success` após `auth.signUp` ok.
-- `src/hooks/use-auth.tsx` — disparar `login_success` no `SIGNED_IN`.
-- `src/components/chat/ChatWindow.tsx` — disparar `message_sent` no envio.
-- `src/components/status/CreateStatusDialog.tsx` — disparar `status_published` ao criar.
-- `src/routes/descobrir.tsx` — `discover_list_view`.
-- `src/routes/u.$username.tsx` — `public_profile_view`.
+**`src/components/badges/BadgeIcon.tsx`** — renderiza emoji/ícone colorido.
 
-Todos usam o `track()` existente; não precisa de tabela nova.
+**Hook `useUserBadges(userId)`** — react-query, cache compartilhado.
 
-### 2. Server function de agregação
+## 3. Pontos de exibição
 
-Novo arquivo `src/lib/funnel.functions.ts`:
-- `getConversionFunnel({ period: 'today'|'7d'|'30d'|'90d' })` — só admins.
-- Roda queries agregadas em `analytics_events` (distinct sessions/users por `event_name` no intervalo) + joins com `profiles`, `messages`, `statuses` para etapas 10–12.
-- Retorna `{ steps: [{key, label, count, dropPct}], abandonment: [...], visitor: {...}, alerts: [...] }`.
-- Gate de admin via `has_role(auth.uid(), 'admin')` igual aos outros admin fns.
+Adicionar `<UserBadges userId={...} variant="inline" />` ao lado do nome em:
+- Perfil público (`src/routes/u.$username.tsx`) — versão `full`
+- Status viewer (`StatusViewer`, `StatusBar`)
+- Comentários e respostas em `src/routes/s.$statusId.tsx`
+- Reações de status (autor)
+- Lista de seguidores/seguindo no perfil
+- `PeopleYouMayKnow` (descoberta)
+- `descobrir.tsx` (cards)
+- Cabeçalho de conversas privadas (`ChatWindow`) e grupos (`GroupSettingsDialog`)
+- Sidebar do chat (lista de conversas)
 
-### 3. UI
+## 4. Nova seção "Conquistas" no perfil
 
-Novo arquivo `src/components/admin/ConversionFunnelTab.tsx`:
-- `useQuery` chamando o serverFn.
-- Componente `<FunnelChart>` próprio (divs com largura proporcional, sem libs novas — já temos `recharts` se quiser barras horizontais).
-- Cards de abandono em grid.
-- Alertas como `<Alert>` do shadcn quando `dropPct >= threshold`.
+Em `src/routes/_authenticated/profile.tsx` e no perfil público `u.$username.tsx`:
+- Card "Conquistas" com grid de todos os selos do usuário
+- Cada selo: ícone grande, nome, descrição, data de conquista
+- Selos ainda não conquistados aparecem em cinza com "como obter" (apenas no próprio perfil)
 
-Registrar a aba em `src/routes/admin.tsx`.
+## 5. Filtros em Descoberta
 
-### 4. Banco
+Em `src/routes/descobrir.tsx` adicionar chips de filtro:
+- "Apenas verificados", "Criadores populares" (10k+ seguidores), "Embaixadores" (10+ convites), "Membros fundadores"
+- Filtros aplicados via RPC `get_people_you_may_know` estendido ou nova RPC `discover_users(filter)`
 
-Nenhuma migration necessária — `analytics_events` já tem `event_name`, `session_id`, `user_id`, `created_at`, `metadata`. Para acelerar, em uma segunda iteração posso adicionar índice em `(event_name, created_at)`.
+## 6. Aba Admin → Selos
 
-## Detalhes técnicos
+Novo componente `src/components/admin/BadgesTab.tsx` + entrada em `admin.tsx`:
+- Listar catálogo de selos
+- Buscar usuário e conceder/remover selo (chama `admin_award_badge`/`admin_revoke_badge`)
+- Listar quem possui cada selo (com paginação)
+- Para o selo "Verificado": fluxo manual; demais são read-only (automáticos)
 
-- Períodos: `today` = hoje em UTC; `7d/30d/90d` = `now() - interval`.
-- Deduplicação no SQL com `count(distinct session_id)` para etapas pré-login e `count(distinct user_id)` para pós-login.
-- Etapas 10–12: a primeira ocorrência é derivada via `min(created_at) per user_id` e contada no período pedido.
-- Alertas: gerados no server com limiares default (`abandonAlert >= 40%`, `noLoginAlert >= 15%`). Frases em PT-BR montadas no server para já chegar prontas na UI.
-- Acesso: apenas usuários com `app_role = 'admin'`. Não exposto a `anon`.
+## 7. Regras finais
 
-## Fora de escopo (não vou fazer agora)
+- Selos hierárquicos (followers/invites): apenas o **maior** é exibido inline; todos aparecem na seção Conquistas com o ativo destacado.
+- "Membro Fundador" e "Verificado" são prioritários na exibição inline.
+- Recompute idempotente — pode ser chamado quantas vezes for necessário.
+- Performance: query única por usuário cacheada em react-query; selos raramente mudam.
 
-- A/B testing de variantes da tela de cadastro.
-- Exportar CSV do funil (posso adicionar depois).
-- Índice no banco para `analytics_events` (avalio se ficar lento).
-- Heatmap de cliques.
+## Resultado
+
+Plataforma gamificada com símbolos visuais de reputação ao lado de todo nome de usuário, seção de Conquistas no perfil, filtros de descoberta por selo, e painel admin para conceder verificação manual. Tudo no backend + web — sem rebuild Android.
