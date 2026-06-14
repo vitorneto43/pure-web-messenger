@@ -2186,6 +2186,17 @@ export type Database = {
           username: string
         }[]
       }
+      dispatch_status_push: {
+        Args: {
+          _comment_id: string
+          _emoji: string
+          _kind: string
+          _preview: string
+          _sender_id: string
+          _status_id: string
+        }
+        Returns: undefined
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
