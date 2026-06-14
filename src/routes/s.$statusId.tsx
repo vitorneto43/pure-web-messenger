@@ -493,6 +493,12 @@ function StatusPublicPage() {
                 className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                 onClick={() => {
                   setReplyTo(c);
+                  // If replying to a reply, pre-fill an @mention so the conversation thread
+                  // keeps context even though all replies sit on the same visual level.
+                  if (isReply && c.author?.display_name) {
+                    const mention = `@${c.author.display_name} `;
+                    setText((t) => (t.startsWith("@") ? t : mention + t));
+                  }
                   setTimeout(() => {
                     document.getElementById("comment-input")?.focus();
                   }, 0);
