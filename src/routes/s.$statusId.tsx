@@ -398,6 +398,52 @@ function StatusPublicPage() {
               </div>
               <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
             </div>
+
+            {sortedEmojis.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1 px-1">
+                {sortedEmojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => toggleCommentReaction(c.id, emoji)}
+                    className={`text-xs rounded-full border px-2 py-0.5 flex items-center gap-1 transition ${
+                      counts[emoji].mine
+                        ? "bg-primary/15 border-primary/40 text-foreground"
+                        : "bg-muted/60 border-border hover:bg-muted"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    <span className="tabular-nums">{counts[emoji].count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 mt-1 px-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    aria-label="Reagir"
+                  >
+                    <SmilePlus className="size-3.5" /> Reagir
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-1.5" align="start">
+                  <div className="flex gap-0.5">
+                    {REACTION_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        className="text-xl hover:scale-125 transition px-1.5 py-1"
+                        onClick={() => toggleCommentReaction(c.id, emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <div className="hidden">
+
             <div className="flex items-center gap-3 mt-1 px-2">
               {user && (
                 <button
