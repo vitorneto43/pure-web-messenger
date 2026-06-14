@@ -109,7 +109,7 @@ function DiscoverStatusPage() {
     if (liked) {
       await (supabase as any).from("status_reactions").delete().eq("status_id", s.status_id).eq("user_id", user.id);
     } else {
-      await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" });
+      await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" }, { onConflict: "status_id,user_id" });
     }
   }
 
