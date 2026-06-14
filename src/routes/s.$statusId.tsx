@@ -385,7 +385,7 @@ function StatusPublicPage() {
     const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
 
     return (
-      <li key={c.id} className={depth > 0 ? "ml-10" : ""}>
+      <li key={c.id} className={depth > 0 && depth <= 1 ? "ml-6 sm:ml-10" : ""}>
         <div className="flex items-start gap-2.5">
           <Avatar className="size-8">
             <AvatarImage src={c.author?.avatar_url ?? undefined} />
