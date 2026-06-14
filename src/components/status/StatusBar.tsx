@@ -204,6 +204,19 @@ export function StatusBar() {
           </span>
         </button>
 
+        {/* Discover public statuses */}
+        <Link
+          to="/descobrir-status"
+          className="flex flex-col items-center gap-1 shrink-0"
+        >
+          <div className="size-14 rounded-full grid place-items-center bg-gradient-to-br from-primary via-fuchsia-500 to-pink-500 ring-2 ring-offset-2 ring-offset-sidebar ring-primary/40 shadow-lg">
+            <Globe2 className="size-6 text-white" />
+          </div>
+          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
+            Descobrir
+          </span>
+        </Link>
+
         {/* Others */}
         {groups.map((g) => (
           <button
