@@ -148,6 +148,19 @@ export function NotificationsBell() {
       setViewerPost(n);
       return;
     }
+    // Status interactions → open the post's comments discussion
+    if (
+      n.type === "status_comment" ||
+      n.type === "status_reaction" ||
+      n.type === "comment_reply" ||
+      n.type === "comment_reaction"
+    ) {
+      const statusId = typeof data.status_id === "string" ? data.status_id : null;
+      if (statusId) {
+        navigate({ to: "/s/$statusId", params: { statusId } });
+        return;
+      }
+    }
     const convId = typeof data.conversation_id === "string" ? data.conversation_id : null;
     if (convId) {
       navigate({ to: "/chat/$conversationId", params: { conversationId: convId } });
