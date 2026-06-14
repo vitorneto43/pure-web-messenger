@@ -39,6 +39,55 @@ export const submitSupportTicket = createServerFn({ method: "POST" })
       console.error("[support] insert failed", error);
       throw new Error("Falha ao enviar mensagem");
     }
+
+    // Send confirmation email to the user
+    try {
+      const React = await import("react");
+      const { render } = await import("@react-email/components");
+      const { template } = await import("@/lib/email-templates/support-received");
+      const messageId = crypto.randomUUID();
+
+      const element = React.createElement(template.component, {
+        recipientName: data.name,
+        originalMessage: data.message,
+      });
+      const html = await render(element);
+      const plainText = await render(element, { plainText: true });
+
+      await supabaseAdmin.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: "support-received",
+        recipient_email: data.email.toLowerCase(),
+        status: "pending",
+      });
+
+      const subjectRaw: unknown = template.subject;
+      const subject =
+        typeof subjectRaw === "function"
+          ? (subjectRaw as (d: Record<string, any>) => string)({})
+          : (subjectRaw as string);
+
+      await supabaseAdmin.rpc("enqueue_email", {
+        queue_name: "transactional_emails",
+        payload: {
+          message_id: messageId,
+          to: data.email.toLowerCase(),
+          from: "WaveChat Suporte <noreply@notify.webconnectchat.com>",
+          sender_domain: "notify.webconnectchat.com",
+          subject,
+          html,
+          text: plainText,
+          purpose: "transactional",
+          label: "support-received",
+          idempotency_key: `support-received-${messageId}`,
+          queued_at: new Date().toISOString(),
+        },
+      });
+    } catch (e) {
+      console.error("[support] confirmation email failed", e);
+      // Don't fail the submit — ticket is already saved
+    }
+
     return { ok: true };
   });
 
