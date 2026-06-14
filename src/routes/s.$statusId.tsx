@@ -442,10 +442,8 @@ function StatusPublicPage() {
                   </div>
                 </PopoverContent>
               </Popover>
-              <div className="hidden">
-
-            <div className="flex items-center gap-3 mt-1 px-2">
               {user && (
+
                 <button
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                   onClick={() => {
