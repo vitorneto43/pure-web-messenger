@@ -71,7 +71,7 @@ self.addEventListener("push", (event) => {
         requireInteraction: true,
         vibrate: [300, 120, 300, 120, 300, 120, 600],
         timestamp: Date.now(),
-        data: { conversationId, url: conversationId ? `/chat/${conversationId}` : "/" },
+        data: { conversationId, url: data.url || (conversationId ? `/chat/${conversationId}` : "/") },
         actions: [
           { action: "open", title: "Abrir" },
           { action: "dismiss", title: "Depois" },

@@ -31,6 +31,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { sendStatusPush } from "@/lib/status-push.functions";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
@@ -227,6 +228,10 @@ function StatusPublicPage() {
         .from("status_comment_reactions" as any)
         .insert({ comment_id: commentId, user_id: user.id, emoji });
       if (error) return toast.error(error.message);
+      // Fire-and-forget push to the comment author
+      sendStatusPush({
+        data: { statusId, kind: "comment_reaction", commentId, emoji },
+      }).catch(() => {});
     }
     loadComments();
   }
@@ -258,17 +263,27 @@ function StatusPublicPage() {
     const value = text.trim();
     if (!value) return;
     setSending(true);
+    const parentId = replyTo?.id ?? null;
     const { error } = await supabase.from("status_comments").insert({
       status_id: statusId,
       user_id: user.id,
       content: value.slice(0, 1000),
-      parent_id: replyTo?.id ?? null,
+      parent_id: parentId,
     });
     setSending(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+    // Fire-and-forget push to status owner or parent-comment author
+    sendStatusPush({
+      data: {
+        statusId,
+        kind: parentId ? "reply" : "comment",
+        commentId: parentId ?? undefined,
+        preview: value.slice(0, 120),
+      },
+    }).catch(() => {});
     setText("");
     setReplyTo(null);
     loadComments();
