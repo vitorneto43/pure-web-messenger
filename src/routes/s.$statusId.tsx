@@ -107,6 +107,32 @@ function StatusPublicPage() {
     if (typeof data === "number") setViewCount(data);
   }
 
+  async function loadShareCount() {
+    const { data } = await supabase.rpc("get_status_share_count", { _status_id: statusId });
+    if (typeof data === "number") setShareCount(data);
+  }
+
+  async function handleShare() {
+    if (!status) return;
+    setSharing(true);
+    try {
+      await shareMessageExternally({
+        content: status.caption ?? status.content ?? null,
+        attachment_url: status.media_url,
+        attachment_type:
+          status.kind === "video" ? "video/mp4" : status.kind === "image" ? "image/jpeg" : null,
+        attachment_name: status.media_url ? `wavechat-status-${status.id}` : null,
+        brandWatermark: true,
+      });
+      if (user) {
+        await supabase.rpc("record_status_share", { _status_id: statusId });
+        loadShareCount();
+      }
+    } finally {
+      setSharing(false);
+    }
+  }
+
   async function load() {
     setLoading(true);
     const { data: s } = await supabase
