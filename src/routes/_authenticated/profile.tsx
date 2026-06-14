@@ -24,6 +24,7 @@ import { NotificationSettings } from "@/components/NotificationSettings";
 import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { InviteRewardsCard } from "@/components/InviteRewardsCard";
+import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
 import { BANKS } from "@/lib/banks";
 import { SocialLinksEditor } from "@/components/profile/SocialLinks";
 import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
