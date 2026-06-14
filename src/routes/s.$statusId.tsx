@@ -1,6 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply, Share2 } from "lucide-react";
+import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply, Share2, SmilePlus } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 import { shareMessageExternally } from "@/lib/share-message";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,9 +70,14 @@ type CommentRow = {
   parent_id: string | null;
 };
 
+type CommentReaction = { emoji: string; user_id: string };
+
 type Comment = CommentRow & {
   author: { display_name: string; username: string | null; avatar_url: string | null } | null;
 };
+
+const REACTION_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🔥", "🎉", "👏"];
+
 
 function StatusPublicPage() {
   const { statusId } = Route.useParams();
@@ -75,6 +86,8 @@ function StatusPublicPage() {
   const [status, setStatus] = useState<StatusRow | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [reactionsByComment, setReactionsByComment] = useState<Record<string, CommentReaction[]>>({});
+
   const [viewCount, setViewCount] = useState<number>(0);
   const [shareCount, setShareCount] = useState<number>(0);
   const [sharing, setSharing] = useState(false);
@@ -165,6 +178,7 @@ function StatusPublicPage() {
     const rows = (data ?? []) as CommentRow[];
     if (rows.length === 0) {
       setComments([]);
+      setReactionsByComment({});
       return;
     }
     const ids = Array.from(new Set(rows.map((r) => r.user_id)));
@@ -179,7 +193,44 @@ function StatusPublicPage() {
       ]),
     );
     setComments(rows.map((r) => ({ ...r, author: map.get(r.user_id) ?? null })));
+
+    const commentIds = rows.map((r) => r.id);
+    const { data: reacts } = await supabase
+      .from("status_comment_reactions" as any)
+      .select("comment_id,emoji,user_id")
+      .in("comment_id", commentIds);
+    const byComment: Record<string, CommentReaction[]> = {};
+    for (const r of (reacts ?? []) as any[]) {
+      (byComment[r.comment_id] ||= []).push({ emoji: r.emoji, user_id: r.user_id });
+    }
+    setReactionsByComment(byComment);
   }
+
+  async function toggleCommentReaction(commentId: string, emoji: string) {
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    const existing = (reactionsByComment[commentId] ?? []).find(
+      (r) => r.user_id === user.id && r.emoji === emoji,
+    );
+    if (existing) {
+      const { error } = await supabase
+        .from("status_comment_reactions" as any)
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", user.id)
+        .eq("emoji", emoji);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("status_comment_reactions" as any)
+        .insert({ comment_id: commentId, user_id: user.id, emoji });
+      if (error) return toast.error(error.message);
+    }
+    loadComments();
+  }
+
 
   useEffect(() => {
     load();
@@ -309,6 +360,15 @@ function StatusPublicPage() {
     const canDelete = !!user && (c.user_id === user.id || status.user_id === user.id);
     const canReport = !!user && c.user_id !== user.id;
     const childReplies = repliesByParent[c.id] ?? [];
+    const reactions = reactionsByComment[c.id] ?? [];
+    const counts: Record<string, { count: number; mine: boolean }> = {};
+    for (const r of reactions) {
+      const entry = (counts[r.emoji] ||= { count: 0, mine: false });
+      entry.count += 1;
+      if (user && r.user_id === user.id) entry.mine = true;
+    }
+    const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
+
     return (
       <li key={c.id} className={depth > 0 ? "ml-10" : ""}>
         <div className="flex items-start gap-2.5">
@@ -338,8 +398,52 @@ function StatusPublicPage() {
               </div>
               <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
             </div>
+
+            {sortedEmojis.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1 px-1">
+                {sortedEmojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => toggleCommentReaction(c.id, emoji)}
+                    className={`text-xs rounded-full border px-2 py-0.5 flex items-center gap-1 transition ${
+                      counts[emoji].mine
+                        ? "bg-primary/15 border-primary/40 text-foreground"
+                        : "bg-muted/60 border-border hover:bg-muted"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    <span className="tabular-nums">{counts[emoji].count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-center gap-3 mt-1 px-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    aria-label="Reagir"
+                  >
+                    <SmilePlus className="size-3.5" /> Reagir
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-1.5" align="start">
+                  <div className="flex gap-0.5">
+                    {REACTION_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        className="text-xl hover:scale-125 transition px-1.5 py-1"
+                        onClick={() => toggleCommentReaction(c.id, emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               {user && (
+
                 <button
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                   onClick={() => {
