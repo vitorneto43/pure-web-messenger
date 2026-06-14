@@ -152,7 +152,7 @@ function StatusPublicPage() {
       .eq("id", s.user_id)
       .maybeSingle();
     setAuthor((p as Author) ?? null);
-    await Promise.all([loadComments(), loadViewCount()]);
+    await Promise.all([loadComments(), loadViewCount(), loadShareCount()]);
     setLoading(false);
   }
 
