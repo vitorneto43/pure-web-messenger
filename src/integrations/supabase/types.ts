@@ -2178,6 +2178,7 @@ export type Database = {
           id: string
         }[]
       }
+      get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
       get_user_status_archive: {
         Args: { _user_id: string }
@@ -2267,6 +2268,7 @@ export type Database = {
       recompute_ip_risk: { Args: { _ip_hash: string }; Returns: string }
       recompute_trust_score: { Args: { _user_id: string }; Returns: number }
       record_profile_view: { Args: { _owner: string }; Returns: undefined }
+      record_status_share: { Args: { _status_id: string }; Returns: undefined }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
       register_ban: { Args: { _user_id: string }; Returns: undefined }
       register_boost_click: { Args: { _status_id: string }; Returns: Json }

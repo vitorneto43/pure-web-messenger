@@ -273,6 +273,9 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         attachment_name: current.media_url ? `wavechat-status-${current.id}` : null,
         brandWatermark: true,
       });
+      if (user) {
+        await supabase.rpc("record_status_share", { _status_id: current.id });
+      }
     } finally {
       setPaused(false);
     }
