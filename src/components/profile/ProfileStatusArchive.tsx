@@ -145,14 +145,16 @@ function Grid({
             <Button
               size="icon"
               variant="secondary"
-              className="absolute top-1 left-1 size-7 opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+              className="absolute top-1 left-1 size-7 shadow-md"
               disabled={busy === it.id}
               onClick={() => togglePin(it.id)}
               title={it.pinned ? "Desafixar" : "Fixar"}
+              aria-label={it.pinned ? "Desafixar" : "Fixar"}
             >
               {it.pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
             </Button>
           )}
+
         </div>
       ))}
     </div>
