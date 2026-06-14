@@ -300,10 +300,12 @@ function PublicProfile() {
 
       </div>
 
+      {!isPrivate && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
     </>
+
   );
 }
 
