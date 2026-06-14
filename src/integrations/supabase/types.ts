@@ -203,6 +203,51 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          category: string
+          code: string
+          color: string
+          created_at: string
+          criteria: Json
+          description: string
+          display_priority: number
+          icon: string
+          id: string
+          is_automatic: boolean
+          name: string
+          tier: number
+        }
+        Insert: {
+          category: string
+          code: string
+          color?: string
+          created_at?: string
+          criteria?: Json
+          description: string
+          display_priority?: number
+          icon: string
+          id?: string
+          is_automatic?: boolean
+          name: string
+          tier?: number
+        }
+        Update: {
+          category?: string
+          code?: string
+          color?: string
+          created_at?: string
+          criteria?: Json
+          description?: string
+          display_priority?: number
+          icon?: string
+          id?: string
+          is_automatic?: boolean
+          name?: string
+          tier?: number
+        }
+        Relationships: []
+      }
       banned_ips: {
         Row: {
           banned_by: string | null
@@ -2041,6 +2086,52 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          awarded_by: string | null
+          badge_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_awarded_by_fkey"
+            columns: ["awarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_blocks: {
         Row: {
           blocked_id: string
@@ -2142,12 +2233,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_award_badge: {
+        Args: { _badge_code: string; _user_id: string }
+        Returns: undefined
+      }
       admin_boost_overview: { Args: { _days?: number }; Returns: Json }
       admin_invites_overview: { Args: never; Returns: Json }
       admin_list_admins: { Args: never; Returns: Json }
       admin_newsletter_stats: { Args: never; Returns: Json }
       admin_onboarding_survey_stats: { Args: { _days?: number }; Returns: Json }
       admin_push_logs: { Args: { _days?: number }; Returns: Json }
+      admin_revoke_badge: {
+        Args: { _badge_code: string; _user_id: string }
+        Returns: undefined
+      }
       admin_send_newsletter: { Args: { _post_id: string }; Returns: Json }
       admin_signup_sources: { Args: never; Returns: Json }
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
@@ -2227,6 +2326,20 @@ export type Database = {
       }
       get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
+      get_user_badges: {
+        Args: { _user_id: string }
+        Returns: {
+          awarded_at: string
+          category: string
+          code: string
+          color: string
+          description: string
+          display_priority: number
+          icon: string
+          name: string
+          tier: number
+        }[]
+      }
       get_user_status_archive: {
         Args: { _user_id: string }
         Returns: {
@@ -2314,6 +2427,7 @@ export type Database = {
       recompute_device_risk: { Args: { _fp_hash: string }; Returns: string }
       recompute_ip_risk: { Args: { _ip_hash: string }; Returns: string }
       recompute_trust_score: { Args: { _user_id: string }; Returns: number }
+      recompute_user_badges: { Args: { _user_id: string }; Returns: undefined }
       record_profile_view: { Args: { _owner: string }; Returns: undefined }
       record_status_share: { Args: { _status_id: string }; Returns: undefined }
       redeem_free_boost: { Args: { _status_id: string }; Returns: Json }
