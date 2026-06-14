@@ -29,6 +29,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -139,6 +140,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSupportRoute = ApiPublicSupportRouteImport.update({
+  id: '/api/public/support',
+  path: '/api/public/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStatusPushRoute = ApiPublicStatusPushRouteImport.update({
   id: '/api/public/status-push',
   path: '/api/public/status-push',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
+  '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
+  '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
+  '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/chat/$conversationId'
     | '/api/public/status-push'
+    | '/api/public/support'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chat/$conversationId'
     | '/api/public/status-push'
+    | '/api/public/support'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
     | '/api/public/status-push'
+    | '/api/public/support'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -408,6 +420,7 @@ export interface RootRouteChildren {
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
+  ApiPublicSupportRoute: typeof ApiPublicSupportRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
@@ -561,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/support': {
+      id: '/api/public/support'
+      path: '/api/public/support'
+      fullPath: '/api/public/support'
+      preLoaderRoute: typeof ApiPublicSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/status-push': {
       id: '/api/public/status-push'
       path: '/api/public/status-push'
@@ -679,6 +699,7 @@ const rootRouteChildren: RootRouteChildren = {
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
+  ApiPublicSupportRoute: ApiPublicSupportRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,

@@ -57,13 +57,29 @@ function SupportPage() {
     }
     setBusy(true);
     try {
-      await submit({ data: parsed.data });
+      // Primary path: public REST endpoint (works in WebView, no auth needed)
+      const res = await fetch("/api/public/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      if (!res.ok) {
+        // Fallback to server function in case of edge issue
+        await submit({ data: parsed.data });
+      }
       setSent(true);
       setForm({ name: "", email: "", message: "" });
       toast.success("Mensagem enviada! Nossa equipe vai responder em breve.");
     } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || "Erro ao enviar. Tente novamente.");
+      console.error("[support] submit failed", err);
+      try {
+        await submit({ data: parsed.data });
+        setSent(true);
+        setForm({ name: "", email: "", message: "" });
+        toast.success("Mensagem enviada! Nossa equipe vai responder em breve.");
+      } catch (err2: any) {
+        toast.error(err2?.message || err?.message || "Erro ao enviar. Tente novamente.");
+      }
     } finally {
       setBusy(false);
     }
