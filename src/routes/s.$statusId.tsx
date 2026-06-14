@@ -86,6 +86,8 @@ function StatusPublicPage() {
   const [status, setStatus] = useState<StatusRow | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [reactionsByComment, setReactionsByComment] = useState<Record<string, CommentReaction[]>>({});
+
   const [viewCount, setViewCount] = useState<number>(0);
   const [shareCount, setShareCount] = useState<number>(0);
   const [sharing, setSharing] = useState(false);
