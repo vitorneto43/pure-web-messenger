@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { UserBadges } from "@/components/badges/UserBadges";
 
 interface Suggestion {
   id: string;
@@ -79,7 +80,10 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
                 <AvatarFallback>{s.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-left min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">{s.display_name}</div>
+                <div className="text-sm font-medium truncate flex items-center gap-1.5">
+                  <span className="truncate">{s.display_name}</span>
+                  <UserBadges userId={s.id} max={2} />
+                </div>
                 <div className="text-xs text-muted-foreground truncate">
                   @{s.username}
                   {s.mutual_count > 0 && <> · {s.mutual_count === 1 ? t("app.people.mutualOne", { count: s.mutual_count }) : t("app.people.mutualMany", { count: s.mutual_count })}</>}

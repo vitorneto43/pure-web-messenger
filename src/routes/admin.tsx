@@ -49,6 +49,8 @@ import { ComplianceTab } from "@/components/admin/ComplianceTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
 import { ShieldAlert, Scale, ShieldCheck, TrendingDown } from "lucide-react";
 import { ConversionFunnelTab } from "@/components/admin/ConversionFunnelTab";
+import { BadgesTab } from "@/components/admin/BadgesTab";
+import { Award } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -252,6 +254,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="moderation"><ShieldAlert className="size-4 mr-1.5" />Moderação</TabsTrigger>
               <TabsTrigger value="compliance"><Scale className="size-4 mr-1.5" />Compliance</TabsTrigger>
               <TabsTrigger value="security"><ShieldCheck className="size-4 mr-1.5" />Segurança</TabsTrigger>
+              <TabsTrigger value="badges"><Award className="size-4 mr-1.5" />Selos</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
           </div>
@@ -282,6 +285,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="moderation" className="mt-4"><ModerationTab /></TabsContent>
           <TabsContent value="compliance" className="mt-4"><ComplianceTab isSuperadmin={isSuperadmin} /></TabsContent>
           <TabsContent value="security" className="mt-4"><SecurityTab isSuperadmin={isSuperadmin} /></TabsContent>
+          <TabsContent value="badges" className="mt-4"><BadgesTab /></TabsContent>
           <TabsContent value="settings" className="mt-4"><PinSettings /></TabsContent>
         </Tabs>
       </main>
