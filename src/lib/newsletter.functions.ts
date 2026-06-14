@@ -78,12 +78,59 @@ export const submitNewsletterFeedback = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("newsletter_feedback").insert({
-      message: data.message,
-      email: data.email ?? null,
-      user_id: data.userId ?? null,
-    });
+    const { data: inserted, error } = await supabaseAdmin
+      .from("newsletter_feedback")
+      .insert({
+        message: data.message,
+        email: data.email ?? null,
+        user_id: data.userId ?? null,
+      })
+      .select("id, email")
+      .single();
     if (error) throw new Error(error.message);
+
+    // Confirmation email (if email provided)
+    if (inserted?.email) {
+      try {
+        const React = await import("react");
+        const { render } = await import("@react-email/components");
+        const { template } = await import("@/lib/email-templates/support-received");
+        const messageId = crypto.randomUUID();
+        const element = React.createElement(template.component, {
+          originalMessage: data.message,
+        });
+        const html = await render(element);
+        const plainText = await render(element, { plainText: true });
+        await supabaseAdmin.from("email_send_log").insert({
+          message_id: messageId,
+          template_name: "support-received",
+          recipient_email: inserted.email.toLowerCase(),
+          status: "pending",
+        });
+        const subjectRaw: unknown = template.subject;
+        const subject = typeof subjectRaw === "function"
+          ? (subjectRaw as (d: Record<string, any>) => string)({})
+          : (subjectRaw as string);
+        await supabaseAdmin.rpc("enqueue_email", {
+          queue_name: "transactional_emails",
+          payload: {
+            message_id: messageId,
+            to: inserted.email.toLowerCase(),
+            from: "WaveChat <noreply@notify.webconnectchat.com>",
+            sender_domain: "notify.webconnectchat.com",
+            subject,
+            html,
+            text: plainText,
+            purpose: "transactional",
+            label: "newsletter-feedback-received",
+            idempotency_key: `nl-fb-received-${inserted.id}`,
+            queued_at: new Date().toISOString(),
+          },
+        });
+      } catch (e) {
+        console.error("[newsletter] confirmation email failed", e);
+      }
+    }
     return { ok: true };
   });
 
