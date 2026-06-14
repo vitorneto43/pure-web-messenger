@@ -8,6 +8,8 @@ import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
+import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { useServerFn } from "@tanstack/react-start";
@@ -300,10 +302,12 @@ function PublicProfile() {
 
       </div>
 
+      {!isPrivate && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
     </>
+
   );
 }
 
