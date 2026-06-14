@@ -237,7 +237,31 @@ async function sendNativePayloadToUser(
   return { sent };
 }
 
+export async function sendNativeStatusInteraction(args: {
+  recipientId: string;
+  senderId: string;
+  statusId: string;
+  title: string;
+  body: string;
+  kind: "comment" | "reply" | "status_reaction" | "comment_reaction";
+}) {
+  return sendNativePayloadToUser(
+    args.recipientId,
+    {
+      type: "status_interaction",
+      statusId: args.statusId,
+      url: `/s/${args.statusId}`,
+      kind: args.kind,
+      timestamp: String(Date.now()),
+    },
+    "120s",
+    { title: args.title, body: args.body || args.title },
+    { senderId: args.senderId, kind: `status_${args.kind}` },
+  );
+}
+
 export async function sendNativeMessage(args: {
+
   recipientId: string;
   senderId: string;
   conversationId: string;
