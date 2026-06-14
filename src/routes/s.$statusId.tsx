@@ -402,15 +402,12 @@ function StatusPublicPage() {
     }
     const sortedEmojis = Object.keys(counts).sort((a, b) => counts[b].count - counts[a].count);
 
-    // If this is a reply to another reply, prefix the body with @parentAuthor mention
+    // If this reply targets another reply, prefix the body with @parentAuthor mention
     let mention: string | null = null;
     if (isReply && c.parent_id) {
       const parent = commentById.get(c.parent_id);
-      if (parent && !parent.parent_id ? false : parent) {
-        // only show mention when parent is itself a reply (not the root)
-        if (parent.parent_id) {
-          mention = parent.author?.display_name ?? "alguém";
-        }
+      if (parent && parent.parent_id) {
+        mention = parent.author?.display_name ?? "alguém";
       }
     }
 
