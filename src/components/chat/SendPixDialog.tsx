@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { FeatureTip } from "@/components/FeatureTip";
 import { encodePixMessage } from "@/lib/pix";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
