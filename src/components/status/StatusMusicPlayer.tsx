@@ -44,7 +44,15 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
     const p = a.play();
     if (p && typeof p.catch === "function") {
       p.then(() => setNeedsTap(false)).catch((err) => {
-        console.warn("[StatusMusicPlayer] autoplay blocked:", err?.message || err);
+        console.warn("[StatusMusicPlayer] play blocked, retrying muted:", err?.message || err);
+        // Mobile fallback: muted autoplay is always allowed; then prompt user to unmute.
+        try {
+          a.muted = true;
+          const p2 = a.play();
+          if (p2 && typeof p2.catch === "function") {
+            p2.catch((e2) => console.warn("[StatusMusicPlayer] muted play failed:", e2?.message || e2));
+          }
+        } catch {}
         setNeedsTap(true);
       });
     }
@@ -53,32 +61,38 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
   useEffect(() => {
     if (!track) return;
     const a = new Audio();
-    a.crossOrigin = "anonymous";
+    // NOTE: do NOT set crossOrigin — many CDNs (incompetech, dropbox) don't send CORS headers,
+    // and setting crossOrigin="anonymous" causes the browser/WebView to block the load entirely.
     a.preload = "auto";
     a.src = track.audio_url;
     a.volume = muted ? 0 : volume;
     a.muted = muted;
-    a.currentTime = startSec;
+    a.loop = false;
     (a as any).playsInline = true;
     (a as any).webkitPlaysInline = true;
     a.setAttribute("playsinline", "");
     audioRef.current = a;
+    const onLoaded = () => {
+      try { a.currentTime = startSec; } catch {}
+      tryPlay(a);
+    };
     const onTime = () => {
-      if (a.currentTime >= startSec + durationSec) a.currentTime = startSec;
+      if (a.currentTime >= startSec + durationSec) {
+        try { a.currentTime = startSec; } catch {}
+      }
     };
     const onError = () => {
       console.warn("[StatusMusicPlayer] audio error", a.error?.code, track.audio_url);
     };
+    a.addEventListener("loadedmetadata", onLoaded, { once: true });
     a.addEventListener("timeupdate", onTime);
     a.addEventListener("error", onError);
-    const onCanPlay = () => tryPlay(a);
-    a.addEventListener("canplay", onCanPlay, { once: true });
-    // also kick off immediately
+    // Kick off immediately as well (Android WebView sometimes fires loadedmetadata late)
     tryPlay(a);
     return () => {
+      a.removeEventListener("loadedmetadata", onLoaded);
       a.removeEventListener("timeupdate", onTime);
       a.removeEventListener("error", onError);
-      a.removeEventListener("canplay", onCanPlay);
       a.pause();
       a.src = "";
       audioRef.current = null;
