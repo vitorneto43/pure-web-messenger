@@ -312,6 +312,8 @@ function PublicProfile() {
 
       {(!isPrivate || isOwn) && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
 
+      {!isPrivate && <TrafficInsightsCard username={data.username} />}
+
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
     </>
