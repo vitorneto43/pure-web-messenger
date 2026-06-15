@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Loader2, ImagePlus, Type, Video, BadgeCheck } from "lucide-react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
+import { MusicPickerSheet, type MusicSelection } from "./MusicPickerSheet";
+import { moodEmoji } from "@/lib/story-music";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
