@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Globe2 } from "lucide-react";
+import { Plus, Loader2, Globe2, Hash } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -216,6 +216,18 @@ export function StatusBar() {
             Descobrir
           </span>
         </Link>
+
+        {/* Trending hashtags */}
+        <Link to="/hashtags" className="flex flex-col items-center gap-1 shrink-0">
+          <div className="size-14 rounded-full grid place-items-center bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 ring-2 ring-offset-2 ring-offset-sidebar ring-orange-400/40 shadow-lg">
+            <Hash className="size-6 text-white" />
+          </div>
+          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
+            Em alta
+          </span>
+        </Link>
+
+
 
         {/* Others */}
         {groups.map((g) => (

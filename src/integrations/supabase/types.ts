@@ -1980,7 +1980,9 @@ export type Database = {
           created_at: string
           cta_label: string | null
           cta_url: string | null
+          description: string | null
           expires_at: string
+          hashtags: string[]
           id: string
           is_official: boolean
           kind: string
@@ -2000,7 +2002,9 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          description?: string | null
           expires_at?: string
+          hashtags?: string[]
           id?: string
           is_official?: boolean
           kind: string
@@ -2020,7 +2024,9 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          description?: string | null
           expires_at?: string
+          hashtags?: string[]
           id?: string
           is_official?: boolean
           kind?: string
@@ -2440,6 +2446,22 @@ export type Database = {
         Returns: number
       }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
+      get_hashtag_people: {
+        Args: { _limit?: number; _tag: string }
+        Returns: {
+          avatar_url: string
+          city: string
+          display_name: string
+          last_caption: string
+          last_status_id: string
+          last_used_at: string
+          shares_conversation: boolean
+          user_id: string
+          username: string
+          uses_count: number
+          viewer_follows: boolean
+        }[]
+      }
       get_invite_stats: { Args: never; Returns: Json }
       get_my_restrictions: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
@@ -2465,6 +2487,15 @@ export type Database = {
       }
       get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
+      get_trending_hashtags: {
+        Args: { _limit?: number }
+        Returns: {
+          authors_count: number
+          last_used_at: string
+          tag: string
+          uses_count: number
+        }[]
+      }
       get_user_badges: {
         Args: { _user_id: string }
         Returns: {
