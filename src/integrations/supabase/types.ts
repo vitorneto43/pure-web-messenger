@@ -1075,6 +1075,38 @@ export type Database = {
         }
         Relationships: []
       }
+      music_track_plays: {
+        Row: {
+          created_at: string
+          id: string
+          source: string
+          track_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: string
+          track_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: string
+          track_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_track_plays_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "story_music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       native_push_tokens: {
         Row: {
           created_at: string
@@ -2539,6 +2571,10 @@ export type Database = {
         }
         Returns: string
       }
+      log_music_play: {
+        Args: { _source?: string; _track_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -2547,6 +2583,33 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      new_music_tracks: {
+        Args: { _limit?: number }
+        Returns: {
+          artist: string
+          audio_url: string
+          cover_url: string | null
+          created_at: string
+          duration_sec: number
+          genre: string | null
+          id: string
+          is_active: boolean
+          license: string
+          mood: string
+          play_count: number
+          sort_order: number
+          source: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "story_music_tracks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       propagate_severe_ban: {
         Args: { _reason: string; _user_id: string }
@@ -2608,6 +2671,28 @@ export type Database = {
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       toggle_follow: { Args: { _target: string }; Returns: boolean }
       toggle_status_pin: { Args: { _status_id: string }; Returns: boolean }
+      trending_music_tracks: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          artist: string
+          audio_url: string
+          cover_url: string
+          created_at: string
+          duration_sec: number
+          genre: string
+          id: string
+          is_active: boolean
+          license: string
+          mood: string
+          play_count: number
+          sort_order: number
+          source: string
+          source_url: string
+          title: string
+          trend_plays: number
+          updated_at: string
+        }[]
+      }
       users_share_conversation: {
         Args: { _a: string; _b: string }
         Returns: boolean
