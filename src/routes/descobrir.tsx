@@ -126,7 +126,7 @@ function DiscoverPage() {
             <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1"><MessageCircle className="size-3.5" /> Mensagens</span>
               <span className="inline-flex items-center gap-1"><Phone className="size-3.5" /> Chamadas</span>
-              <span className="inline-flex items-center gap-1"><Heart className="size-3.5" /> Status</span>
+              <span className="inline-flex items-center gap-1"><Heart className="size-3.5" /> Stories</span>
             </div>
           </section>
         )}
