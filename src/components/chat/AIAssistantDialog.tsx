@@ -108,6 +108,13 @@ export function AIAssistantDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <FeatureTip id="ai-assistant" title="Como usar a IA">
+          A IA te ajuda a <b>responder</b>, <b>resumir</b>, <b>traduzir</b> e <b>sugerir</b> mensagens.
+          O conteúdo é gerado automaticamente — revise antes de enviar. Não compartilhe dados sensíveis.
+        </FeatureTip>
+
+
+
         <div className="min-h-[100px] rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap break-words">
           {loading && (
             <div className="flex items-center gap-2 text-muted-foreground">
