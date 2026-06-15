@@ -247,14 +247,111 @@ function AuthPage() {
     }
   }
 
+  const isAndroidWeb =
+    typeof window !== "undefined" &&
+    /Android/i.test(navigator.userAgent) &&
+    !(window as any).Capacitor?.isNativePlatform?.();
+
+  const features = [
+    { icon: MessageCircle, label: "Chat privado" },
+    { icon: Users, label: "Grupos" },
+    { icon: Camera, label: "Status" },
+    { icon: MessageSquare, label: "Comentários" },
+    { icon: UserPlus, label: "Seguidores" },
+    { icon: Globe2, label: "Pessoas para conhecer" },
+    { icon: Phone, label: "Voz e vídeo" },
+    { icon: Languages, label: "Tradução automática" },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Soft ambient background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 -left-24 size-[28rem] rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute top-1/3 -right-24 size-[26rem] rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 size-[22rem] rounded-full bg-primary/10 blur-3xl" />
+      </div>
+
       <div className="flex-1 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <img src={wavechatLogo.url} alt="WaveChat" className="size-10 rounded-xl shadow-lg object-cover" />
-          <span className="text-xl font-bold tracking-tight">Wavechat</span>
-        </div>
+        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+          {/* HERO / Apresentação */}
+          <div className="text-center lg:text-left order-1">
+            <div className="flex items-center justify-center lg:justify-start gap-2 mb-6">
+              <img src={wavechatLogo.url} alt="WaveChat" className="size-12 rounded-2xl shadow-lg object-cover" />
+              <span className="text-2xl font-bold tracking-tight">Wavechat</span>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
+              <Sparkles className="size-3.5" /> Comunidade · Conexão · Descoberta
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">
+              Conheça pessoas.
+              <br />
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Compartilhe momentos.
+              </span>
+              <br />
+              Inicie conversas.
+            </h1>
+
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0">
+              Uma plataforma para descobrir pessoas, publicar status, seguir perfis e criar novas conexões.
+            </p>
+
+            {/* Destaques */}
+            <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {features.map((f) => (
+                <div
+                  key={f.label}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card/60 backdrop-blur px-2 py-3 text-center hover:border-primary/40 hover:bg-card transition"
+                >
+                  <f.icon className="size-5 text-primary" />
+                  <span className="text-[11px] font-medium leading-tight">{f.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Prova social */}
+            <div className="mt-6 rounded-2xl border border-border bg-gradient-to-br from-card/80 to-card/40 backdrop-blur px-4 py-3.5 flex items-center gap-3">
+              <div className="flex -space-x-2">
+                {["from-pink-500 to-orange-400", "from-sky-500 to-indigo-500", "from-emerald-500 to-teal-400", "from-violet-500 to-fuchsia-500"].map((g, i) => (
+                  <div key={i} className={`size-7 rounded-full bg-gradient-to-br ${g} ring-2 ring-background`} />
+                ))}
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground text-left">
+                Usuários de diversos estados já estão utilizando o WaveChat para conhecer pessoas e criar novas conexões.
+              </p>
+            </div>
+
+            {/* Banner Android-only */}
+            {isAndroidWeb && (
+              <a
+                href="https://play.google.com/store/apps/details?id=com.wavechat.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => void track("playstore_click", { from: "auth_hero_android" })}
+                className="mt-5 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-left hover:bg-primary/15 transition"
+              >
+                <div className="size-10 rounded-xl bg-primary/20 grid place-items-center shrink-0">
+                  <Smartphone className="size-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">Sua experiência será melhor no app</p>
+                  <p className="text-xs text-muted-foreground">
+                    Notificações em tempo real e acesso mais rápido às conversas.
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+                  Baixar
+                </span>
+              </a>
+            )}
+          </div>
+
+          {/* CARD DE LOGIN */}
+          <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto order-2">
+
 
 
         <div className="glass rounded-2xl border border-border p-6 sm:p-8 shadow-xl">
