@@ -2047,6 +2047,13 @@ export type Database = {
             referencedRelation: "story_music_tracks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "statuses_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       story_music_tracks: {
