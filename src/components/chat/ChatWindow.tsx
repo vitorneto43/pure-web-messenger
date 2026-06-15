@@ -128,6 +128,22 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordCancelledRef = useRef(false);
 
+  // Read ?draft= from URL once per conversation to prefill the composer
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const draft = params.get("draft");
+      if (draft) {
+        setText((prev) => (prev ? prev : draft));
+        const url = new URL(window.location.href);
+        url.searchParams.delete("draft");
+        window.history.replaceState({}, "", url.toString());
+        setTimeout(() => textareaRef.current?.focus(), 50);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+
   // Load conversation + members + messages
   useEffect(() => {
     if (!user) return;
