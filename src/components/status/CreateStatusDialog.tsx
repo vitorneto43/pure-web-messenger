@@ -283,14 +283,57 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
                 <Video className="size-5 mr-2" /> {t("status.selectVideo")}
               </Button>
             )}
-            <Input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder={t("status.captionOptional")}
-              maxLength={200}
-            />
           </TabsContent>
         </Tabs>
+
+        {/* Legenda + descrição + sugestão de IA — vale para texto, imagem e vídeo */}
+        <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold">Legenda</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={suggestCaption}
+              disabled={suggesting}
+            >
+              {suggesting ? (
+                <Loader2 className="size-3.5 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="size-3.5 mr-1 text-primary" />
+              )}
+              Sugerir com IA
+            </Button>
+          </div>
+          <Input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Escreva uma legenda curta com #hashtags"
+            maxLength={200}
+          />
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descrição (opcional) — conte mais sobre o story. Use #hashtags para alcançar quem ainda não te segue."
+            maxLength={500}
+            rows={2}
+          />
+          {hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-1">
+              <Hash className="size-3.5 text-primary mt-0.5" />
+              {hashtags.map((h) => (
+                <span key={h} className="text-[11px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-muted-foreground leading-tight">
+            Hashtags ajudam o algoritmo a mostrar seu story para quem ainda não te segue e nas tendências.
+          </p>
+        </div>
+
 
         {tab !== "text" && (
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
