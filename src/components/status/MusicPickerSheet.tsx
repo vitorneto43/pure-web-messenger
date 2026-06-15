@@ -31,11 +31,25 @@ interface Props {
   initial?: MusicSelection | null;
 }
 
+type Tab = "trending" | "new" | "mood";
+
+interface TrendingTrack extends MusicTrack {
+  trend_plays?: number;
+}
+
+function formatPlays(n: number | undefined): string {
+  const v = n ?? 0;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+  return String(v);
+}
+
 export function MusicPickerSheet({ open, onOpenChange, onSelect, showVolumeMix, initial }: Props) {
   const [step, setStep] = useState<"list" | "trim">("list");
+  const [tab, setTab] = useState<Tab>("trending");
   const [mood, setMood] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [tracks, setTracks] = useState<MusicTrack[]>([]);
+  const [tracks, setTracks] = useState<TrendingTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<MusicTrack | null>(null);
   const [startSec, setStartSec] = useState(0);
