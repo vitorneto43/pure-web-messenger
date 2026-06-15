@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Hash, Loader2, MessageSquare, Search, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { ArrowLeft, Hash, Loader2, MessageSquare, Search, TrendingUp, Users, ArrowRight, Image as ImageIcon, Video, Type } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +63,29 @@ function HashtagsPage() {
     },
   });
 
+  const searchResults = useQuery({
+    queryKey: ["hashtag-search-preview", normalizedSearch],
+    enabled: normalizedSearch.length > 0,
+    queryFn: async () => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("statuses")
+        .select(
+          "id, kind, content, media_url, caption, background, hashtags, created_at, user_id, profiles!inner(username, display_name, avatar_url, visibility)",
+        )
+        .gt("expires_at", nowIso)
+        .eq("profiles.visibility", "public")
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (error) throw error;
+      const list = (data ?? []) as any[];
+      return list.filter((s) =>
+        Array.isArray(s.hashtags) &&
+        s.hashtags.some((h: string) => (h ?? "").toLowerCase().includes(normalizedSearch)),
+      );
+    },
+  });
+
   return (
     <div className="fixed inset-0 bg-background text-foreground flex flex-col">
       <header className="flex items-center gap-2 px-3 py-3 border-b bg-card/95 backdrop-blur z-10">
@@ -121,6 +144,81 @@ function HashtagsPage() {
             hashtag em alta para descobrir pessoas que falaram do tema. Apenas stories <b>públicos</b> aparecem aqui.
           </FeatureTip>
         </div>
+
+        {normalizedSearch && (
+          <div className="px-3 pb-3">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                <Hash className="size-4 text-primary" />
+                Publicações com "{normalizedSearch}"
+              </h2>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => navigate({ to: "/hashtag/$tag", params: { tag: normalizedSearch } })}
+                className="h-7 gap-1 text-xs"
+              >
+                Ver tudo
+                <ArrowRight className="size-3" />
+              </Button>
+            </div>
+
+            {searchResults.isLoading && (
+              <div className="p-6 grid place-items-center">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!searchResults.isLoading && (searchResults.data ?? []).length === 0 && (
+              <div className="p-6 text-center text-xs text-muted-foreground border rounded-lg">
+                Nenhuma publicação pública encontrada para essa hashtag.
+              </div>
+            )}
+
+            {(searchResults.data ?? []).length > 0 && (
+              <div className="grid grid-cols-3 gap-1.5">
+                {(searchResults.data ?? []).slice(0, 9).map((s: any) => (
+                  <Link
+                    key={s.id}
+                    to="/s/$statusId"
+                    params={{ statusId: s.id }}
+                    className="relative aspect-square rounded-md overflow-hidden bg-muted group"
+                  >
+                    {s.kind === "image" && s.media_url && (
+                      <img src={s.media_url} alt={s.caption ?? ""} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    )}
+                    {s.kind === "video" && s.media_url && (
+                      <video src={s.media_url} className="absolute inset-0 w-full h-full object-cover" muted playsInline />
+                    )}
+                    {s.kind === "text" && (
+                      <div
+                        className="absolute inset-0 grid place-items-center p-1.5 text-center text-white text-[10px] font-semibold"
+                        style={{ background: s.background ?? "linear-gradient(135deg,#6366f1,#ec4899)" }}
+                      >
+                        <span className="line-clamp-4">{s.content}</span>
+                      </div>
+                    )}
+                    <div className="absolute top-1 left-1 size-5 rounded-full bg-black/60 grid place-items-center text-white">
+                      {s.kind === "image" && <ImageIcon className="size-2.5" />}
+                      {s.kind === "video" && <Video className="size-2.5" />}
+                      {s.kind === "text" && <Type className="size-2.5" />}
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 px-1.5 py-1 bg-gradient-to-t from-black/80 to-transparent text-white">
+                      <span className="text-[9px] font-medium truncate block">
+                        @{s.profiles?.username}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="h-px bg-border my-4" />
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1 px-1">
+              Hashtags relacionadas
+            </p>
+          </div>
+        )}
 
         {trending.isLoading && (
           <div className="p-10 grid place-items-center">
