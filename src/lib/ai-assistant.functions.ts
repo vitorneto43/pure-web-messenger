@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const ActionSchema = z.object({
-  action: z.enum(["translate", "suggest_reply", "improve", "summarize"]),
+  action: z.enum(["translate", "suggest_reply", "improve", "summarize", "suggest_caption"]),
   text: z.string().min(1).max(8000).optional(),
   context: z.string().max(12000).optional(),
   targetLanguage: z.string().min(2).max(40).optional(),
@@ -44,8 +44,16 @@ function buildPrompt(input: Input): { system: string; user: string } {
         system: `Você resume conversas de chat em português do Brasil, de forma objetiva, em até 5 bullets curtos.`,
         user: input.context ?? input.text ?? "",
       };
+    case "suggest_caption":
+      return {
+        system: `Você é um copywriter de redes sociais (TikTok/Instagram). Gere UMA legenda curta (até 140 caracteres), envolvente, em português do Brasil, com 2 a 4 hashtags relevantes no final (em minúsculas, sem espaços, juntas tipo #motivacao). Responda APENAS com a legenda final, sem aspas, sem prefixo.`,
+        user: `Conteúdo do story:\n${input.text ?? input.context ?? ""}`,
+      };
   }
 }
+
+
+
 
 export const runAIAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

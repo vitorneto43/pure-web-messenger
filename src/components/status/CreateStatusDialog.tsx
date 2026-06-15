@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X } from "lucide-react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X, Sparkles, Hash } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,6 +42,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [text, setText] = useState("");
   const [bg, setBg] = useState(BG_OPTIONS[0]);
   const [caption, setCaption] = useState("");
+  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +52,41 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [ctaUrl, setCtaUrl] = useState("");
   const [music, setMusic] = useState<MusicSelection | null>(null);
   const [musicOpen, setMusicOpen] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const aiRun = useServerFn(runAIAssistant);
+
+  const hashtags = Array.from(
+    new Set(
+      `${text} ${caption} ${description}`
+        .toLowerCase()
+        .match(/#([a-z0-9_\u00c0-\u024f]{2,40})/g) ?? [],
+    ),
+  );
+
+  async function suggestCaption() {
+    const seed = (tab === "text" ? text : caption) || description || (file?.name ?? "");
+    if (!seed.trim() && !description.trim()) {
+      toast.info("Escreva algo ou descreva o story para sugerir uma legenda");
+      return;
+    }
+    setSuggesting(true);
+    try {
+      const r = await aiRun({
+        data: { action: "suggest_caption", text: seed.slice(0, 800), context: description.slice(0, 800) },
+      });
+      if (r.ok) {
+        setCaption(r.content.slice(0, 200));
+        toast.success("Legenda sugerida ✨");
+      } else {
+        toast.error(r.error);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha na sugestão");
+    } finally {
+      setSuggesting(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -61,6 +98,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   function reset() {
     setText("");
     setCaption("");
+    setDescription("");
     setFile(null);
     setPreview(null);
     setCtaLabel("");
@@ -68,6 +106,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setMusic(null);
     setTab("text");
   }
+
 
   function pickFile(f: File | null) {
     setFile(f);
@@ -89,6 +128,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           user_id: user.id,
           kind: "text",
           content: text.trim().slice(0, 500),
+          caption: caption.trim().slice(0, 200) || null,
+          description: description.trim().slice(0, 500) || null,
           background: bg,
           is_official: isOfficialAccount && isOfficial,
           music_track_id: music?.track.id ?? null,
@@ -138,6 +179,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
+          description: description.trim().slice(0, 500) || null,
           is_official: isOfficialAccount && isOfficial,
           cta_url,
           cta_label,
@@ -223,13 +265,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
                 {t("status.change")}
               </Button>
             )}
-            <Input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder={t("status.captionOptional")}
-              maxLength={200}
-            />
           </TabsContent>
+
 
           <TabsContent value="video" className="space-y-3">
             <input
@@ -246,14 +283,57 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
                 <Video className="size-5 mr-2" /> {t("status.selectVideo")}
               </Button>
             )}
-            <Input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder={t("status.captionOptional")}
-              maxLength={200}
-            />
           </TabsContent>
         </Tabs>
+
+        {/* Legenda + descrição + sugestão de IA — vale para texto, imagem e vídeo */}
+        <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold">Legenda</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={suggestCaption}
+              disabled={suggesting}
+            >
+              {suggesting ? (
+                <Loader2 className="size-3.5 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="size-3.5 mr-1 text-primary" />
+              )}
+              Sugerir com IA
+            </Button>
+          </div>
+          <Input
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Escreva uma legenda curta com #hashtags"
+            maxLength={200}
+          />
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descrição (opcional) — conte mais sobre o story. Use #hashtags para alcançar quem ainda não te segue."
+            maxLength={500}
+            rows={2}
+          />
+          {hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-1">
+              <Hash className="size-3.5 text-primary mt-0.5" />
+              {hashtags.map((h) => (
+                <span key={h} className="text-[11px] font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-muted-foreground leading-tight">
+            Hashtags ajudam o algoritmo a mostrar seu story para quem ainda não te segue e nas tendências.
+          </p>
+        </div>
+
 
         {tab !== "text" && (
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
