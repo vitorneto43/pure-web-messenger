@@ -225,33 +225,64 @@ export function MusicPickerSheet({ open, onOpenChange, onSelect, showVolumeMix, 
                   className="pl-9"
                 />
               </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
-                <button
-                  onClick={() => setMood("")}
-                  className={cn(
-                    "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition",
-                    !mood ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border",
-                  )}
-                >
-                  Todos
-                </button>
-                {MOODS.map((m) => (
+
+              {!search.trim() && (
+                <div className="flex gap-1.5 pt-1">
+                  {([
+                    { id: "trending", label: "Em alta", icon: Flame },
+                    { id: "new", label: "Novas", icon: Sparkles },
+                    { id: "mood", label: "Por humor", icon: ListMusic },
+                  ] as const).map((t) => {
+                    const Icon = t.icon;
+                    const active = tab === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTab(t.id)}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition",
+                          active
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/60 border-border text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <Icon className="size-3.5" />
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!search.trim() && tab === "mood" && (
+                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
                   <button
-                    key={m.value}
-                    onClick={() => setMood(m.value === mood ? "" : m.value)}
+                    onClick={() => setMood("")}
                     className={cn(
-                      "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition flex items-center gap-1",
-                      mood === m.value ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border",
+                      "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition",
+                      !mood ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border",
                     )}
                   >
-                    <span>{m.emoji}</span>
-                    {m.label}
+                    Todos
                   </button>
-                ))}
-              </div>
+                  {MOODS.map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => setMood(m.value === mood ? "" : m.value)}
+                      className={cn(
+                        "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition flex items-center gap-1",
+                        mood === m.value ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border",
+                      )}
+                    >
+                      <span>{m.emoji}</span>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 pb-4">
+            <div className="flex-1 overflow-y-auto px-3 pb-4">
               {loading && (
                 <div className="py-8 grid place-items-center">
                   <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -260,49 +291,97 @@ export function MusicPickerSheet({ open, onOpenChange, onSelect, showVolumeMix, 
               {!loading && tracks.length === 0 && (
                 <div className="py-10 text-center text-sm text-muted-foreground space-y-1">
                   <Music className="size-8 mx-auto opacity-50" />
-                  <p>Nenhuma música disponível ainda.</p>
-                  <p className="text-xs">A equipe está montando o catálogo.</p>
+                  <p>Nenhuma música encontrada.</p>
                 </div>
               )}
-              <ul className="space-y-1">
-                {tracks.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/60 transition"
-                  >
-                    <button
-                      onClick={() => previewTrack(t)}
-                      className="relative size-12 rounded-md bg-muted overflow-hidden grid place-items-center shrink-0 ring-1 ring-border"
-                      aria-label={previewingId === t.id ? "Pausar" : "Tocar"}
-                    >
-                      {t.cover_url ? (
-                        <img src={t.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl">{moodEmoji(t.mood)}</span>
+
+              {!loading && tracks.length > 0 && !search.trim() && tab === "trending" && (
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-1 pt-2 pb-1 flex items-center gap-1">
+                  <Flame className="size-3 text-orange-500" /> Top 7 dias · atualizado em tempo real
+                </p>
+              )}
+
+              <ul className="space-y-1.5">
+                {tracks.map((t, idx) => {
+                  const showRank = !search.trim() && tab === "trending";
+                  const showNewBadge = !search.trim() && tab === "new";
+                  const rank = idx + 1;
+                  const isTop3 = showRank && rank <= 3;
+                  return (
+                    <li
+                      key={t.id}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-xl transition",
+                        isTop3
+                          ? "bg-gradient-to-r from-orange-500/10 via-pink-500/5 to-transparent ring-1 ring-orange-500/20"
+                          : "hover:bg-muted/60",
                       )}
-                      <span className="absolute inset-0 grid place-items-center bg-black/40">
-                        {previewingId === t.id ? (
-                          <Pause className="size-5 text-white" />
-                        ) : (
-                          <Play className="size-5 text-white" />
+                    >
+                      {showRank && (
+                        <div
+                          className={cn(
+                            "w-6 text-center font-black tabular-nums shrink-0",
+                            rank === 1 && "text-orange-500 text-xl",
+                            rank === 2 && "text-pink-500 text-lg",
+                            rank === 3 && "text-amber-500 text-base",
+                            rank > 3 && "text-muted-foreground text-sm",
+                          )}
+                        >
+                          {rank}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => previewTrack(t)}
+                        className={cn(
+                          "relative rounded-lg bg-muted overflow-hidden grid place-items-center shrink-0 ring-1 ring-border",
+                          isTop3 ? "size-14" : "size-12",
                         )}
-                      </span>
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{t.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {t.artist} · {formatDuration(t.duration_sec)}
-                      </p>
-                    </div>
-                    <Button size="sm" onClick={() => pickTrack(t)}>
-                      <Check className="size-4 mr-1" /> Usar
-                    </Button>
-                  </li>
-                ))}
+                        aria-label={previewingId === t.id ? "Pausar" : "Tocar"}
+                      >
+                        {t.cover_url ? (
+                          <img src={t.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xl">{moodEmoji(t.mood)}</span>
+                        )}
+                        <span className="absolute inset-0 grid place-items-center bg-black/40">
+                          {previewingId === t.id ? (
+                            <Pause className="size-5 text-white" />
+                          ) : (
+                            <Play className="size-5 text-white" />
+                          )}
+                        </span>
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className={cn("font-medium truncate", isTop3 ? "text-sm" : "text-sm")}>{t.title}</p>
+                          {rank === 1 && showRank && <Flame className="size-3.5 text-orange-500 shrink-0" />}
+                          {showNewBadge && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary text-primary-foreground shrink-0">
+                              Novo
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {t.artist} · {formatDuration(t.duration_sec)}
+                          {showRank && (t.trend_plays ?? 0) > 0 && (
+                            <> · <span className="text-orange-500/90 font-medium">{formatPlays(t.trend_plays)} usos</span></>
+                          )}
+                          {!showRank && (t.play_count ?? 0) > 0 && (
+                            <> · {formatPlays(t.play_count)} usos</>
+                          )}
+                        </p>
+                      </div>
+                      <Button size="sm" onClick={() => pickTrack(t)}>
+                        <Check className="size-4 mr-1" /> Usar
+                      </Button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
         )}
+
 
         {step === "trim" && selectedTrack && (
           <div className="flex-1 flex flex-col overflow-y-auto">
