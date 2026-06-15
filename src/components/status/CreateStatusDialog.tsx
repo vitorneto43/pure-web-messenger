@@ -42,6 +42,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [text, setText] = useState("");
   const [bg, setBg] = useState(BG_OPTIONS[0]);
   const [caption, setCaption] = useState("");
+  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +52,41 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [ctaUrl, setCtaUrl] = useState("");
   const [music, setMusic] = useState<MusicSelection | null>(null);
   const [musicOpen, setMusicOpen] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const aiRun = useServerFn(runAIAssistant);
+
+  const hashtags = Array.from(
+    new Set(
+      `${text} ${caption} ${description}`
+        .toLowerCase()
+        .match(/#([a-z0-9_\u00c0-\u024f]{2,40})/g) ?? [],
+    ),
+  );
+
+  async function suggestCaption() {
+    const seed = (tab === "text" ? text : caption) || description || (file?.name ?? "");
+    if (!seed.trim() && !description.trim()) {
+      toast.info("Escreva algo ou descreva o story para sugerir uma legenda");
+      return;
+    }
+    setSuggesting(true);
+    try {
+      const r = await aiRun({
+        data: { action: "suggest_caption", text: seed.slice(0, 800), context: description.slice(0, 800) },
+      });
+      if (r.ok) {
+        setCaption(r.content.slice(0, 200));
+        toast.success("Legenda sugerida ✨");
+      } else {
+        toast.error(r.error);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha na sugestão");
+    } finally {
+      setSuggesting(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
