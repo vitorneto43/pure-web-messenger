@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const ActionSchema = z.object({
-  action: z.enum(["translate", "suggest_reply", "improve", "summarize"]),
+  action: z.enum(["translate", "suggest_reply", "improve", "summarize", "suggest_caption"]),
   text: z.string().min(1).max(8000).optional(),
   context: z.string().max(12000).optional(),
   targetLanguage: z.string().min(2).max(40).optional(),
