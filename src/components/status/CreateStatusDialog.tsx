@@ -212,6 +212,13 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </DialogDescription>
         </DialogHeader>
 
+        <FeatureTip id="create-status" title="Como funciona o Stories">
+          Seu Stories fica visível por <b>24 horas</b>. Use <b>#hashtags</b> na legenda
+          para alcançar quem ainda não te segue. Conteúdo público pode aparecer na aba "Em alta".
+        </FeatureTip>
+
+
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-3">
             <TabsTrigger value="text"><Type className="size-3.5 mr-1.5" /> {t("status.tabText")}</TabsTrigger>
