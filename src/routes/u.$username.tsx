@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
-import { TrafficInsightsCard } from "@/components/profile/TrafficInsightsCard";
+
 import { UserBadges } from "@/components/badges/UserBadges";
 import { AchievementsCard } from "@/components/badges/AchievementsCard";
 
@@ -312,7 +312,7 @@ function PublicProfile() {
 
       {(!isPrivate || isOwn) && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
 
-      {!isPrivate && <TrafficInsightsCard username={data.username} />}
+      
 
       {isOwn && <PendingRequestsCard ownerId={data.id} />}
     </div>
