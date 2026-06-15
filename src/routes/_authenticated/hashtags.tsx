@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
+import { FeatureTip } from "@/components/FeatureTip";
 
 export const Route = createFileRoute("/_authenticated/hashtags")({
   component: HashtagsPage,
