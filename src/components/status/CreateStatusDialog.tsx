@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
 import { MusicPickerSheet, type MusicSelection } from "./MusicPickerSheet";
 import { moodEmoji } from "@/lib/story-music";
+import { FeatureTip } from "@/components/FeatureTip";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
