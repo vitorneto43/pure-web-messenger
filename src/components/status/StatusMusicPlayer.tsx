@@ -30,7 +30,7 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
         .maybeSingle();
       if (!cancel && data) {
         setTrack(data as MusicTrack);
-        (supabase as any).rpc("increment_music_play_count", { _track_id: trackId }).then(() => {});
+        (supabase as any).rpc("log_music_play", { _track_id: trackId, _source: "story_view" }).then(() => {});
       }
     })();
     return () => {
