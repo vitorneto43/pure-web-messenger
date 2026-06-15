@@ -436,15 +436,20 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             className="max-h-full max-w-full pointer-events-none"
           />
         )}
-        {(current.caption || current.cta_url || (current.kind !== "text" && extractFirstUrl(current.caption))) && (
+        {(current.caption || (current as any).description || current.cta_url || (current.kind !== "text" && extractFirstUrl(current.caption))) && (
           <div className="absolute bottom-4 left-4 right-4 z-20 space-y-2">
             {current.kind !== "text" && (() => {
               const u = extractFirstUrl(current.caption);
               return u ? <StatusLinkPreview url={u} /> : null;
             })()}
             {current.caption && (
-              <p className="text-center text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm">
+              <p className="text-white bg-black/40 backdrop-blur rounded-lg px-3 py-2 text-sm leading-snug">
                 {renderWithLinks(current.caption)}
+              </p>
+            )}
+            {(current as any).description && (
+              <p className="text-white/90 bg-black/30 backdrop-blur rounded-lg px-3 py-2 text-xs leading-snug whitespace-pre-wrap">
+                {renderWithLinks((current as any).description)}
               </p>
             )}
             {current.cta_url && (
@@ -464,6 +469,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             )}
           </div>
         )}
+
 
 
         {/* tap/hold zones — tap navigates, hold pauses (WhatsApp/Instagram behavior) */}
