@@ -265,13 +265,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
                 {t("status.change")}
               </Button>
             )}
-            <Input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder={t("status.captionOptional")}
-              maxLength={200}
-            />
           </TabsContent>
+
 
           <TabsContent value="video" className="space-y-3">
             <input
