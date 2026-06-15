@@ -27,6 +27,7 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -131,6 +132,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHashtagsRoute = AuthenticatedHashtagsRouteImport.update({
+  id: '/hashtags',
+  path: '/hashtags',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDescobrirStatusRoute =
   AuthenticatedDescobrirStatusRouteImport.update({
     id: '/descobrir-status',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
+  '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
+  '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
+  '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/descobrir-status'
+    | '/hashtags'
     | '/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/descobrir-status'
+    | '/hashtags'
     | '/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/chat'
     | '/_authenticated/descobrir-status'
+    | '/_authenticated/hashtags'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
     | '/s/$statusId'
@@ -573,6 +585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/hashtags': {
+      id: '/_authenticated/hashtags'
+      path: '/hashtags'
+      fullPath: '/hashtags'
+      preLoaderRoute: typeof AuthenticatedHashtagsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/descobrir-status': {
       id: '/_authenticated/descobrir-status'
       path: '/descobrir-status'
@@ -688,6 +707,7 @@ const AuthenticatedChatRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
   AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
+  AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -695,6 +715,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
+  AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
