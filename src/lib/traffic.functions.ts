@@ -68,6 +68,61 @@ export const getMyProfileTraffic = createServerFn({ method: "GET" })
   });
 
 /**
+ * Métricas públicas de tráfego de um perfil (por username).
+ * Visível a qualquer usuário autenticado.
+ */
+export const getProfileTrafficByUsername = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { username: string }) => data)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("id, username")
+      .eq("username", data.username)
+      .maybeSingle();
+    if (!prof) {
+      return {
+        profile_views_total: 0,
+        profile_views_unique: 0,
+        profile_page_views: 0,
+        social_link_clicks_total: 0,
+      };
+    }
+
+    const { data: views } = await supabaseAdmin
+      .from("profile_views")
+      .select("viewer_id, viewed_at")
+      .eq("owner_id", prof.id)
+      .gte("viewed_at", since);
+    const total = views?.length ?? 0;
+    const unique = new Set((views ?? []).map((v) => v.viewer_id)).size;
+
+    const { count: pageViews } = await supabaseAdmin
+      .from("analytics_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_name", "public_profile_view")
+      .eq("path", `/u/${prof.username}`)
+      .gte("created_at", since);
+
+    const { count: socialClicks } = await supabaseAdmin
+      .from("analytics_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_name", "social_link_click_on_profile")
+      .contains("metadata", { owner_username: prof.username })
+      .gte("created_at", since);
+
+    return {
+      profile_views_total: total,
+      profile_views_unique: unique,
+      profile_page_views: pageViews ?? 0,
+      social_link_clicks_total: socialClicks ?? 0,
+    };
+  });
+
+/**
  * Tráfego global do site nos últimos 7 dias, agrupado por hora do dia (0–23)
  * no fuso horário do servidor (UTC). Cliente converte se quiser.
  */
