@@ -20,6 +20,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { currentLocale } from "@/i18n";
 import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
+import { FeatureTip } from "@/components/FeatureTip";
 import {
   OBJECTIVES,
   calculateCpm,
