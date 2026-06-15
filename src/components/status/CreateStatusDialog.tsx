@@ -179,6 +179,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
+          description: description.trim().slice(0, 500) || null,
           is_official: isOfficialAccount && isOfficial,
           cta_url,
           cta_label,
