@@ -225,10 +225,6 @@ function HashtagsPage() {
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         )}
-          <div className="p-10 grid place-items-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
 
         {!trending.isLoading && (trending.data ?? []).length === 0 && (
           <div className="p-10 text-center text-sm text-muted-foreground">
