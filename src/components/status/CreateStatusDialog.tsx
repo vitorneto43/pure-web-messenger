@@ -91,7 +91,11 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           content: text.trim().slice(0, 500),
           background: bg,
           is_official: isOfficialAccount && isOfficial,
-        });
+          music_track_id: music?.track.id ?? null,
+          music_start_sec: music?.start_sec ?? 0,
+          music_duration_sec: music?.duration_sec ?? 15,
+          music_volume: music?.volume ?? 0.8,
+        } as any);
         if (error) throw error;
       } else {
         if (!file) {
