@@ -1953,6 +1953,10 @@ export type Database = {
           is_official: boolean
           kind: string
           media_url: string | null
+          music_duration_sec: number
+          music_start_sec: number
+          music_track_id: string | null
+          music_volume: number
           pinned: boolean
           pinned_at: string | null
           user_id: string
@@ -1969,6 +1973,10 @@ export type Database = {
           is_official?: boolean
           kind: string
           media_url?: string | null
+          music_duration_sec?: number
+          music_start_sec?: number
+          music_track_id?: string | null
+          music_volume?: number
           pinned?: boolean
           pinned_at?: string | null
           user_id: string
@@ -1985,9 +1993,78 @@ export type Database = {
           is_official?: boolean
           kind?: string
           media_url?: string | null
+          music_duration_sec?: number
+          music_start_sec?: number
+          music_track_id?: string | null
+          music_volume?: number
           pinned?: boolean
           pinned_at?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statuses_music_track_id_fkey"
+            columns: ["music_track_id"]
+            isOneToOne: false
+            referencedRelation: "story_music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_music_tracks: {
+        Row: {
+          artist: string
+          audio_url: string
+          cover_url: string | null
+          created_at: string
+          duration_sec: number
+          genre: string | null
+          id: string
+          is_active: boolean
+          license: string
+          mood: string
+          play_count: number
+          sort_order: number
+          source: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist: string
+          audio_url: string
+          cover_url?: string | null
+          created_at?: string
+          duration_sec?: number
+          genre?: string | null
+          id?: string
+          is_active?: boolean
+          license?: string
+          mood?: string
+          play_count?: number
+          sort_order?: number
+          source?: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          audio_url?: string
+          cover_url?: string | null
+          created_at?: string
+          duration_sec?: number
+          genre?: string | null
+          id?: string
+          is_active?: boolean
+          license?: string
+          mood?: string
+          play_count?: number
+          sort_order?: number
+          source?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2401,6 +2478,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_music_play_count: {
+        Args: { _track_id: string }
+        Returns: undefined
+      }
       is_conversation_member: {
         Args: { _conv_id: string; _user_id: string }
         Returns: boolean
@@ -2418,6 +2499,33 @@ export type Database = {
       is_wavechat_official_account: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      list_active_music_tracks: {
+        Args: { _mood?: string; _search?: string }
+        Returns: {
+          artist: string
+          audio_url: string
+          cover_url: string | null
+          created_at: string
+          duration_sec: number
+          genre: string | null
+          id: string
+          is_active: boolean
+          license: string
+          mood: string
+          play_count: number
+          sort_order: number
+          source: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "story_music_tracks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       log_compliance_access: {
         Args: {
