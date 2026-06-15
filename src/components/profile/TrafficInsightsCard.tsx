@@ -32,7 +32,7 @@ export function TrafficInsightsCard({ username, title }: { username?: string; ti
     <div className="mt-6 glass border border-border rounded-2xl p-5 sm:p-6">
       <div className="flex items-center gap-2">
         <Activity className="size-5 text-primary" />
-        <h2 className="text-lg font-semibold">Tráfego do seu perfil</h2>
+        <h2 className="text-lg font-semibold">{title ?? (username ? "Tráfego do perfil" : "Tráfego do seu perfil")}</h2>
       </div>
       <p className="text-xs text-muted-foreground mt-1">Últimos 30 dias</p>
 
