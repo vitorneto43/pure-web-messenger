@@ -338,7 +338,3 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     </Dialog>
   );
 }
-      </DialogContent>
-    </Dialog>
-  );
-}
