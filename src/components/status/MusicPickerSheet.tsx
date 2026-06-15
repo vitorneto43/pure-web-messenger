@@ -83,23 +83,40 @@ export function MusicPickerSheet({ open, onOpenChange, onSelect, showVolumeMix, 
     let cancel = false;
     setLoading(true);
     (async () => {
-      const { data, error } = await (supabase as any).rpc("list_active_music_tracks", {
-        _mood: mood || null,
-        _search: search.trim() || null,
-      });
+      const hasSearch = search.trim().length > 0;
+      let data: any = null;
+      let error: any = null;
+      if (hasSearch) {
+        ({ data, error } = await (supabase as any).rpc("list_active_music_tracks", {
+          _mood: null,
+          _search: search.trim(),
+        }));
+      } else if (tab === "trending") {
+        ({ data, error } = await (supabase as any).rpc("trending_music_tracks", {
+          _days: 7,
+          _limit: 50,
+        }));
+      } else if (tab === "new") {
+        ({ data, error } = await (supabase as any).rpc("new_music_tracks", { _limit: 50 }));
+      } else {
+        ({ data, error } = await (supabase as any).rpc("list_active_music_tracks", {
+          _mood: mood || null,
+          _search: null,
+        }));
+      }
       if (cancel) return;
       if (error) {
         console.warn(error);
         setTracks([]);
       } else {
-        setTracks((data ?? []) as MusicTrack[]);
+        setTracks((data ?? []) as TrendingTrack[]);
       }
       setLoading(false);
     })();
     return () => {
       cancel = true;
     };
-  }, [open, step, mood, search]);
+  }, [open, step, tab, mood, search]);
 
   function stopAudio() {
     if (audioRef.current) {
