@@ -51,6 +51,8 @@ function HashtagsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const normalizedSearch = search.trim().toLowerCase().replace(/^#/, "");
 
   const trending = useQuery({
     queryKey: ["trending-hashtags"],
