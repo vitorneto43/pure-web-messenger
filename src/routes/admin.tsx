@@ -50,7 +50,8 @@ import { SecurityTab } from "@/components/admin/SecurityTab";
 import { ShieldAlert, Scale, ShieldCheck, TrendingDown } from "lucide-react";
 import { ConversionFunnelTab } from "@/components/admin/ConversionFunnelTab";
 import { BadgesTab } from "@/components/admin/BadgesTab";
-import { Award } from "lucide-react";
+import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
+import { Award, Music } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
