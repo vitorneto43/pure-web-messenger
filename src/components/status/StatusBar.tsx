@@ -171,7 +171,7 @@ export function StatusBar() {
     <div className="border-b border-border px-3 py-3 bg-sidebar">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Status
+          Stories
         </span>
         {loading && <Loader2 className="size-3 animate-spin text-muted-foreground" />}
       </div>
