@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X } from "lucide-react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X, Sparkles, Hash } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
