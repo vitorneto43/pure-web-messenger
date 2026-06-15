@@ -644,7 +644,8 @@ function AuthPage() {
             ← {t("common.back")}
           </Link>
         </p>
-      </div>
+          </div>
+        </div>
       </div>
       <PublicFooter />
     </div>
