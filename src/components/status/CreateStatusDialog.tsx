@@ -128,6 +128,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           user_id: user.id,
           kind: "text",
           content: text.trim().slice(0, 500),
+          caption: caption.trim().slice(0, 200) || null,
+          description: description.trim().slice(0, 500) || null,
           background: bg,
           is_official: isOfficialAccount && isOfficial,
           music_track_id: music?.track.id ?? null,
