@@ -299,10 +299,45 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
         )}
 
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
+          {music ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-lg">{moodEmoji(music.track.mood)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate leading-tight">{music.track.title}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {music.track.artist} · trecho {music.duration_sec}s
+                </p>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setMusicOpen(true)}>Trocar</Button>
+              <Button size="icon" variant="ghost" onClick={() => setMusic(null)} aria-label="Remover">
+                <X className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="ghost" className="w-full justify-start" onClick={() => setMusicOpen(true)}>
+              <Music className="size-4 mr-2 text-primary" />
+              Adicionar música
+            </Button>
+          )}
+        </div>
+
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
           {isOfficialAccount && isOfficial ? t("status.publishOfficial") : t("status.publish")}
         </Button>
+
+        <MusicPickerSheet
+          open={musicOpen}
+          onOpenChange={setMusicOpen}
+          onSelect={setMusic}
+          showVolumeMix={tab === "video"}
+          initial={music}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
       </DialogContent>
     </Dialog>
   );
