@@ -63,6 +63,29 @@ function HashtagsPage() {
     },
   });
 
+  const searchResults = useQuery({
+    queryKey: ["hashtag-search-preview", normalizedSearch],
+    enabled: normalizedSearch.length > 0,
+    queryFn: async () => {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await (supabase as any)
+        .from("statuses")
+        .select(
+          "id, kind, content, media_url, caption, background, hashtags, created_at, user_id, profiles!inner(username, display_name, avatar_url, visibility)",
+        )
+        .gt("expires_at", nowIso)
+        .eq("profiles.visibility", "public")
+        .order("created_at", { ascending: false })
+        .limit(60);
+      if (error) throw error;
+      const list = (data ?? []) as any[];
+      return list.filter((s) =>
+        Array.isArray(s.hashtags) &&
+        s.hashtags.some((h: string) => (h ?? "").toLowerCase().includes(normalizedSearch)),
+      );
+    },
+  });
+
   return (
     <div className="fixed inset-0 bg-background text-foreground flex flex-col">
       <header className="flex items-center gap-2 px-3 py-3 border-b bg-card/95 backdrop-blur z-10">
