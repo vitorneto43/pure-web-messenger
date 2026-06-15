@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { FeatureTip } from "@/components/FeatureTip";
 
 export type AIAction = "translate" | "suggest_reply" | "improve" | "summarize";
 
