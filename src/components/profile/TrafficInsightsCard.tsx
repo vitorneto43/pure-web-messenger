@@ -2,21 +2,22 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Activity, Eye, Users, MousePointerClick, Link2, TrendingUp, ChevronDown } from "lucide-react";
-import { getMyProfileTraffic, getSiteTrafficByHour } from "@/lib/traffic.functions";
+import { getMyProfileTraffic, getSiteTrafficByHour, getProfileTrafficByUsername } from "@/lib/traffic.functions";
 import { Button } from "@/components/ui/button";
 
 function fmt(n: number) {
   return new Intl.NumberFormat("pt-BR").format(n);
 }
 
-export function TrafficInsightsCard() {
+export function TrafficInsightsCard({ username, title }: { username?: string; title?: string } = {}) {
   const myFn = useServerFn(getMyProfileTraffic);
+  const publicFn = useServerFn(getProfileTrafficByUsername);
   const siteFn = useServerFn(getSiteTrafficByHour);
   const [showPeak, setShowPeak] = useState(false);
 
   const { data: mine, isLoading } = useQuery({
-    queryKey: ["my-profile-traffic"],
-    queryFn: () => myFn(),
+    queryKey: username ? ["profile-traffic", username] : ["my-profile-traffic"],
+    queryFn: () => (username ? publicFn({ data: { username } }) : myFn()),
     staleTime: 60_000,
   });
 
