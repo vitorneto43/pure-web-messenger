@@ -50,7 +50,8 @@ import { SecurityTab } from "@/components/admin/SecurityTab";
 import { ShieldAlert, Scale, ShieldCheck, TrendingDown } from "lucide-react";
 import { ConversionFunnelTab } from "@/components/admin/ConversionFunnelTab";
 import { BadgesTab } from "@/components/admin/BadgesTab";
-import { Award } from "lucide-react";
+import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
+import { Award, Music } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -248,6 +249,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="survey"><ClipboardList className="size-4 mr-1.5" />Pesquisa</TabsTrigger>
               <TabsTrigger value="boosts"><Rocket className="size-4 mr-1.5" />Impulsos</TabsTrigger>
               <TabsTrigger value="status"><FileImage className="size-4 mr-1.5" />Status</TabsTrigger>
+              <TabsTrigger value="music"><Music className="size-4 mr-1.5" />Músicas</TabsTrigger>
               <TabsTrigger value="followers"><Heart className="size-4 mr-1.5" />Seguidores</TabsTrigger>
               <TabsTrigger value="support"><LifeBuoy className="size-4 mr-1.5" />Suporte</TabsTrigger>
               <TabsTrigger value="app-acquisition"><Download className="size-4 mr-1.5" />Aquisição App</TabsTrigger>
@@ -279,6 +281,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="survey" className="mt-4"><OnboardingSurveyTab /></TabsContent>
           <TabsContent value="boosts" className="mt-4"><BoostsTab /></TabsContent>
           <TabsContent value="status" className="mt-4"><StatusAdminTab /></TabsContent>
+          <TabsContent value="music" className="mt-4"><MusicAdminTab /></TabsContent>
           <TabsContent value="followers" className="mt-4"><FollowersAdminTab /></TabsContent>
           <TabsContent value="support" className="mt-4"><SupportTab /></TabsContent>
           <TabsContent value="app-acquisition" className="mt-4"><AppAcquisitionTab /></TabsContent>

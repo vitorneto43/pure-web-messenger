@@ -1,80 +1,110 @@
-# Descoberta de Status Públicos
 
-Transformar o WaveChat de "entrar → não ver nada → sair" para "entrar → ver status → comentar → seguir → conversar".
+## Por que não precisa rebuild
 
-## 1. Banco de dados (1 migração)
+O app Android é um Capacitor WebView que carrega o bundle web servido pelo Lovable. Tudo que for adicionado aqui (banco, Storage, componentes React) chega no celular do usuário na próxima vez que ele abrir o app — sem nova APK/AAB na Play Store.
 
-**`profiles`**: adicionar coluna `is_public_profile boolean default true`. Quando true:
-- Aparece em Descobrir
-- Status `visibility='public'` ficam visíveis para qualquer logado
-- Recebe comentários e seguidores de qualquer um
+A única coisa que exigiria rebuild seria mexer em plugins nativos do Capacitor (não vamos precisar — `<audio>` HTML5 toca MP3 perfeitamente em WebView Android).
 
-**`statuses`**: já tem `visibility`. Garantir índice em `(visibility, created_at desc, expires_at)`.
+---
 
-**RPC `discover_public_statuses(_limit int, _offset int)`** — retorna status públicos para descoberta com mix ponderado:
-- 40% recentes (últimas 24h, visibility='public', autor is_public_profile=true, não-seguidos, não-bloqueados, não próprio)
-- 30% mesma cidade (join profiles_private do viewer)
-- 20% com mais interação (comentários + reações últimos 3 dias)
-- 10% impulsionados (status_boosts ativos)
-- Excluir: já visualizados pelo viewer, autores bloqueados, autores que bloquearam o viewer
-- Para usuário sem seguidos: relaxar filtros, priorizar perfis completos + verificados + fundadores
+## Banco de dados
 
-Retorna: `status_id, user_id, username, display_name, avatar_url, media_url, caption, reactions_count, comments_count, views_count, is_boosted, viewer_already_liked, viewer_already_follows, created_at`.
+Tabela nova `story_music_tracks` (catálogo curado pelo admin):
 
-**RPC `discover_public_profiles(_limit)`** — perfis públicos para "Pessoas para descobrir" (mesma cidade, interesses, novos, ativos). Já existe `discover_people`/`get_people_you_may_know` — estender ou criar nova focada em is_public_profile.
+- `title`, `artist`, `source` (ex: "Pixabay Music", "FMA")
+- `source_url` (link de crédito ao autor)
+- `license` (ex: "CC0", "Pixabay Content License")
+- `audio_url` (Storage público `story-music/`)
+- `cover_url` (capa quadrada opcional)
+- `duration_sec`, `genre`, `mood` (chill, energy, romantic, hype, sad, lofi…)
+- `is_active`, `sort_order`, `play_count`
 
-## 2. Nova rota `src/routes/_authenticated/descobrir-status.tsx`
+E uma nova coluna em `statuses`:
+- `music_track_id` (FK → story_music_tracks)
+- `music_start_sec` (int, default 0) — trecho selecionado
+- `music_duration_sec` (int, default 15)
+- `music_volume` (0.0-1.0, default 0.8) — para stories de vídeo mixar com áudio original
 
-Aba "🌎 Descobrir" acessível pelo `StatusBar` e pela navegação principal. Conteúdo:
+RLS: `story_music_tracks` é leitura pública para `authenticated` (e `anon` p/ link compartilhado de story).
 
-- **Feed vertical full-screen** (mobile-first, similar ao Reels/TikTok mas para status WaveChat)
-- Cada card mostra: mídia/texto do status, avatar + nome + cidade do autor, badges (`UserBadges inline`), tempo
-- Ações em coluna à direita (mobile) ou abaixo (desktop):
-  - ❤️ Curtir (toggle, otimista)
-  - 💬 Comentar → abre bottom sheet com comentários do status
-  - 👤 Ver perfil → `/u/$username`
-  - 💬 Conversar → cria/abre conversa direta
-  - ⭐ Seguir → toggle follow
-- Swipe vertical / scroll snap para próximo
-- Paginação infinita via `useInfiniteQuery` chamando `discover_public_statuses`
-- Registra view via `register_status_view` ao entrar na tela do card
+## Storage
 
-## 3. Privacidade no perfil
+Bucket público `story-music` no Lovable Cloud. Recebe os MP3s (mantemos 128kbps p/ ficar leve, ~1-2MB cada).
 
-Em `src/routes/_authenticated/profile.tsx` adicionar toggle "🔓 Perfil público / 🔒 Perfil privado" que atualiza `profiles.is_public_profile`. Texto explicativo das implicações (aparece em descoberta, recebe comentários/seguidores).
+## Catálogo inicial (~40 faixas)
 
-## 4. Pontos de entrada
+Vou popular usando fontes 100% livres com licenças compatíveis com uso comercial e sem royalties:
 
-- `StatusBar`: adicionar um card de destaque "Descobrir" no início da lista (ícone globo)
-- `EmptyChat` / quando usuário tem 0 conversas: CTA "Descobrir status públicos"
-- Sidebar do chat: link "🌎 Descobrir"
+- **Pixabay Music** (Pixabay Content License — uso comercial livre, sem atribuição obrigatória)
+- **Free Music Archive** — filtro CC0 / CC-BY
+- **YouTube Audio Library** — faixas "no attribution required"
 
-## 5. Algoritmo para novo usuário
+Distribuição sugerida por humor: 8 chill/lofi, 8 happy/upbeat, 6 romantic, 6 hype/trap, 6 cinematic, 6 sad/emotional.
 
-Detectar `following_count = 0` no servidor. Quando zero: a RPC já relaxa filtros automaticamente e prioriza perfis completos, verificados (selo `verified`), fundadores (selo `founder`), criadores (selo de tier alto). Sem necessidade de UI extra.
+Cada faixa entra com crédito ao autor (mesmo quando não obrigatório) — boa prática.
 
-## 6. Detalhes técnicos
+## UX no CreateStatusDialog
 
-- Reutilizar `UserBadges` (selos), `StatusReactions`, comentários do `s.$statusId.tsx`
-- Manter respeito a `user_blocks` e `is_user_restricted`
-- Realtime opcional: apenas update otimista no client (não subscrever para evitar custo)
-- Performance: RPC com `LIMIT/OFFSET`, índices apropriados, mídia lazy-loaded
-- Mobile: scroll-snap-y mandatory, altura `100dvh`
+Novo botão "🎵 Adicionar música" disponível para os 3 tipos (imagem, texto, vídeo):
 
-## Arquivos a criar/editar
+1. **Picker bottom-sheet** com:
+   - Busca por título/artista
+   - Filtro por humor (chips: Chill, Romance, Energia, Triste, Cinemático, Lofi)
+   - Lista com capa, título, artista, duração, botão ▶ preview
+2. **Trim selector** (após escolher a faixa):
+   - Waveform simples (gerada client-side com Web Audio API analisando o MP3)
+   - Slider de 2 pontas pra escolher trecho de 5-30s
+   - Preview tocando o trecho em loop
+   - Para vídeo: slider extra de volume da música vs. áudio original
+3. Salva `music_track_id`, `music_start_sec`, `music_duration_sec`, `music_volume` no status
 
-**Criar:**
-- `supabase/migrations/...` (coluna + índice + RPC `discover_public_statuses` + extensão de `discover_public_profiles`)
-- `src/routes/_authenticated/descobrir-status.tsx`
-- `src/components/status/DiscoverStatusCard.tsx` (card de feed com ações)
-- `src/hooks/use-discover-status.tsx` (`useInfiniteQuery`)
+## UX no StatusViewer
 
-**Editar:**
-- `src/routes/_authenticated/profile.tsx` (toggle público/privado)
-- `src/components/status/StatusBar.tsx` (card "Descobrir" no início)
-- `src/components/chat/EmptyChat.tsx` (CTA descobrir)
-- `src/components/chat/ChatSidebar.tsx` (link descobrir)
+- Tag flutuante no topo "🎵 Título — Artista" (clica → modal de crédito + link p/ fonte)
+- `<audio>` HTML5 tocando o trecho escolhido em loop, sincronizado com o tempo do story
+- Para stories de vídeo: mixa via `volume` no `<video>` (áudio original) + `<audio>` (música)
+- Botão mute global (lembra preferência em `localStorage`)
+- Pré-carrega áudio do próximo story p/ transição suave
 
-## Resultado
+## Admin
 
-Novos usuários abrem o app e imediatamente veem um feed de status reais de pessoas próximas/relevantes, podendo curtir/comentar/seguir/conversar em 1 toque — sem precisar saber quem seguir antes.
+Nova aba "Músicas" no painel admin:
+- Listar/buscar/ativar/desativar faixas
+- Upload de MP3 + capa
+- Editar metadados, humor, ordem
+- Ver `play_count` (quais bombam)
+
+## Tracking
+
+Eventos novos via `track()`:
+- `music_picker_opened`
+- `music_track_previewed` { track_id }
+- `music_attached_to_story` { track_id, mood }
+- `story_music_played` { track_id, story_id }
+
+Permite o admin ver quais músicas geram mais engajamento.
+
+## Detalhes técnicos
+
+- Waveform: `AudioContext.decodeAudioData` → samples → render em `<canvas>`. Cacheado em memória.
+- Loop preciso: `audio.addEventListener('timeupdate', …)` resetando para `music_start_sec` quando passa de `start + duration`.
+- Performance: MP3s 128kbps já são pequenos; servidos via CDN do Lovable. Preload lazy.
+- Acessibilidade: respeita `prefers-reduced-motion` desativando autoplay; mute por padrão até primeiro tap (políticas de autoplay).
+
+## Ordem de implementação
+
+1. Migration: tabela `story_music_tracks` + colunas em `statuses` + RLS + GRANTs
+2. Bucket `story-music` público
+3. Seed das ~40 faixas (faço upload + INSERT)
+4. Componente `<MusicPickerSheet>` + `<TrimSelector>`
+5. Integração no `CreateStatusDialog`
+6. Player no `StatusViewer` (com mix para vídeo)
+7. Aba admin "Músicas"
+8. Tracking de eventos
+
+## O que NÃO faz parte deste plano
+
+- Captação automatizada de catálogo via API (você escolheu catálogo pré-carregado)
+- Sincronizar batida com efeitos visuais (pode vir depois)
+- Letras/karaokê
+- Música em chat (foco é stories)

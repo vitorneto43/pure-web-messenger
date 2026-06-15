@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Loader2, ImagePlus, Type, Video, BadgeCheck } from "lucide-react";
+import { Loader2, ImagePlus, Type, Video, BadgeCheck, Music, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
+import { MusicPickerSheet, type MusicSelection } from "./MusicPickerSheet";
+import { moodEmoji } from "@/lib/story-music";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -45,6 +47,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [isOfficial, setIsOfficial] = useState(false);
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
+  const [music, setMusic] = useState<MusicSelection | null>(null);
+  const [musicOpen, setMusicOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -61,6 +65,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setPreview(null);
     setCtaLabel("");
     setCtaUrl("");
+    setMusic(null);
     setTab("text");
   }
 
@@ -86,7 +91,11 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           content: text.trim().slice(0, 500),
           background: bg,
           is_official: isOfficialAccount && isOfficial,
-        });
+          music_track_id: music?.track.id ?? null,
+          music_start_sec: music?.start_sec ?? 0,
+          music_duration_sec: music?.duration_sec ?? 15,
+          music_volume: music?.volume ?? 0.8,
+        } as any);
         if (error) throw error;
       } else {
         if (!file) {
@@ -132,6 +141,10 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           is_official: isOfficialAccount && isOfficial,
           cta_url,
           cta_label,
+          music_track_id: music?.track.id ?? null,
+          music_start_sec: music?.start_sec ?? 0,
+          music_duration_sec: music?.duration_sec ?? 15,
+          music_volume: music?.volume ?? 0.8,
         } as any);
         if (error) throw error;
       }
@@ -286,10 +299,41 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
         )}
 
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
+          {music ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-lg">{moodEmoji(music.track.mood)}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate leading-tight">{music.track.title}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {music.track.artist} · trecho {music.duration_sec}s
+                </p>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setMusicOpen(true)}>Trocar</Button>
+              <Button size="icon" variant="ghost" onClick={() => setMusic(null)} aria-label="Remover">
+                <X className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="ghost" className="w-full justify-start" onClick={() => setMusicOpen(true)}>
+              <Music className="size-4 mr-2 text-primary" />
+              Adicionar música
+            </Button>
+          )}
+        </div>
+
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
           {isOfficialAccount && isOfficial ? t("status.publishOfficial") : t("status.publish")}
         </Button>
+
+        <MusicPickerSheet
+          open={musicOpen}
+          onOpenChange={setMusicOpen}
+          onSelect={setMusic}
+          showVolumeMix={tab === "video"}
+          initial={music}
+        />
       </DialogContent>
     </Dialog>
   );
