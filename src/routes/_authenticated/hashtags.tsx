@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
+import { FeatureTip } from "@/components/FeatureTip";
 
 export const Route = createFileRoute("/_authenticated/hashtags")({
   component: HashtagsPage,
@@ -81,6 +82,13 @@ function HashtagsPage() {
       </header>
 
       <div className="flex-1 overflow-y-auto">
+        <div className="p-3">
+          <FeatureTip id="hashtags-page" title="Como funciona o Em alta">
+            Toque numa hashtag para ver quem mais falou do tema. Use <b>"Puxar assunto"</b>
+            para começar uma conversa já com contexto. Apenas stories <b>públicos</b> aparecem aqui.
+          </FeatureTip>
+        </div>
+
         {trending.isLoading && (
           <div className="p-10 grid place-items-center">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />

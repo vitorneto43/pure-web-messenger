@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { FeatureTip } from "@/components/FeatureTip";
 
 export type AIAction = "translate" | "suggest_reply" | "improve" | "summarize";
 
@@ -106,6 +107,13 @@ export function AIAssistantDialog({
             <Sparkles className="size-3" /> {t("chat.generatedByAI")}
           </DialogDescription>
         </DialogHeader>
+
+        <FeatureTip id="ai-assistant" title="Como usar a IA">
+          A IA te ajuda a <b>responder</b>, <b>resumir</b>, <b>traduzir</b> e <b>sugerir</b> mensagens.
+          O conteúdo é gerado automaticamente — revise antes de enviar. Não compartilhe dados sensíveis.
+        </FeatureTip>
+
+
 
         <div className="min-h-[100px] rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap break-words">
           {loading && (

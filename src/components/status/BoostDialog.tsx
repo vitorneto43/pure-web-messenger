@@ -20,6 +20,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { currentLocale } from "@/i18n";
 import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
+import { FeatureTip } from "@/components/FeatureTip";
 import {
   OBJECTIVES,
   calculateCpm,
@@ -272,6 +273,13 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
             </DialogTitle>
             <DialogDescription>{t("boost.description")}</DialogDescription>
           </DialogHeader>
+
+          <FeatureTip id="boost-status" title="Como funciona o Impulso" className="mt-3">
+            O impulso entrega seu Stories para mais pessoas fora do seu círculo. O valor
+            é cobrado <b>uma única vez</b> e o alcance é estimado — não há cobrança recorrente.
+          </FeatureTip>
+
+
 
           {!clientSecret ? (
             <div className="mt-4 space-y-3">

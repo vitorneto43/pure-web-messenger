@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { FeatureTip } from "@/components/FeatureTip";
 import { encodePixMessage } from "@/lib/pix";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -83,7 +84,13 @@ export function SendPixDialog({ open, onOpenChange, onSend }: Props) {
           </DialogDescription>
         </DialogHeader>
 
+        <FeatureTip id="send-pix" title="Pix com segurança">
+          Confira a <b>chave</b> e o <b>nome do recebedor</b> antes de enviar. O WaveChat
+          nunca pede senha do banco. Nunca envie Pix para desconhecidos sob pressão.
+        </FeatureTip>
+
         <div className="space-y-3">
+
           <div>
             <Label>{t("chat.receiverName")}</Label>
             <Input

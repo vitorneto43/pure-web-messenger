@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
 import { MusicPickerSheet, type MusicSelection } from "./MusicPickerSheet";
 import { moodEmoji } from "@/lib/story-music";
+import { FeatureTip } from "@/components/FeatureTip";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -210,6 +211,13 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
             {t("status.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
+
+        <FeatureTip id="create-status" title="Como funciona o Stories">
+          Seu Stories fica visível por <b>24 horas</b>. Use <b>#hashtags</b> na legenda
+          para alcançar quem ainda não te segue. Conteúdo público pode aparecer na aba "Em alta".
+        </FeatureTip>
+
+
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-3">
