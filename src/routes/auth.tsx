@@ -255,7 +255,7 @@ function AuthPage() {
   const features = [
     { icon: MessageCircle, label: "Chat privado" },
     { icon: Users, label: "Grupos" },
-    { icon: Camera, label: "Status" },
+    { icon: Camera, label: "Stories" },
     { icon: MessageSquare, label: "Comentários" },
     { icon: UserPlus, label: "Seguidores" },
     { icon: Globe2, label: "Pessoas para conhecer" },
