@@ -47,6 +47,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [isOfficial, setIsOfficial] = useState(false);
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
+  const [music, setMusic] = useState<MusicSelection | null>(null);
+  const [musicOpen, setMusicOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
