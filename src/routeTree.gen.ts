@@ -33,6 +33,7 @@ import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/c
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
+import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -163,6 +164,11 @@ const ApiPublicStatusPushRoute = ApiPublicStatusPushRouteImport.update({
   path: '/api/public/status-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedHashtagTagRoute = AuthenticatedHashtagTagRouteImport.update({
+  id: '/hashtag/$tag',
+  path: '/hashtag/$tag',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedChatConversationIdRoute =
   AuthenticatedChatConversationIdRouteImport.update({
     id: '/$conversationId',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -309,6 +317,7 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
+  '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/s/$statusId'
     | '/u/$username'
     | '/chat/$conversationId'
+    | '/hashtag/$tag'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/'
     | '/chat/$conversationId'
+    | '/hashtag/$tag'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
+    | '/_authenticated/hashtag/$tag'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -627,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStatusPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/hashtag/$tag': {
+      id: '/_authenticated/hashtag/$tag'
+      path: '/hashtag/$tag'
+      fullPath: '/hashtag/$tag'
+      preLoaderRoute: typeof AuthenticatedHashtagTagRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/chat/$conversationId': {
       id: '/_authenticated/chat/$conversationId'
       path: '/$conversationId'
@@ -710,6 +729,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -718,6 +738,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Hash, Loader2, MessageSquare, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, Hash, Loader2, MessageSquare, Search, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -50,6 +51,8 @@ function HashtagsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const normalizedSearch = search.trim().toLowerCase().replace(/^#/, "");
 
   const trending = useQuery({
     queryKey: ["trending-hashtags"],
@@ -81,11 +84,41 @@ function HashtagsPage() {
         </div>
       </header>
 
+      <div className="px-3 pt-3 pb-2 border-b bg-card/60">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (normalizedSearch) {
+              navigate({ to: "/hashtag/$tag", params: { tag: normalizedSearch } });
+            }
+          }}
+          className="relative"
+        >
+          <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Pesquisar hashtag (ex.: recife, viagem)"
+            className="pl-9 pr-24 h-10"
+          />
+          {normalizedSearch && (
+            <Button
+              type="submit"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 gap-1"
+            >
+              Ver #{normalizedSearch}
+              <ArrowRight className="size-3.5" />
+            </Button>
+          )}
+        </form>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         <div className="p-3">
           <FeatureTip id="hashtags-page" title="Como funciona o Em alta">
-            Toque numa hashtag para ver quem mais falou do tema. Use <b>"Puxar assunto"</b>
-            para começar uma conversa já com contexto. Apenas stories <b>públicos</b> aparecem aqui.
+            Pesquise uma hashtag para ver <b>todas</b> as publicações com ela, ou toque numa
+            hashtag em alta para descobrir pessoas que falaram do tema. Apenas stories <b>públicos</b> aparecem aqui.
           </FeatureTip>
         </div>
 
@@ -102,42 +135,74 @@ function HashtagsPage() {
         )}
 
         <ul className="divide-y">
-          {(trending.data ?? []).map((t, i) => (
+          {(trending.data ?? [])
+            .filter((t) => !normalizedSearch || t.tag.toLowerCase().includes(normalizedSearch))
+            .map((t, i) => (
             <li key={t.tag}>
-              <button
-                onClick={() => setActiveTag(activeTag === t.tag ? null : t.tag)}
+              <div
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition text-left",
+                  "w-full flex items-center gap-2 px-4 py-3 hover:bg-muted/50 transition",
                   activeTag === t.tag && "bg-muted/60",
                 )}
               >
-                <span
-                  className={cn(
-                    "size-9 rounded-full grid place-items-center text-sm font-bold shrink-0",
-                    i < 3 ? "bg-gradient-to-br from-primary to-pink-500 text-white" : "bg-muted text-foreground/70",
-                  )}
+                <button
+                  onClick={() => setActiveTag(activeTag === t.tag ? null : t.tag)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 font-semibold truncate">
-                    <Hash className="size-4 text-primary shrink-0" />
-                    <span className="truncate">{t.tag}</span>
+                  <span
+                    className={cn(
+                      "size-9 rounded-full grid place-items-center text-sm font-bold shrink-0",
+                      i < 3 ? "bg-gradient-to-br from-primary to-pink-500 text-white" : "bg-muted text-foreground/70",
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 font-semibold truncate">
+                      <Hash className="size-4 text-primary shrink-0" />
+                      <span className="truncate">{t.tag}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-0.5">
+                      <span>{t.uses_count} {t.uses_count === 1 ? "story" : "stories"}</span>
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3" /> {t.authors_count}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-3 mt-0.5">
-                    <span>{t.uses_count} {t.uses_count === 1 ? "story" : "stories"}</span>
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3" /> {t.authors_count}
-                    </span>
-                  </div>
-                </div>
-              </button>
+                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate({ to: "/hashtag/$tag", params: { tag: t.tag } })}
+                  className="shrink-0 gap-1"
+                >
+                  Ver
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </div>
 
               {activeTag === t.tag && user && (
                 <HashtagPeopleList tag={t.tag} meId={user.id} />
               )}
             </li>
           ))}
+
+          {!trending.isLoading && normalizedSearch &&
+            !(trending.data ?? []).some((t) => t.tag.toLowerCase().includes(normalizedSearch)) && (
+              <li className="px-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Nenhuma hashtag em alta corresponde a "{normalizedSearch}".
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => navigate({ to: "/hashtag/$tag", params: { tag: normalizedSearch } })}
+                  className="gap-1"
+                >
+                  Ver publicações com #{normalizedSearch}
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </li>
+            )}
         </ul>
       </div>
     </div>
