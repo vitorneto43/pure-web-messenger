@@ -298,7 +298,7 @@ function PublicProfile() {
               <div className="mt-6">
                 <span className="text-xs text-muted-foreground">Redes sociais</span>
                 <div className="mt-2">
-                  <SocialLinksDisplay links={data.social_links} />
+                  <SocialLinksDisplay links={data.social_links} ownerUsername={data.username} />
                 </div>
               </div>
             )}
