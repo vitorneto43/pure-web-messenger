@@ -428,7 +428,7 @@ export function MusicPickerSheet({ open, onOpenChange, onSelect, showVolumeMix, 
                 </div>
                 <Slider
                   min={5}
-                  max={Math.min(30, Math.max(5, selectedTrack.duration_sec - startSec))}
+                  max={Math.min(60, Math.max(5, selectedTrack.duration_sec - startSec))}
                   step={1}
                   value={[durationSec]}
                   onValueChange={(v) => setDurationSec(v[0])}
