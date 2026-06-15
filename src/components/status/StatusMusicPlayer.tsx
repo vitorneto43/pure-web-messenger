@@ -59,8 +59,9 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
     a.volume = muted ? 0 : volume;
     a.muted = muted;
     a.currentTime = startSec;
-    a.playsInline = true as any;
+    (a as any).playsInline = true;
     (a as any).webkitPlaysInline = true;
+    a.setAttribute("playsinline", "");
     audioRef.current = a;
     const onTime = () => {
       if (a.currentTime >= startSec + durationSec) a.currentTime = startSec;
