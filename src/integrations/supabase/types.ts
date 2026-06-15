@@ -2406,8 +2406,10 @@ export type Database = {
           created_at: string
           cta_label: string
           cta_url: string
+          description: string
           display_name: string
           expires_at: string
+          hashtags: string[]
           is_boosted: boolean
           is_official: boolean
           kind: string
