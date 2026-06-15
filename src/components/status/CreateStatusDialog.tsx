@@ -98,6 +98,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   function reset() {
     setText("");
     setCaption("");
+    setDescription("");
     setFile(null);
     setPreview(null);
     setCtaLabel("");
@@ -105,6 +106,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setMusic(null);
     setTab("text");
   }
+
 
   function pickFile(f: File | null) {
     setFile(f);
