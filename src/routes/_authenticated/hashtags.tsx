@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Hash, Loader2, MessageSquare, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, Hash, Loader2, MessageSquare, Search, TrendingUp, Users, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
