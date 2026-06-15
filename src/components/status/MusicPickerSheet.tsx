@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Music, Play, Pause, Search, Check, X, Volume2 } from "lucide-react";
+import { Loader2, Music, Play, Pause, Search, Check, X, Volume2, Flame, Sparkles, ListMusic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
