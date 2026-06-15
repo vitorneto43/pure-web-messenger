@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
 import { StatusReactions } from "./StatusReactions";
 import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
+import { StatusMusicPlayer } from "./StatusMusicPlayer";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
 function renderWithLinks(text: string) {
@@ -394,6 +395,15 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
 
       {/* content */}
       <div className="flex-1 relative grid place-items-center overflow-hidden select-none">
+        {(current as any).music_track_id && (
+          <StatusMusicPlayer
+            trackId={(current as any).music_track_id}
+            startSec={(current as any).music_start_sec ?? 0}
+            durationSec={(current as any).music_duration_sec ?? 15}
+            volume={Number((current as any).music_volume ?? 0.8)}
+            paused={paused || adOpen || boostOpen}
+          />
+        )}
         {current.kind === "text" && (
           <div
             className="w-full h-full grid place-items-center p-8 text-center text-white text-2xl font-semibold overflow-y-auto"
