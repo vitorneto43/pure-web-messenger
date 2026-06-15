@@ -65,6 +65,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setPreview(null);
     setCtaLabel("");
     setCtaUrl("");
+    setMusic(null);
     setTab("text");
   }
 
