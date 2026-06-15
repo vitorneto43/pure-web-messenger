@@ -25,6 +25,7 @@ import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
 import { InviteRewardsCard } from "@/components/InviteRewardsCard";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
+import { TrafficInsightsCard } from "@/components/profile/TrafficInsightsCard";
 import { BANKS } from "@/lib/banks";
 import { SocialLinksEditor } from "@/components/profile/SocialLinks";
 import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
@@ -480,6 +481,7 @@ function ProfilePage() {
 
       <div className="mt-6">
         {user?.id && <ProfileStatusArchive userId={user.id} isOwner={true} />}
+        <TrafficInsightsCard />
         <InviteRewardsCard />
         <BoostHistory />
       </div>

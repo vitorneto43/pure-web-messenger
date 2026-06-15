@@ -1,6 +1,7 @@
 import { SOCIAL_PLATFORMS, SOCIAL_BY_ID, iconUrl, type SocialLinks, type SocialPlatformId } from "@/lib/social-links";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { track } from "@/lib/track";
 
 type Props = {
   value: SocialLinks;
@@ -53,7 +54,7 @@ export function SocialLinksEditor({ value, onChange }: Props) {
 }
 
 /** Exibe os links como botões clicáveis com a logo da plataforma. */
-export function SocialLinksDisplay({ links }: { links: SocialLinks }) {
+export function SocialLinksDisplay({ links, ownerUsername }: { links: SocialLinks; ownerUsername?: string }) {
   const entries = SOCIAL_PLATFORMS.map((p) => {
     const raw = links[p.id];
     if (!raw) return null;
@@ -72,6 +73,12 @@ export function SocialLinksDisplay({ links }: { links: SocialLinks }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            void track("social_link_click", { platform: platform.id });
+            if (ownerUsername) {
+              void track("social_link_click_on_profile", { platform: platform.id, owner_username: ownerUsername });
+            }
+          }}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted hover:bg-muted/70 border border-border text-xs font-medium transition-colors"
           title={platform.label}
         >
