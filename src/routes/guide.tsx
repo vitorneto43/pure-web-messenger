@@ -19,6 +19,15 @@ import {
   Smartphone,
   ShieldCheck,
   HelpCircle,
+  Lock,
+  EyeOff,
+  AlertTriangle,
+  KeyRound,
+  UserX,
+  Flag,
+  Fingerprint,
+  WifiOff,
+  Zap,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
