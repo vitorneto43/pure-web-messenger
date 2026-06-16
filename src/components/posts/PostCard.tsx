@@ -119,9 +119,18 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
   const isMedia = post.kind !== "text" && post.media_url;
 
+  if (hidden) return null;
+
   return (
     <article className="border-b border-border bg-background">
       {GateDialog}
+      <ReportContentDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetType="post"
+        targetId={post.post_id}
+        reportedUserId={post.user_id}
+      />
       <header className="flex items-center gap-3 p-3">
         <button onClick={() => navigate({ to: "/u/$username", params: { username: post.username } })}>
           <Avatar className="size-10">
@@ -141,15 +150,26 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
             {post.is_boosted && <span className="ml-1 text-[10px] uppercase font-bold text-pink-500">Patrocinado</span>}
           </div>
         </div>
-        {isOwner && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreVertical className="size-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreVertical className="size-4" /></Button></DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isOwner ? (
               <DropdownMenuItem onClick={remove} className="text-destructive"><Trash2 className="size-4 mr-2" />Apagar post</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => gate("react", () => setReportOpen(true))}>
+                  <Flag className="size-4 mr-2" />Denunciar post
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleBlock} className="text-destructive">
+                  <Ban className="size-4 mr-2" />Bloquear @{post.username}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
+
 
       {/* Body */}
       {post.kind === "text" && (
