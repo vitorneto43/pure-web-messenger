@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 
 interface Msg {
   id: string;
@@ -15,6 +18,7 @@ interface Msg {
 }
 
 export function LiveChat({ liveId, userId }: { liveId: string; userId: string | null }) {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -79,13 +83,39 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
     setBusy(false);
   }
 
+  async function chatWith(uid: string) {
+    if (!userId) {
+      toast.error("Entre na conta para conversar");
+      return;
+    }
+    if (uid === userId) return;
+    try {
+      const id = await getOrCreateDirectConversation(userId, uid);
+      navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao abrir chat");
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 text-sm">
         {messages.map((m) => (
-          <div key={m.id} className="text-white drop-shadow leading-tight">
-            <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
-            <span className="opacity-95">{m.body}</span>
+          <div key={m.id} className="text-white drop-shadow leading-tight flex items-start gap-1.5">
+            <div className="flex-1 min-w-0">
+              <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
+              <span className="opacity-95 break-words">{m.body}</span>
+            </div>
+            {userId && m.user_id !== userId && (
+              <button
+                type="button"
+                onClick={() => chatWith(m.user_id)}
+                className="shrink-0 p-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition"
+                aria-label={`Conversar com ${m.display_name || m.username || "usuário"}`}
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-white" />
+              </button>
+            )}
           </div>
         ))}
       </div>
