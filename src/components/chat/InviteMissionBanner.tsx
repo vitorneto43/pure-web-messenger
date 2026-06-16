@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Rocket, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { InviteDialog } from "@/components/InviteDialog";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 
 interface Stats {
   invited: number;
@@ -11,6 +13,8 @@ interface Stats {
 }
 
 export function InviteMissionBanner() {
+  const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -19,11 +23,15 @@ export function InviteMissionBanner() {
     if (typeof window !== "undefined") {
       setDismissed(window.localStorage.getItem("invite-mission-dismissed") === "1");
     }
+    if (!user) {
+      setStats({ invited: 0, invited_credited: 0, invited_until_next_reward: 2, pending_views: 0 });
+      return;
+    }
     (async () => {
       const { data } = await (supabase as any).rpc("get_invite_stats");
       if (data) setStats(data as Stats);
     })();
-  }, []);
+  }, [user?.id]);
 
   if (!stats || dismissed) return null;
 
@@ -38,7 +46,7 @@ export function InviteMissionBanner() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => gate("default", () => setOpen(true))}
         className="mx-3 mt-3 w-[calc(100%-1.5rem)] rounded-2xl border border-pink-500/30 bg-gradient-to-r from-pink-500/15 via-purple-500/10 to-amber-500/15 p-3 text-left transition hover:from-pink-500/25 hover:to-amber-500/25 active:scale-[0.99]"
       >
         <div className="flex items-center gap-3">
@@ -91,6 +99,7 @@ export function InviteMissionBanner() {
       </button>
 
       <InviteDialog open={open} onOpenChange={setOpen} />
+      {GateDialog}
     </>
   );
 }

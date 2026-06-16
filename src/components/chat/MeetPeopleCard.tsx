@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
@@ -22,12 +23,13 @@ interface Person {
 
 export function MeetPeopleCard() {
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const [people, setPeople] = useState<Person[] | null>(null);
   const [starting, setStarting] = useState<string | null>(null);
 
   async function load() {
-    const { data } = await (supabase as any).rpc("discover_people", { _limit: 12 });
+    const { data } = await (supabase as any).rpc(user ? "discover_people" : "public_discover_people", { _limit: 12 });
     setPeople(((data as Person[]) ?? []).filter((p) => !!p.username));
   }
 
@@ -36,6 +38,10 @@ export function MeetPeopleCard() {
   }, [user?.id]);
 
   async function startChat(otherId: string) {
+    if (!user) {
+      gate("message", () => undefined);
+      return;
+    }
     if (!user || otherId === user.id) return;
     setStarting(otherId);
     try {
@@ -59,6 +65,7 @@ export function MeetPeopleCard() {
 
   return (
     <div className="mx-3 mt-2 rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-accent/5 to-transparent p-3">
+      {GateDialog}
       <div className="flex items-center gap-2 mb-2">
         <div className="size-7 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
           <Sparkles className="size-3.5 text-primary-foreground" />
