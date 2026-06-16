@@ -1,48 +1,90 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
-/**
- * Anuncia globalmente, via Realtime Presence, quando outros usuários ficam online.
- * Mostra um toast "Fulano entrou agora" com link para o perfil.
- */
-export function useOnlineAnnouncements() {
+export interface OnlineUser {
+  user_id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  visibility: string | null;
+  online_at: string;
+}
+
+interface OnlinePresenceContextValue {
+  users: OnlineUser[]; // all currently online (excludes self)
+  publicUsers: OnlineUser[]; // online users whose profile is public (visible to all)
+  count: number; // public visible count
+  isOnline: (userId: string) => boolean;
+}
+
+const OnlinePresenceContext = createContext<OnlinePresenceContextValue>({
+  users: [],
+  publicUsers: [],
+  count: 0,
+  isOnline: () => false,
+});
+
+export function OnlinePresenceProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const [users, setUsers] = useState<OnlineUser[]>([]);
   const announcedRef = useRef<Set<string>>(new Set());
   const bootRef = useRef(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setUsers([]);
+      return;
+    }
     let cancelled = false;
     let cleanup: (() => void) | null = null;
 
     (async () => {
-      // Busca perfil para tracking
       const { data: prof } = await supabase
         .from("profiles")
         .select("username, display_name, avatar_url, visibility")
         .eq("id", user.id)
         .maybeSingle();
-
       if (cancelled) return;
 
       const channel = supabase.channel("online-users", {
         config: { presence: { key: user.id } },
       });
 
+      const syncList = () => {
+        const state = channel.presenceState() as Record<string, any[]>;
+        const list: OnlineUser[] = [];
+        for (const [key, presences] of Object.entries(state)) {
+          if (key === user.id) continue;
+          const p = presences?.[0];
+          if (!p) continue;
+          list.push({
+            user_id: key,
+            username: p.username ?? null,
+            display_name: p.display_name ?? null,
+            avatar_url: p.avatar_url ?? null,
+            visibility: p.visibility ?? "public",
+            online_at: p.online_at ?? new Date().toISOString(),
+          });
+        }
+        list.sort((a, b) => (b.online_at || "").localeCompare(a.online_at || ""));
+        setUsers(list);
+      };
+
       channel
         .on("presence", { event: "sync" }, () => {
-          // No primeiro sync, registra todos como conhecidos para não soltar enxurrada de toasts
           if (bootRef.current) {
             const state = channel.presenceState() as Record<string, any[]>;
             for (const id of Object.keys(state)) announcedRef.current.add(id);
             bootRef.current = false;
           }
+          syncList();
         })
         .on("presence", { event: "join" }, ({ key, newPresences }) => {
+          syncList();
           if (bootRef.current) return;
           if (key === user.id) return;
           if (announcedRef.current.has(key)) return;
@@ -69,6 +111,7 @@ export function useOnlineAnnouncements() {
         })
         .on("presence", { event: "leave" }, ({ key }) => {
           announcedRef.current.delete(key);
+          syncList();
         })
         .subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
@@ -93,6 +136,22 @@ export function useOnlineAnnouncements() {
       cleanup?.();
       bootRef.current = true;
       announcedRef.current.clear();
+      setUsers([]);
     };
   }, [user?.id]);
+
+  const publicUsers = users.filter((u) => u.visibility !== "private");
+  const onlineIds = new Set(users.map((u) => u.user_id));
+  const value: OnlinePresenceContextValue = {
+    users,
+    publicUsers,
+    count: publicUsers.length,
+    isOnline: (id: string) => onlineIds.has(id),
+  };
+
+  return <OnlinePresenceContext.Provider value={value}>{children}</OnlinePresenceContext.Provider>;
+}
+
+export function useOnlinePresence() {
+  return useContext(OnlinePresenceContext);
 }
