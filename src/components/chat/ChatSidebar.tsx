@@ -379,6 +379,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         </div>
         <div className="flex items-center gap-1">
           <Button size="icon" variant="ghost" className="rounded-full" asChild>
+            <Link to="/posts" title="Posts">
+              <Newspaper className="size-4" />
+            </Link>
+          </Button>
+          <Button size="icon" variant="ghost" className="rounded-full" asChild>
             <Link to="/diretrizes" title={t("nav.guidelines")}>
               <BookOpen className="size-4" />
             </Link>
@@ -429,13 +434,16 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             className="pl-9 bg-sidebar-hover border-transparent focus-visible:bg-card"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             onClick={() => gate("message", () => setNewChatOpen(true))}
             size="sm"
             className="flex-1 rounded-full"
           >
             <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
+          </Button>
+          <Button asChild size="sm" variant="secondary" className="rounded-full">
+            <Link to="/posts"><Newspaper className="size-4 mr-1.5" />Posts</Link>
           </Button>
           <Button
             onClick={() => gate("join_group", () => setNewGroupOpen(true))}
