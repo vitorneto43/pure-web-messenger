@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ interface ConversationItem {
 export function ChatSidebar({ activeConversationId }: { activeConversationId?: string }) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -77,11 +79,15 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
-    requestBrowserNotificationPermission();
-  }, []);
+    if (user) requestBrowserNotificationPermission();
+  }, [user?.id]);
 
   async function loadConversations() {
-    if (!user) return;
+    if (!user) {
+      setConversations([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     // 1. all memberships of mine
     const { data: members } = await supabase
@@ -199,7 +205,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     let cancelled = false;
     setSearchingUsers(true);
     const handle = setTimeout(async () => {
-      const { data } = await supabase.rpc("search_users", { q });
+      const { data } = await (supabase as any).rpc(user ? "search_users" : "public_search_users", { q });
       if (cancelled) return;
       setUserResults((data as any[]) ?? []);
       setSearchingUsers(false);
@@ -211,6 +217,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   }, [search]);
 
   async function openDirectWith(otherUserId: string) {
+    if (!user) {
+      gate("message", () => undefined);
+      return;
+    }
     if (!user || startingChat) return;
     if (otherUserId === user.id) {
       toast.error(t("chat.cannotChatWithSelf"));
@@ -298,6 +308,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   }, [user?.id, activeConversationId]);
 
   function inviteFriend() {
+    if (!user) {
+      gate("default", () => undefined);
+      return;
+    }
     setInviteOpen(true);
   }
 
