@@ -1618,6 +1618,7 @@ export type Database = {
           music_track_id: string | null
           music_volume: number | null
           pinned: boolean
+          thumbnail_url: string | null
           updated_at: string
           user_id: string
           visibility: string
@@ -1636,6 +1637,7 @@ export type Database = {
           music_track_id?: string | null
           music_volume?: number | null
           pinned?: boolean
+          thumbnail_url?: string | null
           updated_at?: string
           user_id: string
           visibility?: string
@@ -1654,6 +1656,7 @@ export type Database = {
           music_track_id?: string | null
           music_volume?: number | null
           pinned?: boolean
+          thumbnail_url?: string | null
           updated_at?: string
           user_id?: string
           visibility?: string
@@ -2806,6 +2809,7 @@ export type Database = {
           music_track_id: string
           post_id: string
           reactions_count: number
+          thumbnail_url: string
           user_id: string
           username: string
           viewer_already_liked: boolean
@@ -2905,6 +2909,7 @@ export type Database = {
           music_track_id: string
           post_id: string
           reactions_count: number
+          thumbnail_url: string
           user_id: string
           username: string
           views_count: number
