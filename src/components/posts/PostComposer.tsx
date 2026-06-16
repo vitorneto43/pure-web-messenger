@@ -187,7 +187,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
                   {kind === "image"
                     ? <img src={mediaUrl} alt="" className="w-full max-h-64 object-contain" />
                     : <video src={mediaUrl} className="w-full max-h-64" controls />}
-                  <button onClick={() => setMediaUrl(null)} className="absolute top-2 right-2 size-7 grid place-items-center rounded-full bg-black/60 text-white"><X className="size-4" /></button>
+                  <button onClick={() => { setMediaUrl(null); setThumbnailUrl(null); }} className="absolute top-2 right-2 size-7 grid place-items-center rounded-full bg-black/60 text-white"><X className="size-4" /></button>
                 </div>
               )}
             </div>
