@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useOnlinePresence } from "@/hooks/use-online-presence";
+import { LiveAvatarRing } from "@/components/live/LiveAvatarRing";
 
 /**
  * Faixa horizontal mostrando quem está online agora.
@@ -41,10 +42,12 @@ export function OnlineUsersStrip() {
             const content = (
               <div className="flex flex-col items-center gap-1 w-14 shrink-0">
                 <div className="relative">
-                  <Avatar className="size-12 ring-2 ring-emerald-500/60">
-                    <AvatarImage src={u.avatar_url ?? undefined} />
-                    <AvatarFallback>{initial}</AvatarFallback>
-                  </Avatar>
+                  <LiveAvatarRing hostId={u.user_id} showPill={false}>
+                    <Avatar className="size-12 ring-2 ring-emerald-500/60">
+                      <AvatarImage src={u.avatar_url ?? undefined} />
+                      <AvatarFallback>{initial}</AvatarFallback>
+                    </Avatar>
+                  </LiveAvatarRing>
                   <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 border-2 border-background" />
                 </div>
                 <span className="text-[10px] leading-tight text-center truncate w-full">

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Radio } from "lucide-react";
 import { toast } from "sonner";
+import { notifyLiveStart } from "@/lib/live-push.functions";
+
 
 export const Route = createFileRoute("/live/new")({
   head: () => ({
@@ -36,8 +38,15 @@ function NewLive() {
       return;
     }
     const live = Array.isArray(data) ? data[0] : data;
-    if (live?.id) navigate({ to: "/live/$liveId", params: { liveId: live.id } });
+    if (live?.id) {
+      // Fire-and-forget: notify followers (web + native push). Don't block navigation.
+      notifyLiveStart({ data: { liveId: live.id } }).catch((e) =>
+        console.error("notifyLiveStart failed", e),
+      );
+      navigate({ to: "/live/$liveId", params: { liveId: live.id } });
+    }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
