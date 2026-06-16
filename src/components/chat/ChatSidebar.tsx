@@ -353,7 +353,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   return (
     <>
       {GateDialog}
-      <div className="p-4 flex items-center justify-between border-b border-border">
+      <div className="px-2 py-3 flex items-center justify-between gap-1 border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
             <span className="text-primary-foreground font-bold text-sm">W</span>
