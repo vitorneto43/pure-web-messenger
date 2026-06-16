@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2, Lock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { useMessageNotificationIntent } from "@/hooks/use-message-notification-i
 import { OnboardingNameDialog } from "@/components/OnboardingNameDialog";
 import { OnboardingSurveyDialog } from "@/components/OnboardingSurveyDialog";
 import { ModerationGate } from "@/components/ModerationGate";
+import { GuestBanner } from "@/components/GuestBanner";
+import { track } from "@/lib/track";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthGuard,
