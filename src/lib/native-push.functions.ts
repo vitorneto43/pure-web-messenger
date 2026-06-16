@@ -292,6 +292,35 @@ export async function sendNativeMessage(args: {
   );
 }
 
+export async function sendNativeLiveStart(args: {
+  recipientIds: string[];
+  liveId: string;
+  title: string;
+  body: string;
+}) {
+  let total = 0;
+  await Promise.all(
+    args.recipientIds.map(async (rid) => {
+      const r = await sendNativePayloadToUser(
+        rid,
+        {
+          type: "live_start",
+          liveId: args.liveId,
+          url: `/live/${args.liveId}`,
+          timestamp: String(Date.now()),
+        },
+        "600s",
+        { title: args.title, body: args.body },
+        { kind: "live_start" },
+      );
+      total += r.sent ?? 0;
+    }),
+  );
+  return { sent: total };
+}
+
+
+
 
 export const saveNativeToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
