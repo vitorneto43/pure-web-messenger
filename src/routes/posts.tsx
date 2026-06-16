@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Loader2, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Sparkles, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -56,8 +56,12 @@ function PostsPage() {
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 h-12 border-b bg-background/80 backdrop-blur">
         <button onClick={() => navigate({ to: "/chat" })} className="size-9 grid place-items-center rounded-full hover:bg-muted"><ArrowLeft className="size-5" /></button>
         <h1 className="font-bold">Posts</h1>
-        <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
-          <Plus className="size-4 mr-1" />Novo
+        <div className="flex items-center gap-1">
+          <button onClick={() => navigate({ to: "/live" })} className="size-9 grid place-items-center rounded-full hover:bg-muted relative" title="Lives">
+            <Radio className="size-5 text-red-500" />
+          </button>
+          <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
+            <Plus className="size-4 mr-1" />Novo
         </Button>
       </header>
 
