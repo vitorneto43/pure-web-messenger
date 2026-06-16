@@ -62,7 +62,8 @@ function PostsPage() {
           </button>
           <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
             <Plus className="size-4 mr-1" />Novo
-        </Button>
+          </Button>
+        </div>
       </header>
 
       <div className="max-w-xl mx-auto">
