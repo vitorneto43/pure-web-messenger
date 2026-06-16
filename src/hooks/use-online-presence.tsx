@@ -36,8 +36,18 @@ export function OnlinePresenceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) {
-      setUsers([]);
-      return;
+      let cancelled = false;
+      const loadPublic = async () => {
+        const { data } = await (supabase as any).rpc("public_online_users", { _limit: 30 });
+        if (!cancelled) setUsers((data as OnlineUser[]) ?? []);
+      };
+      void loadPublic();
+      const id = setInterval(loadPublic, 60_000);
+      return () => {
+        cancelled = true;
+        clearInterval(id);
+        setUsers([]);
+      };
     }
     let cancelled = false;
     let cleanup: (() => void) | null = null;
