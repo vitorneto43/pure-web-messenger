@@ -90,3 +90,15 @@ function PushBootstrap() {
   useMessageNotificationIntent();
   return null;
 }
+
+function GuestBrowse({ pathname }: { pathname: string }) {
+  useEffect(() => {
+    void track("guest_view", { path: pathname });
+  }, [pathname]);
+  return (
+    <OnlinePresenceProvider>
+      <GuestBanner />
+      <Outlet />
+    </OnlinePresenceProvider>
+  );
+}
