@@ -11,6 +11,7 @@ import { LiveReactionsLayer } from "@/components/live/LiveReactionsLayer";
 import { LiveGiftSheet } from "@/components/live/LiveGiftSheet";
 import { LiveStagePanel, RequestStageButton } from "@/components/live/LiveStagePanel";
 import { LiveHeader } from "@/components/live/LiveHeader";
+import { LivePixSheet } from "@/components/live/LivePixSheet";
 
 export const Route = createFileRoute("/live/$liveId")({
   loader: async ({ params }) => getLive({ data: { liveId: params.liveId } }),
