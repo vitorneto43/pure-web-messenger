@@ -11,7 +11,7 @@ import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 
-export const Route = createFileRoute("/_authenticated/posts")({
+export const Route = createFileRoute("/posts")({
   component: PostsPage,
   head: () => ({ meta: [
     { title: "Posts — WaveChat" },
