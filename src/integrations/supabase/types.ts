@@ -3677,6 +3677,7 @@ export type Database = {
         | "status_comment"
         | "post"
         | "post_comment"
+        | "live"
       stage_request_status:
         | "pending"
         | "approved"
@@ -3832,6 +3833,7 @@ export const Constants = {
         "status_comment",
         "post",
         "post_comment",
+        "live",
       ],
       stage_request_status: [
         "pending",
