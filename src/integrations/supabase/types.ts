@@ -3262,6 +3262,18 @@ export type Database = {
       }
       get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
+      get_top_hosts_weekly: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          gifts_count: number
+          host_id: string
+          lives_count: number
+          total_coins: number
+          username: string
+        }[]
+      }
       get_trending_hashtags: {
         Args: { _limit?: number }
         Returns: {

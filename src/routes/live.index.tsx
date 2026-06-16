@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getActiveLives } from "@/lib/live.functions";
-import { Eye, Coins, Radio } from "lucide-react";
+import { getActiveLives, getTopHostsWeekly } from "@/lib/live.functions";
+import { Eye, Coins, Radio, Trophy, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/live/")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/live/")({
 
 function LiveFeed() {
   const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
+  const [top, setTop] = useState<Awaited<ReturnType<typeof getTopHostsWeekly>>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +27,14 @@ function LiveFeed() {
     getActiveLives()
       .then((d) => active && setLives(d))
       .finally(() => active && setLoading(false));
+    getTopHostsWeekly({ data: { limit: 10 } }).then((d) => active && setTop(d));
     const t = setInterval(() => getActiveLives().then((d) => active && setLives(d)), 15000);
     return () => {
       active = false;
       clearInterval(t);
     };
   }, []);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -45,7 +49,68 @@ function LiveFeed() {
         </Link>
       </header>
 
+      {top.length > 0 && (
+        <section className="px-3 pt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Trophy className="w-4 h-4 text-yellow-500" />
+            <h2 className="text-sm font-bold">Top criadores da semana</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-none">
+            {top.map((h, i) => (
+              <Link
+                key={h.host_id}
+                to="/u/$username"
+                params={{ username: h.username ?? "" }}
+                className="flex flex-col items-center min-w-[80px] group"
+              >
+                <div className="relative">
+                  <div
+                    className={`w-16 h-16 rounded-full p-[2px] ${
+                      i === 0
+                        ? "bg-gradient-to-br from-yellow-400 to-orange-500"
+                        : i === 1
+                          ? "bg-gradient-to-br from-zinc-300 to-zinc-500"
+                          : i === 2
+                            ? "bg-gradient-to-br from-amber-600 to-amber-800"
+                            : "bg-muted"
+                    }`}
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden bg-muted">
+                      {h.avatar_url ? (
+                        <img src={h.avatar_url} alt={h.display_name ?? h.username ?? ""} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-pink-500 to-yellow-500" />
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow ${
+                      i === 0
+                        ? "bg-yellow-500"
+                        : i === 1
+                          ? "bg-zinc-400"
+                          : i === 2
+                            ? "bg-amber-700"
+                            : "bg-muted-foreground"
+                    }`}
+                  >
+                    {i === 0 ? <Crown className="w-3 h-3" /> : `#${i + 1}`}
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium mt-1 truncate w-16 text-center">
+                  {h.display_name ?? h.username ?? "Host"}
+                </p>
+                <p className="text-[10px] flex items-center gap-0.5 text-muted-foreground">
+                  <Coins className="w-2.5 h-2.5 text-yellow-500" /> {h.total_coins}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {loading ? (
+
         <div className="p-6 text-center text-muted-foreground">Carregando…</div>
       ) : lives.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground">

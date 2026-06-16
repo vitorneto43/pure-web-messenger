@@ -12,6 +12,18 @@ function publicClient() {
 
 // ============ Public reads (SSR-safe) ============
 
+export const getTopHostsWeekly = createServerFn({ method: "GET" })
+  .inputValidator((d: { limit?: number } | undefined) =>
+    z.object({ limit: z.number().int().min(1).max(100).optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const sb = publicClient();
+    const { data: rows, error } = await sb.rpc("get_top_hosts_weekly", { p_limit: data.limit ?? 10 });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+
 export const getActiveLives = createServerFn({ method: "GET" }).handler(async () => {
   const sb = publicClient();
   const { data, error } = await sb
