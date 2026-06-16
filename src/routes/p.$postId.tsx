@@ -11,16 +11,48 @@ import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 
 export const Route = createFileRoute("/p/$postId")({
   component: PublicPostPage,
-  head: ({ params }) => ({ meta: [
-    { title: `Post — WaveChat` },
-    { name: "description", content: "Veja este post no WaveChat e participe da conversa." },
-    { property: "og:title", content: "Post no WaveChat" },
-    { property: "og:url", content: `https://webconnectchat.com/p/${params.postId}` },
-  ] }),
+  loader: async ({ params }) => {
+    const { data } = await (supabase as any).rpc("get_public_post", { _post_id: params.postId });
+    const row = (data ?? [])[0];
+    if (!row) return { post: null as PostItem | null };
+    return { post: { ...row, hashtags: row.hashtags ?? [], is_boosted: false, viewer_already_liked: false } as PostItem };
+  },
+  head: ({ params, loaderData }) => {
+    const post = loaderData?.post;
+    const url = `https://webconnectchat.com/p/${params.postId}`;
+    const baseTitle = post
+      ? `${post.display_name} (@${post.username}) no WaveChat`
+      : "Post no WaveChat";
+    const desc = post
+      ? (post.caption || post.content || `Veja este post de @${post.username} no WaveChat.`).slice(0, 200)
+      : "Veja este post no WaveChat e participe da conversa.";
+    const image = post?.kind === "image" && post.media_url
+      ? post.media_url
+      : post?.kind === "video" && post.media_url
+        ? post.media_url
+        : undefined;
+    const meta: Array<Record<string, string>> = [
+      { title: baseTitle },
+      { name: "description", content: desc },
+      { property: "og:type", content: "article" },
+      { property: "og:title", content: baseTitle },
+      { property: "og:description", content: desc },
+      { property: "og:url", content: url },
+      { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
+      { name: "twitter:title", content: baseTitle },
+      { name: "twitter:description", content: desc },
+    ];
+    if (image) {
+      meta.push({ property: "og:image", content: image });
+      meta.push({ name: "twitter:image", content: image });
+    }
+    return { meta };
+  },
 });
 
 function PublicPostPage() {
   const { postId } = Route.useParams();
+  const { post: initialPost } = Route.useLoaderData();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -28,6 +60,7 @@ function PublicPostPage() {
 
   const q = useQuery({
     queryKey: ["public-post", postId],
+    initialData: initialPost,
     queryFn: async () => {
       const { data } = await (supabase as any).rpc("get_public_post", { _post_id: postId });
       const row = (data ?? [])[0];
