@@ -1009,14 +1009,12 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 />
                 <AttachItem
                   icon={<VideoIcon className="size-4 text-green-500" />}
-                  label={t("chat.attachMeeting", { defaultValue: "Reunião (Jitsi)" })}
+                  label={t("chat.attachMeeting", { defaultValue: "Reunião por vídeo" })}
                   onClick={async () => {
                     const room = `wavechat-${crypto.randomUUID().slice(0, 8)}`;
-                    const url = `https://meet.jit.si/${room}`;
-                    await sendMessage(`📹 Reunião: ${url}`);
-                    try {
-                      window.open(url, "_blank", "noopener,noreferrer");
-                    } catch {}
+                    const inAppUrl = `${window.location.origin}/meet/${room}`;
+                    await sendMessage(`📹 Reunião: toque para entrar → ${inAppUrl}`);
+                    navigate({ to: "/meet/$roomId", params: { roomId: room } });
                   }}
                 />
                 <AttachItem
