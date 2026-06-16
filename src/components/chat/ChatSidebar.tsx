@@ -349,6 +349,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
   return (
     <>
+      {GateDialog}
       <div className="p-4 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
@@ -371,7 +372,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
               </a>
             </div>
             <div className="text-[11px] text-muted-foreground leading-tight">
-              {user?.email}
+              {user?.email ?? "Visitante · 100% grátis"}
             </div>
           </div>
         </div>
@@ -386,25 +387,32 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
               <HelpCircle className="size-4" />
             </Link>
           </Button>
-          <NotificationsBell />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <Settings className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link to="/profile">{t("chat.myProfile")}</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
-                <UsersRound className="size-4 mr-2" /> {t("chat.newGroup")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={logout} className="text-destructive">
-                <LogOut className="size-4 mr-2" /> {t("chat.logout")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user ? <NotificationsBell /> : (
+            <Button size="icon" variant="ghost" className="rounded-full relative" onClick={() => gate("default", () => undefined)}>
+              <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
+              <Settings className="size-4" />
+            </Button>
+          )}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost" className="rounded-full">
+                  <Settings className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">{t("chat.myProfile")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
+                  <UsersRound className="size-4 mr-2" /> {t("chat.newGroup")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="text-destructive">
+                  <LogOut className="size-4 mr-2" /> {t("chat.logout")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
       </div>
 
@@ -422,14 +430,14 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setNewChatOpen(true)}
+            onClick={() => gate("message", () => setNewChatOpen(true))}
             size="sm"
             className="flex-1 rounded-full"
           >
             <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
           </Button>
           <Button
-            onClick={() => setNewGroupOpen(true)}
+            onClick={() => gate("join_group", () => setNewGroupOpen(true))}
             size="sm"
             variant="secondary"
             className="rounded-full"
