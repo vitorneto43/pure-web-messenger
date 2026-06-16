@@ -273,22 +273,24 @@ export function StatusBar() {
             className="flex flex-col items-center gap-1 shrink-0"
           >
             <div className="relative">
-              <Avatar
-                className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${
-                  g.isOfficial
-                    ? "ring-sky-500"
-                    : g.isSponsored
-                      ? "ring-pink-500"
-                      : g.hasUnseen
-                        ? "ring-primary"
-                        : "ring-muted"
-                }`}
-              >
-                <AvatarImage src={g.user.avatar_url ?? undefined} />
-                <AvatarFallback className="bg-secondary text-sm">
-                  {g.user.display_name[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <LiveAvatarRing hostId={g.user.id} showPill={false}>
+                <Avatar
+                  className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${
+                    g.isOfficial
+                      ? "ring-sky-500"
+                      : g.isSponsored
+                        ? "ring-pink-500"
+                        : g.hasUnseen
+                          ? "ring-primary"
+                          : "ring-muted"
+                  }`}
+                >
+                  <AvatarImage src={g.user.avatar_url ?? undefined} />
+                  <AvatarFallback className="bg-secondary text-sm">
+                    {g.user.display_name[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </LiveAvatarRing>
               {g.isOfficial && (
                 <span className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full bg-sky-500 text-white grid place-items-center ring-2 ring-sidebar">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="size-2.5">
