@@ -11,6 +11,7 @@ import { LiveReactionsLayer } from "@/components/live/LiveReactionsLayer";
 import { LiveGiftSheet } from "@/components/live/LiveGiftSheet";
 import { LiveStagePanel, RequestStageButton } from "@/components/live/LiveStagePanel";
 import { LiveHeader } from "@/components/live/LiveHeader";
+import { LivePixSheet } from "@/components/live/LivePixSheet";
 
 export const Route = createFileRoute("/live/$liveId")({
   loader: async ({ params }) => getLive({ data: { liveId: params.liveId } }),
@@ -194,6 +195,7 @@ function LiveView() {
                 {isHost && <LiveStagePanel liveId={live.id} isHost={isHost} />}
               </div>
               <div className="flex items-center gap-2">
+                {!isHost && <LivePixSheet liveId={live.id} />}
                 {!isHost && <LiveGiftSheet liveId={live.id} userId={userId} />}
                 {isHost && (
                   <Button size="sm" variant="destructive" onClick={endLive}>

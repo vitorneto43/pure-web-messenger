@@ -3191,6 +3191,15 @@ export type Database = {
         }[]
       }
       get_invite_stats: { Args: never; Returns: Json }
+      get_live_pix_info: {
+        Args: { p_live_id: string }
+        Returns: {
+          city: string
+          pix_key: string
+          pix_key_type: string
+          recipient_name: string
+        }[]
+      }
       get_my_restrictions: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_people_you_may_know: {
