@@ -87,10 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Web Connect Chat is a full-featured, browser-based messaging platform for real-time conversations." },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "Wavechat — chat em tempo real direto do navegador" },
-      { name: "description", content: "Web Connect Chat is a full-featured, browser-based messaging platform for real-time conversations." },
-      { name: "twitter:description", content: "Web Connect Chat is a full-featured, browser-based messaging platform for real-time conversations." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/611c8190-7892-42f2-a762-682c8f840c7e/id-preview-aab16bd3--84e5b2ed-fe1c-4906-b46d-5e198f0c6c1c.lovable.app-1779216602177.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/611c8190-7892-42f2-a762-682c8f840c7e/id-preview-aab16bd3--84e5b2ed-fe1c-4906-b46d-5e198f0c6c1c.lovable.app-1779216602177.png" },
+      { name: "twitter:description", content: "Plataforma de chat moderna, sem app, sem celular, sem SMS. Conversas privadas e em grupo direto do navegador." },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
