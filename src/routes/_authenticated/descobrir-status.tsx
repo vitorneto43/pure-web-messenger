@@ -54,8 +54,7 @@ function DiscoverStatusPage() {
   const qc = useQueryClient();
 
   const query = useInfiniteQuery({
-    queryKey: ["discover-status", user?.id],
-    enabled: !!user,
+    queryKey: ["discover-status", user?.id ?? "guest"],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const { data, error } = await (supabase as any).rpc("discover_public_statuses", {
