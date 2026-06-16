@@ -1287,6 +1287,387 @@ export type Database = {
         }
         Relationships: []
       }
+      post_boost_clicks: {
+        Row: {
+          amount_charged_cents: number | null
+          boost_id: string | null
+          created_at: string
+          cta_url: string | null
+          id: string
+          post_id: string
+          session_hash: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_charged_cents?: number | null
+          boost_id?: string | null
+          created_at?: string
+          cta_url?: string | null
+          id?: string
+          post_id: string
+          session_hash?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_charged_cents?: number | null
+          boost_id?: string | null
+          created_at?: string
+          cta_url?: string | null
+          id?: string
+          post_id?: string
+          session_hash?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_boost_clicks_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "post_boosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_boost_clicks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_boosts: {
+        Row: {
+          activated_at: string | null
+          amount_cents: number
+          boost_type: string
+          checkout_session_id: string | null
+          cpm_cents: number | null
+          created_at: string
+          currency: string
+          duration_days: number
+          ends_at: string | null
+          environment: string
+          id: string
+          is_free_reward: boolean
+          objective: string | null
+          package: string
+          post_id: string
+          refund_reason: string | null
+          refunded_amount_cents: number
+          refunded_at: string | null
+          status: string
+          target_age_max: number | null
+          target_age_min: number | null
+          target_countries: string[]
+          target_gender: string | null
+          target_states: string[]
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+          views_remaining: number
+          views_total: number
+        }
+        Insert: {
+          activated_at?: string | null
+          amount_cents?: number
+          boost_type?: string
+          checkout_session_id?: string | null
+          cpm_cents?: number | null
+          created_at?: string
+          currency?: string
+          duration_days?: number
+          ends_at?: string | null
+          environment?: string
+          id?: string
+          is_free_reward?: boolean
+          objective?: string | null
+          package: string
+          post_id: string
+          refund_reason?: string | null
+          refunded_amount_cents?: number
+          refunded_at?: string | null
+          status?: string
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_countries?: string[]
+          target_gender?: string | null
+          target_states?: string[]
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+          views_remaining?: number
+          views_total?: number
+        }
+        Update: {
+          activated_at?: string | null
+          amount_cents?: number
+          boost_type?: string
+          checkout_session_id?: string | null
+          cpm_cents?: number | null
+          created_at?: string
+          currency?: string
+          duration_days?: number
+          ends_at?: string | null
+          environment?: string
+          id?: string
+          is_free_reward?: boolean
+          objective?: string | null
+          package?: string
+          post_id?: string
+          refund_reason?: string | null
+          refunded_amount_cents?: number
+          refunded_at?: string | null
+          status?: string
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_countries?: string[]
+          target_gender?: string | null
+          target_states?: string[]
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+          views_remaining?: number
+          views_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_boosts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          emoji: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          emoji?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          emoji?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_shares: {
+        Row: {
+          channel: string | null
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string | null
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_views: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          session_hash: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          session_hash?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          session_hash?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          background: string | null
+          caption: string | null
+          content: string | null
+          created_at: string
+          hashtags: string[]
+          id: string
+          is_official: boolean
+          kind: string
+          media_url: string | null
+          music_start_sec: number | null
+          music_track_id: string | null
+          music_volume: number | null
+          pinned: boolean
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          hashtags?: string[]
+          id?: string
+          is_official?: boolean
+          kind: string
+          media_url?: string | null
+          music_start_sec?: number | null
+          music_track_id?: string | null
+          music_volume?: number | null
+          pinned?: boolean
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          hashtags?: string[]
+          id?: string
+          is_official?: boolean
+          kind?: string
+          media_url?: string | null
+          music_start_sec?: number | null
+          music_track_id?: string | null
+          music_volume?: number | null
+          pinned?: boolean
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_music_track_id_fkey"
+            columns: ["music_track_id"]
+            isOneToOne: false
+            referencedRelation: "story_music_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_follows: {
         Row: {
           created_at: string
@@ -2407,6 +2788,30 @@ export type Database = {
           username: string
         }[]
       }
+      discover_public_posts: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          avatar_url: string
+          background: string
+          caption: string
+          comments_count: number
+          content: string
+          created_at: string
+          display_name: string
+          hashtags: string[]
+          is_boosted: boolean
+          is_official: boolean
+          kind: string
+          media_url: string
+          music_track_id: string
+          post_id: string
+          reactions_count: number
+          user_id: string
+          username: string
+          viewer_already_liked: boolean
+          views_count: number
+        }[]
+      }
       discover_public_statuses: {
         Args: { _limit?: number; _offset?: number }
         Returns: {
@@ -2480,6 +2885,43 @@ export type Database = {
           id: string
           mutual_count: number
           reason: string
+          username: string
+        }[]
+      }
+      get_public_post: {
+        Args: { _post_id: string }
+        Returns: {
+          avatar_url: string
+          background: string
+          caption: string
+          comments_count: number
+          content: string
+          created_at: string
+          display_name: string
+          hashtags: string[]
+          is_official: boolean
+          kind: string
+          media_url: string
+          music_track_id: string
+          post_id: string
+          reactions_count: number
+          user_id: string
+          username: string
+          views_count: number
+        }[]
+      }
+      get_public_post_comments: {
+        Args: { _post_id: string }
+        Returns: {
+          avatar_url: string
+          content: string
+          created_at: string
+          display_name: string
+          id: string
+          parent_id: string
+          post_id: string
+          reactions_count: number
+          user_id: string
           username: string
         }[]
       }
@@ -2717,6 +3159,11 @@ export type Database = {
           _region?: string
           _user_id: string
         }
+        Returns: undefined
+      }
+      register_post_boost_click: { Args: { _post_id: string }; Returns: Json }
+      register_post_view: {
+        Args: { _post_id: string; _session_hash?: string }
         Returns: undefined
       }
       register_status_view: { Args: { _status_id: string }; Returns: Json }

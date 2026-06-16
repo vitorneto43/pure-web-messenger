@@ -28,9 +28,10 @@ async function activateBoost(sessionOrTx: any, env: StripeEnv) {
   const meta = sessionOrTx.metadata ?? {};
   const boostId: string | undefined = meta.boostId;
   if (!boostId) return;
+  const table = meta.targetKind === "post" ? "post_boosts" : "status_boosts";
   const sb = getSupabase();
-  const { data: updated, error } = await sb
-    .from("status_boosts")
+  const { data: updated, error } = await (sb as any)
+    .from(table)
     .update({
       status: "active",
       activated_at: new Date().toISOString(),
@@ -41,16 +42,14 @@ async function activateBoost(sessionOrTx: any, env: StripeEnv) {
     .eq("status", "pending")
     .select("user_id, views_total, package")
     .maybeSingle();
-  if (error) {
-    console.error("[webhook] activate failed", error);
-    return;
-  }
+  if (error) { console.error("[webhook] activate failed", error); return; }
   if (updated) {
+    const isPost = meta.targetKind === "post";
     await notify(
       updated.user_id,
-      "Impulso ativado!",
-      `Seu status agora aparece para mais ${updated.views_total} pessoas.`,
-      { boostId, package: updated.package },
+      isPost ? "Impulso de Post ativado!" : "Impulso ativado!",
+      `Seu ${isPost ? "post" : "status"} agora aparece para mais ${updated.views_total} pessoas.`,
+      { boostId, package: updated.package, targetKind: meta.targetKind ?? "status" },
     );
   }
 }
@@ -59,44 +58,36 @@ async function failBoost(sessionOrTx: any) {
   const meta = sessionOrTx.metadata ?? {};
   const boostId: string | undefined = meta.boostId;
   if (!boostId) return;
-  await getSupabase()
-    .from("status_boosts")
-    .update({ status: "failed" })
-    .eq("id", boostId)
-    .eq("status", "pending");
+  const table = meta.targetKind === "post" ? "post_boosts" : "status_boosts";
+  await (getSupabase() as any).from(table).update({ status: "failed" }).eq("id", boostId).eq("status", "pending");
 }
 
 async function handleChargeRefunded(charge: any) {
   const paymentIntentId = charge.payment_intent;
   if (!paymentIntentId) return;
   const sb = getSupabase();
-  const { data: boost } = await sb
-    .from("status_boosts")
-    .select("id, user_id, status, amount_cents, refunded_amount_cents")
-    .eq("transaction_id", paymentIntentId)
-    .maybeSingle();
-  if (!boost) return;
-  if (boost.status === "refunded") return;
-
-  const refundedTotal: number = charge.amount_refunded ?? boost.amount_cents;
-  await sb
-    .from("status_boosts")
-    .update({
+  for (const table of ["status_boosts", "post_boosts"] as const) {
+    const { data: boost } = await (sb as any)
+      .from(table)
+      .select("id, user_id, status, amount_cents, refunded_amount_cents")
+      .eq("transaction_id", paymentIntentId)
+      .maybeSingle();
+    if (!boost || boost.status === "refunded") continue;
+    const refundedTotal: number = charge.amount_refunded ?? boost.amount_cents;
+    await (sb as any).from(table).update({
       status: "refunded",
       views_remaining: 0,
       refunded_amount_cents: refundedTotal,
       refunded_at: new Date().toISOString(),
       refund_reason: "manual",
-    })
-    .eq("id", boost.id);
-
-  await notify(
-    boost.user_id,
-    "Reembolso processado",
-    `Você recebeu R$ ${(refundedTotal / 100).toFixed(2).replace(".", ",")} de volta no impulso.`,
-    { boostId: boost.id, amount_cents: refundedTotal, reason: "manual" },
-  );
+    }).eq("id", boost.id);
+    await notify(boost.user_id, "Reembolso processado",
+      `Você recebeu R$ ${(refundedTotal / 100).toFixed(2).replace(".", ",")} de volta no impulso.`,
+      { boostId: boost.id, amount_cents: refundedTotal, reason: "manual", targetKind: table === "post_boosts" ? "post" : "status" });
+    return;
+  }
 }
+
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
