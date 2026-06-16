@@ -51,31 +51,35 @@ self.addEventListener("push", (event) => {
   }
 
   const isMessage = data.type === "message";
-  const title = data.title || (isMessage ? "Nova mensagem" : "Chamada recebida");
-  const body = data.body || (isMessage ? "" : "Alguém está te ligando");
+  const isLiveStart = data.type === "live_start";
+  const isNotice = isMessage || isLiveStart;
+  const title = data.title || (isMessage ? "Nova mensagem" : isLiveStart ? "Live ao vivo" : "Chamada recebida");
+  const body = data.body || (isNotice ? "" : "Alguém está te ligando");
   const callId = data.callId;
   const conversationId = data.conversationId;
   const kind = data.kind || "audio";
 
-  const options = isMessage
+  const options = isNotice
     ? {
         body,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
         image: data.image || undefined,
-        // Unique tag per message so Android launcher counts each one on the app icon
-        tag: `msg-${conversationId || "x"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        tag: isLiveStart
+          ? `live-${data.liveId || Date.now()}`
+          : `msg-${conversationId || "x"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         renotify: true,
         silent: false,
-        // Sticks on screen until the user taps it — much more visible
         requireInteraction: true,
-        vibrate: [300, 120, 300, 120, 300, 120, 600],
+        vibrate: isLiveStart ? [200, 100, 200] : [300, 120, 300, 120, 300, 120, 600],
         timestamp: Date.now(),
-        data: { conversationId, url: data.url || (conversationId ? `/chat/${conversationId}` : "/") },
-        actions: [
-          { action: "open", title: "Abrir" },
-          { action: "dismiss", title: "Depois" },
-        ],
+        data: { conversationId, liveId: data.liveId, url: data.url || (conversationId ? `/chat/${conversationId}` : "/") },
+        actions: isLiveStart
+          ? [{ action: "open", title: "Entrar" }, { action: "dismiss", title: "Depois" }]
+          : [
+              { action: "open", title: "Abrir" },
+              { action: "dismiss", title: "Depois" },
+            ],
       }
     : {
         body,
