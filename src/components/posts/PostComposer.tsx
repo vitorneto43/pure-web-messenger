@@ -31,6 +31,35 @@ function parseHashtags(raw: string): string[] {
   ).slice(0, 12);
 }
 
+async function createVideoThumbnail(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    const url = URL.createObjectURL(file);
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+    const cleanup = () => URL.revokeObjectURL(url);
+    video.onerror = () => { cleanup(); resolve(null); };
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(1, Math.max(0, (video.duration || 1) / 3));
+    };
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 1200;
+        canvas.height = video.videoHeight || 630;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas indisponível");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => { cleanup(); resolve(blob); }, "image/jpeg", 0.88);
+      } catch {
+        cleanup(); resolve(null);
+      }
+    };
+  });
+}
+
 export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const ai = useServerFn(runAIAssistant);
@@ -39,6 +68,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [description, setDescription] = useState("");
   const [hashtagsRaw, setHashtagsRaw] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
@@ -48,7 +78,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
 
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
-    setMediaUrl(null); setMusicTrackId(null); setMusicTitle(null);
+    setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
   }
 
   async function handleFile(file: File, expected: "image" | "video") {
@@ -60,7 +90,19 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       const { error } = await supabase.storage.from("status-media").upload(path, file, { upsert: false });
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from("status-media").getPublicUrl(path);
-      setMediaUrl(publicUrl); setKind(expected);
+      let thumbUrl: string | null = expected === "image" ? publicUrl : null;
+      if (expected === "video") {
+        const thumb = await createVideoThumbnail(file);
+        if (thumb) {
+          const thumbPath = `${user.id}/posts/${Date.now()}-thumb.jpg`;
+          const { error: thumbError } = await supabase.storage.from("status-media").upload(thumbPath, thumb, { contentType: "image/jpeg", upsert: false });
+          if (!thumbError) {
+            const { data: { publicUrl: uploadedThumbUrl } } = supabase.storage.from("status-media").getPublicUrl(thumbPath);
+            thumbUrl = uploadedThumbUrl;
+          }
+        }
+      }
+      setMediaUrl(publicUrl); setThumbnailUrl(thumbUrl); setKind(expected);
     } catch (e: any) {
       toast.error("Falha no upload", { description: e.message });
     } finally { setUploading(false); }
@@ -97,7 +139,8 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         user_id: user.id,
         kind,
         content: kind === "text" ? content.trim() : null,
-        media_url: mediaUrl,
+        media_url: kind === "text" ? null : mediaUrl,
+        thumbnail_url: kind === "image" ? mediaUrl : kind === "video" ? thumbnailUrl : null,
         caption: description.trim() || null,
         background: kind === "text" ? "linear-gradient(135deg,#6366f1,#ec4899)" : null,
         hashtags,
@@ -144,7 +187,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
                   {kind === "image"
                     ? <img src={mediaUrl} alt="" className="w-full max-h-64 object-contain" />
                     : <video src={mediaUrl} className="w-full max-h-64" controls />}
-                  <button onClick={() => setMediaUrl(null)} className="absolute top-2 right-2 size-7 grid place-items-center rounded-full bg-black/60 text-white"><X className="size-4" /></button>
+                  <button onClick={() => { setMediaUrl(null); setThumbnailUrl(null); }} className="absolute top-2 right-2 size-7 grid place-items-center rounded-full bg-black/60 text-white"><X className="size-4" /></button>
                 </div>
               )}
             </div>

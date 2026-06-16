@@ -23,6 +23,7 @@ export interface PostItem {
   kind: "text" | "image" | "video";
   content: string | null;
   media_url: string | null;
+  thumbnail_url?: string | null;
   caption: string | null;
   background: string | null;
   hashtags: string[];

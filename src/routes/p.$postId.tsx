@@ -9,6 +9,16 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 
+const PUBLIC_ORIGIN = "https://webconnectchat.com";
+const DEFAULT_POST_IMAGE = `${PUBLIC_ORIGIN}/post-share-default.png`;
+
+function getShareImage(post: PostItem | null | undefined) {
+  if (!post) return DEFAULT_POST_IMAGE;
+  if (post.kind === "image" && post.media_url) return post.media_url;
+  if (post.kind === "video") return post.thumbnail_url || DEFAULT_POST_IMAGE;
+  return DEFAULT_POST_IMAGE;
+}
+
 export const Route = createFileRoute("/p/$postId")({
   component: PublicPostPage,
   loader: async ({ params }) => {
@@ -19,34 +29,35 @@ export const Route = createFileRoute("/p/$postId")({
   },
   head: ({ params, loaderData }) => {
     const post = loaderData?.post;
-    const url = `https://webconnectchat.com/p/${params.postId}`;
+    const url = `${PUBLIC_ORIGIN}/p/${params.postId}`;
     const baseTitle = post
       ? `${post.display_name} (@${post.username}) no WaveChat`
       : "Post no WaveChat";
     const desc = post
       ? (post.caption || post.content || `Veja este post de @${post.username} no WaveChat.`).slice(0, 200)
       : "Veja este post no WaveChat e participe da conversa.";
-    const image = post?.kind === "image" && post.media_url
-      ? post.media_url
-      : post?.kind === "video" && post.media_url
-        ? post.media_url
-        : (post?.avatar_url || undefined);
+    const image = getShareImage(post);
+    const video = post?.kind === "video" && post.media_url ? post.media_url : undefined;
     const meta: Array<Record<string, string>> = [
       { title: baseTitle },
       { name: "description", content: desc },
-      { property: "og:type", content: "article" },
+      { property: "og:type", content: video ? "video.other" : "article" },
       { property: "og:title", content: baseTitle },
       { property: "og:description", content: desc },
       { property: "og:url", content: url },
+      { property: "og:image", content: image },
+      { property: "og:image:secure_url", content: image },
       { name: "twitter:card", content: image ? "summary_large_image" : "summary" },
       { name: "twitter:title", content: baseTitle },
       { name: "twitter:description", content: desc },
+      { name: "twitter:image", content: image },
     ];
-    if (image) {
-      meta.push({ property: "og:image", content: image });
-      meta.push({ name: "twitter:image", content: image });
+    if (video) {
+      meta.push({ property: "og:video", content: video });
+      meta.push({ property: "og:video:secure_url", content: video });
+      meta.push({ property: "og:video:type", content: "video/mp4" });
     }
-    return { meta };
+    return { meta, links: [{ rel: "canonical", href: url }] };
   },
 });
 
