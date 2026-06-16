@@ -63,11 +63,7 @@ function AuthGuard() {
       );
     }
     // Public read-only browse for other authenticated-layout routes
-    return (
-      <OnlinePresenceProvider>
-        <Outlet />
-      </OnlinePresenceProvider>
-    );
+    return <GuestBrowse pathname={pathname} />;
   }
 
   return (
