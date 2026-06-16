@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getActiveLives } from "@/lib/live.functions";
-import { Eye, Coins, Radio } from "lucide-react";
+import { getActiveLives, getTopHostsWeekly } from "@/lib/live.functions";
+import { Eye, Coins, Radio, Trophy, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/live/")({
   head: () => ({
