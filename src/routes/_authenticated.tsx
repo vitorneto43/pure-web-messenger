@@ -1,8 +1,7 @@
-import { createFileRoute, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, Lock, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { CallProvider } from "@/hooks/use-call";
 import { CallScreen } from "@/components/call/CallScreen";
 import { IncomingCallDialog } from "@/components/call/IncomingCallDialog";
@@ -25,7 +24,6 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthGuard() {
   const { session, loading } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -35,34 +33,8 @@ function AuthGuard() {
     );
   }
 
-  // Unauthenticated visitors can browse most pages read-only.
-  // Chat requires login — show a wall.
+  // Unauthenticated web visitors can browse the app shell read-only.
   if (!session) {
-    const isChat = pathname === "/chat" || pathname.startsWith("/chat/");
-    if (isChat) {
-      return (
-        <div className="min-h-screen grid place-items-center px-4">
-          <div className="max-w-sm w-full text-center glass border border-border rounded-2xl p-8">
-            <div className="mx-auto mb-3 grid place-items-center size-12 rounded-full bg-primary/10 text-primary">
-              <Lock className="size-5" />
-            </div>
-            <h1 className="text-xl font-semibold">Crie sua conta para conversar</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              O chat é exclusivo para usuários cadastrados. É grátis e leva menos de 30 segundos.
-            </p>
-            <div className="mt-6 flex flex-col gap-2">
-              <Button onClick={() => navigate({ to: "/auth", search: { redirect: pathname, mode: "signup" } as any })}>
-                <MessageCircle className="size-4 mr-2" /> Criar conta grátis
-              </Button>
-              <Button variant="outline" onClick={() => navigate({ to: "/auth", search: { redirect: pathname } as any })}>
-                Já tenho conta
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    // Public read-only browse for other authenticated-layout routes
     return <GuestBrowse pathname={pathname} />;
   }
 
