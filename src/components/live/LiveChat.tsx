@@ -18,6 +18,7 @@ interface Msg {
 }
 
 export function LiveChat({ liveId, userId }: { liveId: string; userId: string | null }) {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
