@@ -101,40 +101,46 @@ function DiscoverStatusPage() {
   }
 
   async function toggleLike(s: DiscoverStatus) {
-    if (!user) return;
-    const liked = s.viewer_already_liked;
-    patch(s.status_id, {
-      viewer_already_liked: !liked,
-      reactions_count: s.reactions_count + (liked ? -1 : 1),
+    gate("react", async () => {
+      if (!user) return;
+      const liked = s.viewer_already_liked;
+      patch(s.status_id, {
+        viewer_already_liked: !liked,
+        reactions_count: s.reactions_count + (liked ? -1 : 1),
+      });
+      if (liked) {
+        await (supabase as any).from("status_reactions").delete().eq("status_id", s.status_id).eq("user_id", user.id);
+      } else {
+        await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" }, { onConflict: "status_id,user_id" });
+      }
     });
-    if (liked) {
-      await (supabase as any).from("status_reactions").delete().eq("status_id", s.status_id).eq("user_id", user.id);
-    } else {
-      await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" }, { onConflict: "status_id,user_id" });
-    }
   }
 
   async function toggleFollow(s: DiscoverStatus) {
-    if (!user || user.id === s.user_id) return;
-    const following = s.viewer_already_follows;
-    patch(s.status_id, { viewer_already_follows: !following });
-    if (following) {
-      await supabase.from("profile_follows").delete().eq("follower_id", user.id).eq("following_id", s.user_id);
-      toast.message(`Você deixou de seguir @${s.username}`);
-    } else {
-      await supabase.from("profile_follows").insert({ follower_id: user.id, following_id: s.user_id });
-      toast.success(`Você está seguindo @${s.username}`);
-    }
+    gate("follow", async () => {
+      if (!user || user.id === s.user_id) return;
+      const following = s.viewer_already_follows;
+      patch(s.status_id, { viewer_already_follows: !following });
+      if (following) {
+        await supabase.from("profile_follows").delete().eq("follower_id", user.id).eq("following_id", s.user_id);
+        toast.message(`Você deixou de seguir @${s.username}`);
+      } else {
+        await supabase.from("profile_follows").insert({ follower_id: user.id, following_id: s.user_id });
+        toast.success(`Você está seguindo @${s.username}`);
+      }
+    });
   }
 
   async function startChat(s: DiscoverStatus) {
-    if (!user) return;
-    try {
-      const id = await getOrCreateDirectConversation(user.id, s.user_id);
-      navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível abrir a conversa");
-    }
+    gate("message", async () => {
+      if (!user) return;
+      try {
+        const id = await getOrCreateDirectConversation(user.id, s.user_id);
+        navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Não foi possível abrir a conversa");
+      }
+    });
   }
 
   return (
