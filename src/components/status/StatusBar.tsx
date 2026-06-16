@@ -3,6 +3,7 @@ import { Plus, Loader2, Globe2, Hash } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CreateStatusDialog } from "./CreateStatusDialog";
@@ -36,6 +37,7 @@ export interface UserGroup {
 
 export function StatusBar() {
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const { t } = useTranslation();
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [mine, setMine] = useState<StatusRow[]>([]);
@@ -44,8 +46,42 @@ export function StatusBar() {
   const [viewing, setViewing] = useState<{ groups: UserGroup[]; groupIndex: number; statusIndex: number } | null>(null);
 
   async function load() {
-    if (!user) return;
     setLoading(true);
+    if (!user) {
+      const { data } = await (supabase as any).rpc("discover_public_statuses", { _limit: 30, _offset: 0 });
+      const byUser = new Map<string, UserGroup>();
+      for (const r of data ?? []) {
+        const status: StatusRow = {
+          id: r.status_id,
+          user_id: r.user_id,
+          kind: r.kind,
+          content: r.content,
+          media_url: r.media_url,
+          caption: r.caption,
+          background: r.background,
+          is_official: r.is_official,
+          created_at: r.created_at,
+          expires_at: r.expires_at,
+          cta_url: r.cta_url,
+          cta_label: r.cta_label,
+        };
+        const current = byUser.get(r.user_id);
+        if (current) current.statuses.push(status);
+        else byUser.set(r.user_id, {
+          user: { id: r.user_id, display_name: r.display_name, avatar_url: r.avatar_url },
+          statuses: [status],
+          hasUnseen: true,
+          isOfficial: !!r.is_official,
+          isSponsored: !!r.is_boosted,
+          firstUnseenIndex: 0,
+          sponsoredStatusIds: r.is_boosted ? [r.status_id] : [],
+        });
+      }
+      setMine([]);
+      setGroups(Array.from(byUser.values()));
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from("statuses")
       .select("*")
@@ -137,16 +173,14 @@ export function StatusBar() {
     };
   }, [user?.id]);
 
-  if (!user) return null;
-
   const viewerGroups: UserGroup[] = [
     ...(mine.length
       ? [
           {
             user: {
-              id: user.id,
+              id: user!.id,
               display_name: t("status.myStatus"),
-              avatar_url: (user.user_metadata as any)?.avatar_url ?? null,
+              avatar_url: (user!.user_metadata as any)?.avatar_url ?? null,
             },
             statuses: mine,
             hasUnseen: false,
@@ -176,22 +210,23 @@ export function StatusBar() {
         {loading && <Loader2 className="size-3 animate-spin text-muted-foreground" />}
       </div>
       <div className="flex gap-3 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1">
+        {GateDialog}
         {/* My status */}
         <button
-          onClick={() => (mine.length ? openViewer(user.id) : setCreateOpen(true))}
+          onClick={() => gate("create_status", () => (mine.length && user ? openViewer(user.id) : setCreateOpen(true)))}
           className="flex flex-col items-center gap-1 shrink-0 group"
         >
           <div className="relative">
             <Avatar className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}>
-              <AvatarImage src={(user.user_metadata as any)?.avatar_url} />
+              <AvatarImage src={(user?.user_metadata as any)?.avatar_url} />
               <AvatarFallback className="bg-secondary text-sm">
-                {(user.email?.[0] ?? "?").toUpperCase()}
+                {(user?.email?.[0] ?? "V").toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setCreateOpen(true);
+                gate("create_status", () => setCreateOpen(true));
               }}
               className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-primary text-primary-foreground grid place-items-center ring-2 ring-sidebar hover:scale-110 transition"
               aria-label={t("status.createStatus")}
