@@ -129,8 +129,9 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       <MusicPickerSheet
         open={musicOpen}
         onOpenChange={setMusicOpen}
-        onPick={(track) => { setMusicTrackId(track.id); setMusicTitle(`${track.title} — ${track.artist}`); setMusicOpen(false); }}
+        onSelect={(sel) => { setMusicTrackId(sel.track.id); setMusicTitle(`${sel.track.title} — ${sel.track.artist}`); setMusicOpen(false); }}
       />
+
     </>
   );
 }
