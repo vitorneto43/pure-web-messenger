@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Eye, X } from "lucide-react";
+import { LiveModerationMenu } from "./LiveModerationMenu";
 
 interface Host {
+  id?: string | null;
   username?: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
@@ -11,6 +13,7 @@ interface Host {
 
 export function LiveHeader({
   liveId,
+  hostId,
   title,
   host,
   isHost,
@@ -18,6 +21,7 @@ export function LiveHeader({
   onClose,
 }: {
   liveId: string;
+  hostId: string;
   title: string;
   host: Host | null;
   isHost: boolean;
