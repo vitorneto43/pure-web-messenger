@@ -53,10 +53,26 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const isOwner = user?.id === post.user_id;
+  const [reportOpen, setReportOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const blockFn = useServerFn(blockUser);
 
   useEffect(() => {
     void (supabase as any).rpc("register_post_view", { _post_id: post.post_id, _session_hash: null });
   }, [post.post_id]);
+
+  async function handleBlock() {
+    gate("react", async () => {
+      if (!confirm(`Bloquear @${post.username}? Você não verá mais conteúdos dessa pessoa.`)) return;
+      try {
+        await blockFn({ data: { user_id: post.user_id } });
+        toast.success("Usuário bloqueado");
+        setHidden(true);
+      } catch (e: any) {
+        toast.error(e?.message ?? "Falha ao bloquear");
+      }
+    });
+  }
 
   async function toggleLike() {
     gate("react", async () => {
