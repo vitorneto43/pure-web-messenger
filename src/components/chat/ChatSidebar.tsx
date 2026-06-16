@@ -353,7 +353,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   return (
     <>
       {GateDialog}
-      <div className="p-4 flex items-center justify-between border-b border-border">
+      <div className="px-2 py-3 flex items-center justify-between gap-1 border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
             <span className="text-primary-foreground font-bold text-sm">W</span>
@@ -379,29 +379,29 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+        <div className="flex items-center gap-0 shrink-0">
+          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
             <Link to="/live" title="Lives">
               <Radio className="size-4 text-red-500" />
             </Link>
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
             <Link to="/posts" title="Posts">
               <Newspaper className="size-4" />
             </Link>
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
             <Link to="/diretrizes" title={t("nav.guidelines")}>
               <BookOpen className="size-4" />
             </Link>
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full" asChild>
+          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
             <Link to="/guide" title={t("chat.help")}>
               <HelpCircle className="size-4" />
             </Link>
           </Button>
           {user ? <NotificationsBell /> : (
-            <Button size="icon" variant="ghost" className="rounded-full relative" onClick={() => gate("default", () => undefined)}>
+            <Button size="icon" variant="ghost" className="rounded-full relative size-8" onClick={() => gate("default", () => undefined)}>
               <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
               <Settings className="size-4" />
             </Button>
@@ -409,7 +409,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="rounded-full">
+                <Button size="icon" variant="ghost" className="rounded-full size-8">
                   <Settings className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
