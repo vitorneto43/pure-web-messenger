@@ -1,75 +1,100 @@
-## Visão geral
+# Sistema de Lives no WaveChat
 
-Nova área `/posts` no menu principal do WaveChat com posts duradouros (sem expiração tipo Status), comentários em 2 níveis, botão "Chat" em cada comentarista, exposição pública para visitantes web (com gate de cadastro em curtir/comentar/compartilhar) e sistema de Boost de Post espelhado do Status.
+Lives ao vivo (1 host → milhares de viewers) usando **LiveKit Cloud** como servidor de mídia, integradas ao app existente sem rebuild Android (as permissões de câmera/microfone já estão no `AndroidManifest` por causa das chamadas).
 
-## Banco de dados (1 migration)
+## O que será entregue
 
-**Tabelas novas (`public`):**
+### 1. Rotas e telas novas
 
-- `posts` — `id, user_id, kind ('text'|'image'|'video'), content, media_url, caption, background, hashtags[], music_track_id (fk story_music_tracks), music_start_sec, music_volume, visibility ('public'|'followers'), is_official, pinned, created_at, updated_at`
-- `post_reactions` — `post_id, user_id, emoji, created_at` (unique post_id+user_id)
-- `post_comments` — `id, post_id, user_id, parent_id (nullable, fk post_comments — só 1 nível: parent_id IS NULL OR parent_id aponta para comentário raiz), content, created_at` + trigger valida profundidade
-- `post_comment_reactions` — `comment_id, user_id, emoji`
-- `post_views` — `post_id, viewer_id (nullable p/ guest), session_hash, created_at`
-- `post_shares` — `post_id, user_id, channel, created_at`
-- `post_boosts` — espelho exato de `status_boosts` substituindo `status_id` por `post_id`, mesmas colunas de pacote/segmentação/objetivo/CPM/refund
-- `post_boost_clicks` — espelho de `status_boost_clicks`
+```text
+/live                       → feed de lives ativas agora (público)
+/live/new                   → tela de "Ir ao vivo" (host) — gated por login
+/live/$liveId               → tela de live (viewer ou host)
+```
 
-**RPCs:**
-- `discover_public_posts(_limit, _offset)` — feed público (anon)
-- `register_post_view(_post_id)` — anon-safe
-- `register_post_boost_click(_post_id)`
-- `get_post_boost_report(_boost_id)`
+- Card de live no feed `/posts` quando o autor estiver ao vivo.
+- Botão "Ao vivo" no header do `/chat` e no perfil do usuário.
 
-**RLS/GRANT:** RLS habilitada em todas; SELECT público `TO anon` apenas em posts com `visibility='public'`; inserts/updates/deletes restritos por `auth.uid()`.
+### 2. Recursos da live
 
-## Server functions
+- **Vídeo + áudio HD** do host via WebRTC (LiveKit).
+- **Chat ao vivo** com mensagens rolando, envio instantâneo (Supabase Realtime).
+- **Reações flutuantes** (❤️ 🔥 👏 😂 🎉) animadas na tela.
+- **Contador de espectadores + lista** ("quem está assistindo" com avatares).
+- **Convidar pra subir no palco**: host aprova pedidos, até 4 convidados publicam vídeo/áudio junto. Convidado pode pedir, host aceita/recusa, host pode "tirar do palco".
+- **Presentes pagos** (moedas WaveCoins): catálogo de presentes (🌹 Rosa, 🦁 Leão, 🚀 Foguete etc.), comprados com moedas (compradas via Stripe), aparecem animados na live, top doadores ranqueados no painel da live.
+- **Denunciar / bloquear** o host (reusa `ReportContentDialog`).
+- **Encerrar live** pelo host; viewers veem mensagem "Live encerrada".
+- **Notificação** para seguidores quando alguém entra ao vivo (push + sino).
+- **Compartilhar link** da live (Open Graph com thumbnail do host).
 
-- `src/lib/posts.functions.ts` — `createPost`, `deletePost`, `togglePostReaction`, `addPostComment`, `replyToComment`, `deleteComment`, `toggleCommentReaction`, `sharePost`, `listMyPosts`
-- `src/lib/public-posts.functions.ts` — `getPublicFeed`, `getPublicPost(id)`, `getPublicComments(postId)` (server publishable client, projeção segura)
-- `src/lib/post-boost.functions.ts` — clone de `boost-analytics.functions.ts` e a parte de criação de boost de Status, apontando para `post_boosts` (reusa mesmo Stripe checkout)
+### 3. O que NÃO entra nesta primeira versão
 
-## Rotas
+- Replay/gravação automática (LiveKit suporta, mas adiciona custo — pode vir depois).
+- Stream para YouTube/Twitch via RTMP.
+- Filtros faciais / AR.
+- Co-host vendo a mesma tela (multi-host está incluso via "palco", até 4 pessoas; isso cobre o caso de uso).
 
-- `src/routes/_authenticated/posts.tsx` — feed scrollável (similar `descobrir-status`), funciona para guest via `GuestBrowse`
-- `src/routes/_authenticated/posts.$postId.tsx` — detalhe do post + thread de comentários
-- `src/routes/p.$postId.tsx` — rota pública compartilhável com OG tags (SEO)
+## Tecnologia
 
-## UI
+- **LiveKit Cloud** (free tier: 100 GB egress/mês, milhares de viewers concorrentes). Você cria a conta em livekit.io e me passa as 3 credenciais.
+- **Backend**: server functions TanStack que mintam tokens JWT do LiveKit (HS256 via Web Crypto — compatível com o runtime do Lovable Cloud, sem pacote nativo).
+- **Frontend**: `@livekit/components-react` + `livekit-client` (puro WebRTC do navegador, funciona no Capacitor sem rebuild).
+- **Chat/reações/palco-requests**: Supabase Realtime nas novas tabelas.
+- **Presentes pagos**: reaproveita o sistema Stripe já existente do app.
 
-- `src/components/posts/PostFeed.tsx` — lista vertical infinita
-- `src/components/posts/PostCard.tsx` — render texto/imagem/vídeo + player de música (reusa `StatusMusicPlayer`) + ações
-- `src/components/posts/PostComposer.tsx` — criar post (reusa `MusicPickerSheet`)
-- `src/components/posts/PostComments.tsx` — comentários + respostas (2 níveis), botão `MessageSquare` em cada autor que chama `getOrCreateDirectConversation` (gated por `useAuthGate("message")`)
-- `src/components/posts/PostActions.tsx` — curtir/comentar/compartilhar/impulsionar, todas atrás de `useAuthGate`
-- `src/components/posts/PostBoostDialog.tsx` — clone do `BoostDialog` apontando para `post_boosts`
-- `src/components/posts/PostBoostReportDialog.tsx` — clone do `BoostReportDialog`
+## Banco de dados (novas tabelas)
 
-Sidebar (`ChatSidebar.tsx`): adicionar item "Posts" com ícone `Newspaper`/`Layout` rotando para `/posts`.
+- `live_sessions` — host, título, capa, status (live/ended), `viewer_count`, contagem de presentes/curtidas, timestamps.
+- `live_chat_messages` — mensagens da live (chat efêmero, TTL curto).
+- `live_reactions` — emoji burst (TTL curto, agregado por minuto).
+- `live_stage_requests` — pedidos pra subir no palco (pending/approved/rejected/kicked).
+- `live_viewers` — heartbeat de quem está assistindo (limpa após X min sem ping).
+- `live_gifts_catalog` — catálogo de presentes (nome, emoji/animação, custo em moedas).
+- `live_gifts_sent` — presente enviado (live_id, viewer_id, gift_id, qty, moedas gastas).
+- `user_coins` — saldo de moedas do usuário (já pode existir? checo antes).
+- `coin_purchases` — compras de pacotes de moedas via Stripe.
 
-## Comportamento guest
+Tudo com RLS, GRANTs e policies (anon lê live ativa + chat; autenticado escreve chat/reações/presentes; host edita a própria live).
 
-- `/posts` e `/p/$postId` renderizam para não-autenticados via `GuestBrowse`
-- Toda ação (curtir, comentar, responder, compartilhar, criar post, impulsionar, abrir chat) passa por `useAuthGate(action, fn)` → abre `AuthGateDialog`
-- Views de guest são registradas com `session_hash` (fingerprint anon)
+## Pacotes de moedas (Stripe)
 
-## Pagamentos / Boost
+Crio 4 produtos no Stripe (você ajusta os preços depois):
+- 100 moedas — R$ 4,90
+- 500 moedas — R$ 19,90
+- 1 200 moedas — R$ 39,90 (bônus +200)
+- 5 000 moedas — R$ 149,90 (bônus +1 000)
 
-- `post_boosts` reusa `payments.functions.ts` adicionando `boost_target_kind: 'post'` no metadata do Stripe checkout
-- Webhook `/api/public/payments/webhook.ts` ganha branch que ativa `post_boosts` quando `boost_target_kind==='post'`
-- Refund sweeper inclui `post_boosts`
-- Mesmos pacotes, mesma UI de segmentação (estados/idade/gênero/CPM/objetivo)
+Webhook Stripe credita as moedas em `user_coins` após pagamento.
 
-## Detalhes técnicos
+## Segredos que você precisa fornecer
 
-- `parent_id` de `post_comments` validado por trigger: `parent_id IS NULL OR (SELECT parent_id FROM post_comments WHERE id = NEW.parent_id) IS NULL` (proíbe nível 3)
-- `posts.kind='video'` aceita upload via bucket `posts-media` (criar bucket público)
-- Música: só `story_music_tracks` ativos (SOMENTE biblioteca interna)
-- Feed público ordenado por `(is_boosted DESC, created_at DESC)` com janela de boost ativa
-- Compartilhamento gera link `https://webconnectchat.com/p/{id}` com OG dinâmico
+Depois que aprovar o plano, vou pedir três variáveis via formulário seguro:
 
-## Escopo NÃO incluído
+1. `LIVEKIT_API_KEY`
+2. `LIVEKIT_API_SECRET`
+3. `LIVEKIT_WS_URL` (algo como `wss://seuprojeto.livekit.cloud`)
 
-- Não altera Status existente
-- Não adiciona música externa (apenas `story_music_tracks`)
-- Não muda visibilidade da home `/index` para visitantes
+Como obter: criar conta em https://cloud.livekit.io → Project → Settings → Keys.
+
+## Rebuild Android?
+
+**Não precisa.** O AndroidManifest atual (das chamadas WebRTC) já contém `CAMERA`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS` e o `<uses-feature>` de câmera. O `livekit-client` usa as mesmas APIs do navegador (`getUserMedia`), então abre o request de permissão automaticamente na webview do Capacitor.
+
+## Ordem de implementação
+
+1. Migration: criar todas as tabelas, RLS, GRANTs, RPCs (`start_live`, `end_live`, `join_live`, `send_gift`, `request_stage`, `approve_stage`).
+2. Pedir os 3 secrets do LiveKit.
+3. Server functions: `mintLiveKitToken` (host/viewer/guest), `purchaseCoinsCheckout`, `sendLiveGift`.
+4. Webhook Stripe: tratar `coin_purchase` e creditar `user_coins`.
+5. Instalar `@livekit/components-react` + `livekit-client`.
+6. Componentes: `LiveStudio` (host), `LiveViewer`, `LiveChat`, `LiveReactions`, `LiveStagePanel`, `LiveGiftSheet`, `LiveCard`.
+7. Rotas `/live`, `/live/new`, `/live/$liveId`.
+8. Integração: card de live no feed, botão no header do chat, push notification para seguidores.
+
+## Custos a ter em mente
+
+- LiveKit Cloud free tier cobre bem para começar; depois disso é ~$0,12/GB de egress (cerca de R$ 0,06 por viewer-hora em SD).
+- Stripe: taxa padrão por transação dos pacotes de moedas.
+
+Confirma o plano que eu sigo: peço os secrets do LiveKit e implemento ponta a ponta.
