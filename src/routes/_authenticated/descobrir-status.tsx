@@ -145,15 +145,18 @@ function DiscoverStatusPage() {
 
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col">
+      {GateDialog}
       <header className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10 bg-black/80 backdrop-blur z-10">
-        <button onClick={() => navigate({ to: "/chat" })} className="size-9 grid place-items-center rounded-full hover:bg-white/10">
+        <button onClick={() => navigate({ to: user ? "/chat" : "/descobrir" })} className="size-9 grid place-items-center rounded-full hover:bg-white/10">
           <ArrowLeft className="size-5" />
         </button>
         <div className="flex items-center gap-2">
           <Globe2 className="size-4 text-primary" />
           <span className="font-bold">Descobrir status</span>
         </div>
-        <div className="size-9" />
+        {user ? <div className="size-9" /> : (
+          <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+        )}
       </header>
 
       {query.isLoading && (
