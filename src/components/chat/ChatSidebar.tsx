@@ -396,18 +396,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
       <StatusBar />
 
-      <OnlineUsersStrip />
-
-
-
-      <ProfileCompletionBanner />
-
-      <InviteMissionBanner />
-
-      <MeetPeopleCard />
-
-      <div className="px-3 pt-3 pb-2 space-y-2">
-
+      <div className="px-3 pt-2 pb-2 space-y-2 border-b border-border bg-sidebar">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
@@ -458,10 +447,14 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             </button>
           ))}
         </div>
-        <AdsterraBanner variant="banner_320x50" className="pt-1" />
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
+        <OnlineUsersStrip />
+        <ProfileCompletionBanner />
+        <InviteMissionBanner />
+        <MeetPeopleCard />
+        <AdsterraBanner variant="banner_320x50" className="px-1 pt-2 pb-1" />
         {loading ? (
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
