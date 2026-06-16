@@ -195,6 +195,7 @@ function LiveView() {
                 {isHost && <LiveStagePanel liveId={live.id} isHost={isHost} />}
               </div>
               <div className="flex items-center gap-2">
+                {!isHost && <LivePixSheet liveId={live.id} />}
                 {!isHost && <LiveGiftSheet liveId={live.id} userId={userId} />}
                 {isHost && (
                   <Button size="sm" variant="destructive" onClick={endLive}>
