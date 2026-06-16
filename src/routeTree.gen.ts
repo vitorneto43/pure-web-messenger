@@ -22,6 +22,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -105,6 +106,11 @@ const AboutRoute = AboutRouteImport.update({
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
@@ -218,7 +224,7 @@ const ApiPublicAuthCheckSignupIpRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedRouteWithChildren
+  '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
@@ -253,7 +259,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AuthenticatedRouteWithChildren
+  '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
@@ -289,6 +295,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
@@ -396,6 +403,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/send'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/about'
     | '/admin'
@@ -432,6 +440,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
@@ -552,6 +561,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/u/$username': {
@@ -729,6 +745,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
@@ -761,13 +778,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
