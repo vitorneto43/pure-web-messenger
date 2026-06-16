@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useOnlinePresence } from "@/hooks/use-online-presence";
+import { LiveAvatarRing } from "@/components/live/LiveAvatarRing";
 
 /**
  * Faixa horizontal mostrando quem está online agora.
