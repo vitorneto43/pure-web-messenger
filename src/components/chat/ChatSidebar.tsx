@@ -623,12 +623,14 @@ function ConversationRow({
       }`}
     >
       <div className="relative">
-        <Avatar className="size-11">
-          <AvatarImage src={avatar ?? undefined} />
-          <AvatarFallback className="bg-secondary text-sm">
-            {name[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <LiveAvatarRing hostId={conv.is_group ? null : conv.other_user?.id} showPill={false}>
+          <Avatar className="size-11">
+            <AvatarImage src={avatar ?? undefined} />
+            <AvatarFallback className="bg-secondary text-sm">
+              {name[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </LiveAvatarRing>
         {online && (
           <span className="absolute bottom-0 right-0 size-3 rounded-full bg-emerald-400 ring-2 ring-sidebar" />
         )}
