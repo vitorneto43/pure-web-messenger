@@ -25,8 +25,10 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
+import { Route as PPostIdRouteImport } from './routes/p.$postId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/posts'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -123,6 +125,11 @@ const SStatusIdRoute = SStatusIdRouteImport.update({
   path: '/s/$statusId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PPostIdRoute = PPostIdRouteImport.update({
+  id: '/p/$postId',
+  path: '/p/$postId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
@@ -131,6 +138,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPostsRoute = AuthenticatedPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedHashtagsRoute = AuthenticatedHashtagsRouteImport.update({
@@ -240,8 +252,10 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
@@ -275,8 +289,10 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/posts': typeof AuthenticatedPostsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
@@ -312,8 +328,10 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
+  '/_authenticated/posts': typeof AuthenticatedPostsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
@@ -349,8 +367,10 @@ export interface FileRouteTypes {
     | '/chat'
     | '/descobrir-status'
     | '/hashtags'
+    | '/posts'
     | '/profile'
     | '/email/unsubscribe'
+    | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
     | '/chat/$conversationId'
@@ -384,8 +404,10 @@ export interface FileRouteTypes {
     | '/chat'
     | '/descobrir-status'
     | '/hashtags'
+    | '/posts'
     | '/profile'
     | '/email/unsubscribe'
+    | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
     | '/chat/$conversationId'
@@ -420,8 +442,10 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/descobrir-status'
     | '/_authenticated/hashtags'
+    | '/_authenticated/posts'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
+    | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
     | '/_authenticated/chat/$conversationId'
@@ -455,6 +479,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  PPostIdRoute: typeof PPostIdRoute
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
@@ -584,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SStatusIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$postId': {
+      id: '/p/$postId'
+      path: '/p/$postId'
+      fullPath: '/p/$postId'
+      preLoaderRoute: typeof PPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
       path: '/email/unsubscribe'
@@ -596,6 +628,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/posts': {
+      id: '/_authenticated/posts'
+      path: '/posts'
+      fullPath: '/posts'
+      preLoaderRoute: typeof AuthenticatedPostsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/hashtags': {
@@ -728,6 +767,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
   AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
+  AuthenticatedPostsRoute: typeof AuthenticatedPostsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
 }
@@ -736,6 +776,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
+  AuthenticatedPostsRoute: AuthenticatedPostsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
 }
@@ -760,6 +801,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  PPostIdRoute: PPostIdRoute,
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
