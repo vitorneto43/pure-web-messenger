@@ -55,6 +55,6 @@ function PushBootstrap() {
   useBoostReturn();
   useLiveLocationBroadcast();
   useMessageNotificationIntent();
-  useOnlineAnnouncements();
+  
   return null;
 }
