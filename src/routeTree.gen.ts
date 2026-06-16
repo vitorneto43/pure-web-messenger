@@ -28,6 +28,7 @@ import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as PPostIdRouteImport } from './routes/p.$postId'
+import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -141,6 +142,11 @@ const SStatusIdRoute = SStatusIdRouteImport.update({
 const PPostIdRoute = PPostIdRouteImport.update({
   id: '/p/$postId',
   path: '/p/$postId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeetRoomIdRoute = MeetRoomIdRouteImport.update({
+  id: '/meet/$roomId',
+  path: '/meet/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveNewRoute = LiveNewRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
+  '/meet/$roomId': typeof MeetRoomIdRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
+  '/meet/$roomId': typeof MeetRoomIdRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
+  '/meet/$roomId': typeof MeetRoomIdRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
+    | '/meet/$roomId'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
+    | '/meet/$roomId'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
+    | '/meet/$roomId'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
@@ -518,6 +530,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LiveLiveIdRoute: typeof LiveLiveIdRoute
   LiveNewRoute: typeof LiveNewRoute
+  MeetRoomIdRoute: typeof MeetRoomIdRoute
   PPostIdRoute: typeof PPostIdRoute
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -668,6 +681,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$postId'
       fullPath: '/p/$postId'
       preLoaderRoute: typeof PPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meet/$roomId': {
+      id: '/meet/$roomId'
+      path: '/meet/$roomId'
+      fullPath: '/meet/$roomId'
+      preLoaderRoute: typeof MeetRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/live/new': {
@@ -863,6 +883,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LiveLiveIdRoute: LiveLiveIdRoute,
   LiveNewRoute: LiveNewRoute,
+  MeetRoomIdRoute: MeetRoomIdRoute,
   PPostIdRoute: PPostIdRoute,
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
@@ -883,13 +904,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
