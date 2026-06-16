@@ -30,7 +30,7 @@ export const Route = createFileRoute("/p/$postId")({
       ? post.media_url
       : post?.kind === "video" && post.media_url
         ? post.media_url
-        : undefined;
+        : (post?.avatar_url || undefined);
     const meta: Array<Record<string, string>> = [
       { title: baseTitle },
       { name: "description", content: desc },
