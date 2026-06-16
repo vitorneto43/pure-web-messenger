@@ -12,6 +12,7 @@ import {
   BookOpen,
   User as UserIcon,
   Newspaper,
+  Radio,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -379,6 +380,11 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         </div>
         <div className="flex items-center gap-1">
           <Button size="icon" variant="ghost" className="rounded-full" asChild>
+            <Link to="/live" title="Lives">
+              <Radio className="size-4 text-red-500" />
+            </Link>
+          </Button>
+          <Button size="icon" variant="ghost" className="rounded-full" asChild>
             <Link to="/posts" title="Posts">
               <Newspaper className="size-4" />
             </Link>
@@ -441,6 +447,9 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             className="flex-1 rounded-full"
           >
             <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
+          </Button>
+          <Button asChild size="sm" variant="secondary" className="rounded-full">
+            <Link to="/live"><Radio className="size-4 mr-1.5 text-red-500" />Lives</Link>
           </Button>
           <Button asChild size="sm" variant="secondary" className="rounded-full">
             <Link to="/posts"><Newspaper className="size-4 mr-1.5" />Posts</Link>
