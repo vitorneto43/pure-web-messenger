@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Radio } from "lucide-react";
 import { toast } from "sonner";
+import { notifyLiveStart } from "@/lib/live-push.functions";
+
 
 export const Route = createFileRoute("/live/new")({
   head: () => ({
