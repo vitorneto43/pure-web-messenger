@@ -29,7 +29,7 @@ function NewLive() {
       return;
     }
     setBusy(true);
-    const { data, error } = await supabase.rpc("start_live", { p_title: title, p_cover_url: null });
+    const { data, error } = await supabase.rpc("start_live", { p_title: title });
     setBusy(false);
     if (error) {
       toast.error(error.message);
