@@ -5,6 +5,7 @@ import { Loader2, Heart, MessageCircle, UserPlus, UserCheck, MessageSquare, Arro
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { UserBadges } from "@/components/badges/UserBadges";
