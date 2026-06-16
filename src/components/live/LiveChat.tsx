@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
+import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 
 interface Msg {
   id: string;
