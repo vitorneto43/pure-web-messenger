@@ -2655,6 +2655,40 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      public_discover_people: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          city: string
+          country: string
+          display_name: string
+          id: string
+          mutual_count: number
+          reason: string
+          region: string
+          username: string
+        }[]
+      }
+      public_online_users: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          online_at: string
+          user_id: string
+          username: string
+          visibility: string
+        }[]
+      }
+      public_search_users: {
+        Args: { q: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          username: string
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
