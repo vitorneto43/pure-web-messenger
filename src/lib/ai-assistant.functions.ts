@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const ActionSchema = z.object({
-  action: z.enum(["translate", "suggest_reply", "improve", "summarize", "suggest_caption"]),
+  action: z.enum(["translate", "suggest_reply", "improve", "summarize", "suggest_caption", "suggest_hashtags"]),
   text: z.string().min(1).max(8000).optional(),
   context: z.string().max(12000).optional(),
   targetLanguage: z.string().min(2).max(40).optional(),
@@ -48,6 +48,11 @@ function buildPrompt(input: Input): { system: string; user: string } {
       return {
         system: `Você é um copywriter de redes sociais (TikTok/Instagram). Gere UMA legenda curta (até 140 caracteres), envolvente, em português do Brasil, com 2 a 4 hashtags relevantes no final (em minúsculas, sem espaços, juntas tipo #motivacao). Responda APENAS com a legenda final, sem aspas, sem prefixo.`,
         user: `Conteúdo do story:\n${input.text ?? input.context ?? ""}`,
+      };
+    case "suggest_hashtags":
+      return {
+        system: `Você é especialista em SEO de redes sociais. Gere de 5 a 8 hashtags relevantes, em minúsculas, sem espaços, sem acentos, separadas por espaço, começando com #. Responda APENAS as hashtags em uma única linha, sem explicação, sem aspas, sem prefixo. Exemplo: #motivacao #foco #sucesso #mindset #vida`,
+        user: `Conteúdo do post:\n${input.text ?? input.context ?? ""}`,
       };
   }
 }
