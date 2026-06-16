@@ -24,9 +24,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as PPostIdRouteImport } from './routes/p.$postId'
+import { Route as LiveNewRouteImport } from './routes/live.new'
+import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
@@ -120,6 +123,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LiveIndexRoute = LiveIndexRouteImport.update({
+  id: '/live/',
+  path: '/live/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -133,6 +141,16 @@ const SStatusIdRoute = SStatusIdRouteImport.update({
 const PPostIdRoute = PPostIdRouteImport.update({
   id: '/p/$postId',
   path: '/p/$postId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveNewRoute = LiveNewRouteImport.update({
+  id: '/live/new',
+  path: '/live/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveLiveIdRoute = LiveLiveIdRouteImport.update({
+  id: '/live/$liveId',
+  path: '/live/$liveId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -255,9 +273,12 @@ export interface FileRoutesByFullPath {
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/live/$liveId': typeof LiveLiveIdRoute
+  '/live/new': typeof LiveNewRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -292,9 +313,12 @@ export interface FileRoutesByTo {
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/live/$liveId': typeof LiveLiveIdRoute
+  '/live/new': typeof LiveNewRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -331,9 +355,12 @@ export interface FileRoutesById {
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/live/$liveId': typeof LiveLiveIdRoute
+  '/live/new': typeof LiveNewRoute
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -370,9 +397,12 @@ export interface FileRouteTypes {
     | '/hashtags'
     | '/profile'
     | '/email/unsubscribe'
+    | '/live/$liveId'
+    | '/live/new'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
     | '/api/public/status-push'
@@ -407,9 +437,12 @@ export interface FileRouteTypes {
     | '/hashtags'
     | '/profile'
     | '/email/unsubscribe'
+    | '/live/$liveId'
+    | '/live/new'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
     | '/api/public/status-push'
@@ -445,9 +478,12 @@ export interface FileRouteTypes {
     | '/_authenticated/hashtags'
     | '/_authenticated/profile'
     | '/email/unsubscribe'
+    | '/live/$liveId'
+    | '/live/new'
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
     | '/api/public/status-push'
@@ -480,9 +516,12 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  LiveLiveIdRoute: typeof LiveLiveIdRoute
+  LiveNewRoute: typeof LiveNewRoute
   PPostIdRoute: typeof PPostIdRoute
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  LiveIndexRoute: typeof LiveIndexRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -603,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live/': {
+      id: '/live/'
+      path: '/live'
+      fullPath: '/live/'
+      preLoaderRoute: typeof LiveIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -622,6 +668,20 @@ declare module '@tanstack/react-router' {
       path: '/p/$postId'
       fullPath: '/p/$postId'
       preLoaderRoute: typeof PPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live/new': {
+      id: '/live/new'
+      path: '/live/new'
+      fullPath: '/live/new'
+      preLoaderRoute: typeof LiveNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live/$liveId': {
+      id: '/live/$liveId'
+      path: '/live/$liveId'
+      fullPath: '/live/$liveId'
+      preLoaderRoute: typeof LiveLiveIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -801,9 +861,12 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  LiveLiveIdRoute: LiveLiveIdRoute,
+  LiveNewRoute: LiveNewRoute,
   PPostIdRoute: PPostIdRoute,
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
+  LiveIndexRoute: LiveIndexRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,

@@ -361,6 +361,45 @@ export type Database = {
           },
         ]
       }
+      coin_purchases: {
+        Row: {
+          amount_cents: number
+          coins: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          package_id: string
+          status: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          coins: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          package_id: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          coins?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          package_id?: string
+          status?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       compliance_access_logs: {
         Row: {
           accessor_email: string | null
@@ -864,6 +903,113 @@ export type Database = {
           },
         ]
       }
+      live_chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          live_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          live_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          live_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_gifts_catalog: {
+        Row: {
+          coins_cost: number
+          emoji: string
+          enabled: boolean
+          id: string
+          name: string
+          rarity: string
+          sort_order: number
+        }
+        Insert: {
+          coins_cost: number
+          emoji: string
+          enabled?: boolean
+          id: string
+          name: string
+          rarity?: string
+          sort_order?: number
+        }
+        Update: {
+          coins_cost?: number
+          emoji?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          rarity?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      live_gifts_sent: {
+        Row: {
+          coins_spent: number
+          created_at: string
+          gift_id: string
+          id: string
+          live_id: string
+          quantity: number
+          sender_id: string
+        }
+        Insert: {
+          coins_spent: number
+          created_at?: string
+          gift_id: string
+          id?: string
+          live_id: string
+          quantity?: number
+          sender_id: string
+        }
+        Update: {
+          coins_spent?: number
+          created_at?: string
+          gift_id?: string
+          id?: string
+          live_id?: string
+          quantity?: number
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_gifts_sent_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "live_gifts_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_gifts_sent_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_locations: {
         Row: {
           accuracy: number | null
@@ -911,6 +1057,147 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      live_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          live_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          live_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          live_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_reactions_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_sessions: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          livekit_room: string
+          peak_viewers: number
+          started_at: string
+          status: Database["public"]["Enums"]["live_status"]
+          title: string
+          total_gift_coins: number
+          total_reactions: number
+          viewer_count: number
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          livekit_room: string
+          peak_viewers?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["live_status"]
+          title?: string
+          total_gift_coins?: number
+          total_reactions?: number
+          viewer_count?: number
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          livekit_room?: string
+          peak_viewers?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["live_status"]
+          title?: string
+          total_gift_coins?: number
+          total_reactions?: number
+          viewer_count?: number
+        }
+        Relationships: []
+      }
+      live_stage_requests: {
+        Row: {
+          created_at: string
+          id: string
+          live_id: string
+          status: Database["public"]["Enums"]["stage_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          live_id: string
+          status?: Database["public"]["Enums"]["stage_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          live_id?: string
+          status?: Database["public"]["Enums"]["stage_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stage_requests_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_viewers: {
+        Row: {
+          last_seen: string
+          live_id: string
+          user_id: string
+        }
+        Insert: {
+          last_seen?: string
+          live_id: string
+          user_id: string
+        }
+        Update: {
+          last_seen?: string
+          live_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_viewers_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -2659,6 +2946,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_coins: {
+        Row: {
+          balance: number
+          lifetime_earned: number
+          lifetime_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          lifetime_earned?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          lifetime_earned?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_onboarding_survey: {
         Row: {
           age_range: string
@@ -2857,6 +3168,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      end_live: { Args: { p_live_id: string }; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -2997,6 +3309,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      heartbeat_viewer: { Args: { p_live_id: string }; Returns: number }
       increment_music_play_count: {
         Args: { _track_id: string }
         Returns: undefined
@@ -3019,6 +3332,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      leave_stage: { Args: { p_live_id: string }; Returns: undefined }
       list_active_music_tracks: {
         Args: { _mood?: string; _search?: string }
         Returns: {
@@ -3177,6 +3491,43 @@ export type Database = {
         Returns: string
       }
       request_profile_view: { Args: { _owner: string }; Returns: Json }
+      request_stage: {
+        Args: { p_live_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          live_id: string
+          status: Database["public"]["Enums"]["stage_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_stage_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      resolve_stage_request: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["stage_request_status"]
+          p_request_id: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          live_id: string
+          status: Database["public"]["Enums"]["stage_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_stage_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       respond_profile_view: {
         Args: { _approve: boolean; _requester: string }
         Returns: Json
@@ -3193,6 +3544,52 @@ export type Database = {
           id: string
           username: string
         }[]
+      }
+      send_live_gift: {
+        Args: { p_gift_id: string; p_live_id: string; p_quantity?: number }
+        Returns: {
+          coins_spent: number
+          created_at: string
+          gift_id: string
+          id: string
+          live_id: string
+          quantity: number
+          sender_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_gifts_sent"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_live_reaction: {
+        Args: { p_emoji: string; p_live_id: string }
+        Returns: undefined
+      }
+      start_live: {
+        Args: { p_cover_url?: string; p_title: string }
+        Returns: {
+          cover_url: string | null
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          livekit_room: string
+          peak_viewers: number
+          started_at: string
+          status: Database["public"]["Enums"]["live_status"]
+          title: string
+          total_gift_coins: number
+          total_reactions: number
+          viewer_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       toggle_follow: { Args: { _target: string }; Returns: boolean }
@@ -3239,6 +3636,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "moderator" | "superadmin"
+      live_status: "live" | "ended"
       moderation_action_type:
         | "warning"
         | "content_removed"
@@ -3258,6 +3656,12 @@ export type Database = {
         | "status_comment"
         | "post"
         | "post_comment"
+      stage_request_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "kicked"
+        | "left"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3386,6 +3790,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "superadmin"],
+      live_status: ["live", "ended"],
       moderation_action_type: [
         "warning",
         "content_removed",
@@ -3406,6 +3811,13 @@ export const Constants = {
         "status_comment",
         "post",
         "post_comment",
+      ],
+      stage_request_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "kicked",
+        "left",
       ],
     },
   },
