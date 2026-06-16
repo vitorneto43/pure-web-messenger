@@ -5,6 +5,7 @@ import { Loader2, Heart, MessageCircle, UserPlus, UserCheck, MessageSquare, Arro
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { UserBadges } from "@/components/badges/UserBadges";
@@ -50,12 +51,12 @@ const PAGE_SIZE = 12;
 
 function DiscoverStatusPage() {
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const query = useInfiniteQuery({
-    queryKey: ["discover-status", user?.id],
-    enabled: !!user,
+    queryKey: ["discover-status", user?.id ?? "guest"],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const { data, error } = await (supabase as any).rpc("discover_public_statuses", {
@@ -100,53 +101,62 @@ function DiscoverStatusPage() {
   }
 
   async function toggleLike(s: DiscoverStatus) {
-    if (!user) return;
-    const liked = s.viewer_already_liked;
-    patch(s.status_id, {
-      viewer_already_liked: !liked,
-      reactions_count: s.reactions_count + (liked ? -1 : 1),
+    gate("react", async () => {
+      if (!user) return;
+      const liked = s.viewer_already_liked;
+      patch(s.status_id, {
+        viewer_already_liked: !liked,
+        reactions_count: s.reactions_count + (liked ? -1 : 1),
+      });
+      if (liked) {
+        await (supabase as any).from("status_reactions").delete().eq("status_id", s.status_id).eq("user_id", user.id);
+      } else {
+        await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" }, { onConflict: "status_id,user_id" });
+      }
     });
-    if (liked) {
-      await (supabase as any).from("status_reactions").delete().eq("status_id", s.status_id).eq("user_id", user.id);
-    } else {
-      await (supabase as any).from("status_reactions").upsert({ status_id: s.status_id, user_id: user.id, emoji: "❤️" }, { onConflict: "status_id,user_id" });
-    }
   }
 
   async function toggleFollow(s: DiscoverStatus) {
-    if (!user || user.id === s.user_id) return;
-    const following = s.viewer_already_follows;
-    patch(s.status_id, { viewer_already_follows: !following });
-    if (following) {
-      await supabase.from("profile_follows").delete().eq("follower_id", user.id).eq("following_id", s.user_id);
-      toast.message(`Você deixou de seguir @${s.username}`);
-    } else {
-      await supabase.from("profile_follows").insert({ follower_id: user.id, following_id: s.user_id });
-      toast.success(`Você está seguindo @${s.username}`);
-    }
+    gate("follow", async () => {
+      if (!user || user.id === s.user_id) return;
+      const following = s.viewer_already_follows;
+      patch(s.status_id, { viewer_already_follows: !following });
+      if (following) {
+        await supabase.from("profile_follows").delete().eq("follower_id", user.id).eq("following_id", s.user_id);
+        toast.message(`Você deixou de seguir @${s.username}`);
+      } else {
+        await supabase.from("profile_follows").insert({ follower_id: user.id, following_id: s.user_id });
+        toast.success(`Você está seguindo @${s.username}`);
+      }
+    });
   }
 
   async function startChat(s: DiscoverStatus) {
-    if (!user) return;
-    try {
-      const id = await getOrCreateDirectConversation(user.id, s.user_id);
-      navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível abrir a conversa");
-    }
+    gate("message", async () => {
+      if (!user) return;
+      try {
+        const id = await getOrCreateDirectConversation(user.id, s.user_id);
+        navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Não foi possível abrir a conversa");
+      }
+    });
   }
 
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col">
+      {GateDialog}
       <header className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10 bg-black/80 backdrop-blur z-10">
-        <button onClick={() => navigate({ to: "/chat" })} className="size-9 grid place-items-center rounded-full hover:bg-white/10">
+        <button onClick={() => navigate({ to: user ? "/chat" : "/descobrir" })} className="size-9 grid place-items-center rounded-full hover:bg-white/10">
           <ArrowLeft className="size-5" />
         </button>
         <div className="flex items-center gap-2">
           <Globe2 className="size-4 text-primary" />
           <span className="font-bold">Descobrir status</span>
         </div>
-        <div className="size-9" />
+        {user ? <div className="size-9" /> : (
+          <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+        )}
       </header>
 
       {query.isLoading && (

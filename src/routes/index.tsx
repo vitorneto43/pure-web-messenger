@@ -6,6 +6,6 @@ export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (data.session) throw redirect({ to: "/chat" });
-    throw redirect({ to: "/descobrir" });
+    throw redirect({ to: "/descobrir-status" });
   },
 });
