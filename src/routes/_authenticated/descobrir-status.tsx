@@ -51,6 +51,7 @@ const PAGE_SIZE = 12;
 
 function DiscoverStatusPage() {
   const { user } = useAuth();
+  const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
