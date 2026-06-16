@@ -22,7 +22,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -107,11 +106,6 @@ const AboutRoute = AboutRouteImport.update({
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
@@ -224,7 +218,7 @@ const ApiPublicAuthCheckSignupIpRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
@@ -259,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
@@ -278,7 +273,6 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
-  '/': typeof AuthenticatedIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -315,7 +309,6 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -368,6 +361,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/about'
     | '/admin'
     | '/auth'
@@ -387,7 +381,6 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/s/$statusId'
     | '/u/$username'
-    | '/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
     | '/api/public/status-push'
@@ -423,7 +416,6 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/s/$statusId'
     | '/u/$username'
-    | '/_authenticated/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
     | '/api/public/status-push'
@@ -561,13 +553,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/u/$username': {
       id: '/u/$username'
@@ -728,7 +713,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
 }
 
@@ -737,7 +721,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
 }
 
@@ -778,3 +761,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
