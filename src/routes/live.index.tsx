@@ -19,6 +19,7 @@ export const Route = createFileRoute("/live/")({
 
 function LiveFeed() {
   const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
+  const [top, setTop] = useState<Awaited<ReturnType<typeof getTopHostsWeekly>>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,12 +27,14 @@ function LiveFeed() {
     getActiveLives()
       .then((d) => active && setLives(d))
       .finally(() => active && setLoading(false));
+    getTopHostsWeekly({ data: { limit: 10 } }).then((d) => active && setTop(d));
     const t = setInterval(() => getActiveLives().then((d) => active && setLives(d)), 15000);
     return () => {
       active = false;
       clearInterval(t);
     };
   }, []);
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
