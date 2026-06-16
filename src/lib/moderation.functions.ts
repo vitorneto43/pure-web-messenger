@@ -139,8 +139,8 @@ export const takedownLive = createServerFn({ method: "POST" })
       reason: data.reason,
       details: data.details ?? `Takedown por moderador: ${data.reason}`,
       status: "resolved",
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString(),
+      reviewer_id: userId,
+      resolved_at: new Date().toISOString(),
     });
 
     return { ok: true };
