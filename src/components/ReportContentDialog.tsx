@@ -35,7 +35,7 @@ const REASONS: Array<{ value: string; key: string }> = [
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  targetType: "profile" | "status" | "message" | "group" | "conversation";
+  targetType: "profile" | "status" | "message" | "group" | "conversation" | "post" | "post_comment";
   targetId: string;
   reportedUserId?: string | null;
 }

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { StatusMusicPlayer } from "@/components/status/StatusMusicPlayer";
+import { ReportContentDialog } from "@/components/ReportContentDialog";
+import { blockUser } from "@/lib/moderation.functions";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
@@ -50,10 +53,26 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
   const isOwner = user?.id === post.user_id;
+  const [reportOpen, setReportOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const blockFn = useServerFn(blockUser);
 
   useEffect(() => {
     void (supabase as any).rpc("register_post_view", { _post_id: post.post_id, _session_hash: null });
   }, [post.post_id]);
+
+  async function handleBlock() {
+    gate("react", async () => {
+      if (!confirm(`Bloquear @${post.username}? Você não verá mais conteúdos dessa pessoa.`)) return;
+      try {
+        await blockFn({ data: { user_id: post.user_id } });
+        toast.success("Usuário bloqueado");
+        setHidden(true);
+      } catch (e: any) {
+        toast.error(e?.message ?? "Falha ao bloquear");
+      }
+    });
+  }
 
   async function toggleLike() {
     gate("react", async () => {
@@ -100,9 +119,18 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
   const isMedia = post.kind !== "text" && post.media_url;
 
+  if (hidden) return null;
+
   return (
     <article className="border-b border-border bg-background">
       {GateDialog}
+      <ReportContentDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetType="post"
+        targetId={post.post_id}
+        reportedUserId={post.user_id}
+      />
       <header className="flex items-center gap-3 p-3">
         <button onClick={() => navigate({ to: "/u/$username", params: { username: post.username } })}>
           <Avatar className="size-10">
@@ -122,15 +150,26 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
             {post.is_boosted && <span className="ml-1 text-[10px] uppercase font-bold text-pink-500">Patrocinado</span>}
           </div>
         </div>
-        {isOwner && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreVertical className="size-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreVertical className="size-4" /></Button></DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isOwner ? (
               <DropdownMenuItem onClick={remove} className="text-destructive"><Trash2 className="size-4 mr-2" />Apagar post</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            ) : (
+              <>
+                <DropdownMenuItem onClick={() => gate("react", () => setReportOpen(true))}>
+                  <Flag className="size-4 mr-2" />Denunciar post
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleBlock} className="text-destructive">
+                  <Ban className="size-4 mr-2" />Bloquear @{post.username}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
+
 
       {/* Body */}
       {post.kind === "text" && (

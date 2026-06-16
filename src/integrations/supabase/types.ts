@@ -3256,6 +3256,8 @@ export type Database = {
         | "group"
         | "conversation"
         | "status_comment"
+        | "post"
+        | "post_comment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3402,6 +3404,8 @@ export const Constants = {
         "group",
         "conversation",
         "status_comment",
+        "post",
+        "post_comment",
       ],
     },
   },

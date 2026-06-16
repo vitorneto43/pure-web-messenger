@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const reportSchema = z.object({
-  target_type: z.enum(["profile", "status", "message", "group", "conversation"]),
+  target_type: z.enum(["profile", "status", "message", "group", "conversation", "post", "post_comment"]),
   target_id: z.string().min(1).max(255),
   reported_user_id: z.string().uuid().nullable().optional(),
   reason: z.string().min(1).max(100),
