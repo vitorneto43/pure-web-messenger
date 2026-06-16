@@ -79,9 +79,9 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
   async function share() {
     gate("react", async () => {
-      const url = `${window.location.origin}/p/${post.post_id}`;
+      const url = `https://webconnectchat.com/p/${post.post_id}`;
       try {
-        if (navigator.share) await navigator.share({ url, title: post.caption ?? "Post no WaveChat" });
+        if (navigator.share) await navigator.share({ url, title: post.caption ?? `Post de @${post.username} no WaveChat` });
         else { await navigator.clipboard.writeText(url); toast.success("Link copiado!"); }
         void track("post_share", { post_id: post.post_id });
         if (user) await (supabase as any).from("post_shares").insert({ post_id: post.post_id, user_id: user.id, channel: "link" });
