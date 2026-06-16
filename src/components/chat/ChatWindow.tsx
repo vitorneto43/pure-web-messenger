@@ -24,6 +24,7 @@ import {
   Trash2,
   User,
   Video,
+  VideoIcon,
   X,
 } from "lucide-react";
 import { downloadFile } from "@/lib/download";
@@ -1005,6 +1006,18 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                   icon={<FileText className="size-4 text-orange-500" />}
                   label={t("chat.attachFile", { defaultValue: "Documento" })}
                   onClick={() => fileRef.current?.click()}
+                />
+                <AttachItem
+                  icon={<VideoIcon className="size-4 text-green-500" />}
+                  label={t("chat.attachMeeting", { defaultValue: "Reunião (Jitsi)" })}
+                  onClick={async () => {
+                    const room = `wavechat-${crypto.randomUUID().slice(0, 8)}`;
+                    const url = `https://meet.jit.si/${room}`;
+                    await sendMessage(`📹 Reunião: ${url}`);
+                    try {
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    } catch {}
+                  }}
                 />
                 <AttachItem
                   icon={<Share2 className="size-4 text-sky-500" />}
