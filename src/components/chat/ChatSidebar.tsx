@@ -396,6 +396,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
 
       <StatusBar />
 
+      <OnlineUsersStrip />
+
+
+
       <ProfileCompletionBanner />
 
       <InviteMissionBanner />
