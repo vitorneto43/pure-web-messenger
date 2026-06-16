@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const reportSchema = z.object({
-  target_type: z.enum(["profile", "status", "message", "group", "conversation", "post", "post_comment"]),
+  target_type: z.enum(["profile", "status", "message", "group", "conversation", "post", "post_comment", "live"]),
   target_id: z.string().min(1).max(255),
   reported_user_id: z.string().uuid().nullable().optional(),
   reason: z.string().min(1).max(100),
@@ -102,6 +102,49 @@ async function assertModerator(supabase: any, userId: string) {
   const { data: isSuper } = await supabase.rpc("has_role", { _user_id: userId, _role: "superadmin" });
   if (!isAdmin && !isMod && !isSuper) throw new Error("Forbidden");
 }
+
+export const takedownLive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      live_id: z.string().uuid(),
+      reason: z.string().min(1).max(100),
+      details: z.string().max(1000).optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertModerator(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: live, error: liveErr } = await supabaseAdmin
+      .from("live_sessions")
+      .select("id, host_id, status")
+      .eq("id", data.live_id)
+      .maybeSingle();
+    if (liveErr) throw new Error(liveErr.message);
+    if (!live) throw new Error("Live não encontrada");
+
+    const { error: upErr } = await supabaseAdmin
+      .from("live_sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", data.live_id);
+    if (upErr) throw new Error(upErr.message);
+
+    await supabaseAdmin.from("content_reports").insert({
+      reporter_id: userId,
+      reported_user_id: live.host_id,
+      target_type: "live",
+      target_id: data.live_id,
+      reason: data.reason,
+      details: data.details ?? `Takedown por moderador: ${data.reason}`,
+      status: "resolved",
+      reviewer_id: userId,
+      resolved_at: new Date().toISOString(),
+    });
+
+    return { ok: true };
+  });
 
 export const listReports = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

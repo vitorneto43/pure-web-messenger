@@ -178,6 +178,7 @@ function LiveView() {
         <LiveRoomShell token={token} serverUrl={serverUrl} publish={publish} onLeave={close}>
           <LiveHeader
             liveId={live.id}
+            hostId={live.host_id}
             title={live.title}
             host={live.host}
             isHost={isHost}

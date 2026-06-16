@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Eye, X } from "lucide-react";
+import { LiveModerationMenu } from "./LiveModerationMenu";
 
 interface Host {
+  id?: string | null;
   username?: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
@@ -11,6 +13,7 @@ interface Host {
 
 export function LiveHeader({
   liveId,
+  hostId,
   title,
   host,
   isHost,
@@ -18,6 +21,7 @@ export function LiveHeader({
   onClose,
 }: {
   liveId: string;
+  hostId: string;
   title: string;
   host: Host | null;
   isHost: boolean;
@@ -61,6 +65,7 @@ export function LiveHeader({
         <span className="flex items-center gap-1 text-white text-xs bg-black/50 backdrop-blur px-2 py-1 rounded-full">
           <Eye className="w-3.5 h-3.5" /> {viewers}
         </span>
+        <LiveModerationMenu liveId={liveId} hostId={hostId} isHost={isHost} onTakendown={onClose} />
         <Button size="icon" variant="ghost" className="bg-black/50 hover:bg-black/70 text-white rounded-full" onClick={onClose}>
           <X className="w-5 h-5" />
         </Button>
