@@ -257,6 +257,46 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
             </div>
           ) : (
             <>
+              {groupInfo && (
+                <div className="rounded-lg border border-border p-2.5 text-xs flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    {isPublic ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
+                    {isPublic ? "Comunidade pública" : "Grupo privado"}
+                    {isPublic && groupInfo.join_policy === "request" && <span>· aprovação</span>}
+                    {isPublic && groupInfo.join_policy === "open" && <span>· entrada livre</span>}
+                  </span>
+                  {meIsAdmin && (
+                    <Button size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
+                      <Settings2 className="size-3.5 mr-1" /> Editar
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {meIsAdmin && isPublic && groupInfo?.join_policy === "request" && pendingReqs.length > 0 && (
+                <div className="rounded-lg border border-border p-2 space-y-1">
+                  <div className="text-xs font-semibold px-1">Solicitações pendentes ({pendingReqs.length})</div>
+                  {pendingReqs.map((r) => (
+                    <div key={r.id} className="flex items-center gap-2 p-1.5">
+                      <Avatar className="size-8">
+                        <AvatarImage src={r.profile?.avatar_url ?? undefined} />
+                        <AvatarFallback>{r.profile?.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{r.profile?.display_name ?? "Usuário"}</div>
+                        <div className="text-xs text-muted-foreground truncate">@{r.profile?.username}</div>
+                      </div>
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => decide(r.id, "approved")}>
+                        <Check className="size-4 text-green-500" />
+                      </Button>
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => decide(r.id, "rejected")}>
+                        <X className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {meIsAdmin && (
                 <Button
                   variant="outline"
@@ -267,6 +307,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                   <UserPlus className="size-4 mr-2" /> {t("chat.addParticipant")}
                 </Button>
               )}
+
 
               <div className="max-h-72 overflow-y-auto scrollbar-thin -mx-1 px-1 space-y-1">
                 {members.map((m) => {
