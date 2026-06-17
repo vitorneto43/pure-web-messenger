@@ -67,8 +67,12 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
   const [searching, setSearching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [groupInfo, setGroupInfo] = useState<any>(null);
+  const [pendingReqs, setPendingReqs] = useState<any[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
 
   const meIsAdmin = members.find((m) => m.user_id === user?.id)?.role === "admin";
+  const isPublic = groupInfo?.visibility === "public";
 
   async function load() {
     setLoading(true);
