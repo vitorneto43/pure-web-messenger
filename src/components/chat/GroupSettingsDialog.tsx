@@ -26,6 +26,14 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  listPendingJoinRequests,
+  decideJoinRequest,
+  updateGroupSettings,
+} from "@/lib/groups.functions";
+import { Globe, Lock, Settings2, Check } from "lucide-react";
 
 interface MemberRow {
   user_id: string;
@@ -59,11 +67,20 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
   const [searching, setSearching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [groupInfo, setGroupInfo] = useState<any>(null);
+  const [pendingReqs, setPendingReqs] = useState<any[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
 
   const meIsAdmin = members.find((m) => m.user_id === user?.id)?.role === "admin";
+  const isPublic = groupInfo?.visibility === "public";
 
   async function load() {
     setLoading(true);
+    const { data: gRow } = await supabase
+      .from("conversations")
+      .select("id, name, description, avatar_url, visibility, category, join_policy")
+      .eq("id", conversationId).maybeSingle();
+    setGroupInfo(gRow);
     const { data: rows } = await supabase
       .from("conversation_members")
       .select("user_id, role")
@@ -86,9 +103,32 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
     setLoading(false);
   }
 
+  async function loadPending() {
+    if (!meIsAdmin || !isPublic || groupInfo?.join_policy !== "request") return;
+    try {
+      const r = await listPendingJoinRequests({ data: { id: conversationId } });
+      setPendingReqs(r.requests);
+    } catch { /* ignore */ }
+  }
+
   useEffect(() => {
     if (open) load();
   }, [open, conversationId]);
+
+  useEffect(() => {
+    if (open) void loadPending();
+  }, [open, meIsAdmin, isPublic, groupInfo?.join_policy]);
+
+  async function decide(requestId: string, decision: "approved" | "rejected") {
+    setBusy(true);
+    try {
+      await decideJoinRequest({ data: { requestId, decision } });
+      toast.success(decision === "approved" ? "Aprovado" : "Recusado");
+      setPendingReqs(p => p.filter(r => r.id !== requestId));
+      if (decision === "approved") await load();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setBusy(false); }
+  }
 
   async function runSearch(q: string) {
     setQuery(q);
@@ -217,6 +257,46 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
             </div>
           ) : (
             <>
+              {groupInfo && (
+                <div className="rounded-lg border border-border p-2.5 text-xs flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    {isPublic ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
+                    {isPublic ? "Comunidade pública" : "Grupo privado"}
+                    {isPublic && groupInfo.join_policy === "request" && <span>· aprovação</span>}
+                    {isPublic && groupInfo.join_policy === "open" && <span>· entrada livre</span>}
+                  </span>
+                  {meIsAdmin && (
+                    <Button size="sm" variant="ghost" onClick={() => setEditOpen(true)}>
+                      <Settings2 className="size-3.5 mr-1" /> Editar
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {meIsAdmin && isPublic && groupInfo?.join_policy === "request" && pendingReqs.length > 0 && (
+                <div className="rounded-lg border border-border p-2 space-y-1">
+                  <div className="text-xs font-semibold px-1">Solicitações pendentes ({pendingReqs.length})</div>
+                  {pendingReqs.map((r) => (
+                    <div key={r.id} className="flex items-center gap-2 p-1.5">
+                      <Avatar className="size-8">
+                        <AvatarImage src={r.profile?.avatar_url ?? undefined} />
+                        <AvatarFallback>{r.profile?.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{r.profile?.display_name ?? "Usuário"}</div>
+                        <div className="text-xs text-muted-foreground truncate">@{r.profile?.username}</div>
+                      </div>
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => decide(r.id, "approved")}>
+                        <Check className="size-4 text-green-500" />
+                      </Button>
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => decide(r.id, "rejected")}>
+                        <X className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {meIsAdmin && (
                 <Button
                   variant="outline"
@@ -227,6 +307,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                   <UserPlus className="size-4 mr-2" /> {t("chat.addParticipant")}
                 </Button>
               )}
+
 
               <div className="max-h-72 overflow-y-auto scrollbar-thin -mx-1 px-1 space-y-1">
                 {members.map((m) => {
@@ -398,6 +479,121 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {groupInfo && (
+        <EditGroupDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          group={groupInfo}
+          onSaved={(patch) => { setGroupInfo({ ...groupInfo, ...patch }); }}
+        />
+      )}
     </>
   );
 }
+
+const CATEGORIES = [
+  { value: "business", label: "Negócios" }, { value: "tech", label: "Tecnologia" },
+  { value: "games", label: "Games" }, { value: "music", label: "Música" },
+  { value: "entertainment", label: "Entretenimento" }, { value: "relationships", label: "Relacionamentos" },
+  { value: "travel", label: "Viagens" }, { value: "sports", label: "Esportes" },
+  { value: "education", label: "Educação" }, { value: "other", label: "Outros" },
+] as const;
+
+function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; group: any; onSaved: (patch: any) => void }) {
+  const [name, setName] = useState(group.name ?? "");
+  const [description, setDescription] = useState(group.description ?? "");
+  const [visibility, setVisibility] = useState<"private"|"public">(group.visibility ?? "private");
+  const [category, setCategory] = useState<string>(group.category ?? "other");
+  const [joinPolicy, setJoinPolicy] = useState<"open"|"request">(group.join_policy ?? "request");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setName(group.name ?? "");
+      setDescription(group.description ?? "");
+      setVisibility(group.visibility ?? "private");
+      setCategory(group.category ?? "other");
+      setJoinPolicy(group.join_policy ?? "request");
+    }
+  }, [open, group]);
+
+  async function save() {
+    setBusy(true);
+    try {
+      const patch: any = {
+        id: group.id,
+        name: name.trim(),
+        description: description.trim() || null,
+        visibility,
+        category: visibility === "public" ? (category as any) : null,
+        join_policy: visibility === "public" ? joinPolicy : "request",
+      };
+      await updateGroupSettings({ data: patch });
+      toast.success("Grupo atualizado");
+      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy });
+      onOpenChange(false);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Editar grupo</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Nome</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="mt-1.5" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Descrição</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Tipo</label>
+            <div className="grid grid-cols-2 gap-2 mt-1.5">
+              <button type="button" onClick={() => setVisibility("private")}
+                className={`p-2.5 rounded-lg border text-sm flex items-center gap-2 ${visibility==="private"?"border-primary bg-primary/5":"border-border"}`}>
+                <Lock className="size-3.5" /> Privado
+              </button>
+              <button type="button" onClick={() => setVisibility("public")}
+                className={`p-2.5 rounded-lg border text-sm flex items-center gap-2 ${visibility==="public"?"border-primary bg-primary/5":"border-border"}`}>
+                <Globe className="size-3.5" /> Público
+              </button>
+            </div>
+          </div>
+          {visibility === "public" && (
+            <>
+              <div>
+                <label className="text-sm font-medium">Categoria</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Como entrar</label>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  <button type="button" onClick={() => setJoinPolicy("open")}
+                    className={`p-2.5 rounded-lg border text-sm ${joinPolicy==="open"?"border-primary bg-primary/5":"border-border"}`}>Livre</button>
+                  <button type="button" onClick={() => setJoinPolicy("request")}
+                    className={`p-2.5 rounded-lg border text-sm ${joinPolicy==="request"?"border-primary bg-primary/5":"border-border"}`}>Aprovação</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={save} disabled={busy}>
+            {busy && <Loader2 className="size-4 animate-spin mr-2" />} Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
