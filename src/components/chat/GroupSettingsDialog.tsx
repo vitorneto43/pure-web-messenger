@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crown, Loader2, LogOut, Search, ShieldOff, Trash2, UserMinus, UserPlus, X } from "lucide-react";
+import { Crown, Loader2, LogOut, Search, Share2, ShieldOff, Trash2, UserMinus, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import {
