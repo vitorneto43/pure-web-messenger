@@ -34,6 +34,8 @@ function DiscoverPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
+  const [groups, setGroups] = useState<PublicGroup[] | null>(null);
+  const [groupSort, setGroupSort] = useState<"popular" | "recent">("popular");
 
   useEffect(() => {
     void track("discover_list_view");
@@ -41,6 +43,13 @@ function DiscoverPage() {
       .then((r) => setProfiles(r.profiles))
       .catch(() => setProfiles([]));
   }, []);
+
+  useEffect(() => {
+    setGroups(null);
+    discoverGroupsPublic({ data: { sort: groupSort, limit: 24 } })
+      .then((r) => setGroups(r.groups))
+      .catch(() => setGroups([]));
+  }, [groupSort]);
 
   return (
     <div className="min-h-screen">
