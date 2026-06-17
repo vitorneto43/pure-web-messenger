@@ -21,6 +21,8 @@ import { useTranslation } from "react-i18next";
 import { MusicPickerSheet, type MusicSelection } from "./MusicPickerSheet";
 import { moodEmoji } from "@/lib/story-music";
 import { FeatureTip } from "@/components/FeatureTip";
+import { SchedulePicker } from "@/components/SchedulePicker";
+import { scheduleStatus } from "@/lib/schedule.functions";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -54,6 +56,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [music, setMusic] = useState<MusicSelection | null>(null);
   const [musicOpen, setMusicOpen] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const aiRun = useServerFn(runAIAssistant);
 
@@ -106,6 +109,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     setCtaUrl("");
     setMusic(null);
     setTab("text");
+    setScheduledAt(null);
   }
 
 
@@ -117,6 +121,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function submit() {
     if (!user) return;
+    const isScheduled = !!scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000;
     setSubmitting(true);
     try {
       if (tab === "text") {
@@ -125,20 +130,27 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           setSubmitting(false);
           return;
         }
-        const { error } = await supabase.from("statuses").insert({
-          user_id: user.id,
-          kind: "text",
+        const basePayload = {
+          kind: "text" as const,
           content: text.trim().slice(0, 500),
           caption: caption.trim().slice(0, 200) || null,
           description: description.trim().slice(0, 500) || null,
           background: bg,
-          is_official: isOfficialAccount && isOfficial,
           music_track_id: music?.track.id ?? null,
           music_start_sec: music?.start_sec ?? 0,
           music_duration_sec: music?.duration_sec ?? 15,
           music_volume: music?.volume ?? 0.8,
-        } as any);
-        if (error) throw error;
+        };
+        if (isScheduled) {
+          await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
+        } else {
+          const { error } = await supabase.from("statuses").insert({
+            user_id: user.id,
+            ...basePayload,
+            is_official: isOfficialAccount && isOfficial,
+          } as any);
+          if (error) throw error;
+        }
       } else {
         if (!file) {
           toast.error(t("status.selectFile"));
@@ -152,7 +164,6 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           setSubmitting(false);
           return;
         }
-        // Validate CTA url if provided
         let cta_url: string | null = null;
         const ctaTrim = ctaUrl.trim();
         if (ctaTrim) {
@@ -175,23 +186,30 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           .upload(path, file, { contentType: file.type, upsert: false });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("status-media").getPublicUrl(path);
-        const { error } = await supabase.from("statuses").insert({
-          user_id: user.id,
+        const basePayload = {
           kind,
           media_url: pub.publicUrl,
           caption: caption.trim().slice(0, 200) || null,
           description: description.trim().slice(0, 500) || null,
-          is_official: isOfficialAccount && isOfficial,
           cta_url,
           cta_label,
           music_track_id: music?.track.id ?? null,
           music_start_sec: music?.start_sec ?? 0,
           music_duration_sec: music?.duration_sec ?? 15,
           music_volume: music?.volume ?? 0.8,
-        } as any);
-        if (error) throw error;
+        };
+        if (isScheduled) {
+          await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
+        } else {
+          const { error } = await supabase.from("statuses").insert({
+            user_id: user.id,
+            ...basePayload,
+            is_official: isOfficialAccount && isOfficial,
+          } as any);
+          if (error) throw error;
+        }
       }
-      toast.success(t("status.published"));
+      toast.success(isScheduled ? "Stories agendado!" : t("status.published"));
       reset();
       onOpenChange(false);
       onCreated();
@@ -410,9 +428,17 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           )}
         </div>
 
+        <div className="rounded-lg border border-border bg-muted/30 p-3">
+          <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
+        </div>
+
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
-          {isOfficialAccount && isOfficial ? t("status.publishOfficial") : t("status.publish")}
+          {scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000
+            ? "Agendar story"
+            : isOfficialAccount && isOfficial
+              ? t("status.publishOfficial")
+              : t("status.publish")}
         </Button>
 
         <MusicPickerSheet
