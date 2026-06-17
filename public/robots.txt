@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /api/
+Disallow: /lovable/
+Disallow: /email/
+Disallow: /chat
+Disallow: /chat/
+Disallow: /meet/
+Disallow: /hashtag/
+Disallow: /hashtags
+Disallow: /descobrir-status
+Disallow: /profile
+Disallow: /scheduled
+Disallow: /recordings
+
+Sitemap: https://webconnectchat.com/sitemap.xml
