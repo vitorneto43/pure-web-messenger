@@ -89,6 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "Wavechat — chat em tempo real direto do navegador" },
       { name: "twitter:description", content: "Plataforma de chat moderna, sem app, sem celular, sem SMS. Conversas privadas e em grupo direto do navegador." },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "google-site-verification", content: "PdiNXjlMuSXoX737yifFw1Ts1YQb_zrd9jXo4u5W9Jk" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
