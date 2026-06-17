@@ -32,6 +32,7 @@ import { Route as PPostIdRouteImport } from './routes/p.$postId'
 import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
+import { Route as GGroupIdRouteImport } from './routes/g.$groupId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
 import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
@@ -167,6 +168,11 @@ const LiveNewRoute = LiveNewRouteImport.update({
 const LiveLiveIdRoute = LiveLiveIdRouteImport.update({
   id: '/live/$liveId',
   path: '/live/$liveId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GGroupIdRoute = GGroupIdRouteImport.update({
+  id: '/g/$groupId',
+  path: '/g/$groupId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/g/$groupId': typeof GGroupIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/g/$groupId': typeof GGroupIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/g/$groupId': typeof GGroupIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -456,6 +465,7 @@ export interface FileRouteTypes {
     | '/recordings'
     | '/scheduled'
     | '/email/unsubscribe'
+    | '/g/$groupId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/recordings'
     | '/scheduled'
     | '/email/unsubscribe'
+    | '/g/$groupId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recordings'
     | '/_authenticated/scheduled'
     | '/email/unsubscribe'
+    | '/g/$groupId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -591,6 +603,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  GGroupIdRoute: typeof GGroupIdRoute
   LiveLiveIdRoute: typeof LiveLiveIdRoute
   LiveNewRoute: typeof LiveNewRoute
   MeetRoomIdRoute: typeof MeetRoomIdRoute
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       path: '/live/$liveId'
       fullPath: '/live/$liveId'
       preLoaderRoute: typeof LiveLiveIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/g/$groupId': {
+      id: '/g/$groupId'
+      path: '/g/$groupId'
+      fullPath: '/g/$groupId'
+      preLoaderRoute: typeof GGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -986,6 +1006,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  GGroupIdRoute: GGroupIdRoute,
   LiveLiveIdRoute: LiveLiveIdRoute,
   LiveNewRoute: LiveNewRoute,
   MeetRoomIdRoute: MeetRoomIdRoute,
@@ -1011,13 +1032,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
