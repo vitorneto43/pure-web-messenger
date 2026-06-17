@@ -479,6 +479,121 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {groupInfo && (
+        <EditGroupDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          group={groupInfo}
+          onSaved={(patch) => { setGroupInfo({ ...groupInfo, ...patch }); }}
+        />
+      )}
     </>
   );
 }
+
+const CATEGORIES = [
+  { value: "business", label: "Negócios" }, { value: "tech", label: "Tecnologia" },
+  { value: "games", label: "Games" }, { value: "music", label: "Música" },
+  { value: "entertainment", label: "Entretenimento" }, { value: "relationships", label: "Relacionamentos" },
+  { value: "travel", label: "Viagens" }, { value: "sports", label: "Esportes" },
+  { value: "education", label: "Educação" }, { value: "other", label: "Outros" },
+] as const;
+
+function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; group: any; onSaved: (patch: any) => void }) {
+  const [name, setName] = useState(group.name ?? "");
+  const [description, setDescription] = useState(group.description ?? "");
+  const [visibility, setVisibility] = useState<"private"|"public">(group.visibility ?? "private");
+  const [category, setCategory] = useState<string>(group.category ?? "other");
+  const [joinPolicy, setJoinPolicy] = useState<"open"|"request">(group.join_policy ?? "request");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setName(group.name ?? "");
+      setDescription(group.description ?? "");
+      setVisibility(group.visibility ?? "private");
+      setCategory(group.category ?? "other");
+      setJoinPolicy(group.join_policy ?? "request");
+    }
+  }, [open, group]);
+
+  async function save() {
+    setBusy(true);
+    try {
+      const patch: any = {
+        id: group.id,
+        name: name.trim(),
+        description: description.trim() || null,
+        visibility,
+        category: visibility === "public" ? (category as any) : null,
+        join_policy: visibility === "public" ? joinPolicy : "request",
+      };
+      await updateGroupSettings({ data: patch });
+      toast.success("Grupo atualizado");
+      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy });
+      onOpenChange(false);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Editar grupo</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Nome</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="mt-1.5" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Descrição</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Tipo</label>
+            <div className="grid grid-cols-2 gap-2 mt-1.5">
+              <button type="button" onClick={() => setVisibility("private")}
+                className={`p-2.5 rounded-lg border text-sm flex items-center gap-2 ${visibility==="private"?"border-primary bg-primary/5":"border-border"}`}>
+                <Lock className="size-3.5" /> Privado
+              </button>
+              <button type="button" onClick={() => setVisibility("public")}
+                className={`p-2.5 rounded-lg border text-sm flex items-center gap-2 ${visibility==="public"?"border-primary bg-primary/5":"border-border"}`}>
+                <Globe className="size-3.5" /> Público
+              </button>
+            </div>
+          </div>
+          {visibility === "public" && (
+            <>
+              <div>
+                <label className="text-sm font-medium">Categoria</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Como entrar</label>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  <button type="button" onClick={() => setJoinPolicy("open")}
+                    className={`p-2.5 rounded-lg border text-sm ${joinPolicy==="open"?"border-primary bg-primary/5":"border-border"}`}>Livre</button>
+                  <button type="button" onClick={() => setJoinPolicy("request")}
+                    className={`p-2.5 rounded-lg border text-sm ${joinPolicy==="request"?"border-primary bg-primary/5":"border-border"}`}>Aprovação</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={save} disabled={busy}>
+            {busy && <Loader2 className="size-4 animate-spin mr-2" />} Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
