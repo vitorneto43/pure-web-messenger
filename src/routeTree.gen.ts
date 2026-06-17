@@ -32,6 +32,8 @@ import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
+import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
@@ -166,6 +168,16 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedScheduledRoute = AuthenticatedScheduledRouteImport.update({
+  id: '/scheduled',
+  path: '/scheduled',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRecordingsRoute = AuthenticatedRecordingsRouteImport.update({
+  id: '/recordings',
+  path: '/recordings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -292,6 +304,8 @@ export interface FileRoutesByFullPath {
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recordings': typeof AuthenticatedRecordingsRoute
+  '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -335,6 +349,8 @@ export interface FileRoutesByTo {
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recordings': typeof AuthenticatedRecordingsRoute
+  '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -380,6 +396,8 @@ export interface FileRoutesById {
   '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
+  '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -425,6 +443,8 @@ export interface FileRouteTypes {
     | '/descobrir-status'
     | '/hashtags'
     | '/profile'
+    | '/recordings'
+    | '/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -468,6 +488,8 @@ export interface FileRouteTypes {
     | '/descobrir-status'
     | '/hashtags'
     | '/profile'
+    | '/recordings'
+    | '/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -512,6 +534,8 @@ export interface FileRouteTypes {
     | '/_authenticated/descobrir-status'
     | '/_authenticated/hashtags'
     | '/_authenticated/profile'
+    | '/_authenticated/recordings'
+    | '/_authenticated/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -739,6 +763,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/scheduled': {
+      id: '/_authenticated/scheduled'
+      path: '/scheduled'
+      fullPath: '/scheduled'
+      preLoaderRoute: typeof AuthenticatedScheduledRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recordings': {
+      id: '/_authenticated/recordings'
+      path: '/recordings'
+      fullPath: '/recordings'
+      preLoaderRoute: typeof AuthenticatedRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -891,6 +929,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
+  AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
 }
 
@@ -899,6 +939,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
+  AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
 }
 
