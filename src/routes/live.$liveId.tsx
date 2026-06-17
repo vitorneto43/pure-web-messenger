@@ -233,6 +233,8 @@ function LiveView() {
             isHost={isHost}
             initialViewerCount={live.viewer_count}
             onClose={close}
+            isFollowing={isFollowing}
+            onToggleFollow={toggleLiveFollow}
           />
           <LiveReactionsLayer liveId={live.id} userId={userId} />
           <div className="absolute left-0 right-0 bottom-0 z-10 max-h-[55%] flex flex-col">
