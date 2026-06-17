@@ -20,6 +20,8 @@ export function LiveHeader({
   isHost,
   initialViewerCount,
   onClose,
+  isFollowing,
+  onToggleFollow,
 }: {
   liveId: string;
   hostId: string;
@@ -28,6 +30,8 @@ export function LiveHeader({
   isHost: boolean;
   initialViewerCount: number;
   onClose: () => void;
+  isFollowing?: boolean;
+  onToggleFollow?: () => void;
 }) {
   const [viewers, setViewers] = useState<number>(initialViewerCount);
 
