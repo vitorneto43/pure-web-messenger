@@ -24,6 +24,8 @@ export type PublicGroup = {
   join_policy: GroupJoinPolicy;
   member_count: number;
   created_at: string;
+  rules: string | null;
+  pinned_message: string | null;
 };
 
 function makePublicClient() {
