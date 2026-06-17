@@ -559,6 +559,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
                     </div>
                     <MessageSquarePlus className="size-4 text-primary shrink-0" />
                   </button>
+                ))}
               </div>
             )}
             {search.trim() && groupResults.length > 0 && (
