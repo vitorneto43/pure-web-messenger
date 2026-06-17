@@ -623,6 +623,8 @@ export type Database = {
           join_policy: Database["public"]["Enums"]["group_join_policy"]
           member_count: number
           name: string | null
+          pinned_message: string | null
+          rules: string | null
           updated_at: string
           visibility: Database["public"]["Enums"]["group_visibility"]
         }
@@ -637,6 +639,8 @@ export type Database = {
           join_policy?: Database["public"]["Enums"]["group_join_policy"]
           member_count?: number
           name?: string | null
+          pinned_message?: string | null
+          rules?: string | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["group_visibility"]
         }
@@ -651,6 +655,8 @@ export type Database = {
           join_policy?: Database["public"]["Enums"]["group_join_policy"]
           member_count?: number
           name?: string | null
+          pinned_message?: string | null
+          rules?: string | null
           updated_at?: string
           visibility?: Database["public"]["Enums"]["group_visibility"]
         }
