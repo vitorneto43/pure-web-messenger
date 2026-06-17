@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Eye, X } from "lucide-react";
+import { Eye, X, UserPlus, UserCheck } from "lucide-react";
 import { LiveModerationMenu } from "./LiveModerationMenu";
+import { toast } from "sonner";
 
 interface Host {
   id?: string | null;
