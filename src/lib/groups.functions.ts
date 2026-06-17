@@ -222,6 +222,8 @@ export const updateGroupSettings = createServerFn({ method: "POST" })
     category: categoryEnum.nullable().optional(),
     visibility: visibilityEnum.optional(),
     join_policy: joinPolicyEnum.optional(),
+    rules: z.string().trim().max(2000).nullable().optional(),
+    pinned_message: z.string().trim().max(1000).nullable().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
