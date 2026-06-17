@@ -47,6 +47,8 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
 import { Route as ApiPublicHooksUnreadMessageEmailsRouteImport } from './routes/api/public/hooks/unread-message-emails'
+import { Route as ApiPublicHooksSchedulerTickRouteImport } from './routes/api/public/hooks/scheduler-tick'
+import { Route as ApiPublicHooksLivekitEgressRouteImport } from './routes/api/public/hooks/livekit-egress'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/public/auth/check-signup-ip'
 
@@ -247,6 +249,18 @@ const ApiPublicHooksUnreadMessageEmailsRoute =
     path: '/api/public/hooks/unread-message-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSchedulerTickRoute =
+  ApiPublicHooksSchedulerTickRouteImport.update({
+    id: '/api/public/hooks/scheduler-tick',
+    path: '/api/public/hooks/scheduler-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksLivekitEgressRoute =
+  ApiPublicHooksLivekitEgressRouteImport.update({
+    id: '/api/public/hooks/livekit-egress',
+    path: '/api/public/hooks/livekit-egress',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCallsStatusRoute = ApiPublicCallsStatusRouteImport.update({
   id: '/api/public/calls/status',
   path: '/api/public/calls/status',
@@ -293,6 +307,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -334,6 +350,8 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -377,6 +395,8 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -420,6 +440,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -461,6 +483,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -503,6 +527,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -540,6 +566,8 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
+  ApiPublicHooksLivekitEgressRoute: typeof ApiPublicHooksLivekitEgressRoute
+  ApiPublicHooksSchedulerTickRoute: typeof ApiPublicHooksSchedulerTickRoute
   ApiPublicHooksUnreadMessageEmailsRoute: typeof ApiPublicHooksUnreadMessageEmailsRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -816,6 +844,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksUnreadMessageEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/scheduler-tick': {
+      id: '/api/public/hooks/scheduler-tick'
+      path: '/api/public/hooks/scheduler-tick'
+      fullPath: '/api/public/hooks/scheduler-tick'
+      preLoaderRoute: typeof ApiPublicHooksSchedulerTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/livekit-egress': {
+      id: '/api/public/hooks/livekit-egress'
+      path: '/api/public/hooks/livekit-egress'
+      fullPath: '/api/public/hooks/livekit-egress'
+      preLoaderRoute: typeof ApiPublicHooksLivekitEgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/calls/status': {
       id: '/api/public/calls/status'
       path: '/api/public/calls/status'
@@ -893,6 +935,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
+  ApiPublicHooksLivekitEgressRoute: ApiPublicHooksLivekitEgressRoute,
+  ApiPublicHooksSchedulerTickRoute: ApiPublicHooksSchedulerTickRoute,
   ApiPublicHooksUnreadMessageEmailsRoute:
     ApiPublicHooksUnreadMessageEmailsRoute,
   ApiPublicPaymentsRefundSweeperRoute: ApiPublicPaymentsRefundSweeperRoute,
