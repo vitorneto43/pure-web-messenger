@@ -26,6 +26,14 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  listPendingJoinRequests,
+  decideJoinRequest,
+  updateGroupSettings,
+} from "@/lib/groups.functions";
+import { Globe, Lock, Settings2, Check } from "lucide-react";
 
 interface MemberRow {
   user_id: string;
