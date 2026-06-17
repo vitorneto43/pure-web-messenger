@@ -31,7 +31,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         // Dynamic: public profiles + public posts
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const [profiles, posts] = await Promise.all([
+          const [profiles, posts, groups] = await Promise.all([
             supabaseAdmin
               .from("profiles")
               .select("username, updated_at, last_seen")
@@ -46,6 +46,13 @@ export const Route = createFileRoute("/sitemap.xml")({
               .eq("visibility", "public")
               .order("created_at", { ascending: false })
               .limit(5000),
+            supabaseAdmin
+              .from("conversations")
+              .select("id, updated_at, created_at")
+              .eq("is_group", true)
+              .eq("visibility", "public")
+              .order("member_count", { ascending: false })
+              .limit(2000),
           ]);
           for (const p of profiles.data ?? []) {
             if (!p.username) continue;
@@ -62,6 +69,14 @@ export const Route = createFileRoute("/sitemap.xml")({
               lastmod: (p.updated_at ?? p.created_at ?? undefined) as string | undefined,
               changefreq: "weekly",
               priority: "0.6",
+            });
+          }
+          for (const g of groups.data ?? []) {
+            entries.push({
+              path: `/g/${g.id}`,
+              lastmod: (g.updated_at ?? g.created_at ?? undefined) as string | undefined,
+              changefreq: "weekly",
+              priority: "0.7",
             });
           }
         } catch (err) {
