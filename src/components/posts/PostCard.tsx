@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban } from "lucide-react";
+import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
