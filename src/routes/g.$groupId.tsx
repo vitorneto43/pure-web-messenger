@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Globe, Loader2, MoreVertical, ShieldAlert, Users } from "lucide-react";
+import { ArrowLeft, Globe, Loader2, MoreVertical, Share2, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -143,7 +143,21 @@ function GroupPage() {
         </div>
 
         {group.description && (
-          <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-6 text-center">{group.description}</p>
+          <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-4 text-center">{group.description}</p>
+        )}
+
+        {group.pinned_message && (
+          <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm mb-4">
+            <div className="font-semibold text-primary mb-1">📌 Mensagem fixada</div>
+            <p className="whitespace-pre-wrap text-foreground/90">{group.pinned_message}</p>
+          </div>
+        )}
+
+        {group.rules && (
+          <div className="rounded-lg border border-border p-3 text-sm mb-4">
+            <div className="font-semibold mb-1">📋 Regras do grupo</div>
+            <p className="whitespace-pre-wrap text-muted-foreground">{group.rules}</p>
+          </div>
         )}
 
         <div className="mb-6">
@@ -162,6 +176,21 @@ function GroupPage() {
             </Button>
           )}
         </div>
+
+        <Button
+          variant="outline"
+          className="w-full mb-6"
+          onClick={async () => {
+            const url = `${window.location.origin}/g/${group.id}`;
+            try {
+              if (navigator.share) await navigator.share({ title: group.name ?? "Grupo", url });
+              else { await navigator.clipboard.writeText(url); toast.success("Link copiado"); }
+            } catch { /* cancelled */ }
+          }}
+        >
+          <Share2 className="size-4 mr-2" /> Compartilhar grupo
+        </Button>
+
 
         {admins.length > 0 && (
           <section>

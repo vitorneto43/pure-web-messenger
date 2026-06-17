@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crown, Loader2, LogOut, Search, ShieldOff, Trash2, UserMinus, UserPlus, X } from "lucide-react";
+import { Crown, Loader2, LogOut, Search, Share2, ShieldOff, Trash2, UserMinus, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -78,7 +78,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
     setLoading(true);
     const { data: gRow } = await supabase
       .from("conversations")
-      .select("id, name, description, avatar_url, visibility, category, join_policy")
+      .select("id, name, description, avatar_url, visibility, category, join_policy, rules, pinned_message, member_count")
       .eq("id", conversationId).maybeSingle();
     setGroupInfo(gRow);
     const { data: rows } = await supabase
@@ -271,6 +271,48 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                     </Button>
                   )}
                 </div>
+              )}
+
+              {groupInfo?.pinned_message && (
+                <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs">
+                  <div className="font-semibold text-primary mb-1 flex items-center gap-1">📌 Mensagem fixada</div>
+                  <p className="whitespace-pre-wrap text-foreground/90">{groupInfo.pinned_message}</p>
+                </div>
+              )}
+
+              {groupInfo?.description && (
+                <div className="rounded-lg border border-border p-2.5 text-xs">
+                  <div className="font-semibold mb-1">Descrição</div>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{groupInfo.description}</p>
+                </div>
+              )}
+
+              {groupInfo?.rules && (
+                <div className="rounded-lg border border-border p-2.5 text-xs">
+                  <div className="font-semibold mb-1">📋 Regras do grupo</div>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{groupInfo.rules}</p>
+                </div>
+              )}
+
+              {isPublic && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    const url = `${window.location.origin}/g/${conversationId}`;
+                    try {
+                      if (navigator.share) {
+                        await navigator.share({ title: groupName, url });
+                      } else {
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Link copiado");
+                      }
+                    } catch { /* user cancelled */ }
+                  }}
+                >
+                  <Share2 className="size-4 mr-2" /> Compartilhar grupo
+                </Button>
               )}
 
               {meIsAdmin && isPublic && groupInfo?.join_policy === "request" && pendingReqs.length > 0 && (
@@ -506,6 +548,8 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
   const [visibility, setVisibility] = useState<"private"|"public">(group.visibility ?? "private");
   const [category, setCategory] = useState<string>(group.category ?? "other");
   const [joinPolicy, setJoinPolicy] = useState<"open"|"request">(group.join_policy ?? "request");
+  const [rules, setRules] = useState(group.rules ?? "");
+  const [pinned, setPinned] = useState(group.pinned_message ?? "");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -515,6 +559,8 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
       setVisibility(group.visibility ?? "private");
       setCategory(group.category ?? "other");
       setJoinPolicy(group.join_policy ?? "request");
+      setRules(group.rules ?? "");
+      setPinned(group.pinned_message ?? "");
     }
   }, [open, group]);
 
@@ -528,10 +574,12 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
         visibility,
         category: visibility === "public" ? (category as any) : null,
         join_policy: visibility === "public" ? joinPolicy : "request",
+        rules: rules.trim() || null,
+        pinned_message: pinned.trim() || null,
       };
       await updateGroupSettings({ data: patch });
       toast.success("Grupo atualizado");
-      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy });
+      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy, rules: patch.rules, pinned_message: patch.pinned_message });
       onOpenChange(false);
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(false); }
@@ -548,7 +596,15 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
           </div>
           <div>
             <label className="text-sm font-medium">Descrição</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" placeholder="Sobre o que é este grupo" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">📌 Mensagem fixada</label>
+            <Textarea value={pinned} onChange={(e) => setPinned(e.target.value)} maxLength={1000} className="mt-1.5 min-h-16" placeholder="Aviso destacado no topo do grupo" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">📋 Regras do grupo</label>
+            <Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={2000} className="mt-1.5 min-h-24" placeholder="1. Respeite os membros&#10;2. Sem spam&#10;3. ..." />
           </div>
           <div>
             <label className="text-sm font-medium">Tipo</label>
