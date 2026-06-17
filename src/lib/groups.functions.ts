@@ -45,7 +45,7 @@ export const discoverGroupsPublic = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<{ groups: PublicGroup[] }> => {
     const sb = makePublicClient();
     let q = sb.from("conversations")
-      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at")
+      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at, rules, pinned_message")
       .eq("is_group", true)
       .eq("visibility", "public");
     if (data.category) q = q.eq("category", data.category);
@@ -66,7 +66,7 @@ export const searchGroupsPublic = createServerFn({ method: "GET" })
     const sb = makePublicClient();
     const { data: rows, error } = await sb
       .from("conversations")
-      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at")
+      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at, rules, pinned_message")
       .eq("is_group", true)
       .eq("visibility", "public")
       .ilike("name", `%${data.q}%`)
@@ -82,7 +82,7 @@ export const getGroupPublic = createServerFn({ method: "GET" })
     const sb = makePublicClient();
     const { data: g } = await sb
       .from("conversations")
-      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at, visibility, is_group")
+      .select("id, name, description, avatar_url, category, join_policy, member_count, created_at, rules, pinned_message, visibility, is_group")
       .eq("id", data.id)
       .maybeSingle();
     if (!g || g.is_group !== true || g.visibility !== "public") return { group: null, admins: [] };
