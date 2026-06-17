@@ -50,12 +50,26 @@ function LiveView() {
   const [publish, setPublish] = useState(false);
   const [stageStatus, setStageStatus] = useState<string | null>(null);
   const [ended, setEnded] = useState(live?.status === "ended");
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
 
   const isHost = !!(userId && live?.host_id === userId);
+
+  useEffect(() => {
+    if (!userId || !live || isHost) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profile_follows")
+        .select("id")
+        .eq("follower_id", userId)
+        .eq("following_id", live.host_id)
+        .maybeSingle();
+      setIsFollowing(!!data);
+    })();
+  }, [userId, live?.host_id, isHost]);
 
   // Watch stage status to auto-promote to publisher when host approves
   useEffect(() => {
@@ -134,6 +148,17 @@ function LiveView() {
 
   const [recording, setRecording] = useState(false);
 
+  async function toggleLiveFollow() {
+    if (!live || isHost || !userId) return;
+    const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: live.host_id });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setIsFollowing(!!nowFollowing);
+    toast.success(nowFollowing ? "Seguindo" : "Deixou de seguir");
+  }
+
   async function close() {
     navigate({ to: "/live" });
   }
@@ -208,6 +233,8 @@ function LiveView() {
             isHost={isHost}
             initialViewerCount={live.viewer_count}
             onClose={close}
+            isFollowing={isFollowing}
+            onToggleFollow={toggleLiveFollow}
           />
           <LiveReactionsLayer liveId={live.id} userId={userId} />
           <div className="absolute left-0 right-0 bottom-0 z-10 max-h-[55%] flex flex-col">

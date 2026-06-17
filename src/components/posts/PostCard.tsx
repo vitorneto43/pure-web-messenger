@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban } from "lucide-react";
+import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban, UserPlus, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -55,11 +55,25 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   const isOwner = user?.id === post.user_id;
   const [reportOpen, setReportOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const blockFn = useServerFn(blockUser);
 
   useEffect(() => {
     void (supabase as any).rpc("register_post_view", { _post_id: post.post_id, _session_hash: null });
   }, [post.post_id]);
+
+  useEffect(() => {
+    if (!user || isOwner) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profile_follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", post.user_id)
+        .maybeSingle();
+      setIsFollowing(!!data);
+    })();
+  }, [user?.id, post.user_id, isOwner]);
 
   async function handleBlock() {
     gate("react", async () => {
@@ -109,6 +123,19 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
     });
   }
 
+  async function toggleFollow() {
+    if (!user || isOwner) return;
+    gate("follow", async () => {
+      const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: post.user_id });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setIsFollowing(!!nowFollowing);
+      toast.success(nowFollowing ? "Seguindo" : "Deixou de seguir");
+    });
+  }
+
   async function remove() {
     if (!confirm("Apagar este post?")) return;
     const { error } = await (supabase as any).from("posts").delete().eq("id", post.post_id);
@@ -142,6 +169,19 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
           <div className="flex items-center gap-1.5 text-sm">
             <span className="font-semibold truncate">{post.display_name}</span>
             {post.is_official && <BadgeCheck className="size-4 text-sky-500" />}
+            {!isOwner && user && (
+              <button
+                onClick={toggleFollow}
+                className={cn(
+                  "ml-1 text-xs font-medium px-2 py-0.5 rounded-full border transition",
+                  isFollowing
+                    ? "border-primary/30 text-primary bg-primary/10"
+                    : "border-primary text-primary hover:bg-primary/10"
+                )}
+              >
+                {isFollowing ? "Seguindo" : "Seguir"}
+              </button>
+            )}
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span>@{post.username}</span>

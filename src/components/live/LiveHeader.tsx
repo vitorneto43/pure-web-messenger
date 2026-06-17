@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Eye, X } from "lucide-react";
+import { Eye, X, UserPlus, UserCheck } from "lucide-react";
 import { LiveModerationMenu } from "./LiveModerationMenu";
+import { toast } from "sonner";
 
 interface Host {
   id?: string | null;
@@ -19,6 +20,8 @@ export function LiveHeader({
   isHost,
   initialViewerCount,
   onClose,
+  isFollowing,
+  onToggleFollow,
 }: {
   liveId: string;
   hostId: string;
@@ -27,6 +30,8 @@ export function LiveHeader({
   isHost: boolean;
   initialViewerCount: number;
   onClose: () => void;
+  isFollowing?: boolean;
+  onToggleFollow?: () => void;
 }) {
   const [viewers, setViewers] = useState<number>(initialViewerCount);
 
@@ -56,7 +61,21 @@ export function LiveHeader({
           )}
         </div>
         <div className="text-white min-w-0">
-          <p className="text-sm font-semibold truncate">{host?.display_name || host?.username || "Host"}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold truncate">{host?.display_name || host?.username || "Host"}</p>
+            {onToggleFollow && !isHost && (
+              <button
+                onClick={onToggleFollow}
+                className={
+                  isFollowing
+                    ? "text-[10px] font-medium px-1.5 py-0.5 rounded-full border border-white/40 text-white/90 bg-white/10"
+                    : "text-[10px] font-medium px-1.5 py-0.5 rounded-full border border-white text-white hover:bg-white/20"
+                }
+              >
+                {isFollowing ? "Seguindo" : "Seguir"}
+              </button>
+            )}
+          </div>
           <p className="text-xs opacity-80 truncate">{title || "Ao vivo"}</p>
         </div>
         <span className="ml-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded">AO VIVO</span>
