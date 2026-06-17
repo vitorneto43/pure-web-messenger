@@ -585,7 +585,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
                   </Link>
                 ))}
               </div>
-                )}
+            )}
           </>
         )}
       </div>
