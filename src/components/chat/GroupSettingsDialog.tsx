@@ -273,6 +273,48 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                 </div>
               )}
 
+              {groupInfo?.pinned_message && (
+                <div className="rounded-lg border border-primary/40 bg-primary/5 p-2.5 text-xs">
+                  <div className="font-semibold text-primary mb-1 flex items-center gap-1">📌 Mensagem fixada</div>
+                  <p className="whitespace-pre-wrap text-foreground/90">{groupInfo.pinned_message}</p>
+                </div>
+              )}
+
+              {groupInfo?.description && (
+                <div className="rounded-lg border border-border p-2.5 text-xs">
+                  <div className="font-semibold mb-1">Descrição</div>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{groupInfo.description}</p>
+                </div>
+              )}
+
+              {groupInfo?.rules && (
+                <div className="rounded-lg border border-border p-2.5 text-xs">
+                  <div className="font-semibold mb-1">📋 Regras do grupo</div>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{groupInfo.rules}</p>
+                </div>
+              )}
+
+              {isPublic && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    const url = `${window.location.origin}/g/${conversationId}`;
+                    try {
+                      if (navigator.share) {
+                        await navigator.share({ title: groupName, url });
+                      } else {
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Link copiado");
+                      }
+                    } catch { /* user cancelled */ }
+                  }}
+                >
+                  <Share2 className="size-4 mr-2" /> Compartilhar grupo
+                </Button>
+              )}
+
               {meIsAdmin && isPublic && groupInfo?.join_policy === "request" && pendingReqs.length > 0 && (
                 <div className="rounded-lg border border-border p-2 space-y-1">
                   <div className="text-xs font-semibold px-1">Solicitações pendentes ({pendingReqs.length})</div>
