@@ -148,6 +148,17 @@ function LiveView() {
 
   const [recording, setRecording] = useState(false);
 
+  async function toggleLiveFollow() {
+    if (!live || isHost || !userId) return;
+    const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: live.host_id });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setIsFollowing(!!nowFollowing);
+    toast.success(nowFollowing ? "Seguindo" : "Deixou de seguir");
+  }
+
   async function close() {
     navigate({ to: "/live" });
   }
