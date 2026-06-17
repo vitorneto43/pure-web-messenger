@@ -167,7 +167,7 @@ function GroupPage() {
           <section>
             <h2 className="text-sm font-semibold mb-2">Administradores</h2>
             <div className="flex flex-wrap gap-2">
-              {admins.map(a => (
+              {admins.map((a: { id: string; username: string; display_name: string; avatar_url: string | null }) => (
                 <Link
                   key={a.id}
                   to="/u/$username"
