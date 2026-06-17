@@ -143,7 +143,21 @@ function GroupPage() {
         </div>
 
         {group.description && (
-          <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-6 text-center">{group.description}</p>
+          <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-4 text-center">{group.description}</p>
+        )}
+
+        {group.pinned_message && (
+          <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm mb-4">
+            <div className="font-semibold text-primary mb-1">📌 Mensagem fixada</div>
+            <p className="whitespace-pre-wrap text-foreground/90">{group.pinned_message}</p>
+          </div>
+        )}
+
+        {group.rules && (
+          <div className="rounded-lg border border-border p-3 text-sm mb-4">
+            <div className="font-semibold mb-1">📋 Regras do grupo</div>
+            <p className="whitespace-pre-wrap text-muted-foreground">{group.rules}</p>
+          </div>
         )}
 
         <div className="mb-6">
