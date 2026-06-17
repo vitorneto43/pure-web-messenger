@@ -177,6 +177,21 @@ function GroupPage() {
           )}
         </div>
 
+        <Button
+          variant="outline"
+          className="w-full mb-6"
+          onClick={async () => {
+            const url = `${window.location.origin}/g/${group.id}`;
+            try {
+              if (navigator.share) await navigator.share({ title: group.name ?? "Grupo", url });
+              else { await navigator.clipboard.writeText(url); toast.success("Link copiado"); }
+            } catch { /* cancelled */ }
+          }}
+        >
+          <Share2 className="size-4 mr-2" /> Compartilhar grupo
+        </Button>
+
+
         {admins.length > 0 && (
           <section>
             <h2 className="text-sm font-semibold mb-2">Administradores</h2>
