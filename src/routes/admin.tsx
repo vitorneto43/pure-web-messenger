@@ -258,7 +258,6 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="compliance"><Scale className="size-4 mr-1.5" />Compliance</TabsTrigger>
               <TabsTrigger value="security"><ShieldCheck className="size-4 mr-1.5" />Segurança</TabsTrigger>
               <TabsTrigger value="badges"><Award className="size-4 mr-1.5" />Selos</TabsTrigger>
-              <TabsTrigger value="badges"><Award className="size-4 mr-1.5" />Selos</TabsTrigger>
               <TabsTrigger value="groups"><Globe className="size-4 mr-1.5" />Grupos</TabsTrigger>
               <TabsTrigger value="settings"><KeyRound className="size-4 mr-1.5" />PIN</TabsTrigger>
             </TabsList>
