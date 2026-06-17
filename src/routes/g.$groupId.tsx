@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Globe, Loader2, MoreVertical, ShieldAlert, Users } from "lucide-react";
+import { ArrowLeft, Globe, Loader2, MoreVertical, Share2, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
