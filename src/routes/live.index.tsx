@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getActiveLives, getTopHostsWeekly } from "@/lib/live.functions";
-import { Eye, Coins, Radio, Trophy, Crown } from "lucide-react";
+import { listUpcomingLives } from "@/lib/schedule.functions";
+import { Eye, Coins, Radio, Trophy, Crown, CalendarClock, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/live/")({
 function LiveFeed() {
   const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
   const [top, setTop] = useState<Awaited<ReturnType<typeof getTopHostsWeekly>>>([]);
+  const [upcoming, setUpcoming] = useState<Awaited<ReturnType<typeof listUpcomingLives>>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +30,11 @@ function LiveFeed() {
       .then((d) => active && setLives(d))
       .finally(() => active && setLoading(false));
     getTopHostsWeekly({ data: { limit: 10 } }).then((d) => active && setTop(d));
-    const t = setInterval(() => getActiveLives().then((d) => active && setLives(d)), 15000);
+    listUpcomingLives().then((d) => active && setUpcoming(d)).catch(() => {});
+    const t = setInterval(() => {
+      getActiveLives().then((d) => active && setLives(d));
+      listUpcomingLives().then((d) => active && setUpcoming(d)).catch(() => {});
+    }, 30000);
     return () => {
       active = false;
       clearInterval(t);
@@ -38,16 +44,52 @@ function LiveFeed() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="flex items-center justify-between p-4 border-b">
+      <header className="flex items-center justify-between p-4 border-b gap-2">
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Radio className="w-5 h-5 text-red-500" /> Ao vivo
         </h1>
-        <Link to="/live/new">
-          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
-            <Radio className="w-4 h-4 mr-1" /> Iniciar live
-          </Button>
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link to="/recordings"><Button size="sm" variant="ghost"><Video className="w-4 h-4 mr-1" /> Gravações</Button></Link>
+          <Link to="/scheduled"><Button size="sm" variant="ghost"><CalendarClock className="w-4 h-4 mr-1" /> Agendados</Button></Link>
+          <Link to="/live/new">
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+              <Radio className="w-4 h-4 mr-1" /> Iniciar
+            </Button>
+          </Link>
+        </div>
       </header>
+
+      {upcoming.length > 0 && (
+        <section className="px-3 pt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarClock className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-bold">Em breve</h2>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-none">
+            {upcoming.map((u) => (
+              <div key={u.id} className="min-w-[180px] max-w-[200px] rounded-xl border border-border bg-card p-2.5 shrink-0">
+                <div className="flex items-center gap-2">
+                  {u.host?.avatar_url ? (
+                    <img src={u.host.avatar_url} alt="" className="size-8 rounded-full object-cover" />
+                  ) : <div className="size-8 rounded-full bg-muted" />}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold truncate">{u.host?.display_name || u.host?.username || "Host"}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {new Date(u.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] mt-1.5 line-clamp-2 font-medium">{u.title || "Live agendada"}</p>
+                {u.will_record && (
+                  <p className="text-[10px] text-red-500 mt-1 flex items-center gap-0.5">
+                    <Video className="size-2.5" /> Será gravada
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {top.length > 0 && (
         <section className="px-3 pt-3">

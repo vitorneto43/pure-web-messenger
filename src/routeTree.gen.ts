@@ -32,6 +32,8 @@ import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
+import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
@@ -47,6 +49,8 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaymentsRefundSweeperRouteImport } from './routes/api/public/payments/refund-sweeper'
 import { Route as ApiPublicHooksUnreadMessageEmailsRouteImport } from './routes/api/public/hooks/unread-message-emails'
+import { Route as ApiPublicHooksSchedulerTickRouteImport } from './routes/api/public/hooks/scheduler-tick'
+import { Route as ApiPublicHooksLivekitEgressRouteImport } from './routes/api/public/hooks/livekit-egress'
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/public/auth/check-signup-ip'
 
@@ -164,6 +168,16 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedScheduledRoute = AuthenticatedScheduledRouteImport.update({
+  id: '/scheduled',
+  path: '/scheduled',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRecordingsRoute = AuthenticatedRecordingsRouteImport.update({
+  id: '/recordings',
+  path: '/recordings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -247,6 +261,18 @@ const ApiPublicHooksUnreadMessageEmailsRoute =
     path: '/api/public/hooks/unread-message-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSchedulerTickRoute =
+  ApiPublicHooksSchedulerTickRouteImport.update({
+    id: '/api/public/hooks/scheduler-tick',
+    path: '/api/public/hooks/scheduler-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksLivekitEgressRoute =
+  ApiPublicHooksLivekitEgressRouteImport.update({
+    id: '/api/public/hooks/livekit-egress',
+    path: '/api/public/hooks/livekit-egress',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCallsStatusRoute = ApiPublicCallsStatusRouteImport.update({
   id: '/api/public/calls/status',
   path: '/api/public/calls/status',
@@ -278,6 +304,8 @@ export interface FileRoutesByFullPath {
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recordings': typeof AuthenticatedRecordingsRoute
+  '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -293,6 +321,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -319,6 +349,8 @@ export interface FileRoutesByTo {
   '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recordings': typeof AuthenticatedRecordingsRoute
+  '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -334,6 +366,8 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -362,6 +396,8 @@ export interface FileRoutesById {
   '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
+  '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
@@ -377,6 +413,8 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
+  '/api/public/hooks/livekit-egress': typeof ApiPublicHooksLivekitEgressRoute
+  '/api/public/hooks/scheduler-tick': typeof ApiPublicHooksSchedulerTickRoute
   '/api/public/hooks/unread-message-emails': typeof ApiPublicHooksUnreadMessageEmailsRoute
   '/api/public/payments/refund-sweeper': typeof ApiPublicPaymentsRefundSweeperRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -405,6 +443,8 @@ export interface FileRouteTypes {
     | '/descobrir-status'
     | '/hashtags'
     | '/profile'
+    | '/recordings'
+    | '/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -420,6 +460,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -446,6 +488,8 @@ export interface FileRouteTypes {
     | '/descobrir-status'
     | '/hashtags'
     | '/profile'
+    | '/recordings'
+    | '/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -461,6 +505,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -488,6 +534,8 @@ export interface FileRouteTypes {
     | '/_authenticated/descobrir-status'
     | '/_authenticated/hashtags'
     | '/_authenticated/profile'
+    | '/_authenticated/recordings'
+    | '/_authenticated/scheduled'
     | '/email/unsubscribe'
     | '/live/$liveId'
     | '/live/new'
@@ -503,6 +551,8 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
+    | '/api/public/hooks/livekit-egress'
+    | '/api/public/hooks/scheduler-tick'
     | '/api/public/hooks/unread-message-emails'
     | '/api/public/payments/refund-sweeper'
     | '/api/public/payments/webhook'
@@ -540,6 +590,8 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
+  ApiPublicHooksLivekitEgressRoute: typeof ApiPublicHooksLivekitEgressRoute
+  ApiPublicHooksSchedulerTickRoute: typeof ApiPublicHooksSchedulerTickRoute
   ApiPublicHooksUnreadMessageEmailsRoute: typeof ApiPublicHooksUnreadMessageEmailsRoute
   ApiPublicPaymentsRefundSweeperRoute: typeof ApiPublicPaymentsRefundSweeperRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -711,6 +763,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/scheduled': {
+      id: '/_authenticated/scheduled'
+      path: '/scheduled'
+      fullPath: '/scheduled'
+      preLoaderRoute: typeof AuthenticatedScheduledRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recordings': {
+      id: '/_authenticated/recordings'
+      path: '/recordings'
+      fullPath: '/recordings'
+      preLoaderRoute: typeof AuthenticatedRecordingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -816,6 +882,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksUnreadMessageEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/scheduler-tick': {
+      id: '/api/public/hooks/scheduler-tick'
+      path: '/api/public/hooks/scheduler-tick'
+      fullPath: '/api/public/hooks/scheduler-tick'
+      preLoaderRoute: typeof ApiPublicHooksSchedulerTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/livekit-egress': {
+      id: '/api/public/hooks/livekit-egress'
+      path: '/api/public/hooks/livekit-egress'
+      fullPath: '/api/public/hooks/livekit-egress'
+      preLoaderRoute: typeof ApiPublicHooksLivekitEgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/calls/status': {
       id: '/api/public/calls/status'
       path: '/api/public/calls/status'
@@ -849,6 +929,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
+  AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
 }
 
@@ -857,6 +939,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
+  AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
 }
 
@@ -893,6 +977,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
+  ApiPublicHooksLivekitEgressRoute: ApiPublicHooksLivekitEgressRoute,
+  ApiPublicHooksSchedulerTickRoute: ApiPublicHooksSchedulerTickRoute,
   ApiPublicHooksUnreadMessageEmailsRoute:
     ApiPublicHooksUnreadMessageEmailsRoute,
   ApiPublicPaymentsRefundSweeperRoute: ApiPublicPaymentsRefundSweeperRoute,
@@ -904,13 +990,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

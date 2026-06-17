@@ -1090,6 +1090,71 @@ export type Database = {
           },
         ]
       }
+      live_recordings: {
+        Row: {
+          created_at: string
+          duration_sec: number | null
+          ended_at: string | null
+          error_message: string | null
+          file_url: string | null
+          host_id: string
+          id: string
+          is_public: boolean
+          live_id: string
+          livekit_egress_id: string | null
+          size_bytes: number | null
+          started_at: string | null
+          status: string
+          storage_path: string | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_sec?: number | null
+          ended_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          host_id: string
+          id?: string
+          is_public?: boolean
+          live_id: string
+          livekit_egress_id?: string | null
+          size_bytes?: number | null
+          started_at?: string | null
+          status?: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_sec?: number | null
+          ended_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          host_id?: string
+          id?: string
+          is_public?: boolean
+          live_id?: string
+          livekit_egress_id?: string | null
+          size_bytes?: number | null
+          started_at?: string | null
+          status?: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_recordings_live_id_fkey"
+            columns: ["live_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_sessions: {
         Row: {
           cover_url: string | null
@@ -1099,12 +1164,14 @@ export type Database = {
           id: string
           livekit_room: string
           peak_viewers: number
+          scheduled_live_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["live_status"]
           title: string
           total_gift_coins: number
           total_reactions: number
           viewer_count: number
+          will_record: boolean
         }
         Insert: {
           cover_url?: string | null
@@ -1114,12 +1181,14 @@ export type Database = {
           id?: string
           livekit_room: string
           peak_viewers?: number
+          scheduled_live_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["live_status"]
           title?: string
           total_gift_coins?: number
           total_reactions?: number
           viewer_count?: number
+          will_record?: boolean
         }
         Update: {
           cover_url?: string | null
@@ -1129,14 +1198,24 @@ export type Database = {
           id?: string
           livekit_room?: string
           peak_viewers?: number
+          scheduled_live_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["live_status"]
           title?: string
           total_gift_coins?: number
           total_reactions?: number
           viewer_count?: number
+          will_record?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "live_sessions_scheduled_live_id_fkey"
+            columns: ["scheduled_live_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_lives"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       live_stage_requests: {
         Row: {
@@ -2265,6 +2344,194 @@ export type Database = {
           p256dh?: string
           updated_at?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_lives: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          host_alert_sent_at: string | null
+          host_id: string
+          id: string
+          live_session_id: string | null
+          reminder_sent_at: string | null
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+          will_record: boolean
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          host_alert_sent_at?: string | null
+          host_id: string
+          id?: string
+          live_session_id?: string | null
+          reminder_sent_at?: string | null
+          scheduled_at: string
+          status?: string
+          title?: string
+          updated_at?: string
+          will_record?: boolean
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          host_alert_sent_at?: string | null
+          host_id?: string
+          id?: string
+          live_session_id?: string | null
+          reminder_sent_at?: string | null
+          scheduled_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          will_record?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_lives_live_session_id_fkey"
+            columns: ["live_session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_posts: {
+        Row: {
+          background: string | null
+          caption: string | null
+          content: string | null
+          created_at: string
+          error_message: string | null
+          hashtags: string[]
+          id: string
+          kind: string
+          media_url: string | null
+          music_track_id: string | null
+          published_post_id: string | null
+          scheduled_at: string
+          status: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          error_message?: string | null
+          hashtags?: string[]
+          id?: string
+          kind: string
+          media_url?: string | null
+          music_track_id?: string | null
+          published_post_id?: string | null
+          scheduled_at: string
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          error_message?: string | null
+          hashtags?: string[]
+          id?: string
+          kind?: string
+          media_url?: string | null
+          music_track_id?: string | null
+          published_post_id?: string | null
+          scheduled_at?: string
+          status?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      scheduled_statuses: {
+        Row: {
+          background: string | null
+          caption: string | null
+          content: string | null
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          description: string | null
+          error_message: string | null
+          hashtags: string[]
+          id: string
+          kind: string
+          media_url: string | null
+          music_duration_sec: number
+          music_start_sec: number
+          music_track_id: string | null
+          music_volume: number
+          published_status_id: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          description?: string | null
+          error_message?: string | null
+          hashtags?: string[]
+          id?: string
+          kind: string
+          media_url?: string | null
+          music_duration_sec?: number
+          music_start_sec?: number
+          music_track_id?: string | null
+          music_volume?: number
+          published_status_id?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background?: string | null
+          caption?: string | null
+          content?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          description?: string | null
+          error_message?: string | null
+          hashtags?: string[]
+          id?: string
+          kind?: string
+          media_url?: string | null
+          music_duration_sec?: number
+          music_start_sec?: number
+          music_track_id?: string | null
+          music_volume?: number
+          published_status_id?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -3598,12 +3865,14 @@ export type Database = {
           id: string
           livekit_room: string
           peak_viewers: number
+          scheduled_live_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["live_status"]
           title: string
           total_gift_coins: number
           total_reactions: number
           viewer_count: number
+          will_record: boolean
         }
         SetofOptions: {
           from: "*"

@@ -12,6 +12,8 @@ import { LiveGiftSheet } from "@/components/live/LiveGiftSheet";
 import { LiveStagePanel, RequestStageButton } from "@/components/live/LiveStagePanel";
 import { LiveHeader } from "@/components/live/LiveHeader";
 import { LivePixSheet } from "@/components/live/LivePixSheet";
+import { startLiveRecording, stopLiveRecording } from "@/lib/recordings.functions";
+import { Video, VideoOff } from "lucide-react";
 
 export const Route = createFileRoute("/live/$liveId")({
   loader: async ({ params }) => getLive({ data: { liveId: params.liveId } }),
@@ -130,12 +132,34 @@ function LiveView() {
     };
   }, [live, isHost, stageStatus, ended]);
 
-  function close() {
+  const [recording, setRecording] = useState(false);
+
+  async function close() {
     navigate({ to: "/live" });
+  }
+
+  async function toggleRecording() {
+    if (!live) return;
+    try {
+      if (recording) {
+        await stopLiveRecording({ data: { liveId: live.id } });
+        setRecording(false);
+        toast.success("Gravação parada");
+      } else {
+        await startLiveRecording({ data: { liveId: live.id } });
+        setRecording(true);
+        toast.success("Gravando…");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha na gravação");
+    }
   }
 
   async function endLive() {
     if (!live) return;
+    if (recording) {
+      try { await stopLiveRecording({ data: { liveId: live.id } }); } catch {}
+    }
     await supabase.rpc("end_live", { p_live_id: live.id });
     setEnded(true);
     router.invalidate();
@@ -199,9 +223,15 @@ function LiveView() {
                 {!isHost && <LivePixSheet liveId={live.id} />}
                 {!isHost && <LiveGiftSheet liveId={live.id} userId={userId} />}
                 {isHost && (
-                  <Button size="sm" variant="destructive" onClick={endLive}>
-                    Encerrar
-                  </Button>
+                  <>
+                    <Button size="sm" variant={recording ? "destructive" : "outline"} onClick={toggleRecording}>
+                      {recording ? <VideoOff className="size-4 mr-1" /> : <Video className="size-4 mr-1" />}
+                      {recording ? "Parar" : "Gravar"}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={endLive}>
+                      Encerrar
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
