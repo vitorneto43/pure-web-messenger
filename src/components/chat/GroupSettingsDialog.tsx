@@ -76,6 +76,11 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
 
   async function load() {
     setLoading(true);
+    const { data: gRow } = await supabase
+      .from("conversations")
+      .select("id, name, description, avatar_url, visibility, category, join_policy")
+      .eq("id", conversationId).maybeSingle();
+    setGroupInfo(gRow);
     const { data: rows } = await supabase
       .from("conversation_members")
       .select("user_id, role")
@@ -98,9 +103,32 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
     setLoading(false);
   }
 
+  async function loadPending() {
+    if (!meIsAdmin || !isPublic || groupInfo?.join_policy !== "request") return;
+    try {
+      const r = await listPendingJoinRequests({ data: { id: conversationId } });
+      setPendingReqs(r.requests);
+    } catch { /* ignore */ }
+  }
+
   useEffect(() => {
     if (open) load();
   }, [open, conversationId]);
+
+  useEffect(() => {
+    if (open) void loadPending();
+  }, [open, meIsAdmin, isPublic, groupInfo?.join_policy]);
+
+  async function decide(requestId: string, decision: "approved" | "rejected") {
+    setBusy(true);
+    try {
+      await decideJoinRequest({ data: { requestId, decision } });
+      toast.success(decision === "approved" ? "Aprovado" : "Recusado");
+      setPendingReqs(p => p.filter(r => r.id !== requestId));
+      if (decision === "approved") await load();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setBusy(false); }
+  }
 
   async function runSearch(q: string) {
     setQuery(q);
