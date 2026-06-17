@@ -169,6 +169,19 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
           <div className="flex items-center gap-1.5 text-sm">
             <span className="font-semibold truncate">{post.display_name}</span>
             {post.is_official && <BadgeCheck className="size-4 text-sky-500" />}
+            {!isOwner && user && (
+              <button
+                onClick={toggleFollow}
+                className={cn(
+                  "ml-1 text-xs font-medium px-2 py-0.5 rounded-full border transition",
+                  isFollowing
+                    ? "border-primary/30 text-primary bg-primary/10"
+                    : "border-primary text-primary hover:bg-primary/10"
+                )}
+              >
+                {isFollowing ? "Seguindo" : "Seguir"}
+              </button>
+            )}
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span>@{post.username}</span>
