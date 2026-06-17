@@ -55,11 +55,25 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   const isOwner = user?.id === post.user_id;
   const [reportOpen, setReportOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const blockFn = useServerFn(blockUser);
 
   useEffect(() => {
     void (supabase as any).rpc("register_post_view", { _post_id: post.post_id, _session_hash: null });
   }, [post.post_id]);
+
+  useEffect(() => {
+    if (!user || isOwner) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profile_follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", post.user_id)
+        .maybeSingle();
+      setIsFollowing(!!data);
+    })();
+  }, [user?.id, post.user_id, isOwner]);
 
   async function handleBlock() {
     gate("react", async () => {
