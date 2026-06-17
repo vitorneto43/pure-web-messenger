@@ -596,7 +596,15 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
           </div>
           <div>
             <label className="text-sm font-medium">Descrição</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} className="mt-1.5 min-h-20" placeholder="Sobre o que é este grupo" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">📌 Mensagem fixada</label>
+            <Textarea value={pinned} onChange={(e) => setPinned(e.target.value)} maxLength={1000} className="mt-1.5 min-h-16" placeholder="Aviso destacado no topo do grupo" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">📋 Regras do grupo</label>
+            <Textarea value={rules} onChange={(e) => setRules(e.target.value)} maxLength={2000} className="mt-1.5 min-h-24" placeholder="1. Respeite os membros&#10;2. Sem spam&#10;3. ..." />
           </div>
           <div>
             <label className="text-sm font-medium">Tipo</label>
