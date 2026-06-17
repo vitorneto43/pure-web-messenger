@@ -78,7 +78,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
     setLoading(true);
     const { data: gRow } = await supabase
       .from("conversations")
-      .select("id, name, description, avatar_url, visibility, category, join_policy")
+      .select("id, name, description, avatar_url, visibility, category, join_policy, rules, pinned_message, member_count")
       .eq("id", conversationId).maybeSingle();
     setGroupInfo(gRow);
     const { data: rows } = await supabase
