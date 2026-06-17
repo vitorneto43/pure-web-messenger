@@ -50,12 +50,26 @@ function LiveView() {
   const [publish, setPublish] = useState(false);
   const [stageStatus, setStageStatus] = useState<string | null>(null);
   const [ended, setEnded] = useState(live?.status === "ended");
+  const [isFollowing, setIsFollowing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
 
   const isHost = !!(userId && live?.host_id === userId);
+
+  useEffect(() => {
+    if (!userId || !live || isHost) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profile_follows")
+        .select("id")
+        .eq("follower_id", userId)
+        .eq("following_id", live.host_id)
+        .maybeSingle();
+      setIsFollowing(!!data);
+    })();
+  }, [userId, live?.host_id, isHost]);
 
   // Watch stage status to auto-promote to publisher when host approves
   useEffect(() => {
