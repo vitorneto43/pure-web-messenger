@@ -80,6 +80,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [startingChat, setStartingChat] = useState(false);
+  const [groupResults, setGroupResults] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) requestBrowserNotificationPermission();
