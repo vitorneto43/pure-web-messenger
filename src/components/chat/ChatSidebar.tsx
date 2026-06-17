@@ -204,14 +204,19 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
     const q = search.trim();
     if (!q) {
       setUserResults([]);
+      setGroupResults([]);
       return;
     }
     let cancelled = false;
     setSearchingUsers(true);
     const handle = setTimeout(async () => {
-      const { data } = await (supabase as any).rpc(user ? "search_users" : "public_search_users", { q });
+      const [usersRes, groupsRes] = await Promise.all([
+        (supabase as any).rpc(user ? "search_users" : "public_search_users", { q }),
+        import("@/lib/groups.functions").then((m) => m.searchGroupsPublic({ data: { q } })).catch(() => ({ groups: [] })),
+      ]);
       if (cancelled) return;
-      setUserResults((data as any[]) ?? []);
+      setUserResults((usersRes.data as any[]) ?? []);
+      setGroupResults(groupsRes.groups ?? []);
       setSearchingUsers(false);
     }, 250);
     return () => {
