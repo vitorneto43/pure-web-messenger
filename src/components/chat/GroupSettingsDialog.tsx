@@ -548,6 +548,8 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
   const [visibility, setVisibility] = useState<"private"|"public">(group.visibility ?? "private");
   const [category, setCategory] = useState<string>(group.category ?? "other");
   const [joinPolicy, setJoinPolicy] = useState<"open"|"request">(group.join_policy ?? "request");
+  const [rules, setRules] = useState(group.rules ?? "");
+  const [pinned, setPinned] = useState(group.pinned_message ?? "");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -557,6 +559,8 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
       setVisibility(group.visibility ?? "private");
       setCategory(group.category ?? "other");
       setJoinPolicy(group.join_policy ?? "request");
+      setRules(group.rules ?? "");
+      setPinned(group.pinned_message ?? "");
     }
   }, [open, group]);
 
@@ -570,10 +574,12 @@ function EditGroupDialog({ open, onOpenChange, group, onSaved }: { open: boolean
         visibility,
         category: visibility === "public" ? (category as any) : null,
         join_policy: visibility === "public" ? joinPolicy : "request",
+        rules: rules.trim() || null,
+        pinned_message: pinned.trim() || null,
       };
       await updateGroupSettings({ data: patch });
       toast.success("Grupo atualizado");
-      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy });
+      onSaved({ name: patch.name, description: patch.description, visibility, category: patch.category, join_policy: patch.join_policy, rules: patch.rules, pinned_message: patch.pinned_message });
       onOpenChange(false);
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(false); }
