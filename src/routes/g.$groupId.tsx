@@ -134,7 +134,7 @@ function GroupPage() {
           <h1 className="text-xl font-bold">{group.name}</h1>
           <div className="flex items-center gap-2 mt-1.5 text-sm text-muted-foreground">
             <Globe className="size-3.5" /> <span>Público</span>
-            {group.category && <><span>·</span><Badge variant="secondary">{CATEGORY_LABEL[group.category]}</Badge></>}
+            {group.category && <><span>·</span><Badge variant="secondary">{CATEGORY_LABEL[group.category as GroupCategory]}</Badge></>}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
             <Users className="size-4" /> {group.member_count} {group.member_count === 1 ? "membro" : "membros"}
