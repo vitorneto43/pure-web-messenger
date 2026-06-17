@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MusicPickerSheet } from "@/components/status/MusicPickerSheet";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
+import { SchedulePicker } from "@/components/SchedulePicker";
+import { schedulePost } from "@/lib/schedule.functions";
 
 interface Props {
   open: boolean;
@@ -75,10 +77,12 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [musicOpen, setMusicOpen] = useState(false);
   const [musicTrackId, setMusicTrackId] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState<string | null>(null);
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
 
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
+    setScheduledAt(null);
   }
 
   async function handleFile(file: File, expected: "image" | "video") {
@@ -135,8 +139,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       const inline = Array.from((content + " " + description).matchAll(/#(\w+)/g)).map(m => m[1].toLowerCase());
       const explicit = parseHashtags(hashtagsRaw);
       const hashtags = Array.from(new Set([...explicit, ...inline])).slice(0, 12);
-      const { data, error } = await (supabase as any).from("posts").insert({
-        user_id: user.id,
+      const payload = {
         kind,
         content: kind === "text" ? content.trim() : null,
         media_url: kind === "text" ? null : mediaUrl,
@@ -145,7 +148,22 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         background: kind === "text" ? "linear-gradient(135deg,#6366f1,#ec4899)" : null,
         hashtags,
         music_track_id: musicTrackId,
-        visibility: "public",
+        visibility: "public" as const,
+      };
+
+      if (scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000) {
+        await schedulePost({ data: { ...payload, scheduled_at: scheduledAt } });
+        toast.success("Post agendado!", {
+          description: new Date(scheduledAt).toLocaleString("pt-BR"),
+        });
+        reset();
+        onOpenChange(false);
+        return;
+      }
+
+      const { data, error } = await (supabase as any).from("posts").insert({
+        user_id: user.id,
+        ...payload,
       }).select("id").single();
       if (error) throw error;
       toast.success("Post publicado!");
@@ -227,8 +245,13 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
             {musicTrackId && <Button variant="ghost" size="sm" onClick={() => { setMusicTrackId(null); setMusicTitle(null); }}><X className="size-4" /></Button>}
           </div>
 
+          <div className="mt-3">
+            <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
+          </div>
+
           <Button onClick={publish} disabled={saving} className="mt-3 w-full">
-            {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : null}Publicar
+            {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+            {scheduledAt ? "Agendar post" : "Publicar"}
           </Button>
         </DialogContent>
       </Dialog>
