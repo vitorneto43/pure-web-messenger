@@ -123,6 +123,19 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
     });
   }
 
+  async function toggleFollow() {
+    if (!user || isOwner) return;
+    gate("follow", async () => {
+      const { data: nowFollowing, error } = await supabase.rpc("toggle_follow", { _target: post.user_id });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setIsFollowing(!!nowFollowing);
+      toast.success(nowFollowing ? "Seguindo" : "Deixou de seguir");
+    });
+  }
+
   async function remove() {
     if (!confirm("Apagar este post?")) return;
     const { error } = await (supabase as any).from("posts").delete().eq("id", post.post_id);
