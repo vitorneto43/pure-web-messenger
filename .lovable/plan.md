@@ -1,100 +1,66 @@
-# Sistema de Lives no WaveChat
+# Agendamento + Gravação de Lives
 
-Lives ao vivo (1 host → milhares de viewers) usando **LiveKit Cloud** como servidor de mídia, integradas ao app existente sem rebuild Android (as permissões de câmera/microfone já estão no `AndroidManifest` por causa das chamadas).
+Quatro recursos novos integrados ao que já existe:
 
-## O que será entregue
+## 1. Agendar posts
 
-### 1. Rotas e telas novas
+- Novo campo `scheduled_at` em `posts` + status `scheduled`.
+- No `PostComposer`: botão "Agendar" abre date+time picker. Se data futura, salva como `scheduled` (não aparece no feed ainda).
+- Cron `pg_cron` a cada minuto chama `/api/public/hooks/publish-scheduled` → publica posts com `scheduled_at <= now()`, dispara notificações normais.
+- Aba "Agendados" no perfil pra editar/cancelar.
 
-```text
-/live                       → feed de lives ativas agora (público)
-/live/new                   → tela de "Ir ao vivo" (host) — gated por login
-/live/$liveId               → tela de live (viewer ou host)
-```
+## 2. Agendar / programar lives
 
-- Card de live no feed `/posts` quando o autor estiver ao vivo.
-- Botão "Ao vivo" no header do `/chat` e no perfil do usuário.
+- Nova tabela `scheduled_lives` (host_id, title, cover_url, scheduled_at, status, reminder_sent_at, live_session_id).
+- Tela `/live/new` ganha toggle "Ao vivo agora" / "Agendar live".
+- Aparecem em `/live` numa seção "Em breve" com botão "Lembrar-me" (cria notificação).
+- Cron a cada minuto:
+  - **T-30min**: envia push/notification pros seguidores do host: "Fulano vai entrar ao vivo em 30 minutos: <título>" + deep-link pra live agendada. Marca `reminder_sent_at`.
+  - **T-0**: host recebe notificação "Hora da sua live"; quando ele entra em `/live/new?scheduledId=...` cria a `live_session` normal e linka.
 
-### 2. Recursos da live
+## 3. Agendar stories
 
-- **Vídeo + áudio HD** do host via WebRTC (LiveKit).
-- **Chat ao vivo** com mensagens rolando, envio instantâneo (Supabase Realtime).
-- **Reações flutuantes** (❤️ 🔥 👏 😂 🎉) animadas na tela.
-- **Contador de espectadores + lista** ("quem está assistindo" com avatares).
-- **Convidar pra subir no palco**: host aprova pedidos, até 4 convidados publicam vídeo/áudio junto. Convidado pode pedir, host aceita/recusa, host pode "tirar do palco".
-- **Presentes pagos** (moedas WaveCoins): catálogo de presentes (🌹 Rosa, 🦁 Leão, 🚀 Foguete etc.), comprados com moedas (compradas via Stripe), aparecem animados na live, top doadores ranqueados no painel da live.
-- **Denunciar / bloquear** o host (reusa `ReportContentDialog`).
-- **Encerrar live** pelo host; viewers veem mensagem "Live encerrada".
-- **Notificação** para seguidores quando alguém entra ao vivo (push + sino).
-- **Compartilhar link** da live (Open Graph com thumbnail do host).
+- Adiciona `scheduled_at` + status `scheduled` em `statuses`.
+- `CreateStatusDialog` ganha botão "Agendar".
+- Mesmo cron publica stories agendados quando chega a hora (move pra `active`, define `expires_at = published_at + 24h`).
 
-### 3. O que NÃO entra nesta primeira versão
+## 4. Gravar lives
 
-- Replay/gravação automática (LiveKit suporta, mas adiciona custo — pode vir depois).
-- Stream para YouTube/Twitch via RTMP.
-- Filtros faciais / AR.
-- Co-host vendo a mesma tela (multi-host está incluso via "palco", até 4 pessoas; isso cobre o caso de uso).
+- Toggle "Gravar esta live" no `/live/new` (e no painel do host durante a live).
+- Usa **LiveKit Egress** (Room Composite Egress → MP4 no bucket Supabase Storage `live-recordings`).
+- Server fns: `startLiveRecording` / `stopLiveRecording` (chamam API LiveKit com `LIVEKIT_API_KEY/SECRET`, assinam JWT egress).
+- Nova tabela `live_recordings` (live_id, host_id, status, file_url, duration_sec, size_bytes, started_at, ended_at).
+- Ao encerrar a live, egress para automaticamente; webhook do LiveKit (`/api/public/hooks/livekit-egress`) atualiza `live_recordings` com a URL final.
+- Aba "Minhas gravações" no perfil do host com player + download + botão "Publicar como post de vídeo".
 
-## Tecnologia
+## Banco (resumo)
 
-- **LiveKit Cloud** (free tier: 100 GB egress/mês, milhares de viewers concorrentes). Você cria a conta em livekit.io e me passa as 3 credenciais.
-- **Backend**: server functions TanStack que mintam tokens JWT do LiveKit (HS256 via Web Crypto — compatível com o runtime do Lovable Cloud, sem pacote nativo).
-- **Frontend**: `@livekit/components-react` + `livekit-client` (puro WebRTC do navegador, funciona no Capacitor sem rebuild).
-- **Chat/reações/palco-requests**: Supabase Realtime nas novas tabelas.
-- **Presentes pagos**: reaproveita o sistema Stripe já existente do app.
+- `posts`: + `scheduled_at timestamptz`, status enum ganha `scheduled`.
+- `statuses`: + `scheduled_at timestamptz`, status enum ganha `scheduled`.
+- `scheduled_lives` (nova) — RLS: host gerencia a sua; anon lê próximas 7 dias; authenticated lê tudo público.
+- `live_recordings` (nova) — RLS: host vê as suas; anon lê se a live era pública e o host marcou "publicar gravação".
+- `live_reminders_sent` (nova, idempotência do cron).
+- Webhook LiveKit egress: rota `/api/public/hooks/livekit-egress` valida assinatura LiveKit (header `Authorization` JWT HS256) antes de gravar.
 
-## Banco de dados (novas tabelas)
+## Cron (`pg_cron`)
 
-- `live_sessions` — host, título, capa, status (live/ended), `viewer_count`, contagem de presentes/curtidas, timestamps.
-- `live_chat_messages` — mensagens da live (chat efêmero, TTL curto).
-- `live_reactions` — emoji burst (TTL curto, agregado por minuto).
-- `live_stage_requests` — pedidos pra subir no palco (pending/approved/rejected/kicked).
-- `live_viewers` — heartbeat de quem está assistindo (limpa após X min sem ping).
-- `live_gifts_catalog` — catálogo de presentes (nome, emoji/animação, custo em moedas).
-- `live_gifts_sent` — presente enviado (live_id, viewer_id, gift_id, qty, moedas gastas).
-- `user_coins` — saldo de moedas do usuário (já pode existir? checo antes).
-- `coin_purchases` — compras de pacotes de moedas via Stripe.
+Um job a cada minuto chama `/api/public/hooks/scheduler-tick` que:
+1. Publica posts agendados.
+2. Publica statuses agendados.
+3. Envia lembretes T-30min de lives agendadas.
+4. Notifica host no T-0.
 
-Tudo com RLS, GRANTs e policies (anon lê live ativa + chat; autenticado escreve chat/reações/presentes; host edita a própria live).
+## Frontend (componentes principais)
 
-## Pacotes de moedas (Stripe)
+- `SchedulePickerSheet` (reutilizado por post/story/live).
+- `ScheduledLiveCard` no feed `/live`.
+- `RecordToggle` + `RecordingsTab` no perfil.
+- Hooks: `useScheduledItems`, `useLiveRecordings`.
 
-Crio 4 produtos no Stripe (você ajusta os preços depois):
-- 100 moedas — R$ 4,90
-- 500 moedas — R$ 19,90
-- 1 200 moedas — R$ 39,90 (bônus +200)
-- 5 000 moedas — R$ 149,90 (bônus +1 000)
+## Custos / observações
 
-Webhook Stripe credita as moedas em `user_coins` após pagamento.
+- LiveKit Egress: ~$0.004/min de gravação. Eu deixo o toggle desligado por padrão.
+- Storage Supabase: gravações antigas (>30 dias) podem ser auto-removidas via cron — combino contigo depois.
+- Não precisa rebuild Android (tudo no webview + backend).
 
-## Segredos que você precisa fornecer
-
-Depois que aprovar o plano, vou pedir três variáveis via formulário seguro:
-
-1. `LIVEKIT_API_KEY`
-2. `LIVEKIT_API_SECRET`
-3. `LIVEKIT_WS_URL` (algo como `wss://seuprojeto.livekit.cloud`)
-
-Como obter: criar conta em https://cloud.livekit.io → Project → Settings → Keys.
-
-## Rebuild Android?
-
-**Não precisa.** O AndroidManifest atual (das chamadas WebRTC) já contém `CAMERA`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS` e o `<uses-feature>` de câmera. O `livekit-client` usa as mesmas APIs do navegador (`getUserMedia`), então abre o request de permissão automaticamente na webview do Capacitor.
-
-## Ordem de implementação
-
-1. Migration: criar todas as tabelas, RLS, GRANTs, RPCs (`start_live`, `end_live`, `join_live`, `send_gift`, `request_stage`, `approve_stage`).
-2. Pedir os 3 secrets do LiveKit.
-3. Server functions: `mintLiveKitToken` (host/viewer/guest), `purchaseCoinsCheckout`, `sendLiveGift`.
-4. Webhook Stripe: tratar `coin_purchase` e creditar `user_coins`.
-5. Instalar `@livekit/components-react` + `livekit-client`.
-6. Componentes: `LiveStudio` (host), `LiveViewer`, `LiveChat`, `LiveReactions`, `LiveStagePanel`, `LiveGiftSheet`, `LiveCard`.
-7. Rotas `/live`, `/live/new`, `/live/$liveId`.
-8. Integração: card de live no feed, botão no header do chat, push notification para seguidores.
-
-## Custos a ter em mente
-
-- LiveKit Cloud free tier cobre bem para começar; depois disso é ~$0,12/GB de egress (cerca de R$ 0,06 por viewer-hora em SD).
-- Stripe: taxa padrão por transação dos pacotes de moedas.
-
-Confirma o plano que eu sigo: peço os secrets do LiveKit e implemento ponta a ponta.
+Confirma que sigo? Posso entregar tudo de uma vez ou dividir em etapas (1º agendamentos, 2º gravação).
