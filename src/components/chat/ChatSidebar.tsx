@@ -491,7 +491,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
-        <OnlineUsersStrip />
+        
         <ProfileCompletionBanner />
         <InviteMissionBanner />
         <MeetPeopleCard />
