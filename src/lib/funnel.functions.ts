@@ -107,15 +107,29 @@ export const getConversionFunnel = createServerFn({ method: "POST" })
     const since = periodStart(data.period).toISOString();
 
     // ===== Eventos reais do front =====
-    const [visits, signupCtaClicks, googleClicks, signupCompleted, appLogins, discoverViews] =
-      await Promise.all([
-        distinctField("session_id", "page_view", since),
-        distinctField("session_id", "signup_click", since),
-        distinctField("session_id", "google_signin_click", since),
-        distinctField("session_id", "signup_completed", since),
-        distinctField("user_id", "app_login", since),
-        distinctField("session_id", "discover_list_view", since),
-      ]);
+    // Incluímos variantes `guest_*` disparadas pelo AuthGateDialog, senão
+    // visitantes que clicam no CTA via modal somem do funil ("0 cliques").
+    const [
+      visits,
+      signupCtaA,
+      signupCtaB,
+      googleA,
+      googleB,
+      signupCompleted,
+      appLogins,
+      discoverViews,
+    ] = await Promise.all([
+      distinctField("session_id", "page_view", since),
+      distinctField("session_id", "signup_click", since),
+      distinctField("session_id", "guest_signup_click", since),
+      distinctField("session_id", "google_signin_click", since),
+      distinctField("session_id", "guest_google_signin_click", since),
+      distinctField("session_id", "signup_completed", since),
+      distinctField("user_id", "app_login", since),
+      distinctField("session_id", "discover_list_view", since),
+    ]);
+    const signupCtaClicks = signupCtaA + signupCtaB;
+    const googleClicks = googleA + googleB;
 
     // ===== Dados consolidados nas tabelas (fonte da verdade) =====
     const { count: newProfilesCount } = await supabaseAdmin
