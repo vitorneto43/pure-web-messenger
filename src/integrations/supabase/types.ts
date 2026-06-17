@@ -614,30 +614,45 @@ export type Database = {
       conversations: {
         Row: {
           avatar_url: string | null
+          category: Database["public"]["Enums"]["group_category"] | null
           created_at: string
           created_by: string | null
+          description: string | null
           id: string
           is_group: boolean
+          join_policy: Database["public"]["Enums"]["group_join_policy"]
+          member_count: number
           name: string | null
           updated_at: string
+          visibility: Database["public"]["Enums"]["group_visibility"]
         }
         Insert: {
           avatar_url?: string | null
+          category?: Database["public"]["Enums"]["group_category"] | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_group?: boolean
+          join_policy?: Database["public"]["Enums"]["group_join_policy"]
+          member_count?: number
           name?: string | null
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["group_visibility"]
         }
         Update: {
           avatar_url?: string | null
+          category?: Database["public"]["Enums"]["group_category"] | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_group?: boolean
+          join_policy?: Database["public"]["Enums"]["group_join_policy"]
+          member_count?: number
           name?: string | null
           updated_at?: string
+          visibility?: Database["public"]["Enums"]["group_visibility"]
         }
         Relationships: []
       }
@@ -801,6 +816,91 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      group_join_requests: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          message: string | null
+          status: Database["public"]["Enums"]["group_join_request_status"]
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          message?: string | null
+          status?: Database["public"]["Enums"]["group_join_request_status"]
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          message?: string | null
+          status?: Database["public"]["Enums"]["group_join_request_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_join_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_reports: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: Database["public"]["Enums"]["group_report_reason"]
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["group_report_status"]
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: Database["public"]["Enums"]["group_report_reason"]
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["group_report_status"]
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: Database["public"]["Enums"]["group_report_reason"]
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["group_report_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invite_rewards: {
         Row: {
@@ -3926,6 +4026,28 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "moderator" | "superadmin"
+      group_category:
+        | "business"
+        | "tech"
+        | "games"
+        | "music"
+        | "entertainment"
+        | "relationships"
+        | "travel"
+        | "sports"
+        | "education"
+        | "other"
+      group_join_policy: "open" | "request"
+      group_join_request_status: "pending" | "approved" | "rejected"
+      group_report_reason:
+        | "spam"
+        | "adult"
+        | "violence"
+        | "scam"
+        | "copyright"
+        | "other"
+      group_report_status: "pending" | "reviewed" | "dismissed" | "actioned"
+      group_visibility: "private" | "public"
       live_status: "live" | "ended"
       moderation_action_type:
         | "warning"
@@ -4081,6 +4203,30 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "superadmin"],
+      group_category: [
+        "business",
+        "tech",
+        "games",
+        "music",
+        "entertainment",
+        "relationships",
+        "travel",
+        "sports",
+        "education",
+        "other",
+      ],
+      group_join_policy: ["open", "request"],
+      group_join_request_status: ["pending", "approved", "rejected"],
+      group_report_reason: [
+        "spam",
+        "adult",
+        "violence",
+        "scam",
+        "copyright",
+        "other",
+      ],
+      group_report_status: ["pending", "reviewed", "dismissed", "actioned"],
+      group_visibility: ["private", "public"],
       live_status: ["live", "ended"],
       moderation_action_type: [
         "warning",
