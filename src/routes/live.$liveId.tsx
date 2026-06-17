@@ -223,9 +223,15 @@ function LiveView() {
                 {!isHost && <LivePixSheet liveId={live.id} />}
                 {!isHost && <LiveGiftSheet liveId={live.id} userId={userId} />}
                 {isHost && (
-                  <Button size="sm" variant="destructive" onClick={endLive}>
-                    Encerrar
-                  </Button>
+                  <>
+                    <Button size="sm" variant={recording ? "destructive" : "outline"} onClick={toggleRecording}>
+                      {recording ? <VideoOff className="size-4 mr-1" /> : <Video className="size-4 mr-1" />}
+                      {recording ? "Parar" : "Gravar"}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={endLive}>
+                      Encerrar
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
