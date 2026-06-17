@@ -27,8 +27,6 @@ export type PublicGroup = {
 };
 
 function makePublicClient() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { createClient } = require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   });
