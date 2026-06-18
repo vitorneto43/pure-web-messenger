@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, FileText, Monitor } from "lucide-react";
+import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
 import { discoverGroupsPublic, type PublicGroup, type GroupCategory } from "@/lib/groups.functions";
 import { getActiveLives } from "@/lib/live.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
-import type { PostItem } from "@/components/posts/PostCard";
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
@@ -37,9 +35,7 @@ function LandingPage() {
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
   const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
-  const [posts, setPosts] = useState<PostItem[]>([]);
   const [loadingLives, setLoadingLives] = useState(true);
-  const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -56,12 +52,6 @@ function LandingPage() {
     getActiveLives()
       .then((r) => { setLives(r); setLoadingLives(false); })
       .catch(() => setLoadingLives(false));
-    (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
-      .then(({ data, error }: { data: PostItem[] | null; error: any }) => {
-        if (!error) setPosts(data ?? []);
-        setLoadingPosts(false);
-      })
-      .catch(() => setLoadingPosts(false));
   }, [user, navigate]);
 
 
@@ -250,53 +240,6 @@ function LandingPage() {
           )}
         </section>
 
-        {/* Posts */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <FileText className="size-5 text-primary" />
-              <h2 className="text-lg font-bold">Posts da comunidade</h2>
-            </div>
-            <button onClick={() => navigate({ to: "/posts" })} className="text-sm text-primary hover:underline flex items-center gap-1">
-              Ver feed <ArrowRight className="size-3.5" />
-            </button>
-          </div>
-          {loadingPosts ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : posts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Nenhum post ainda. Seja o primeiro!</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {posts.slice(0, 6).map((p) => (
-                <Link
-                  key={p.post_id}
-                  to="/posts"
-                  className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <Avatar className="size-8">
-                      <AvatarImage src={p.avatar_url ?? undefined} />
-                      <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold truncate">{p.display_name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">@{p.username}</p>
-                    </div>
-                  </div>
-                  {p.media_url ? (
-                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
-                      <img src={p.media_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground line-clamp-3">{p.caption || p.content}</p>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
 
         {/* Meet */}
         <section className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row items-center gap-4">
