@@ -29,7 +29,6 @@ import { TrafficInsightsCard } from "@/components/profile/TrafficInsightsCard";
 import { BANKS } from "@/lib/banks";
 import { SocialLinksEditor } from "@/components/profile/SocialLinks";
 import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
-import { INTERESTS } from "@/lib/interests";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
 import {
@@ -374,40 +373,8 @@ function ProfilePage() {
             </p>
           </div>
 
-          <div>
-            <Label>Meus interesses</Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Escolha até 8. Ajuda anúncios e recomendações a fazer sentido pra você.
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {INTERESTS.map((it) => {
-                const active = myInterests.includes(it.key);
-                return (
-                  <button
-                    type="button"
-                    key={it.key}
-                    onClick={() => {
-                      setMyInterests((cur) => {
-                        if (cur.includes(it.key)) return cur.filter((k) => k !== it.key);
-                        if (cur.length >= 8) {
-                          toast.info("Máximo de 8 interesses");
-                          return cur;
-                        }
-                        return [...cur, it.key];
-                      });
-                    }}
-                    className={`text-xs px-2.5 py-1 rounded-full border transition ${
-                      active
-                        ? "border-primary bg-primary/15 text-primary font-medium"
-                        : "border-border bg-muted/40 text-foreground/70 hover:bg-muted"
-                    }`}
-                  >
-                    {it.emoji} {it.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+
+
 
 
           {profile.created_at && (
