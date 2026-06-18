@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
 import { discoverGroupsPublic, type PublicGroup, type GroupCategory } from "@/lib/groups.functions";
 import { getActiveLives } from "@/lib/live.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
-import type { PostItem } from "@/components/posts/PostCard";
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
