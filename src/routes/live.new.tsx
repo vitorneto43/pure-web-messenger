@@ -10,6 +10,8 @@ import { notifyLiveStart } from "@/lib/live-push.functions";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { scheduleLive } from "@/lib/schedule.functions";
 import { startLiveRecording, getRecordingConfig } from "@/lib/recordings.functions";
+import { PolicyHint } from "@/components/PolicyHint";
+import { scanLocally } from "@/lib/content-policy";
 
 export const Route = createFileRoute("/live/new")({
   head: () => ({
@@ -39,6 +41,11 @@ function NewLive() {
   async function start() {
     if (!userId) {
       navigate({ to: "/auth" });
+      return;
+    }
+    const policy = scanLocally(title, "live");
+    if (policy.verdict === "block") {
+      toast.error("Título bloqueado pelas Diretrizes", { description: policy.reasons[0] });
       return;
     }
     setBusy(true);
@@ -102,6 +109,7 @@ function NewLive() {
             placeholder="Ex: Bate-papo da noite 🎙️"
             maxLength={120}
           />
+          <PolicyHint text={title} kind="live" className="mt-2" />
         </div>
 
         <div className="rounded-lg border border-border bg-muted/30 p-3">

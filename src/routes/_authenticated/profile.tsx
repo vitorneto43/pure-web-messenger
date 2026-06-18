@@ -29,6 +29,7 @@ import { TrafficInsightsCard } from "@/components/profile/TrafficInsightsCard";
 import { BANKS } from "@/lib/banks";
 import { SocialLinksEditor } from "@/components/profile/SocialLinks";
 import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
+import { INTERESTS } from "@/lib/interests";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
 import {
@@ -72,6 +73,8 @@ function ProfilePage() {
   });
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
+  const [myInterests, setMyInterests] = useState<string[]>([]);
+  const [birthDate, setBirthDate] = useState<string>("");
   const [hasSurvey, setHasSurvey] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -98,7 +101,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links, interests, birth_date")
         .eq("id", user.id)
         .single(),
       supabase
@@ -131,6 +134,8 @@ function ProfilePage() {
           city: (priv as any)?.city ?? "",
         });
         setSocialLinks(((data as any).social_links as SocialLinks) ?? {});
+        setMyInterests(((data as any).interests as string[]) ?? []);
+        setBirthDate(((data as any).birth_date as string) ?? "");
       }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
@@ -166,6 +171,8 @@ function ProfilePage() {
           visibility: profile.visibility,
           show_city: profile.show_city,
           social_links: cleanSocialLinks(socialLinks),
+          interests: myInterests,
+          birth_date: birthDate || null,
         } as any)
         .eq("id", user.id);
       if (error) throw error;
@@ -352,6 +359,56 @@ function ProfilePage() {
               </div>
             </div>
           )}
+
+          <div>
+            <Label>Data de nascimento</Label>
+            <Input
+              type="date"
+              value={birthDate}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="mt-1.5"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Usada apenas para segmentação por faixa etária em impulsionamentos. Nunca é exibida no perfil.
+            </p>
+          </div>
+
+          <div>
+            <Label>Meus interesses</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Escolha até 8. Ajuda anúncios e recomendações a fazer sentido pra você.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {INTERESTS.map((it) => {
+                const active = myInterests.includes(it.key);
+                return (
+                  <button
+                    type="button"
+                    key={it.key}
+                    onClick={() => {
+                      setMyInterests((cur) => {
+                        if (cur.includes(it.key)) return cur.filter((k) => k !== it.key);
+                        if (cur.length >= 8) {
+                          toast.info("Máximo de 8 interesses");
+                          return cur;
+                        }
+                        return [...cur, it.key];
+                      });
+                    }}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition ${
+                      active
+                        ? "border-primary bg-primary/15 text-primary font-medium"
+                        : "border-border bg-muted/40 text-foreground/70 hover:bg-muted"
+                    }`}
+                  >
+                    {it.emoji} {it.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
 
           {profile.created_at && (
             <div className="text-xs text-muted-foreground">

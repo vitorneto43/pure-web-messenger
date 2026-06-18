@@ -13,6 +13,8 @@ import { MusicPickerSheet } from "@/components/status/MusicPickerSheet";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { schedulePost } from "@/lib/schedule.functions";
+import { PolicyHint } from "@/components/PolicyHint";
+import { scanLocally } from "@/lib/content-policy";
 
 interface Props {
   open: boolean;
@@ -134,6 +136,11 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
     if (!user) return;
     if (kind === "text" && !content.trim()) { toast.error("Escreva algo"); return; }
     if ((kind === "image" || kind === "video") && !mediaUrl) { toast.error("Envie a mídia"); return; }
+    const policy = scanLocally(`${content} ${description} ${hashtagsRaw}`, "post");
+    if (policy.verdict === "block") {
+      toast.error("Bloqueado pelas Diretrizes", { description: policy.reasons[0] });
+      return;
+    }
     setSaving(true);
     try {
       const inline = Array.from((content + " " + description).matchAll(/#(\w+)/g)).map(m => m[1].toLowerCase());
@@ -237,6 +244,12 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
             />
             <p className="text-[11px] text-muted-foreground">Separe por espaço. Até 12 tags.</p>
           </div>
+
+          <PolicyHint
+            text={`${content} ${description} ${hashtagsRaw}`}
+            kind="post"
+            className="mt-3"
+          />
 
           <div className="flex items-center justify-between mt-3">
             <Button variant="outline" size="sm" onClick={() => setMusicOpen(true)}>
