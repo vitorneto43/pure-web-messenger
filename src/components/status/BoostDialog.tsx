@@ -63,6 +63,7 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
   const [statusKind, setStatusKind] = useState<string>("");
+  const [statusText, setStatusText] = useState<string>("");
 
   // Custom boost state — budget kept internally in BRL; displayed in user currency.
   const [budget, setBudget] = useState<number>(20);
@@ -87,13 +88,20 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
       setFreeViews((data as any)?.pending_views ?? 0);
       const { data: s } = await supabase
         .from("statuses")
-        .select("kind, cta_url, cta_label")
+        .select("kind, cta_url, cta_label, content, caption, description")
         .eq("id", statusId)
         .maybeSingle();
       if (s) {
         setStatusKind((s as any).kind ?? "");
         setCtaUrl((s as any).cta_url ?? "");
         setCtaLabel((s as any).cta_label ?? "");
+        setStatusText(
+          [
+            (s as any).content,
+            (s as any).caption,
+            (s as any).description,
+          ].filter(Boolean).join(" · "),
+        );
       }
     })();
   }, [open, statusId]);
@@ -189,6 +197,26 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
       toast.error(e.message ?? t("boost.redeemFailed"));
     } finally {
       setRedeemingFree(false);
+    }
+  }
+
+  async function runReview(): Promise<boolean> {
+    setReviewing(true);
+    try {
+      const text = [statusText, ctaLabel, ctaUrl].filter(Boolean).join(" · ");
+      if (!text.trim()) return true;
+      const verdict = await moderate({ data: { text, kind: "boost" } });
+      if (verdict.verdict === "rejected") {
+        toast.error("Impulso reprovado na análise", {
+          description: `${verdict.reason || "Conteúdo contra as Diretrizes."} Consulte /diretrizes.`,
+        });
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // não derruba UX se a moderação falhar
+    } finally {
+      setReviewing(false);
     }
   }
 
