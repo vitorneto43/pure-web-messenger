@@ -52,12 +52,6 @@ function LandingPage() {
     getActiveLives()
       .then((r) => { setLives(r); setLoadingLives(false); })
       .catch(() => setLoadingLives(false));
-    (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
-      .then(({ data, error }: { data: PostItem[] | null; error: any }) => {
-        if (!error) setPosts(data ?? []);
-        setLoadingPosts(false);
-      })
-      .catch(() => setLoadingPosts(false));
   }, [user, navigate]);
 
 
