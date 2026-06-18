@@ -1,14 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star } from "lucide-react";
+import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, Video, CalendarClock, Trophy, Crown, Image, FileText, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
 import { discoverGroupsPublic, type PublicGroup, type GroupCategory } from "@/lib/groups.functions";
+import { getActiveLives } from "@/lib/live.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+import type { PostItem } from "@/components/posts/PostCard";
+
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
