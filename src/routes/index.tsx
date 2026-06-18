@@ -240,53 +240,6 @@ function LandingPage() {
           )}
         </section>
 
-        {/* Posts */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <FileText className="size-5 text-primary" />
-              <h2 className="text-lg font-bold">Posts da comunidade</h2>
-            </div>
-            <button onClick={() => navigate({ to: "/posts" })} className="text-sm text-primary hover:underline flex items-center gap-1">
-              Ver feed <ArrowRight className="size-3.5" />
-            </button>
-          </div>
-          {loadingPosts ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : posts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Nenhum post ainda. Seja o primeiro!</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {posts.slice(0, 6).map((p) => (
-                <Link
-                  key={p.post_id}
-                  to="/posts"
-                  className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <Avatar className="size-8">
-                      <AvatarImage src={p.avatar_url ?? undefined} />
-                      <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold truncate">{p.display_name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">@{p.username}</p>
-                    </div>
-                  </div>
-                  {p.media_url ? (
-                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
-                      <img src={p.media_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground line-clamp-3">{p.caption || p.content}</p>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
 
         {/* Meet */}
         <section className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row items-center gap-4">
