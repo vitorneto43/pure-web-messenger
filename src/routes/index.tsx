@@ -37,6 +37,10 @@ function LandingPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
+  const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [loadingLives, setLoadingLives] = useState(true);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -50,7 +54,17 @@ function LandingPage() {
     discoverGroupsPublic({ data: { sort: "popular", limit: 8 } })
       .then((r) => setGroups(r.groups))
       .catch(() => setGroups([]));
+    getActiveLives()
+      .then((r) => { setLives(r); setLoadingLives(false); })
+      .catch(() => setLoadingLives(false));
+    (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+      .then(({ data, error }: { data: PostItem[] | null; error: any }) => {
+        if (!error) setPosts(data ?? []);
+        setLoadingPosts(false);
+      })
+      .catch(() => setLoadingPosts(false));
   }, [user, navigate]);
+
 
   return (
     <div className="min-h-screen bg-background">
