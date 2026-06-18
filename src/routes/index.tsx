@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, FileText, Monitor } from "lucide-react";
+import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
