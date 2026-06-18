@@ -582,7 +582,36 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     </div>
                   </Field>
 
+                  <Field label={`Interesses · ${interests.length === 0 ? "todos" : `${interests.length} selecionado(s)`}`}>
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      Mostre seu impulso para pessoas com esses interesses. Quanto mais focado, mais relevante (e +15–25% no CPM).
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                      {INTERESTS.map((i) => {
+                        const active = interests.includes(i.key);
+                        return (
+                          <button
+                            key={i.key}
+                            type="button"
+                            onClick={() =>
+                              setInterests((cur) =>
+                                cur.includes(i.key)
+                                  ? cur.filter((k) => k !== i.key)
+                                  : [...cur, i.key],
+                              )
+                            }
+                            className={`text-[11px] px-2 py-1 rounded-full border transition inline-flex items-center gap-1 ${active ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}
+                          >
+                            <span aria-hidden>{i.emoji}</span>
+                            <span>{i.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Field>
+
                   <Field label={t("boost.custom.objective")}>
+
                     <div className="grid grid-cols-1 gap-1.5">
                       {OBJECTIVES.map((o) => (
                         <button
@@ -603,10 +632,22 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
                     </div>
                   </Field>
 
+                  {reviewing && (
+                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-2 text-xs">
+                      <ShieldCheck className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold">Em análise…</p>
+                        <p className="text-muted-foreground">
+                          Verificando se seu impulso segue as Diretrizes da Comunidade.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <Button
                     className="w-full bg-gradient-to-r from-pink-500 to-amber-500 text-white hover:opacity-90"
                     onClick={pickCustom}
-                    disabled={!!loading || estimatedViews < 1}
+                    disabled={!!loading || reviewing || estimatedViews < 1}
                   >
                     {loading === "custom" ? (
                       <Loader2 className="size-4 animate-spin" />
