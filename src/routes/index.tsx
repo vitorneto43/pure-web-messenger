@@ -35,9 +35,7 @@ function LandingPage() {
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
   const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
-  const [posts, setPosts] = useState<PostItem[]>([]);
   const [loadingLives, setLoadingLives] = useState(true);
-  const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     if (user) {
