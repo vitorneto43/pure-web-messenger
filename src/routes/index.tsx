@@ -21,10 +21,51 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "WaveChat — Conecte-se e Converse" },
-      { name: "description", content: "WaveChat é o melhor lugar para conversar, fazer chamadas e conhecer pessoas. Grupos, stories, e muito mais." },
-      { property: "og:title", content: "WaveChat — Conecte-se e Converse" },
-      { property: "og:description", content: "Entre agora e descubra pessoas, grupos e conversas ao vivo." },
+      { title: "WaveChat - Rede Social Brasileira com Chat, Stories, Grupos e Chamadas" },
+      { name: "description", content: "Converse, faça amizades, publique stories, participe de grupos, lives e chamadas de voz e vídeo. Conheça pessoas e comunidades na WaveChat." },
+      { property: "og:title", content: "WaveChat - Mais que Chat" },
+      { property: "og:description", content: "Rede social brasileira para conversar, compartilhar stories, participar de grupos, fazer chamadas e conhecer novas pessoas." },
+      { property: "og:url", content: "https://webconnectchat.com" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "WaveChat - Rede Social Brasileira" },
+      { name: "twitter:description", content: "Chat, stories, grupos, chamadas e comunidades em um só lugar." },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://webconnectchat.com" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "url": "https://webconnectchat.com",
+              "name": "WaveChat",
+              "description": "Rede social brasileira com chat, stories, grupos, lives e chamadas de voz e vídeo.",
+              "inLanguage": "pt-BR",
+            },
+            {
+              "@type": "SocialMediaPosting",
+              "url": "https://webconnectchat.com",
+              "headline": "WaveChat - Rede Social Brasileira com Chat, Stories, Grupos e Chamadas",
+              "description": "Converse, faça amizades, publique stories, participe de grupos, lives e chamadas de voz e vídeo.",
+              "inLanguage": "pt-BR",
+              "author": {
+                "@type": "Organization",
+                "name": "WaveChat",
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "WaveChat",
+                "url": "https://webconnectchat.com",
+              },
+            },
+          ],
+        }),
+      },
     ],
   }),
 });
