@@ -20,7 +20,7 @@ export function EmptyChat({ onNewChat }: Props) {
         </div>
         <h2 className="mt-5 text-xl font-semibold">{t("chat.emptyChatTitle")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t("chat.emptyChatDescription")}
+          As conversas estão acontecendo, entre e participe
         </p>
 
         <div className="mt-6 space-y-2">
