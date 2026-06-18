@@ -161,6 +161,7 @@ function GuidelinesPage() {
           footer="Se reprovado, o pagamento não é cobrado e você recebe o motivo. Pode editar o conteúdo e tentar de novo."
         />
 
+        <section className="mt-10 rounded-xl border border-border bg-card p-5">
           <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
             <AlertTriangle className="size-5 text-amber-500" /> {t("guidelines.penaltiesTitle")}
           </h2>
