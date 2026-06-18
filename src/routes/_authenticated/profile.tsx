@@ -72,6 +72,8 @@ function ProfilePage() {
   });
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
+  const [myInterests, setMyInterests] = useState<string[]>([]);
+  const [birthDate, setBirthDate] = useState<string>("");
   const [hasSurvey, setHasSurvey] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -98,7 +100,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links, interests, birth_date")
         .eq("id", user.id)
         .single(),
       supabase
@@ -131,6 +133,8 @@ function ProfilePage() {
           city: (priv as any)?.city ?? "",
         });
         setSocialLinks(((data as any).social_links as SocialLinks) ?? {});
+        setMyInterests(((data as any).interests as string[]) ?? []);
+        setBirthDate(((data as any).birth_date as string) ?? "");
       }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
@@ -166,6 +170,8 @@ function ProfilePage() {
           visibility: profile.visibility,
           show_city: profile.show_city,
           social_links: cleanSocialLinks(socialLinks),
+          interests: myInterests,
+          birth_date: birthDate || null,
         } as any)
         .eq("id", user.id);
       if (error) throw error;
