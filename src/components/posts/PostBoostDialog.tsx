@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Rocket } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
@@ -7,9 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createPostBoostCheckout } from "@/lib/post-payments.functions";
+import { scanContent } from "@/lib/content-moderation.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { currentLocale } from "@/i18n";
 import { convertFromBRL, currencyForLocale, formatMoney } from "@/lib/currency";
+import { supabase } from "@/integrations/supabase/client";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 const PACKAGES: { key: PackKey; views: number; priceBRL: number; popular?: boolean }[] = [
@@ -23,11 +25,40 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   const currency = currencyForLocale(locale);
   const [loading, setLoading] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [postText, setPostText] = useState<string>("");
   const startCheckout = useServerFn(createPostBoostCheckout);
+  const moderate = useServerFn(scanContent);
+
+  useEffect(() => {
+    if (!open || !postId) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("posts")
+        .select("content, caption, hashtags")
+        .eq("id", postId)
+        .maybeSingle();
+      if (data) {
+        const tags = Array.isArray((data as any).hashtags)
+          ? (data as any).hashtags.map((h: string) => "#" + h).join(" ")
+          : "";
+        setPostText([(data as any).content, (data as any).caption, tags].filter(Boolean).join(" · "));
+      }
+    })();
+  }, [open, postId]);
 
   async function pickPackage(key: PackKey) {
     setLoading(key);
     try {
+      if (postText.trim()) {
+        const verdict = await moderate({ data: { text: postText, kind: "boost" } });
+        if (verdict.verdict === "rejected") {
+          toast.error("Impulso reprovado na análise", {
+            description: `${verdict.reason || "Conteúdo contra as Diretrizes."} Consulte /diretrizes.`,
+          });
+          setLoading(null);
+          return;
+        }
+      }
       const result = await startCheckout({ data: {
         postId, package: key,
         returnUrl: `${window.location.origin}/posts?boost=success&session_id={CHECKOUT_SESSION_ID}`,
