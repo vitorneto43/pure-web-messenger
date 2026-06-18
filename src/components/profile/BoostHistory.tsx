@@ -17,6 +17,8 @@ type Boost = {
   status: string;
   created_at: string;
   refunded_amount_cents: number | null;
+  review_status: string | null;
+  review_reason: string | null;
 };
 
 const STATUS_CLS: Record<string, string> = {
@@ -54,7 +56,7 @@ export function BoostHistory() {
     supabase
       .from("status_boosts")
       .select(
-        "id, package, views_total, views_remaining, amount_cents, currency, status, created_at, refunded_amount_cents",
+        "id, package, views_total, views_remaining, amount_cents, currency, status, created_at, refunded_amount_cents, review_status, review_reason",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -102,6 +104,16 @@ export function BoostHistory() {
                       <> · {formatMoney(b.refunded_amount_cents, b.currency)} {t("profile.boostRefunded")}</>
                     )}
                   </p>
+                  {b.review_status === "under_review" && (
+                    <p className="text-[11px] mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                      ⏳ Em análise
+                    </p>
+                  )}
+                  {b.review_status === "rejected" && (
+                    <p className="text-[11px] mt-1 text-destructive">
+                      ⛔ Reprovado{b.review_reason ? ` — ${b.review_reason}` : ""}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
