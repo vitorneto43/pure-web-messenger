@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Check, Rocket, Gift, Sparkles, Globe2, Search } from "lucide-react";
+import { Loader2, Check, Rocket, Gift, Sparkles, Globe2, Search, ShieldCheck } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBoostCheckout } from "@/lib/payments.functions";
+import { scanContent } from "@/lib/content-moderation.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { currentLocale } from "@/i18n";
@@ -34,6 +35,7 @@ import {
   getCountryName,
   flagEmoji,
 } from "@/lib/world-regions";
+import { INTERESTS } from "@/lib/interests";
 
 type PackKey = "boost_100" | "boost_500" | "boost_2000";
 
