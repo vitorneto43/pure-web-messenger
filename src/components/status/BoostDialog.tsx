@@ -225,6 +225,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     try {
       const ok = await saveCta();
       if (!ok) { setLoading(null); return; }
+      const approved = await runReview();
+      if (!approved) { setLoading(null); return; }
       const result = await startCheckout({
         data: {
           statusId,
@@ -257,6 +259,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     try {
       const ok = await saveCta();
       if (!ok) { setLoading(null); return; }
+      const approved = await runReview();
+      if (!approved) { setLoading(null); return; }
       const result = await startCheckout({
         data: {
           statusId,
