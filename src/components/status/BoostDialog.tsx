@@ -72,8 +72,11 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
   const [ageMax, setAgeMax] = useState<number>(55);
   const [gender, setGender] = useState<BoostGender>("all");
   const [objective, setObjective] = useState<BoostObjective>("views");
+  const [interests, setInterests] = useState<string[]>([]);
+  const [reviewing, setReviewing] = useState(false);
 
   const startCheckout = useServerFn(createBoostCheckout);
+  const moderate = useServerFn(scanContent);
 
   useEffect(() => {
     if (!open) return;
@@ -117,7 +120,8 @@ export function BoostDialog({ open, onOpenChange, statusId }: Props) {
     ageMax,
     gender,
     objective,
-  }), [budget, days, countries, states, ageMin, ageMax, gender, objective]);
+    interests,
+  }), [budget, days, countries, states, ageMin, ageMax, gender, objective, interests]);
 
   const estimatedViews = useMemo(() => estimateViews(customInput), [customInput]);
   const cpmCents = useMemo(() => calculateCpm(customInput), [customInput]);
