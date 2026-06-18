@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star } from "lucide-react";
+import { Loader2, MessageCircle, Phone, Heart, Users, Globe, Sparkles, ArrowRight, Zap, Shield, Star, Radio, Eye, Coins, FileText, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
 import { discoverGroupsPublic, type PublicGroup, type GroupCategory } from "@/lib/groups.functions";
+import { getActiveLives } from "@/lib/live.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+import type { PostItem } from "@/components/posts/PostCard";
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
@@ -33,6 +36,10 @@ function LandingPage() {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
+  const [lives, setLives] = useState<Awaited<ReturnType<typeof getActiveLives>>>([]);
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [loadingLives, setLoadingLives] = useState(true);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -46,7 +53,17 @@ function LandingPage() {
     discoverGroupsPublic({ data: { sort: "popular", limit: 8 } })
       .then((r) => setGroups(r.groups))
       .catch(() => setGroups([]));
+    getActiveLives()
+      .then((r) => { setLives(r); setLoadingLives(false); })
+      .catch(() => setLoadingLives(false));
+    (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+      .then(({ data, error }: { data: PostItem[] | null; error: any }) => {
+        if (!error) setPosts(data ?? []);
+        setLoadingPosts(false);
+      })
+      .catch(() => setLoadingPosts(false));
   }, [user, navigate]);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,6 +193,127 @@ function LandingPage() {
           )}
         </section>
 
+        {/* Lives */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Radio className="size-5 text-red-500" />
+              <h2 className="text-lg font-bold">Lives ao vivo</h2>
+            </div>
+            <button onClick={() => navigate({ to: "/live" })} className="text-sm text-primary hover:underline flex items-center gap-1">
+              Ver todas <ArrowRight className="size-3.5" />
+            </button>
+          </div>
+          {loadingLives ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : lives.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Ninguém está ao vivo agora. Seja o primeiro!</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {lives.slice(0, 8).map((l) => (
+                <Link
+                  key={l.id}
+                  to="/live/$liveId"
+                  params={{ liveId: l.id }}
+                  className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted group"
+                >
+                  {l.cover_url || l.host?.avatar_url ? (
+                    <img
+                      src={l.cover_url || l.host?.avatar_url || ""}
+                      alt={l.title}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-yellow-500" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/40" />
+                  <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    AO VIVO
+                  </span>
+                  <span className="absolute top-2 right-2 flex items-center gap-1 text-white text-xs bg-black/50 backdrop-blur px-1.5 py-0.5 rounded-full">
+                    <Eye className="w-3 h-3" /> {l.viewer_count}
+                  </span>
+                  <div className="absolute bottom-2 left-2 right-2 text-white">
+                    <p className="text-xs font-semibold truncate">{l.host?.display_name || l.host?.username || "Host"}</p>
+                    <p className="text-[11px] opacity-90 truncate">{l.title || "Ao vivo"}</p>
+                    {l.total_gift_coins > 0 && (
+                      <p className="text-[10px] flex items-center gap-0.5 opacity-90 mt-0.5">
+                        <Coins className="w-3 h-3 text-yellow-400" /> {l.total_gift_coins}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Posts */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="size-5 text-primary" />
+              <h2 className="text-lg font-bold">Posts da comunidade</h2>
+            </div>
+            <button onClick={() => navigate({ to: "/posts" })} className="text-sm text-primary hover:underline flex items-center gap-1">
+              Ver feed <ArrowRight className="size-3.5" />
+            </button>
+          </div>
+          {loadingPosts ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : posts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Nenhum post ainda. Seja o primeiro!</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {posts.slice(0, 6).map((p) => (
+                <Link
+                  key={p.post_id}
+                  to="/posts"
+                  className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <Avatar className="size-8">
+                      <AvatarImage src={p.avatar_url ?? undefined} />
+                      <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{p.display_name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">@{p.username}</p>
+                    </div>
+                  </div>
+                  {p.media_url ? (
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted">
+                      <img src={p.media_url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground line-clamp-3">{p.caption || p.content}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Meet */}
+        <section className="rounded-2xl border border-border bg-card p-5 flex flex-col sm:flex-row items-center gap-4">
+          <div className="size-14 rounded-full bg-primary/10 grid place-items-center shrink-0">
+            <Monitor className="size-7 text-primary" />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="font-bold text-sm">Reuniões com Meet</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Crie salas de vídeo para reuniões, aulas ou bate-papos em grupo. Sem instalação.
+            </p>
+          </div>
+          <Button size="sm" onClick={() => navigate({ to: "/meet/wavechat-geral" })}>
+            Entrar na sala pública
+          </Button>
+        </section>
+
         {/* Features */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FeatureCard
@@ -231,4 +369,3 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: stri
     </div>
   );
 }
-
