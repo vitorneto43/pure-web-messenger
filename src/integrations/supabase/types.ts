@@ -311,6 +311,45 @@ export type Database = {
         }
         Relationships: []
       }
+      boost_review_results: {
+        Row: {
+          boost_id: string
+          boost_kind: string
+          category: string | null
+          confidence: number | null
+          created_at: string
+          id: string
+          payload: Json | null
+          reason: string | null
+          reviewer: string
+          verdict: string
+        }
+        Insert: {
+          boost_id: string
+          boost_kind: string
+          category?: string | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          reason?: string | null
+          reviewer: string
+          verdict: string
+        }
+        Update: {
+          boost_id?: string
+          boost_kind?: string
+          category?: string | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          reason?: string | null
+          reviewer?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           callee_id: string
@@ -1827,11 +1866,15 @@ export type Database = {
           refund_reason: string | null
           refunded_amount_cents: number
           refunded_at: string | null
+          review_reason: string | null
+          review_status: string
+          reviewed_at: string | null
           status: string
           target_age_max: number | null
           target_age_min: number | null
           target_countries: string[]
           target_gender: string | null
+          target_interests: string[]
           target_states: string[]
           transaction_id: string | null
           updated_at: string
@@ -1858,11 +1901,15 @@ export type Database = {
           refund_reason?: string | null
           refunded_amount_cents?: number
           refunded_at?: string | null
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           status?: string
           target_age_max?: number | null
           target_age_min?: number | null
           target_countries?: string[]
           target_gender?: string | null
+          target_interests?: string[]
           target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
@@ -1889,11 +1936,15 @@ export type Database = {
           refund_reason?: string | null
           refunded_amount_cents?: number
           refunded_at?: string | null
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           status?: string
           target_age_max?: number | null
           target_age_min?: number | null
           target_countries?: string[]
           target_gender?: string | null
+          target_interests?: string[]
           target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
@@ -2244,10 +2295,12 @@ export type Database = {
           avatar_url: string | null
           banned_at: string | null
           bio: string | null
+          birth_date: string | null
           created_at: string
           display_name: string
           goal: string | null
           id: string
+          interests: string[]
           invited_by: string | null
           last_seen: string
           moderation_note: string | null
@@ -2269,10 +2322,12 @@ export type Database = {
           avatar_url?: string | null
           banned_at?: string | null
           bio?: string | null
+          birth_date?: string | null
           created_at?: string
           display_name: string
           goal?: string | null
           id: string
+          interests?: string[]
           invited_by?: string | null
           last_seen?: string
           moderation_note?: string | null
@@ -2294,10 +2349,12 @@ export type Database = {
           avatar_url?: string | null
           banned_at?: string | null
           bio?: string | null
+          birth_date?: string | null
           created_at?: string
           display_name?: string
           goal?: string | null
           id?: string
+          interests?: string[]
           invited_by?: string | null
           last_seen?: string
           moderation_note?: string | null
@@ -2781,12 +2838,16 @@ export type Database = {
           refund_reason: string | null
           refunded_amount_cents: number | null
           refunded_at: string | null
+          review_reason: string | null
+          review_status: string
+          reviewed_at: string | null
           status: string
           status_id: string
           target_age_max: number | null
           target_age_min: number | null
           target_countries: string[] | null
           target_gender: string
+          target_interests: string[]
           target_states: string[]
           transaction_id: string | null
           updated_at: string
@@ -2812,12 +2873,16 @@ export type Database = {
           refund_reason?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           status?: string
           status_id: string
           target_age_max?: number | null
           target_age_min?: number | null
           target_countries?: string[] | null
           target_gender?: string
+          target_interests?: string[]
           target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
@@ -2843,12 +2908,16 @@ export type Database = {
           refund_reason?: string | null
           refunded_amount_cents?: number | null
           refunded_at?: string | null
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
           status?: string
           status_id?: string
           target_age_max?: number | null
           target_age_min?: number | null
           target_countries?: string[] | null
           target_gender?: string
+          target_interests?: string[]
           target_states?: string[]
           transaction_id?: string | null
           updated_at?: string
