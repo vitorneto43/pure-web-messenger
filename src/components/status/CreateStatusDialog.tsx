@@ -23,6 +23,8 @@ import { moodEmoji } from "@/lib/story-music";
 import { FeatureTip } from "@/components/FeatureTip";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { scheduleStatus } from "@/lib/schedule.functions";
+import { PolicyHint } from "@/components/PolicyHint";
+import { scanLocally } from "@/lib/content-policy";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -121,6 +123,12 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function submit() {
     if (!user) return;
+    const policyText = `${text} ${caption} ${description} ${ctaLabel} ${ctaUrl}`;
+    const policy = scanLocally(policyText, "status");
+    if (policy.verdict === "block") {
+      toast.error("Bloqueado pelas Diretrizes", { description: policy.reasons[0] });
+      return;
+    }
     const isScheduled = !!scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000;
     setSubmitting(true);
     try {
@@ -431,6 +439,11 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
         <div className="rounded-lg border border-border bg-muted/30 p-3">
           <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
         </div>
+
+        <PolicyHint
+          text={`${text} ${caption} ${description} ${ctaLabel} ${ctaUrl}`}
+          kind="status"
+        />
 
         <Button onClick={submit} disabled={submitting} className="w-full">
           {submitting && <Loader2 className="size-4 animate-spin mr-2" />}
