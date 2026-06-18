@@ -17,6 +17,7 @@ const K = {
   byCountry: "boostReport.byCountry",
   byAge: "boostReport.byAge",
   byGender: "boostReport.byGender",
+  byInterest: "boostReport.byInterest",
   male: "boostReport.male",
   female: "boostReport.female",
   unknown: "boostReport.unknown",

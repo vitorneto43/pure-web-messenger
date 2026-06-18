@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { currentLocale } from "@/i18n";
 import { formatMoney, type Currency } from "@/lib/currency";
+import { labelOfInterest, emojiOfInterest } from "@/lib/interests";
 
 const COLORS = ["#ec4899", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#06b6d4", "#ef4444"];
 
@@ -99,6 +100,13 @@ export function BoostReportDialog({
       name: r.name && r.name !== "?" ? r.name : t("boostReport.unknown"),
     }));
   }, [data, t]);
+
+  const interestData = useMemo(() => {
+    return (data?.by_interest ?? []).map((r: any) => ({
+      ...r,
+      label: `${emojiOfInterest(r.name)} ${labelOfInterest(r.name)}`,
+    }));
+  }, [data]);
 
   const viewsDelivered = data?.views_delivered ?? 0;
 
@@ -225,6 +233,20 @@ export function BoostReportDialog({
                 )}
               </Card>
             </div>
+
+            <Card title={t("boostReport.byInterest")}>
+              {interestData.length === 0 ? <Empty t={t} /> : (
+                <ResponsiveContainer width="100%" height={Math.min(280, 36 + interestData.length * 28)}>
+                  <BarChart data={interestData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" fontSize={10} />
+                    <YAxis dataKey="label" type="category" fontSize={10} width={130} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Card>
           </div>
         )}
       </DialogContent>

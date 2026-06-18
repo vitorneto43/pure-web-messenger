@@ -21,6 +21,7 @@ export interface CustomBoostInput {
   ageMax: number;
   gender: BoostGender;
   objective: BoostObjective;
+  interests?: string[]; // chaves de INTERESTS — [] = sem filtro
 }
 
 const BASE_CPM_CENTS = 5000;
@@ -38,6 +39,12 @@ export function calculateCpm(
   if (input.gender !== "all") cpm = Math.round(cpm * 1.1);
   const ageRestricted = input.ageMin > 13 || input.ageMax < 80;
   if (ageRestricted) cpm = Math.round(cpm * 1.15);
+  // Interesses: mais foco = mais relevância = +15% (1 interesse) escalando até +25% (3+).
+  const interestsCount = input.interests?.length ?? 0;
+  if (interestsCount > 0) {
+    const bump = interestsCount === 1 ? 1.15 : interestsCount === 2 ? 1.2 : 1.25;
+    cpm = Math.round(cpm * bump);
+  }
   if (PREMIUM_OBJECTIVES.includes(input.objective)) cpm = Math.round(cpm * 1.3);
   return cpm;
 }
