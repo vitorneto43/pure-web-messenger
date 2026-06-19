@@ -84,7 +84,7 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
     audioRef.current = a;
     const onLoaded = () => {
       try { a.currentTime = startSec; } catch {}
-      tryPlay(a);
+      if (playing) tryPlay(a);
     };
     const onTime = () => {
       if (a.currentTime >= startSec + durationSec) {
@@ -97,8 +97,7 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
     a.addEventListener("loadedmetadata", onLoaded, { once: true });
     a.addEventListener("timeupdate", onTime);
     a.addEventListener("error", onError);
-    // Kick off immediately as well (Android WebView sometimes fires loadedmetadata late)
-    tryPlay(a);
+    if (playing) tryPlay(a);
     return () => {
       a.removeEventListener("loadedmetadata", onLoaded);
       a.removeEventListener("timeupdate", onTime);
@@ -110,9 +109,9 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track?.id, startSec, durationSec]);
 
-  // Global tap fallback: any user gesture in the document re-tries playback
+  // Global tap fallback: only relevant for autoplay mode (status viewer)
   useEffect(() => {
-    if (!needsTap) return;
+    if (!needsTap || !autoplay) return;
     const handler = () => {
       const a = audioRef.current;
       if (!a) return;
@@ -127,7 +126,7 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
       window.removeEventListener("pointerdown", handler, { capture: true } as any);
       window.removeEventListener("touchstart", handler, { capture: true } as any);
     };
-  }, [needsTap]);
+  }, [needsTap, autoplay]);
 
   useEffect(() => {
     const a = audioRef.current;
