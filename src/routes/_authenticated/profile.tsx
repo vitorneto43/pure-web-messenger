@@ -29,6 +29,7 @@ import { TrafficInsightsCard } from "@/components/profile/TrafficInsightsCard";
 import { BANKS } from "@/lib/banks";
 import { SocialLinksEditor } from "@/components/profile/SocialLinks";
 import { cleanSocialLinks, type SocialLinks } from "@/lib/social-links";
+import { INTERESTS } from "@/lib/interests";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
 import {
