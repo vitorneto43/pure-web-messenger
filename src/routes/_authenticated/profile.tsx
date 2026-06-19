@@ -361,6 +361,36 @@ function ProfilePage() {
           )}
 
           <div>
+            <Label>Meus interesses</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Mostra no seu perfil e ajuda a receber impulsionamentos relevantes. Selecione até 8.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {INTERESTS.map((it) => {
+                const active = myInterests.includes(it.id);
+                return (
+                  <button
+                    key={it.id}
+                    type="button"
+                    onClick={() => {
+                      setMyInterests((prev) =>
+                        active ? prev.filter((x) => x !== it.id) : prev.length >= 8 ? prev : [...prev, it.id],
+                      );
+                    }}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/50 text-foreground/80 border-border hover:bg-muted"
+                    }`}
+                  >
+                    {it.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
             <Label>Data de nascimento</Label>
             <Input
               type="date"
