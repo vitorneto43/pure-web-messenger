@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Music, Volume2, VolumeX, Play } from "lucide-react";
+import { Music, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MusicTrack } from "@/lib/story-music";
 
@@ -11,14 +11,24 @@ interface Props {
   durationSec: number;
   volume: number;
   paused?: boolean;
+  /** When false, audio won't auto-play; user must tap play. Default true (status viewer). */
+  autoplay?: boolean;
+  /** When true, render as an inline pill (for feed cards) instead of absolute overlay. */
+  inline?: boolean;
 }
 
-export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paused }: Props) {
+export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paused, autoplay = true, inline = false }: Props) {
   const [track, setTrack] = useState<MusicTrack | null>(null);
-  const [muted, setMuted] = useState(() =>
-    typeof window !== "undefined" && localStorage.getItem(MUTE_KEY) === "1",
-  );
+  // In feed (inline / non-autoplay) default to muted so multiple posts don't blast at once.
+  const [muted, setMuted] = useState(() => {
+    if (typeof window === "undefined") return !autoplay;
+    const stored = localStorage.getItem(MUTE_KEY);
+    if (stored === "1") return true;
+    if (stored === "0") return false;
+    return !autoplay;
+  });
   const [needsTap, setNeedsTap] = useState(false);
+  const [playing, setPlaying] = useState(autoplay);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
