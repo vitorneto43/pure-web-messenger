@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Fallback ICE servers (STUN + free public TURN) used if Metered fails.
 const FALLBACK_ICE: RTCIceServer[] = [
