@@ -230,7 +230,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         <img src={post.media_url!} alt="" className="w-full max-h-[600px] object-contain bg-black" loading="lazy" />
       )}
       {isMedia && post.kind === "video" && (
-        <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline />
+        <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline muted preload="metadata" />
       )}
 
       {/* Actions */}
@@ -272,7 +272,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       {/* Music tag — at the bottom of the post */}
       {post.music_track_id && (
         <div className="px-3 pb-3">
-          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} />
+          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} autoplay={false} inline />
         </div>
       )}
     </article>
