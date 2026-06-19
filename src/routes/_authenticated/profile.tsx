@@ -367,14 +367,14 @@ function ProfilePage() {
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {INTERESTS.map((it) => {
-                const active = myInterests.includes(it.id);
+                const active = myInterests.includes(it.key);
                 return (
                   <button
-                    key={it.id}
+                    key={it.key}
                     type="button"
                     onClick={() => {
                       setMyInterests((prev) =>
-                        active ? prev.filter((x) => x !== it.id) : prev.length >= 8 ? prev : [...prev, it.id],
+                        active ? prev.filter((x) => x !== it.key) : prev.length >= 8 ? prev : [...prev, it.key],
                       );
                     }}
                     className={`text-xs px-2.5 py-1 rounded-full border transition ${
@@ -383,7 +383,7 @@ function ProfilePage() {
                         : "bg-muted/50 text-foreground/80 border-border hover:bg-muted"
                     }`}
                   >
-                    {it.label}
+                    {it.emoji} {it.label}
                   </button>
                 );
               })}
