@@ -86,16 +86,26 @@ export const reportSpamSignal = createServerFn({ method: "POST" })
       // Soft-delete da mensagem (apaga para todos), sem que o servidor leia
       // o conteúdo — apenas limpa os campos.
       if (data.message_id) {
-        await supabaseAdmin
+        // SECURITY: verify the message was authored by the caller before
+        // auto-deleting. The score is client-provided and untrusted — we must
+        // never let a caller delete arbitrary messages by passing score>=8.
+        const { data: ownMsg } = await supabaseAdmin
           .from("messages")
-          .update({
-            deleted_for_everyone_at: new Date().toISOString(),
-            content: null,
-            attachment_url: null,
-            attachment_name: null,
-            attachment_type: null,
-          })
-          .eq("id", data.message_id);
+          .select("id, sender_id")
+          .eq("id", data.message_id)
+          .maybeSingle();
+        if (ownMsg && ownMsg.sender_id === userId) {
+          await supabaseAdmin
+            .from("messages")
+            .update({
+              deleted_for_everyone_at: new Date().toISOString(),
+              content: null,
+              attachment_url: null,
+              attachment_name: null,
+              attachment_type: null,
+            })
+            .eq("id", data.message_id);
+        }
       }
       const until = new Date(Date.now() + 7 * 86400_000).toISOString();
       await supabaseAdmin.from("profiles").update({ suspended_until: until }).eq("id", userId);

@@ -52,21 +52,28 @@ function toCSV(rows: Recent[]): string {
 }
 
 function exportPDF(rows: Recent[]) {
+  const esc = (v: unknown) =>
+    String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pesquisa de Onboarding</title>
     <style>body{font-family:system-ui,sans-serif;padding:20px;color:#111} h1{font-size:18px} table{width:100%;border-collapse:collapse;font-size:11px} th,td{border:1px solid #ddd;padding:6px;text-align:left} th{background:#f3f4f6}</style>
   </head><body>
     <h1>Pesquisa de Onboarding — WaveChat</h1>
-    <p>${rows.length} respostas — exportado em ${new Date().toLocaleString("pt-BR")}</p>
+    <p>${rows.length} respostas — exportado em ${esc(new Date().toLocaleString("pt-BR"))}</p>
     <table><thead><tr>
       <th>Data</th><th>Usuário</th><th>País</th><th>Cidade</th>
       <th>Motivo</th><th>Canal</th><th>Atrativo</th><th>Objetivo</th><th>Idade</th>
     </tr></thead><tbody>
     ${rows.map(r => `<tr>
-      <td>${new Date(r.created_at).toLocaleString("pt-BR")}</td>
-      <td>${(r.display_name ?? r.username ?? "")}</td>
-      <td>${r.country ?? ""}</td><td>${r.city ?? ""}</td>
-      <td>${r.reason_joined}</td><td>${r.source_channel}</td>
-      <td>${r.favorite_feature}</td><td>${r.main_goal}</td><td>${r.age_range}</td>
+      <td>${esc(new Date(r.created_at).toLocaleString("pt-BR"))}</td>
+      <td>${esc(r.display_name ?? r.username ?? "")}</td>
+      <td>${esc(r.country ?? "")}</td><td>${esc(r.city ?? "")}</td>
+      <td>${esc(r.reason_joined)}</td><td>${esc(r.source_channel)}</td>
+      <td>${esc(r.favorite_feature)}</td><td>${esc(r.main_goal)}</td><td>${esc(r.age_range)}</td>
     </tr>`).join("")}
     </tbody></table>
     <script>window.onload=()=>window.print()</script>

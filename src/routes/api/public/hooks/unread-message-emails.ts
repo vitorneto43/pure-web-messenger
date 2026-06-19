@@ -12,10 +12,10 @@ export const Route = createFileRoute('/api/public/hooks/unread-message-emails')(
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Cron auth: Supabase anon key in apikey header
-        const apikey = request.headers.get('apikey') || ''
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || ''
-        if (!apikey || !expected || apikey !== expected) {
+        // Cron auth: dedicated CRON_SECRET (never the public anon key)
+        const provided = request.headers.get('x-cron-secret') || ''
+        const expected = process.env.CRON_SECRET || ''
+        if (!provided || !expected || provided !== expected) {
           return new Response('Unauthorized', { status: 401 })
         }
 
