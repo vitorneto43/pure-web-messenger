@@ -2141,6 +2141,7 @@ export type Database = {
           music_track_id: string | null
           music_volume: number | null
           pinned: boolean
+          pinned_at: string | null
           thumbnail_url: string | null
           updated_at: string
           user_id: string
@@ -2160,6 +2161,7 @@ export type Database = {
           music_track_id?: string | null
           music_volume?: number | null
           pinned?: boolean
+          pinned_at?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           user_id: string
@@ -2179,6 +2181,7 @@ export type Database = {
           music_track_id?: string | null
           music_volume?: number | null
           pinned?: boolean
+          pinned_at?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           user_id?: string
@@ -3560,6 +3563,7 @@ export type Database = {
           kind: string
           media_url: string
           music_track_id: string
+          pinned: boolean
           post_id: string
           reactions_count: number
           thumbnail_url: string
@@ -3737,6 +3741,23 @@ export type Database = {
           icon: string
           name: string
           tier: number
+        }[]
+      }
+      get_user_posts_archive: {
+        Args: { _user_id: string }
+        Returns: {
+          background: string
+          caption: string
+          comment_count: number
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string
+          pinned: boolean
+          pinned_at: string
+          reaction_count: number
+          user_id: string
         }[]
       }
       get_user_status_archive: {
@@ -4058,6 +4079,7 @@ export type Database = {
       }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       toggle_follow: { Args: { _target: string }; Returns: boolean }
+      toggle_post_pin: { Args: { _post_id: string }; Returns: boolean }
       toggle_status_pin: { Args: { _status_id: string }; Returns: boolean }
       trending_music_tracks: {
         Args: { _days?: number; _limit?: number }

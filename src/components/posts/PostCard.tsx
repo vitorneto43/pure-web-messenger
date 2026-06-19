@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban, UserPlus, UserCheck } from "lucide-react";
+import { Heart, MessageCircle, Share2, Rocket, MoreVertical, Trash2, Music, MessageSquare, BadgeCheck, Flag, Ban, UserPlus, UserCheck, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -38,6 +38,7 @@ export interface PostItem {
   views_count: number;
   is_boosted: boolean;
   viewer_already_liked: boolean;
+  pinned?: boolean;
 }
 
 interface Props {
@@ -144,6 +145,14 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
     onDeleted?.();
   }
 
+  async function togglePin() {
+    if (!isOwner) return;
+    const { data, error } = await (supabase as any).rpc("toggle_post_pin", { _post_id: post.post_id });
+    if (error) { toast.error(error.message); return; }
+    onChange({ pinned: !!data });
+    toast.success(data ? "Post fixado no perfil" : "Post desafixado");
+  }
+
   const isMedia = post.kind !== "text" && post.media_url;
 
   if (hidden) return null;
@@ -224,13 +233,6 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline />
       )}
 
-      {/* Music tag */}
-      {post.music_track_id && (
-        <div className="px-3 pt-2">
-          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} />
-        </div>
-      )}
-
       {/* Actions */}
       <div className="flex items-center gap-1 px-2 py-2">
         <Button variant="ghost" size="sm" onClick={toggleLike}>
@@ -248,9 +250,14 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         </Button>
         <div className="flex-1" />
         {isOwner && (
-          <Button variant="ghost" size="sm" onClick={onBoost} className="text-pink-500">
-            <Rocket className="size-5 mr-1" />Impulsionar
-          </Button>
+          <>
+            <Button variant="ghost" size="sm" onClick={togglePin} title={post.pinned ? "Desafixar" : "Fixar no perfil"}>
+              {post.pinned ? <PinOff className="size-5" /> : <Pin className="size-5" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onBoost} className="text-pink-500">
+              <Rocket className="size-5 mr-1" />Impulsionar
+            </Button>
+          </>
         )}
       </div>
 
@@ -260,6 +267,13 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
           <span className="font-semibold mr-2">@{post.username}</span>
           {post.caption}
         </p>
+      )}
+
+      {/* Music tag — at the bottom of the post */}
+      {post.music_track_id && (
+        <div className="px-3 pb-3">
+          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} />
+        </div>
       )}
     </article>
   );

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
+import { ProfilePostsArchive } from "@/components/profile/ProfilePostsArchive";
 
 import { UserBadges } from "@/components/badges/UserBadges";
 import { AchievementsCard } from "@/components/badges/AchievementsCard";
@@ -311,6 +312,7 @@ function PublicProfile() {
       <AchievementsCard userId={data.id} />
 
       {(!isPrivate || isOwn) && <ProfileStatusArchive userId={data.id} isOwner={isOwn} />}
+      {(!isPrivate || isOwn) && <ProfilePostsArchive userId={data.id} isOwner={isOwn} />}
 
       
 
