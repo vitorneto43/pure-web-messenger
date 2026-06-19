@@ -272,7 +272,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       {/* Music tag — at the bottom of the post */}
       {post.music_track_id && (
         <div className="px-3 pb-3">
-          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} />
+          <StatusMusicPlayer trackId={post.music_track_id} startSec={0} durationSec={30} volume={0.8} autoplay={false} inline />
         </div>
       )}
     </article>
