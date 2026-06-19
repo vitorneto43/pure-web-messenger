@@ -172,6 +172,7 @@ function ProfilePage() {
           show_city: profile.show_city,
           social_links: cleanSocialLinks(socialLinks),
           birth_date: birthDate || null,
+          interests: myInterests,
         } as any)
         .eq("id", user.id);
       if (error) throw error;
