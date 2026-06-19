@@ -38,6 +38,7 @@ export interface PostItem {
   views_count: number;
   is_boosted: boolean;
   viewer_already_liked: boolean;
+  pinned?: boolean;
 }
 
 interface Props {
@@ -142,6 +143,14 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
     if (error) { toast.error(error.message); return; }
     toast.success("Post apagado");
     onDeleted?.();
+  }
+
+  async function togglePin() {
+    if (!isOwner) return;
+    const { data, error } = await (supabase as any).rpc("toggle_post_pin", { _post_id: post.post_id });
+    if (error) { toast.error(error.message); return; }
+    onChange({ pinned: !!data });
+    toast.success(data ? "Post fixado no perfil" : "Post desafixado");
   }
 
   const isMedia = post.kind !== "text" && post.media_url;
