@@ -138,9 +138,9 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    if (paused) a.pause();
+    if (paused || !playing) a.pause();
     else tryPlay(a);
-  }, [paused]);
+  }, [paused, playing]);
 
   function toggleMute(e: React.MouseEvent) {
     e.stopPropagation();
@@ -151,14 +151,53 @@ export function StatusMusicPlayer({ trackId, startSec, durationSec, volume, paus
       if (a) {
         a.muted = v;
         a.volume = v ? 0 : volume;
-        if (!v) tryPlay(a);
+        if (!v && playing) tryPlay(a);
       }
       return v;
     });
     setNeedsTap(false);
   }
 
+  function togglePlay(e: React.MouseEvent) {
+    e.stopPropagation();
+    setPlaying((p) => {
+      const v = !p;
+      const a = audioRef.current;
+      if (a) {
+        if (v) tryPlay(a);
+        else a.pause();
+      }
+      return v;
+    });
+  }
+
   if (!track) return null;
+
+  if (inline) {
+    return (
+      <div className="flex items-center gap-1.5 max-w-full bg-muted/60 text-foreground text-xs px-2.5 py-1.5 rounded-full border border-border w-fit">
+        <button
+          onClick={togglePlay}
+          className="grid place-items-center size-5 rounded-full bg-primary text-primary-foreground"
+          aria-label={playing ? "Pausar" : "Tocar"}
+          title={playing ? "Pausar" : "Tocar"}
+        >
+          {playing ? <Pause className="size-3" /> : <Play className="size-3" />}
+        </button>
+        <Music className="size-3.5 shrink-0 text-primary" />
+        <span className="truncate font-medium max-w-[140px]">{track.title}</span>
+        <span className="truncate opacity-70 max-w-[100px]">· {track.artist}</span>
+        <button
+          onClick={toggleMute}
+          className="ml-1 grid place-items-center size-5"
+          aria-label={muted ? "Ativar som" : "Silenciar"}
+          title={muted ? "Ativar som" : "Silenciar"}
+        >
+          {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
