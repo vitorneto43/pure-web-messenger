@@ -135,6 +135,7 @@ function ProfilePage() {
         });
         setSocialLinks(((data as any).social_links as SocialLinks) ?? {});
         setBirthDate(((data as any).birth_date as string) ?? "");
+        setMyInterests((((data as any).interests as string[]) ?? []));
       }
       setInterests((tags as string[] | null) ?? []);
       setHasSurvey(!!survey?.id);
