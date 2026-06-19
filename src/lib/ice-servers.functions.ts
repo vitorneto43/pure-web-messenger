@@ -10,7 +10,9 @@ const FALLBACK_ICE: RTCIceServer[] = [
   { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
 ];
 
-export const getIceServers = createServerFn({ method: "GET" }).handler(
+export const getIceServers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(
   async (): Promise<{ iceServers: RTCIceServer[] }> => {
     const app = process.env.METERED_APP_NAME;
     const apiKey = process.env.METERED_API_KEY;
