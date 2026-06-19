@@ -25,7 +25,7 @@ import { BoostDialog } from "./BoostDialog";
 import { useTranslation } from "react-i18next";
 import { StatusLinkPreview, extractFirstUrl } from "./StatusLinkPreview";
 import { StatusReactions } from "./StatusReactions";
-import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
+
 import { StatusMusicPlayer } from "./StatusMusicPlayer";
 
 const URL_REGEX = /(\b(?:https?:\/\/|www\.)[^\s<>"']+|\b[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
@@ -601,7 +601,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             <div className="text-[11px] text-white/50 uppercase tracking-wider">
               {t("status.adByPartner") || "Anúncio de parceiro"}
             </div>
-            <AdsterraBanner variant="banner_300x250" />
+            
             <Button
               size="sm"
               variant="secondary"

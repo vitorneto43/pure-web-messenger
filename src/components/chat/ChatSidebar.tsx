@@ -37,7 +37,7 @@ import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
-import { AdsterraBanner } from "@/components/ads/AdsterraBanner";
+
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
@@ -501,7 +501,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         <ProfileCompletionBanner />
         <InviteMissionBanner />
         <MeetPeopleCard />
-        <AdsterraBanner variant="banner_320x50" className="px-1 pt-2 pb-1" />
+        
         {loading ? (
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
