@@ -73,6 +73,7 @@ function ProfilePage() {
   });
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [interests, setInterests] = useState<string[]>([]);
+  const [myInterests, setMyInterests] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState<string>("");
   const [hasSurvey, setHasSurvey] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
