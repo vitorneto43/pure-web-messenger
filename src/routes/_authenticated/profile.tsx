@@ -101,7 +101,7 @@ function ProfilePage() {
     Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links, birth_date")
+        .select("username, display_name, bio, avatar_url, goal, visibility, show_city, created_at, social_links, birth_date, interests")
         .eq("id", user.id)
         .single(),
       supabase
