@@ -230,7 +230,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         <img src={post.media_url!} alt="" className="w-full max-h-[600px] object-contain bg-black" loading="lazy" />
       )}
       {isMedia && post.kind === "video" && (
-        <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline />
+        <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline muted preload="metadata" />
       )}
 
       {/* Actions */}
