@@ -66,7 +66,12 @@ function parse(content: string): Segment[] {
       if (m.index! > lastIndex) {
         segs.push({ type: "text", value: text.slice(lastIndex, m.index) });
       }
-      segs.push({ type: "url", value: m[0] });
+      let urlText = m[0];
+      const tr = urlText.match(TRAILING_PUNCT);
+      let trailing = "";
+      if (tr) { trailing = tr[0]; urlText = urlText.slice(0, -trailing.length); }
+      segs.push({ type: "url", value: urlText });
+      if (trailing) segs.push({ type: "text", value: trailing });
       lastIndex = m.index! + m[0].length;
     }
     if (lastIndex < text.length) {
