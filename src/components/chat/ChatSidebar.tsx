@@ -39,6 +39,7 @@ import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
+import { PostsFeed } from "@/components/posts/PostsFeed";
 
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
