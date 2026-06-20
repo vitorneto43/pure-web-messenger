@@ -517,9 +517,7 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
         {view === "posts" ? (
           <PostsFeed />
         ) : (
-        
-
-        
+        <>
         {loading ? (
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
