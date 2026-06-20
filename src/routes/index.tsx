@@ -242,7 +242,8 @@ function LandingPage() {
               {statuses.map((s) => (
                 <Link
                   key={s.status_id}
-                  to="/descobrir-status"
+                  to="/s/$statusId"
+                  params={{ statusId: s.status_id }}
                   className="relative shrink-0 w-28 aspect-[9/14] rounded-2xl overflow-hidden bg-muted snap-start group"
                 >
                   {s.media_url ? (
@@ -333,7 +334,7 @@ function LandingPage() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {posts.slice(0, 6).map((p) => (
-                <Link key={p.post_id} to="/posts"
+                <Link key={p.post_id} to="/p/$postId" params={{ postId: p.post_id }}
                   className="group rounded-xl overflow-hidden border border-border bg-card hover:bg-accent/30 transition flex flex-col">
                   {p.media_url || p.thumbnail_url ? (
                     <div className="relative aspect-square bg-muted overflow-hidden">
