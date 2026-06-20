@@ -87,7 +87,7 @@ function GroupPage() {
   if (!group) return <NotFound />;
 
   async function handleJoin() {
-    if (!user) { navigate({ to: "/auth" }); return; }
+    if (!user) { navigate({ to: "/auth", search: { mode: "login" } }); return; }
     setBusy(true);
     try {
       if (group!.join_policy === "open") {
@@ -117,7 +117,7 @@ function GroupPage() {
               <MoreVertical className="size-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => user ? setReportOpen(true) : navigate({ to: "/auth" })}>
+              <DropdownMenuItem onSelect={() => user ? setReportOpen(true) : navigate({ to: "/auth", search: { mode: "login" } })}>
                 <ShieldAlert className="size-4 mr-2" /> Denunciar grupo
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -164,7 +164,7 @@ function GroupPage() {
 
         <div className="mb-6">
           {!user ? (
-            <Button className="w-full" onClick={() => navigate({ to: "/auth" })}>Criar conta para entrar</Button>
+            <Button className="w-full" onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}>Criar conta para entrar</Button>
           ) : status?.isMember ? (
             <Button className="w-full" onClick={() => navigate({ to: "/chat/$conversationId", params: { conversationId: group.id } })}>
               Abrir grupo

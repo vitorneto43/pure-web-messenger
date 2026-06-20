@@ -227,7 +227,7 @@ function StatusPublicPage() {
 
   async function toggleCommentReaction(commentId: string, emoji: string) {
     if (!user) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "login" } });
       return;
     }
     const existing = (reactionsByComment[commentId] ?? []).find(
@@ -275,7 +275,7 @@ function StatusPublicPage() {
 
   async function postComment() {
     if (!user) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "login" } });
       return;
     }
     const value = text.trim();
@@ -327,7 +327,7 @@ function StatusPublicPage() {
 
   async function startChat(targetUserId: string) {
     if (!user) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "login" } });
       return;
     }
     if (targetUserId === user.id) return;
@@ -748,7 +748,7 @@ function StatusPublicPage() {
           ) : (
             <div className="rounded-lg border bg-muted/40 p-3 text-sm flex items-center justify-between gap-3">
               <span>Entre para comentar e conversar com o autor.</span>
-              <Button size="sm" onClick={() => navigate({ to: "/auth" })}>
+              <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>
                 Entrar
               </Button>
             </div>

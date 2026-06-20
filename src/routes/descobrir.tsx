@@ -67,8 +67,8 @@ function DiscoverPage() {
               <Button size="sm" onClick={() => navigate({ to: "/chat" })}>Ir para chat</Button>
             ) : (
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
-                <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Criar conta</Button>
+                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>Entrar</Button>
+                <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}>Criar conta</Button>
               </div>
             )}
           </div>
@@ -195,8 +195,8 @@ function DiscoverPage() {
             <h3 className="font-bold mb-1">Pronto pra conversar?</h3>
             <p className="text-sm text-muted-foreground mb-4">Crie sua conta gratuita e comece a usar todas as funcionalidades.</p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button onClick={() => navigate({ to: "/auth" })}>Criar conta grátis</Button>
-              <Button variant="outline" onClick={() => navigate({ to: "/auth" })}>Já tenho conta</Button>
+              <Button onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}>Criar conta grátis</Button>
+              <Button variant="outline" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>Já tenho conta</Button>
             </div>
             <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1"><MessageCircle className="size-3.5" /> Mensagens</span>

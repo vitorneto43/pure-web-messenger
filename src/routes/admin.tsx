@@ -78,7 +78,7 @@ function AdminGate() {
   });
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth" });
+    if (!loading && !session) navigate({ to: "/auth", search: { mode: "login" } });
   }, [loading, session, navigate]);
 
   if (loading || access.isLoading) {
@@ -217,7 +217,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               onClick={async () => {
                 sessionStorage.removeItem(PIN_KEY);
                 await supabase.auth.signOut();
-                navigate({ to: "/auth" });
+                navigate({ to: "/" });
               }}
             >
               <LogOut className="size-4 mr-1" /> Sair

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import "@/i18n";
 import { useTranslation } from "react-i18next";
@@ -27,11 +27,17 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   validateSearch: (search: Record<string, unknown>) => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    invite: typeof search.invite === "string" ? search.invite : undefined,
     mode:
       search.mode === "signup" || search.mode === "login" || search.mode === "forgot"
         ? (search.mode as Mode)
         : undefined,
   }),
+  beforeLoad: ({ search }) => {
+    if (!search.mode && !search.redirect && !search.invite) {
+      throw redirect({ to: "/", replace: true });
+    }
+  },
 });
 
 const signupSchema = z.object({
@@ -118,7 +124,7 @@ function AuthPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const inv = params.get("invite");
+    const inv = search.invite ?? params.get("invite");
     const KEY = "wavechat:pending_invite";
     if (inv) {
       try {
@@ -143,7 +149,7 @@ function AuthPage() {
         localStorage.removeItem(KEY);
       }
     } catch {}
-  }, []);
+  }, [search.invite]);
 
   useEffect(() => {
     if (!loading && session) goAfterAuth();
@@ -563,7 +569,7 @@ function AuthPage() {
               Quer dar uma olhada antes de criar conta?
             </p>
             <Link
-              to="/descobrir"
+              to="/"
               className="inline-flex items-center justify-center text-sm font-semibold text-primary hover:underline"
             >
               Explorar sem cadastro →

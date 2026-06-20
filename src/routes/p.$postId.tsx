@@ -85,7 +85,7 @@ function PublicPostPage() {
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 h-12 border-b bg-background/80 backdrop-blur">
         <button onClick={() => navigate({ to: user ? "/posts" : "/chat" })} className="size-9 grid place-items-center rounded-full hover:bg-muted"><ArrowLeft className="size-5" /></button>
         <h1 className="font-bold">Post</h1>
-        {!user && <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>}
+        {!user && <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>Entrar</Button>}
         {user && <div className="size-9" />}
       </header>
 

@@ -61,7 +61,7 @@ function AboutPage() {
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button asChild size="lg">
-            <Link to="/auth">{t("about.ctaSignup")}</Link>
+            <Link to="/auth" search={{ mode: "signup" }}>{t("about.ctaSignup")}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link to="/contact">{t("about.ctaContact")}</Link>

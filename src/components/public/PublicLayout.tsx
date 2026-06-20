@@ -49,6 +49,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <LanguageSwitcher compact />
             <Link
               to="/auth"
+              search={{ mode: "login" }}
               onClick={() => void track("auth_cta_click", { from: "header" })}
               className="ml-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
             >
