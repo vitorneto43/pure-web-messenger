@@ -145,7 +145,7 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
             return (
               <a
                 key={i}
-                href={s.value}
+                href={normalizeUrl(s.value)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`underline break-all ${
