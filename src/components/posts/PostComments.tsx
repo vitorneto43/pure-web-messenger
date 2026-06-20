@@ -121,8 +121,9 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
             <CommentBlock key={root.id} c={root} onReply={() => setReplyTo(root)} onChat={() => chatWith(root.user_id)} onReact={() => react(root)}>
               {replies.length > 0 && (
                 <div className="ml-10 mt-2 space-y-3 border-l border-border pl-3">
-                  {replies.map(r => (
-                    <CommentBlock key={r.id} c={r} compact onChat={() => chatWith(r.user_id)} onReact={() => react(r)} />
+                  {replies.map(({ row, replyToUsername }) => (
+                    <CommentBlock key={row.id} c={row} compact replyToUsername={replyToUsername}
+                      onReply={() => setReplyTo(row)} onChat={() => chatWith(row.user_id)} onReact={() => react(row)} />
                   ))}
                 </div>
               )}
