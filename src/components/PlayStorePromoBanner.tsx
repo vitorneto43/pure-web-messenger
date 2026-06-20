@@ -10,6 +10,7 @@ export function PlayStorePromoBanner() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (window.location.pathname === "/") return;
     // Hide on native (already in app)
     try {
       if (Capacitor.isNativePlatform()) return;

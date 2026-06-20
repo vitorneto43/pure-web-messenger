@@ -21,7 +21,7 @@ const WIDGET_H = 56; // button height in px (approx)
 const MARGIN = 20;   // 20px margin (Tailwind bottom-5 right-5)
 
 // Hide on routes where the widget would obscure UI.
-const HIDDEN_PATH_PREFIXES = ["/admin", "/auth", "/reset-password"];
+const HIDDEN_PATH_PREFIXES = ["/", "/admin", "/auth", "/reset-password"];
 
 function shouldHideOnPath(path: string) {
   return HIDDEN_PATH_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
