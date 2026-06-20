@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
-import { HomeFeed } from "@/routes/index";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   component: ChatLayout,
@@ -17,5 +17,9 @@ function ChatLayout() {
     );
   }
 
-  return <HomeFeed />;
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
+      <ChatSidebar />
+    </div>
+  );
 }
