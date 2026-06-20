@@ -10,6 +10,7 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { isPromoPost } from "@/lib/feed-filters";
 
 export const Route = createFileRoute("/posts")({
   component: PostsPage,
