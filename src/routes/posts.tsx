@@ -10,6 +10,7 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { isPromoPost } from "@/lib/feed-filters";
 
 export const Route = createFileRoute("/posts")({
   component: PostsPage,
@@ -41,7 +42,7 @@ function PostsPage() {
     getNextPageParam: (last, all) => (last.length < PAGE_SIZE ? undefined : all.length * PAGE_SIZE),
   });
 
-  const items = useMemo(() => query.data?.pages.flat() ?? [], [query.data]);
+  const items = useMemo(() => query.data?.pages.flat().filter((p) => !isPromoPost(p.post_id)) ?? [], [query.data]);
 
   function patch(postId: string, p: Partial<PostItem>) {
     qc.setQueryData(["posts-feed", user?.id ?? "guest"], (old: any) => {

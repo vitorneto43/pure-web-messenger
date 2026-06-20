@@ -33,6 +33,7 @@ import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+import { isPromoPost } from "@/lib/feed-filters";
 
 type PublicStatus = {
   status_id: string; user_id: string; username: string; display_name: string | null;
@@ -118,7 +119,7 @@ export function HomeFeed() {
     getNextPageParam: (last, all) => (last.length < PAGE_SIZE ? undefined : all.length * PAGE_SIZE),
   });
 
-  const items = useMemo(() => feed.data?.pages.flat() ?? [], [feed.data]);
+  const items = useMemo(() => feed.data?.pages.flat().filter((p) => !isPromoPost(p.post_id)) ?? [], [feed.data]);
 
   function patch(postId: string, p: Partial<PostItem>) {
     qc.setQueryData(["home-posts-feed", user?.id ?? "guest"], (old: any) => {
