@@ -54,7 +54,20 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
 
   const grouped = useMemo(() => {
     const roots = items.filter(c => !c.parent_id);
-    return roots.map(r => ({ root: r, replies: items.filter(c => c.parent_id === r.id) }));
+    const byId = new Map(items.map(c => [c.id, c]));
+    const collect = (rootId: string): CommentRow[] => {
+      const direct = items.filter(c => c.parent_id === rootId);
+      const all: CommentRow[] = [];
+      for (const d of direct) { all.push(d); all.push(...collect(d.id)); }
+      return all.sort((a, b) => a.created_at.localeCompare(b.created_at));
+    };
+    return roots.map(r => ({
+      root: r,
+      replies: collect(r.id).map(rep => ({
+        row: rep,
+        replyToUsername: rep.parent_id && rep.parent_id !== r.id ? byId.get(rep.parent_id)?.username ?? null : null,
+      })),
+    }));
   }, [items]);
 
   async function send() {
