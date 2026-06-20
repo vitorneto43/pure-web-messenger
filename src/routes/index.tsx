@@ -146,11 +146,20 @@ function LandingPage() {
             <span className="font-bold text-lg">WaveChat</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
-            <Button size="sm" onClick={handleGoogle} disabled={googleBusy}>
-              {googleBusy ? <Loader2 className="size-4 animate-spin" /> : "Entrar com Google"}
-            </Button>
+            {user ? (
+              <Button size="sm" onClick={() => navigate({ to: "/chat" })} className="gap-1.5">
+                <MessageCircle className="size-4" /> Abrir Chat
+              </Button>
+            ) : (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+                <Button size="sm" onClick={handleGoogle} disabled={googleBusy}>
+                  {googleBusy ? <Loader2 className="size-4 animate-spin" /> : "Entrar com Google"}
+                </Button>
+              </>
+            )}
           </div>
+
         </div>
       </header>
 
