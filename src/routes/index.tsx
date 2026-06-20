@@ -300,25 +300,6 @@ export function HomeFeed() {
           </div>
         </div>
 
-        <nav className="mx-auto max-w-6xl border-t border-border/60 px-3 sm:px-4 py-2" aria-label="Atalhos da WaveChat">
-          <div className="grid grid-cols-5 gap-1.5 sm:flex sm:gap-2 sm:overflow-x-auto">
-            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/descobrir-status" })}>
-              <Sparkles className="size-4" /> <span className="text-[10px] sm:text-sm">Stories</span>
-            </Button>
-            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/live" })}>
-              <Radio className="size-4" /> <span className="text-[10px] sm:text-sm">Lives</span>
-            </Button>
-            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/meet/wavechat-geral" })}>
-              <Monitor className="size-4" /> <span className="text-[10px] sm:text-sm">Meet</span>
-            </Button>
-            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/descobrir" })}>
-              <Users className="size-4" /> <span className="text-[10px] sm:text-sm">Pessoas</span>
-            </Button>
-            <Button size="sm" variant="outline" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => (user ? navigate({ to: "/chat" }) : gate("message", () => navigate({ to: "/chat" })))}>
-              <MessageCircle className="size-4" /> <span className="text-[10px] sm:text-sm">Chat</span>
-            </Button>
-          </div>
-        </nav>
 
         {/* STORIES STRIP — sempre visível */}
         <div className="mx-auto max-w-6xl border-t border-border/60">
