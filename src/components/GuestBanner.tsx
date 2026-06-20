@@ -10,7 +10,7 @@ export function GuestBanner() {
         <span className="size-1.5 rounded-full bg-amber-500" />
         Visitando como convidado
       </span>
-      <Button size="sm" variant="default" className="h-7 px-3 text-xs" onClick={() => navigate({ to: "/auth" })}>
+      <Button size="sm" variant="default" className="h-7 px-3 text-xs" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>
         <UserPlus className="size-3.5 mr-1" /> Entrar
       </Button>
     </div>

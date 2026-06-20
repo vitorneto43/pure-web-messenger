@@ -328,7 +328,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   async function logout() {
     await supabase.auth.signOut();
     toast.success(t("chat.loggedOut"));
-    navigate({ to: "/auth" });
+    navigate({ to: "/" });
   }
 
   const filtered = useMemo(() => {
