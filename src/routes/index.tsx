@@ -157,6 +157,26 @@ function HomeFeed() {
           </div>
         </div>
 
+        <nav className="mx-auto max-w-6xl border-t border-border/60 px-3 sm:px-4 py-2" aria-label="Atalhos da WaveChat">
+          <div className="grid grid-cols-5 gap-1.5 sm:flex sm:gap-2 sm:overflow-x-auto">
+            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/descobrir-status" })}>
+              <CameraStoryIcon /> <span className="text-[10px] sm:text-sm">Stories</span>
+            </Button>
+            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/live" })}>
+              <Radio className="size-4" /> <span className="text-[10px] sm:text-sm">Lives</span>
+            </Button>
+            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/meet/wavechat-geral" })}>
+              <Monitor className="size-4" /> <span className="text-[10px] sm:text-sm">Meet</span>
+            </Button>
+            <Button size="sm" variant="secondary" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => navigate({ to: "/descobrir" })}>
+              <Users className="size-4" /> <span className="text-[10px] sm:text-sm">Pessoas</span>
+            </Button>
+            <Button size="sm" variant="outline" className="min-w-0 flex-col sm:flex-row h-11 sm:h-9 px-1.5 sm:px-3 gap-0.5 sm:gap-1.5" onClick={() => (user ? navigate({ to: "/chat" }) : gate("message", () => navigate({ to: "/chat" })))}>
+              <MessageCircle className="size-4" /> <span className="text-[10px] sm:text-sm">Chat</span>
+            </Button>
+          </div>
+        </nav>
+
         {/* STORIES STRIP */}
         {statuses !== null && statuses.length > 0 && (
           <div className="mx-auto max-w-6xl border-t border-border/60">
@@ -180,62 +200,12 @@ function HomeFeed() {
             </div>
           </div>
         )}
-
-        <nav className="mx-auto max-w-6xl border-t border-border/60 px-3 sm:px-4 py-2" aria-label="Atalhos da WaveChat">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => navigate({ to: "/live" })}>
-              <Radio className="size-4" /> Lives
-            </Button>
-            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => navigate({ to: "/meet/wavechat-geral" })}>
-              <Monitor className="size-4" /> Meet
-            </Button>
-            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => navigate({ to: "/descobrir" })}>
-              <Users className="size-4" /> Pessoas
-            </Button>
-            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => navigate({ to: "/descobrir" })}>
-              <Globe className="size-4" /> Comunidades
-            </Button>
-            <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={() => (user ? navigate({ to: "/chat" }) : gate("message", () => navigate({ to: "/chat" })))}>
-              <MessageCircle className="size-4" /> Chat
-            </Button>
-          </div>
-        </nav>
       </header>
 
       {/* MAIN LAYOUT — feed + side rail */}
       <main className="mx-auto max-w-6xl px-3 sm:px-4 py-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
         {/* FEED */}
         <section className="min-w-0 max-w-xl mx-auto w-full" id="posts">
-          <div className="mb-4 grid grid-cols-2 gap-2">
-            <Button variant="outline" className="h-auto justify-start gap-2 p-3" onClick={() => navigate({ to: "/live" })}>
-              <span className="size-9 rounded-full bg-destructive/10 grid place-items-center shrink-0">
-                <Radio className="size-4 text-destructive" />
-              </span>
-              <span className="min-w-0 text-left">
-                <span className="block text-sm font-bold">Lives</span>
-                <span className="block text-[11px] text-muted-foreground truncate">{lives.length > 0 ? `${lives.length} ao vivo` : "Abrir lives"}</span>
-              </span>
-            </Button>
-            <Button variant="outline" className="h-auto justify-start gap-2 p-3" onClick={() => navigate({ to: "/meet/wavechat-geral" })}>
-              <span className="size-9 rounded-full bg-primary/10 grid place-items-center shrink-0">
-                <Monitor className="size-4 text-primary" />
-              </span>
-              <span className="min-w-0 text-left">
-                <span className="block text-sm font-bold">Meet</span>
-                <span className="block text-[11px] text-muted-foreground truncate">Sala pública</span>
-              </span>
-            </Button>
-          </div>
-
-          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-2 lg:hidden">
-            <Button variant="secondary" className="justify-start gap-2" onClick={() => navigate({ to: "/descobrir" })}>
-              <Users className="size-4" /> Pessoas pra conhecer
-            </Button>
-            <Button variant="secondary" className="justify-start gap-2" onClick={() => navigate({ to: "/descobrir" })}>
-              <Globe className="size-4" /> Comunidades populares
-            </Button>
-          </div>
-
           <div className="mb-3 flex items-center justify-between px-1">
             <h1 className="text-base font-bold">Posts</h1>
             <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => gate("create_status", () => setComposerOpen(true))}>
