@@ -68,7 +68,7 @@ interface ConversationItem {
   unread: number;
 }
 
-export function ChatSidebar({ activeConversationId }: { activeConversationId?: string }) {
+export function ChatSidebar({ activeConversationId, initialView = "chat" }: { activeConversationId?: string; initialView?: "chat" | "posts" }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { gate, GateDialog } = useAuthGate();
@@ -80,6 +80,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
+  const [view, setView] = useState<"chat" | "posts">(initialView);
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [startingChat, setStartingChat] = useState(false);
