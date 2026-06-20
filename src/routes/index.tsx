@@ -226,6 +226,53 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* STORIES — horizontal carousel, real content */}
+        {statuses !== null && statuses.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5 text-pink-500" />
+                <h2 className="text-lg font-bold">Stories</h2>
+              </div>
+              <Link to="/descobrir-status" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver todos <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x">
+              {statuses.map((s) => (
+                <Link
+                  key={s.status_id}
+                  to="/descobrir-status"
+                  className="relative shrink-0 w-28 aspect-[9/14] rounded-2xl overflow-hidden bg-muted snap-start group"
+                >
+                  {s.media_url ? (
+                    <img src={s.media_url} alt={s.caption ?? s.display_name ?? s.username}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
+                  ) : (
+                    <div
+                      className="absolute inset-0 grid place-items-center p-2 text-white text-[11px] font-semibold text-center"
+                      style={{ background: s.background ?? "linear-gradient(135deg,#8b5cf6,#ec4899)" }}
+                    >
+                      {(s.content ?? "").slice(0, 60)}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+                  <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center gap-1.5">
+                    <Avatar className="size-7 ring-2 ring-pink-500">
+                      <AvatarImage src={s.avatar_url ?? undefined} />
+                      <AvatarFallback className="text-[10px]">{(s.display_name ?? s.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 right-1.5 text-white">
+                    <p className="text-[11px] font-semibold truncate">{s.display_name ?? s.username}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+
         {/* LIVES — first because most dynamic */}
         {(loadingLives || lives.length > 0) && (
           <section>
