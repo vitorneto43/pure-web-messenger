@@ -8,6 +8,7 @@ import {
   Newspaper, BookOpen, CircleHelp, Settings, Bell,
   User as UserIcon, Rocket, Hash, CalendarClock, Video,
   Shield, FileText, Lock, Info, LogOut, Mail,
+  Sliders, BarChart3, History, Target, Megaphone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
