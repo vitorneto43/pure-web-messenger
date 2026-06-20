@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 
 export const Route = createFileRoute("/")({
@@ -34,7 +35,9 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
-      <ChatSidebar />
+      <ClientOnly fallback={<div className="flex-1" />}>
+        <ChatSidebar />
+      </ClientOnly>
     </div>
   );
 }
