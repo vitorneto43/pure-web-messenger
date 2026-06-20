@@ -13,6 +13,7 @@ import {
   User as UserIcon,
   Newspaper,
   Radio,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ import { InviteDialog } from "@/components/InviteDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
+import { PostsFeed } from "@/components/posts/PostsFeed";
 
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
@@ -66,7 +68,7 @@ interface ConversationItem {
   unread: number;
 }
 
-export function ChatSidebar({ activeConversationId }: { activeConversationId?: string }) {
+export function ChatSidebar({ activeConversationId, initialView = "chat" }: { activeConversationId?: string; initialView?: "chat" | "posts" }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { gate, GateDialog } = useAuthGate();
@@ -78,6 +80,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
+  const [view, setView] = useState<"chat" | "posts">(initialView);
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [startingChat, setStartingChat] = useState(false);
@@ -459,8 +462,17 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
           <Button asChild size="sm" variant="secondary" className="rounded-full">
             <Link to="/live"><Radio className="size-4 mr-1.5 text-red-500" />Lives</Link>
           </Button>
-          <Button asChild size="sm" variant="secondary" className="rounded-full">
-            <Link to="/"><Newspaper className="size-4 mr-1.5" />Posts</Link>
+          <Button
+            onClick={() => setView((v) => (v === "posts" ? "chat" : "posts"))}
+            size="sm"
+            variant="secondary"
+            className="rounded-full"
+          >
+            {view === "posts" ? (
+              <><MessageCircle className="size-4 mr-1.5" />Chat</>
+            ) : (
+              <><Newspaper className="size-4 mr-1.5" />Posts</>
+            )}
           </Button>
           <Button
             onClick={() => gate("join_group", () => setNewGroupOpen(true))}
@@ -502,7 +514,10 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
         <ProfileCompletionBanner />
         
 
-        
+        {view === "posts" ? (
+          <PostsFeed />
+        ) : (
+        <>
         {loading ? (
           <div className="grid place-items-center py-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -588,6 +603,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
               </div>
             )}
           </>
+        )}
+        </>
         )}
       </div>
 
