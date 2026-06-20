@@ -500,8 +500,8 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
         
         <ProfileCompletionBanner />
-        <InviteMissionBanner />
-        <MeetPeopleCard />
+        
+
         
         {loading ? (
           <div className="grid place-items-center py-10">
