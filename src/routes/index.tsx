@@ -167,8 +167,8 @@ function HomeFeed() {
             </Button>
             {user ? (
               <NotificationsBell />
-            ) : (
-              <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/auth" })} title="Notificações">
+                ) : (
+                  <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })} title="Notificações">
                 <Bell className="size-5" />
               </Button>
             )}
@@ -227,7 +227,7 @@ function HomeFeed() {
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => navigate({ to: "/auth" })}>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>
                       <LogIn className="size-4 mr-2" /> Entrar / Criar conta
                     </DropdownMenuItem>
                   </>
@@ -262,7 +262,7 @@ function HomeFeed() {
                       onClick={async () => {
                         await supabase.auth.signOut();
                         toast.success("Você saiu da conta");
-                        navigate({ to: "/auth" });
+                        navigate({ to: "/" });
                       }}
                       className="text-destructive focus:text-destructive"
                     >
@@ -300,7 +300,7 @@ function HomeFeed() {
                 <Plus className="size-4" /> <span className="hidden sm:inline">Postar</span>
               </Button>
             ) : (
-              <Button size="sm" onClick={() => navigate({ to: "/auth" })} className="gap-1">
+              <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })} className="gap-1">
                 <LogIn className="size-4" /> <span className="hidden sm:inline">Entrar</span>
               </Button>
             )}
@@ -331,7 +331,7 @@ function HomeFeed() {
         <div className="mx-auto max-w-6xl border-t border-border/60">
           <div className="flex gap-3 overflow-x-auto px-3 sm:px-4 py-3 snap-x">
             <button
-              onClick={() => (user ? gate("create_status", () => setComposerOpen(true)) : navigate({ to: "/auth" }))}
+              onClick={() => (user ? gate("create_status", () => setComposerOpen(true)) : navigate({ to: "/auth", search: { mode: "signup" } }))}
               className="shrink-0 flex flex-col items-center gap-1 w-16 snap-start"
               title="Criar story"
             >
@@ -461,7 +461,7 @@ function HomeFeed() {
           {!user && (
             <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-4 text-center">
               <p className="text-sm font-semibold mb-2">Entre pra curtir, comentar e seguir</p>
-              <Button size="sm" className="w-full" onClick={() => navigate({ to: "/auth" })}>Criar conta grátis</Button>
+              <Button size="sm" className="w-full" onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}>Criar conta grátis</Button>
             </div>
           )}
 
