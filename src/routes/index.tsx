@@ -29,6 +29,8 @@ import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { NotificationsBell } from "@/components/chat/NotificationsBell";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
@@ -76,7 +78,7 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-function HomeFeed() {
+export function HomeFeed() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -85,6 +87,7 @@ function HomeFeed() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
+  const [chatSheetOpen, setChatSheetOpen] = useState(false);
   const [statuses, setStatuses] = useState<PublicStatus[] | null>(null);
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
@@ -156,8 +159,8 @@ function HomeFeed() {
             <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/live" })} title="Lives">
               <Radio className="size-5 text-destructive" />
             </Button>
-            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/posts" })} title="Posts">
-              <Newspaper className="size-5" />
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => (user ? setChatSheetOpen(true) : gate("message", () => setChatSheetOpen(true)))} title="Chat">
+              <MessageCircle className="size-5" />
             </Button>
             <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/terms" })} title="Termos de uso">
               <BookOpen className="size-5" />
@@ -507,6 +510,15 @@ function HomeFeed() {
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => feed.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
+
+      <Sheet open={chatSheetOpen} onOpenChange={setChatSheetOpen}>
+        <SheetContent side="right" className="p-0 w-full sm:max-w-md flex flex-col bg-sidebar text-sidebar-foreground">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Conversas</SheetTitle>
+          </SheetHeader>
+          <ChatSidebar />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
