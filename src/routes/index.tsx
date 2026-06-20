@@ -175,9 +175,33 @@ function LandingPage() {
               <StatPill icon={<Flame className="size-4 text-orange-500" />} value={stats?.posts_today} label="posts hoje" />
             </div>
 
+            {/* Quick nav — explorar conteúdo público sem conta */}
+            <div className="pt-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Explorar sem conta</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <Link to="/posts" className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition">
+                  <Flame className="size-4 text-orange-500" />
+                  <span className="text-sm font-semibold">Posts</span>
+                </Link>
+                <Link to="/descobrir-status" className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition">
+                  <Sparkles className="size-4 text-pink-500" />
+                  <span className="text-sm font-semibold">Status</span>
+                </Link>
+                <Link to="/live" className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition">
+                  <Radio className="size-4 text-red-500" />
+                  <span className="text-sm font-semibold">Lives</span>
+                </Link>
+                <Link to="/descobrir" className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/40 transition">
+                  <Globe className="size-4 text-primary" />
+                  <span className="text-sm font-semibold">Comunidades</span>
+                </Link>
+              </div>
+            </div>
+
             <p className="text-xs text-muted-foreground pt-1">
-              Grátis • Sem cartão • Sem anúncios invasivos
+              Grátis • Sem cartão • Sem anúncios invasivos • Conta só quando quiser interagir
             </p>
+
           </div>
         </section>
 
