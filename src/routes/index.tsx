@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 
 export const Route = createFileRoute("/")({
