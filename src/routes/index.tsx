@@ -16,7 +16,19 @@ import { getActiveLives } from "@/lib/live.functions";
 import { signInWithGoogleNative } from "@/lib/native-google-auth";
 import { lovable } from "@/integrations/lovable";
 import { track } from "@/lib/track";
+import { supabase } from "@/integrations/supabase/client";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+
+type PublicStatus = {
+  status_id: string; user_id: string; username: string; display_name: string | null;
+  avatar_url: string | null; kind: string; media_url: string | null; caption: string | null;
+  background: string | null; content: string | null; is_official: boolean;
+};
+type PublicPost = {
+  post_id: string; user_id: string; username: string; display_name: string | null;
+  avatar_url: string | null; kind: string; media_url: string | null; thumbnail_url: string | null;
+  content: string | null; reactions_count: number; comments_count: number; created_at: string;
+};
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
@@ -73,6 +85,9 @@ function LandingPage() {
     try { return Capacitor.isNativePlatform(); } catch { return false; }
   }, []);
 
+  const [statuses, setStatuses] = useState<PublicStatus[] | null>(null);
+  const [posts, setPosts] = useState<PublicPost[] | null>(null);
+
   useEffect(() => {
     if (user) {
       navigate({ to: "/chat" });
@@ -90,6 +105,12 @@ function LandingPage() {
       .catch(() => setLoadingLives(false));
     if (!isNative) {
       getPublicStats().then(setStats).catch(() => setStats(null));
+      (supabase as any).rpc("discover_public_statuses", { _limit: 16, _offset: 0 })
+        .then(({ data }: any) => setStatuses((data ?? []) as PublicStatus[]))
+        .catch(() => setStatuses([]));
+      (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+        .then(({ data }: any) => setPosts((data ?? []) as PublicPost[]))
+        .catch(() => setPosts([]));
     }
   }, [user, navigate, isNative]);
 
@@ -205,6 +226,53 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* STORIES — horizontal carousel, real content */}
+        {statuses !== null && statuses.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5 text-pink-500" />
+                <h2 className="text-lg font-bold">Stories</h2>
+              </div>
+              <Link to="/descobrir-status" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver todos <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x">
+              {statuses.map((s) => (
+                <Link
+                  key={s.status_id}
+                  to="/descobrir-status"
+                  className="relative shrink-0 w-28 aspect-[9/14] rounded-2xl overflow-hidden bg-muted snap-start group"
+                >
+                  {s.media_url ? (
+                    <img src={s.media_url} alt={s.caption ?? s.display_name ?? s.username}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
+                  ) : (
+                    <div
+                      className="absolute inset-0 grid place-items-center p-2 text-white text-[11px] font-semibold text-center"
+                      style={{ background: s.background ?? "linear-gradient(135deg,#8b5cf6,#ec4899)" }}
+                    >
+                      {(s.content ?? "").slice(0, 60)}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+                  <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center gap-1.5">
+                    <Avatar className="size-7 ring-2 ring-pink-500">
+                      <AvatarImage src={s.avatar_url ?? undefined} />
+                      <AvatarFallback className="text-[10px]">{(s.display_name ?? s.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 right-1.5 text-white">
+                    <p className="text-[11px] font-semibold truncate">{s.display_name ?? s.username}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+
         {/* LIVES — first because most dynamic */}
         {(loadingLives || lives.length > 0) && (
           <section>
@@ -248,6 +316,48 @@ function LandingPage() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {/* POSTS preview — real content from feed */}
+        {posts !== null && posts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Flame className="size-5 text-orange-500" />
+                <h2 className="text-lg font-bold">Posts em alta</h2>
+              </div>
+              <Link to="/posts" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver feed <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {posts.slice(0, 6).map((p) => (
+                <Link key={p.post_id} to="/posts"
+                  className="group rounded-xl overflow-hidden border border-border bg-card hover:bg-accent/30 transition flex flex-col">
+                  {p.media_url || p.thumbnail_url ? (
+                    <div className="relative aspect-square bg-muted overflow-hidden">
+                      <img src={p.thumbnail_url || p.media_url || ""} alt={p.content ?? ""}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
+                    </div>
+                  ) : (
+                    <div className="aspect-square p-3 grid place-items-center bg-gradient-to-br from-primary/10 to-accent/10">
+                      <p className="text-xs text-foreground line-clamp-6 text-center">{p.content ?? ""}</p>
+                    </div>
+                  )}
+                  <div className="p-2 flex items-center gap-2">
+                    <Avatar className="size-6">
+                      <AvatarImage src={p.avatar_url ?? undefined} />
+                      <AvatarFallback className="text-[9px]">{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[11px] font-semibold truncate flex-1">{p.display_name ?? p.username}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <Heart className="size-3" /> {p.reactions_count}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </section>
         )}
 
