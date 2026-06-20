@@ -147,8 +147,9 @@ function DiscoverPage() {
           )}
         </section>
 
-        <section>
+        <section id="comunidades">
           <div className="flex items-center justify-between mb-3">
+
             <div className="flex items-center gap-2">
               <Globe className="size-5 text-primary" />
               <h2 className="text-base font-bold">Comunidades</h2>
