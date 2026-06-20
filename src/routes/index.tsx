@@ -85,6 +85,9 @@ function LandingPage() {
     try { return Capacitor.isNativePlatform(); } catch { return false; }
   }, []);
 
+  const [statuses, setStatuses] = useState<PublicStatus[] | null>(null);
+  const [posts, setPosts] = useState<PublicPost[] | null>(null);
+
   useEffect(() => {
     if (user) {
       navigate({ to: "/chat" });
@@ -102,6 +105,12 @@ function LandingPage() {
       .catch(() => setLoadingLives(false));
     if (!isNative) {
       getPublicStats().then(setStats).catch(() => setStats(null));
+      (supabase as any).rpc("discover_public_statuses", { _limit: 16, _offset: 0 })
+        .then(({ data }: any) => setStatuses((data ?? []) as PublicStatus[]))
+        .catch(() => setStatuses([]));
+      (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+        .then(({ data }: any) => setPosts((data ?? []) as PublicPost[]))
+        .catch(() => setPosts([]));
     }
   }, [user, navigate, isNative]);
 
