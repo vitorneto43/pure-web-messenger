@@ -223,7 +223,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       {/* Body */}
       {post.kind === "text" && (
         <div className="px-4 py-8 text-center" style={{ background: post.background ?? "linear-gradient(135deg,#6366f1,#ec4899)", color: "white" }}>
-          <p className="text-xl font-semibold whitespace-pre-wrap">{post.content}</p>
+          <p className="text-xl font-semibold whitespace-pre-wrap">{linkify(post.content, "underline break-all")}</p>
         </div>
       )}
       {isMedia && post.kind === "image" && (
