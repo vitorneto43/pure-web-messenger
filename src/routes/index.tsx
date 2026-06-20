@@ -89,11 +89,7 @@ function LandingPage() {
   const [posts, setPosts] = useState<PublicPost[] | null>(null);
 
   useEffect(() => {
-    if (user) {
-      navigate({ to: "/chat" });
-      return;
-    }
-    void track("landing_page_view", { surface: isNative ? "native" : "web" });
+    void track("landing_page_view", { surface: isNative ? "native" : "web", authed: !!user });
     getRecommendedProfilesPublic({ data: { limit: 12 } })
       .then((r) => setProfiles(r.profiles))
       .catch(() => setProfiles([]));
@@ -108,11 +104,12 @@ function LandingPage() {
       (supabase as any).rpc("discover_public_statuses", { _limit: 16, _offset: 0 })
         .then(({ data }: any) => setStatuses((data ?? []) as PublicStatus[]))
         .catch(() => setStatuses([]));
-      (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+      (supabase as any).rpc("discover_public_posts", { _limit: 12, _offset: 0 })
         .then(({ data }: any) => setPosts((data ?? []) as PublicPost[]))
         .catch(() => setPosts([]));
     }
-  }, [user, navigate, isNative]);
+  }, [user, isNative]);
+
 
   const handleGoogle = async () => {
     setGoogleBusy(true);
