@@ -8,6 +8,7 @@ import {
   Newspaper, BookOpen, CircleHelp, Settings, Bell,
   User as UserIcon, Rocket, Hash, CalendarClock, Video,
   Shield, FileText, Lock, Info, LogOut, Mail,
+  Sliders, BarChart3, History, Target, Megaphone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -199,14 +200,29 @@ function HomeFeed() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Impulsionamentos</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => { navigate({ to: "/posts" }); toast.message("Escolha um post para impulsionar"); }}>
-                      <Rocket className="size-4 mr-2 text-primary" /> Impulsionar um post
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/posts" }); toast.message("Toque em ⚡ no post para impulsionar (pacotes)"); }}>
+                      <Rocket className="size-4 mr-2 text-primary" /> Impulsionar post (pacotes)
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { navigate({ to: "/descobrir-status" }); toast.message("Abra seu status para impulsionar"); }}>
-                      <Rocket className="size-4 mr-2 text-pink-500" /> Impulsionar um story
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/posts" }); toast.message("Toque em ⚡ no post e escolha 'Personalizado'"); }}>
+                      <Sliders className="size-4 mr-2 text-primary" /> Impulsionar post (personalizado)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/descobrir-status" }); toast.message("Abra seu status e toque em ⚡"); }}>
+                      <Rocket className="size-4 mr-2 text-pink-500" /> Impulsionar story (pacotes)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/descobrir-status" }); toast.message("Abra seu status, toque em ⚡ e escolha 'Personalizado' para definir orçamento, dias, estados, idade e gênero"); }}>
+                      <Target className="size-4 mr-2 text-pink-500" /> Impulsionar story (personalizado)
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { navigate({ to: "/live/new" }); }}>
                       <Radio className="size-4 mr-2 text-destructive" /> Iniciar uma live
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                      <History className="size-4 mr-2" /> Histórico de impulsionamentos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                      <BarChart3 className="size-4 mr-2" /> Relatórios e análises
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                      <Megaphone className="size-4 mr-2" /> Minhas campanhas
                     </DropdownMenuItem>
                   </>
                 ) : (
