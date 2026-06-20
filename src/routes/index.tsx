@@ -85,6 +85,7 @@ export function HomeFeed() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
+  const [chatSheetOpen, setChatSheetOpen] = useState(false);
   const [statuses, setStatuses] = useState<PublicStatus[] | null>(null);
   const [profiles, setProfiles] = useState<PublicProfile[] | null>(null);
   const [groups, setGroups] = useState<PublicGroup[] | null>(null);
