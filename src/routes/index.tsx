@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 import {
   Loader2, MessageCircle, Users, Globe, Sparkles, ArrowRight,
-  Radio, Eye, Coins, Monitor, Plus, Search, LogIn, Download,
+  Radio, Eye, Coins, Monitor, Plus, Search, Download,
   Newspaper, BookOpen, CircleHelp, Settings, Bell,
   User as UserIcon, Rocket, Hash, CalendarClock, Video,
   Shield, FileText, Lock, Info, LogOut, Mail,
@@ -168,7 +168,7 @@ function HomeFeed() {
             {user ? (
               <NotificationsBell />
                 ) : (
-                  <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })} title="Notificações">
+                  <Button size="icon" variant="ghost" className="rounded-full" onClick={() => gate("default", () => undefined)} title="Notificações">
                 <Bell className="size-5" />
               </Button>
             )}
@@ -225,13 +225,7 @@ function HomeFeed() {
                       <Megaphone className="size-4 mr-2" /> Minhas campanhas
                     </DropdownMenuItem>
                   </>
-                ) : (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>
-                      <LogIn className="size-4 mr-2" /> Entrar / Criar conta
-                    </DropdownMenuItem>
-                  </>
-                )}
+                ) : null}
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">Institucional</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => navigate({ to: "/about" })}>
@@ -299,11 +293,7 @@ function HomeFeed() {
               <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))} className="gap-1">
                 <Plus className="size-4" /> <span className="hidden sm:inline">Postar</span>
               </Button>
-            ) : (
-              <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })} className="gap-1">
-                <LogIn className="size-4" /> <span className="hidden sm:inline">Entrar</span>
-              </Button>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -331,7 +321,7 @@ function HomeFeed() {
         <div className="mx-auto max-w-6xl border-t border-border/60">
           <div className="flex gap-3 overflow-x-auto px-3 sm:px-4 py-3 snap-x">
             <button
-              onClick={() => (user ? gate("create_status", () => setComposerOpen(true)) : navigate({ to: "/auth", search: { mode: "signup" } }))}
+              onClick={() => gate("create_status", () => setComposerOpen(true))}
               className="shrink-0 flex flex-col items-center gap-1 w-16 snap-start"
               title="Criar story"
             >
@@ -458,13 +448,6 @@ function HomeFeed() {
 
         {/* SIDE RAIL — desktop only */}
         <aside className="hidden lg:block space-y-4 sticky top-[64px] self-start">
-          {!user && (
-            <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-4 text-center">
-              <p className="text-sm font-semibold mb-2">Entre pra curtir, comentar e seguir</p>
-              <Button size="sm" className="w-full" onClick={() => navigate({ to: "/auth", search: { mode: "signup" } })}>Criar conta grátis</Button>
-            </div>
-          )}
-
           <SideCard title="Pessoas pra conhecer" icon={<Users className="size-4 text-primary" />} viewAll={() => navigate({ to: "/descobrir" })}>
             {profiles === null ? <SideLoader /> : profiles.slice(0, 5).map((p) => (
               <Link key={p.id} to="/u/$username" params={{ username: p.username }}
