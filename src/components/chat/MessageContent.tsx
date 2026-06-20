@@ -13,7 +13,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
-const URL_REGEX = /\b(https?:\/\/[^\s<>"']+)/gi;
+const URL_REGEX =
+  /(\bhttps?:\/\/[^\s<>"']+|\bwww\.[^\s<>"']+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}(?:\/[^\s<>"']*)?|\b[a-z0-9-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
+const TRAILING_PUNCT = /[)\].,;:!?]+$/;
+function normalizeUrl(u: string): string {
+  return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+}
 const CALL_REGEX = /^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):(\d+)\]\]$/;
 
 function formatDuration(sec: number): string {
@@ -61,7 +66,12 @@ function parse(content: string): Segment[] {
       if (m.index! > lastIndex) {
         segs.push({ type: "text", value: text.slice(lastIndex, m.index) });
       }
-      segs.push({ type: "url", value: m[0] });
+      let urlText = m[0];
+      const tr = urlText.match(TRAILING_PUNCT);
+      let trailing = "";
+      if (tr) { trailing = tr[0]; urlText = urlText.slice(0, -trailing.length); }
+      segs.push({ type: "url", value: urlText });
+      if (trailing) segs.push({ type: "text", value: trailing });
       lastIndex = m.index! + m[0].length;
     }
     if (lastIndex < text.length) {
@@ -75,7 +85,8 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
   const { t } = useTranslation();
   const callMatch = content.trim().match(CALL_REGEX);
   const segments = useMemo(() => (callMatch ? [] : parse(content)), [content, callMatch]);
-  const firstUrl = segments.find((s) => s.type === "url")?.value;
+  const firstUrlRaw = segments.find((s) => s.type === "url")?.value;
+  const firstUrl = firstUrlRaw ? normalizeUrl(firstUrlRaw) : undefined;
 
   if (callMatch) {
     const [, kind, outcome, durStr] = callMatch;
@@ -134,7 +145,7 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
             return (
               <a
                 key={i}
-                href={s.value}
+                href={normalizeUrl(s.value)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`underline break-all ${

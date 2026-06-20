@@ -16,6 +16,7 @@ import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
 import { formatTime } from "@/lib/format-time";
+import { linkify } from "@/lib/linkify";
 
 export interface PostItem {
   post_id: string;
@@ -223,7 +224,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       {/* Body */}
       {post.kind === "text" && (
         <div className="px-4 py-8 text-center" style={{ background: post.background ?? "linear-gradient(135deg,#6366f1,#ec4899)", color: "white" }}>
-          <p className="text-xl font-semibold whitespace-pre-wrap">{post.content}</p>
+          <p className="text-xl font-semibold whitespace-pre-wrap">{linkify(post.content, "underline break-all")}</p>
         </div>
       )}
       {isMedia && post.kind === "image" && (
@@ -263,9 +264,9 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
       {/* Caption */}
       {post.caption && (
-        <p className="px-4 pb-3 text-sm">
+        <p className="px-4 pb-3 text-sm whitespace-pre-wrap break-words">
           <span className="font-semibold mr-2">@{post.username}</span>
-          {post.caption}
+          {linkify(post.caption)}
         </p>
       )}
 
