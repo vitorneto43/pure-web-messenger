@@ -54,7 +54,20 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
 
   const grouped = useMemo(() => {
     const roots = items.filter(c => !c.parent_id);
-    return roots.map(r => ({ root: r, replies: items.filter(c => c.parent_id === r.id) }));
+    const byId = new Map(items.map(c => [c.id, c]));
+    const collect = (rootId: string): CommentRow[] => {
+      const direct = items.filter(c => c.parent_id === rootId);
+      const all: CommentRow[] = [];
+      for (const d of direct) { all.push(d); all.push(...collect(d.id)); }
+      return all.sort((a, b) => a.created_at.localeCompare(b.created_at));
+    };
+    return roots.map(r => ({
+      root: r,
+      replies: collect(r.id).map(rep => ({
+        row: rep,
+        replyToUsername: rep.parent_id && rep.parent_id !== r.id ? byId.get(rep.parent_id)?.username ?? null : null,
+      })),
+    }));
   }, [items]);
 
   async function send() {
@@ -108,8 +121,9 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
             <CommentBlock key={root.id} c={root} onReply={() => setReplyTo(root)} onChat={() => chatWith(root.user_id)} onReact={() => react(root)}>
               {replies.length > 0 && (
                 <div className="ml-10 mt-2 space-y-3 border-l border-border pl-3">
-                  {replies.map(r => (
-                    <CommentBlock key={r.id} c={r} compact onChat={() => chatWith(r.user_id)} onReact={() => react(r)} />
+                  {replies.map(({ row, replyToUsername }) => (
+                    <CommentBlock key={row.id} c={row} compact replyToUsername={replyToUsername}
+                      onReply={() => setReplyTo(row)} onChat={() => chatWith(row.user_id)} onReact={() => react(row)} />
                   ))}
                 </div>
               )}
@@ -136,8 +150,8 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
   );
 }
 
-function CommentBlock({ c, onReply, onChat, onReact, compact, children }: {
-  c: CommentRow; onReply?: () => void; onChat: () => void; onReact: () => void; compact?: boolean; children?: React.ReactNode;
+function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, children }: {
+  c: CommentRow; onReply?: () => void; onChat: () => void; onReact: () => void; compact?: boolean; replyToUsername?: string | null; children?: React.ReactNode;
 }) {
   return (
     <div>
@@ -152,7 +166,10 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, children }: {
               <span className="font-semibold text-xs">{c.display_name}</span>
               <span className="text-[10px] text-muted-foreground">@{c.username}</span>
             </div>
-            <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {replyToUsername && <span className="text-primary font-medium mr-1">@{replyToUsername}</span>}
+              {c.content}
+            </p>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
             <span>{formatTime(c.created_at)}</span>
