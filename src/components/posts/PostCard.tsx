@@ -264,9 +264,9 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
       {/* Caption */}
       {post.caption && (
-        <p className="px-4 pb-3 text-sm">
+        <p className="px-4 pb-3 text-sm whitespace-pre-wrap break-words">
           <span className="font-semibold mr-2">@{post.username}</span>
-          {post.caption}
+          {linkify(post.caption)}
         </p>
       )}
 
