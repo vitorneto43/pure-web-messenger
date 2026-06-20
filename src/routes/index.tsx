@@ -6,7 +6,14 @@ import {
   Loader2, MessageCircle, Users, Globe, Sparkles, ArrowRight,
   Radio, Eye, Coins, Monitor, Plus, Search, LogIn, Download,
   Newspaper, BookOpen, CircleHelp, Settings, Bell,
+  User as UserIcon, Rocket, Hash, CalendarClock, Video,
+  Shield, FileText, Lock, Info, LogOut, Mail,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
