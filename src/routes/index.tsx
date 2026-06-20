@@ -319,6 +319,48 @@ function LandingPage() {
           </section>
         )}
 
+        {/* POSTS preview — real content from feed */}
+        {posts !== null && posts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Flame className="size-5 text-orange-500" />
+                <h2 className="text-lg font-bold">Posts em alta</h2>
+              </div>
+              <Link to="/posts" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver feed <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {posts.slice(0, 6).map((p) => (
+                <Link key={p.post_id} to="/posts"
+                  className="group rounded-xl overflow-hidden border border-border bg-card hover:bg-accent/30 transition flex flex-col">
+                  {p.media_url || p.thumbnail_url ? (
+                    <div className="relative aspect-square bg-muted overflow-hidden">
+                      <img src={p.thumbnail_url || p.media_url || ""} alt={p.content ?? ""}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
+                    </div>
+                  ) : (
+                    <div className="aspect-square p-3 grid place-items-center bg-gradient-to-br from-primary/10 to-accent/10">
+                      <p className="text-xs text-foreground line-clamp-6 text-center">{p.content ?? ""}</p>
+                    </div>
+                  )}
+                  <div className="p-2 flex items-center gap-2">
+                    <Avatar className="size-6">
+                      <AvatarImage src={p.avatar_url ?? undefined} />
+                      <AvatarFallback className="text-[9px]">{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[11px] font-semibold truncate flex-1">{p.display_name ?? p.username}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <Heart className="size-3" /> {p.reactions_count}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* PESSOAS */}
         <section>
           <div className="flex items-center justify-between mb-4">
