@@ -5,7 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import {
   Loader2, MessageCircle, Users, Globe, Sparkles, ArrowRight,
   Radio, Eye, Coins, Monitor, Plus, Search, LogIn, Download,
-  Newspaper, BookOpen, CircleHelp, Settings,
+  Newspaper, BookOpen, CircleHelp, Settings, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,7 +125,7 @@ function HomeFeed() {
         <div className="mx-auto max-w-6xl flex items-center gap-2 px-3 sm:px-4 min-h-16 py-2">
           <Link to="/" className="flex items-center gap-2 min-w-0 shrink-0">
             <img src={wavechatLogo.url} alt="WaveChat" className="size-11 rounded-full" />
-            <span className="min-w-0 hidden xs:block sm:block">
+            <span className="min-w-0 hidden min-[360px]:block">
               <span className="block truncate font-bold text-base leading-tight">WaveChat</span>
               <span className="block max-w-28 sm:max-w-44 truncate text-xs text-muted-foreground">
                 {user?.email ?? "webconnectchat.com"}
@@ -161,7 +161,7 @@ function HomeFeed() {
               <NotificationsBell />
             ) : (
               <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/auth" })} title="Notificações">
-                <MessageCircle className="size-5" />
+                <Bell className="size-5" />
               </Button>
             )}
             <Button size="icon" variant="ghost" className="rounded-full" onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))} title="Configurações">
