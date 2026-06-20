@@ -604,6 +604,8 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
             )}
           </>
         )}
+        </>
+        )}
       </div>
 
 
