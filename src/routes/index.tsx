@@ -159,8 +159,8 @@ export function HomeFeed() {
             <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/live" })} title="Lives">
               <Radio className="size-5 text-destructive" />
             </Button>
-            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/posts" })} title="Posts">
-              <Newspaper className="size-5" />
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => (user ? setChatSheetOpen(true) : gate("message", () => setChatSheetOpen(true)))} title="Chat">
+              <MessageCircle className="size-5" />
             </Button>
             <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/terms" })} title="Termos de uso">
               <BookOpen className="size-5" />
