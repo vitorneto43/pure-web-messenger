@@ -25,7 +25,7 @@ export const Route = createFileRoute("/p/$postId")({
   loader: async ({ params }) => {
     const { data } = await (supabase as any).rpc("get_public_post", { _post_id: params.postId });
     const row = (data ?? [])[0];
-    if (!row) return { post: null as PostItem | null };
+    if (!row || isPromoPost(row.id ?? row.post_id)) return { post: null as PostItem | null };
     return { post: { ...row, hashtags: row.hashtags ?? [], is_boosted: false, viewer_already_liked: false } as PostItem };
   },
   head: ({ params, loaderData }) => {
