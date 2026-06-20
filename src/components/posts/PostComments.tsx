@@ -150,8 +150,8 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
   );
 }
 
-function CommentBlock({ c, onReply, onChat, onReact, compact, children }: {
-  c: CommentRow; onReply?: () => void; onChat: () => void; onReact: () => void; compact?: boolean; children?: React.ReactNode;
+function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, children }: {
+  c: CommentRow; onReply?: () => void; onChat: () => void; onReact: () => void; compact?: boolean; replyToUsername?: string | null; children?: React.ReactNode;
 }) {
   return (
     <div>
@@ -166,7 +166,10 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, children }: {
               <span className="font-semibold text-xs">{c.display_name}</span>
               <span className="text-[10px] text-muted-foreground">@{c.username}</span>
             </div>
-            <p className="text-sm whitespace-pre-wrap break-words">{c.content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {replyToUsername && <span className="text-primary font-medium mr-1">@{replyToUsername}</span>}
+              {c.content}
+            </p>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
             <span>{formatTime(c.created_at)}</span>
