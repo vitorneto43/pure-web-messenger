@@ -514,6 +514,11 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
         <ProfileCompletionBanner />
         
 
+        {view === "posts" ? (
+          <PostsFeed />
+        ) : (
+        
+
         
         {loading ? (
           <div className="grid place-items-center py-10">
