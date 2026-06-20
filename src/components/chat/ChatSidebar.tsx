@@ -460,7 +460,7 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
             <Link to="/live"><Radio className="size-4 mr-1.5 text-red-500" />Lives</Link>
           </Button>
           <Button asChild size="sm" variant="secondary" className="rounded-full">
-            <Link to="/posts"><Newspaper className="size-4 mr-1.5" />Posts</Link>
+            <Link to="/"><Newspaper className="size-4 mr-1.5" />Posts</Link>
           </Button>
           <Button
             onClick={() => gate("join_group", () => setNewGroupOpen(true))}
