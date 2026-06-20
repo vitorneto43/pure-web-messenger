@@ -40,7 +40,7 @@ function NewLive() {
 
   async function start() {
     if (!userId) {
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { mode: "login" } });
       return;
     }
     const policy = scanLocally(title, "live");
