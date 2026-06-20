@@ -13,7 +13,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
-const URL_REGEX = /\b(https?:\/\/[^\s<>"']+)/gi;
+const URL_REGEX =
+  /(\bhttps?:\/\/[^\s<>"']+|\bwww\.[^\s<>"']+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)+\.[a-z]{2,}(?:\/[^\s<>"']*)?|\b[a-z0-9-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/gi;
+const TRAILING_PUNCT = /[)\].,;:!?]+$/;
+function normalizeUrl(u: string): string {
+  return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+}
 const CALL_REGEX = /^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):(\d+)\]\]$/;
 
 function formatDuration(sec: number): string {
