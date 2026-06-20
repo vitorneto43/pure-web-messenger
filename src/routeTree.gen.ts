@@ -18,6 +18,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostsRouteImport } from './routes/posts'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
+import { Route as DescobrirStatusRouteImport } from './routes/descobrir-status'
 import { Route as DescobrirRouteImport } from './routes/descobrir'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -38,7 +39,6 @@ import { Route as AuthenticatedScheduledRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
-import { Route as AuthenticatedDescobrirStatusRouteImport } from './routes/_authenticated/descobrir-status'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
@@ -99,6 +99,11 @@ const GuideRoute = GuideRouteImport.update({
 const DiretrizesRoute = DiretrizesRouteImport.update({
   id: '/diretrizes',
   path: '/diretrizes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DescobrirStatusRoute = DescobrirStatusRouteImport.update({
+  id: '/descobrir-status',
+  path: '/descobrir-status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DescobrirRoute = DescobrirRouteImport.update({
@@ -200,12 +205,6 @@ const AuthenticatedHashtagsRoute = AuthenticatedHashtagsRouteImport.update({
   path: '/hashtags',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedDescobrirStatusRoute =
-  AuthenticatedDescobrirStatusRouteImport.update({
-    id: '/descobrir-status',
-    path: '/descobrir-status',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -304,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
@@ -314,7 +314,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
-  '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
@@ -351,6 +350,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
@@ -361,7 +361,6 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
-  '/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
@@ -400,6 +399,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
+  '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
@@ -410,7 +410,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
-  '/_authenticated/descobrir-status': typeof AuthenticatedDescobrirStatusRoute
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
@@ -449,6 +448,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/descobrir-status'
     | '/diretrizes'
     | '/guide'
     | '/posts'
@@ -459,7 +459,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/chat'
-    | '/descobrir-status'
     | '/hashtags'
     | '/profile'
     | '/recordings'
@@ -496,6 +495,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/descobrir-status'
     | '/diretrizes'
     | '/guide'
     | '/posts'
@@ -506,7 +506,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/chat'
-    | '/descobrir-status'
     | '/hashtags'
     | '/profile'
     | '/recordings'
@@ -544,6 +543,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/descobrir'
+    | '/descobrir-status'
     | '/diretrizes'
     | '/guide'
     | '/posts'
@@ -554,7 +554,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/unsubscribe'
     | '/_authenticated/chat'
-    | '/_authenticated/descobrir-status'
     | '/_authenticated/hashtags'
     | '/_authenticated/profile'
     | '/_authenticated/recordings'
@@ -593,6 +592,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DescobrirRoute: typeof DescobrirRoute
+  DescobrirStatusRoute: typeof DescobrirStatusRoute
   DiretrizesRoute: typeof DiretrizesRoute
   GuideRoute: typeof GuideRoute
   PostsRoute: typeof PostsRoute
@@ -689,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/diretrizes'
       fullPath: '/diretrizes'
       preLoaderRoute: typeof DiretrizesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/descobrir-status': {
+      id: '/descobrir-status'
+      path: '/descobrir-status'
+      fullPath: '/descobrir-status'
+      preLoaderRoute: typeof DescobrirStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/descobrir': {
@@ -831,13 +838,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHashtagsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/descobrir-status': {
-      id: '/_authenticated/descobrir-status'
-      path: '/descobrir-status'
-      fullPath: '/descobrir-status'
-      preLoaderRoute: typeof AuthenticatedDescobrirStatusRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/chat': {
       id: '/_authenticated/chat'
       path: '/chat'
@@ -966,7 +966,6 @@ const AuthenticatedChatRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
-  AuthenticatedDescobrirStatusRoute: typeof AuthenticatedDescobrirStatusRoute
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
@@ -976,7 +975,6 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
-  AuthenticatedDescobrirStatusRoute: AuthenticatedDescobrirStatusRoute,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
@@ -996,6 +994,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DescobrirRoute: DescobrirRoute,
+  DescobrirStatusRoute: DescobrirStatusRoute,
   DiretrizesRoute: DiretrizesRoute,
   GuideRoute: GuideRoute,
   PostsRoute: PostsRoute,
