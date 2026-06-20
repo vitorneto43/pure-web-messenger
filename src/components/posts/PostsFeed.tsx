@@ -47,6 +47,16 @@ export function PostsFeed() {
   return (
     <div className="max-w-xl mx-auto">
       {GateDialog}
+      <div className="sticky top-0 z-10 bg-sidebar/95 backdrop-blur-sm border-b border-border px-3 py-2 flex items-center justify-between">
+        <span className="text-sm font-semibold">Posts</span>
+        <Button
+          size="sm"
+          className="rounded-full"
+          onClick={() => gate("create_status", () => setComposerOpen(true))}
+        >
+          <PlusCircle className="size-4 mr-1.5" /> Novo post
+        </Button>
+      </div>
       {query.isLoading && (
         <div className="grid place-items-center py-20"><Loader2 className="size-6 animate-spin opacity-60" /></div>
       )}
