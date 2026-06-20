@@ -138,7 +138,7 @@ function HomeFeed() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => (user ? navigate({ to: "/chat" }) : gate("send_message", () => navigate({ to: "/chat" })))}
+              onClick={() => (user ? navigate({ to: "/chat" }) : gate("message", () => navigate({ to: "/chat" })))}
               className="gap-1.5"
               title="Abrir Chat"
             >
