@@ -89,11 +89,7 @@ function LandingPage() {
   const [posts, setPosts] = useState<PublicPost[] | null>(null);
 
   useEffect(() => {
-    if (user) {
-      navigate({ to: "/chat" });
-      return;
-    }
-    void track("landing_page_view", { surface: isNative ? "native" : "web" });
+    void track("landing_page_view", { surface: isNative ? "native" : "web", authed: !!user });
     getRecommendedProfilesPublic({ data: { limit: 12 } })
       .then((r) => setProfiles(r.profiles))
       .catch(() => setProfiles([]));
@@ -108,11 +104,12 @@ function LandingPage() {
       (supabase as any).rpc("discover_public_statuses", { _limit: 16, _offset: 0 })
         .then(({ data }: any) => setStatuses((data ?? []) as PublicStatus[]))
         .catch(() => setStatuses([]));
-      (supabase as any).rpc("discover_public_posts", { _limit: 6, _offset: 0 })
+      (supabase as any).rpc("discover_public_posts", { _limit: 12, _offset: 0 })
         .then(({ data }: any) => setPosts((data ?? []) as PublicPost[]))
         .catch(() => setPosts([]));
     }
-  }, [user, navigate, isNative]);
+  }, [user, isNative]);
+
 
   const handleGoogle = async () => {
     setGoogleBusy(true);
@@ -149,11 +146,20 @@ function LandingPage() {
             <span className="font-bold text-lg">WaveChat</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
-            <Button size="sm" onClick={handleGoogle} disabled={googleBusy}>
-              {googleBusy ? <Loader2 className="size-4 animate-spin" /> : "Entrar com Google"}
-            </Button>
+            {user ? (
+              <Button size="sm" onClick={() => navigate({ to: "/chat" })} className="gap-1.5">
+                <MessageCircle className="size-4" /> Abrir Chat
+              </Button>
+            ) : (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+                <Button size="sm" onClick={handleGoogle} disabled={googleBusy}>
+                  {googleBusy ? <Loader2 className="size-4 animate-spin" /> : "Entrar com Google"}
+                </Button>
+              </>
+            )}
           </div>
+
         </div>
       </header>
 
@@ -274,7 +280,53 @@ function LandingPage() {
         )}
 
 
-        {/* LIVES — first because most dynamic */}
+        {/* POSTS — vitrine principal da rede */}
+        {posts !== null && posts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Flame className="size-5 text-orange-500" />
+                <h2 className="text-lg font-bold">Posts em alta</h2>
+              </div>
+              <Link to="/posts" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver feed <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {posts.slice(0, 12).map((p) => (
+                <Link key={p.post_id} to="/p/$postId" params={{ postId: p.post_id }}
+                  className="group rounded-xl overflow-hidden border border-border bg-card hover:bg-accent/30 transition flex flex-col">
+                  {p.media_url || p.thumbnail_url ? (
+                    <div className="relative aspect-square bg-muted overflow-hidden">
+                      <img src={p.thumbnail_url || p.media_url || ""} alt={p.content ?? ""}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
+                    </div>
+                  ) : (
+                    <div className="aspect-square p-3 grid place-items-center bg-gradient-to-br from-primary/10 to-accent/10">
+                      <p className="text-xs text-foreground line-clamp-6 text-center">{p.content ?? ""}</p>
+                    </div>
+                  )}
+                  <div className="p-2 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="size-6">
+                        <AvatarImage src={p.avatar_url ?? undefined} />
+                        <AvatarFallback className="text-[9px]">{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-[11px] font-semibold truncate flex-1">{p.display_name ?? p.username}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-0.5"><Heart className="size-3" /> {p.reactions_count}</span>
+                      <span className="flex items-center gap-0.5"><MessageCircle className="size-3" /> {p.comments_count}</span>
+                      <span className="ml-auto">{new Date(p.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* LIVES — acontecendo agora */}
         {(loadingLives || lives.length > 0) && (
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -320,82 +372,6 @@ function LandingPage() {
           </section>
         )}
 
-        {/* POSTS preview — real content from feed */}
-        {posts !== null && posts.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="size-5 text-orange-500" />
-                <h2 className="text-lg font-bold">Posts em alta</h2>
-              </div>
-              <Link to="/posts" className="text-sm text-primary hover:underline flex items-center gap-1">
-                Ver feed <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {posts.slice(0, 6).map((p) => (
-                <Link key={p.post_id} to="/p/$postId" params={{ postId: p.post_id }}
-                  className="group rounded-xl overflow-hidden border border-border bg-card hover:bg-accent/30 transition flex flex-col">
-                  {p.media_url || p.thumbnail_url ? (
-                    <div className="relative aspect-square bg-muted overflow-hidden">
-                      <img src={p.thumbnail_url || p.media_url || ""} alt={p.content ?? ""}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition" />
-                    </div>
-                  ) : (
-                    <div className="aspect-square p-3 grid place-items-center bg-gradient-to-br from-primary/10 to-accent/10">
-                      <p className="text-xs text-foreground line-clamp-6 text-center">{p.content ?? ""}</p>
-                    </div>
-                  )}
-                  <div className="p-2 flex items-center gap-2">
-                    <Avatar className="size-6">
-                      <AvatarImage src={p.avatar_url ?? undefined} />
-                      <AvatarFallback className="text-[9px]">{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-[11px] font-semibold truncate flex-1">{p.display_name ?? p.username}</span>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                      <Heart className="size-3" /> {p.reactions_count}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* PESSOAS */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Users className="size-5 text-primary" />
-              <h2 className="text-lg font-bold">Pessoas pra conhecer</h2>
-            </div>
-            <button onClick={() => navigate({ to: "/descobrir" })} className="text-sm text-primary hover:underline flex items-center gap-1">
-              Ver todas <ArrowRight className="size-3.5" />
-            </button>
-          </div>
-          {profiles === null ? (
-            <div className="flex justify-center py-8"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
-          ) : profiles.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Ninguém por aqui ainda. Seja o primeiro!</p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {profiles.map((p) => (
-                <Link key={p.id} to="/u/$username" params={{ username: p.username }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition">
-                  <Avatar className="size-14">
-                    <AvatarImage src={p.avatar_url ?? undefined} />
-                    <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center min-w-0 w-full">
-                    <p className="text-xs font-semibold truncate">{p.display_name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">@{p.username}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* COMUNIDADES */}
         <section>
           <div className="flex items-center justify-between mb-4">
@@ -434,6 +410,50 @@ function LandingPage() {
           )}
         </section>
 
+        {/* PESSOAS */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="size-5 text-primary" />
+              <h2 className="text-lg font-bold">Pessoas pra conhecer</h2>
+            </div>
+            <button onClick={() => navigate({ to: "/descobrir" })} className="text-sm text-primary hover:underline flex items-center gap-1">
+              Ver todas <ArrowRight className="size-3.5" />
+            </button>
+          </div>
+          {profiles === null ? (
+            <div className="flex justify-center py-8"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+          ) : profiles.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Ninguém por aqui ainda. Seja o primeiro!</p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {profiles.map((p) => (
+                <Link key={p.id} to="/u/$username" params={{ username: p.username }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition">
+                  <Avatar className="size-14">
+                    <AvatarImage src={p.avatar_url ?? undefined} />
+                    <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="text-center min-w-0 w-full">
+                    <p className="text-xs font-semibold truncate">{p.display_name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">@{p.username}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* FEATURES */}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <FeatureCard icon={<MessageCircle className="size-5 text-primary" />} title="Chat real" desc="Mensagens em tempo real, sem espera." />
+          <FeatureCard icon={<Phone className="size-5 text-primary" />} title="Chamadas HD" desc="Áudio e vídeo direto no navegador." />
+          <FeatureCard icon={<Sparkles className="size-5 text-primary" />} title="Stories" desc="Compartilhe momentos do seu dia." />
+          <FeatureCard icon={<Shield className="size-5 text-primary" />} title="Privacidade" desc="Você controla quem vê o quê." />
+        </section>
+
+
+
         {/* FEATURES */}
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <FeatureCard icon={<MessageCircle className="size-5 text-primary" />} title="Chat real" desc="Mensagens em tempo real, sem espera." />
@@ -458,18 +478,34 @@ function LandingPage() {
 
         {/* CTA final */}
         <section className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-6 text-center">
-          <h3 className="text-xl font-bold mb-1">Pronto pra entrar na conversa?</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {stats ? `Junte-se a ${stats.total_members.toLocaleString("pt-BR")} brasileiros já na WaveChat.` : "Crie sua conta gratuita em segundos."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
-            <Button onClick={handleGoogle} disabled={googleBusy} className="gap-2">
-              {googleBusy ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
-              Continuar com Google
-            </Button>
-            <Button variant="outline" onClick={() => navigate({ to: "/auth" })}>Outras formas</Button>
-          </div>
+          {user ? (
+            <>
+              <h3 className="text-xl font-bold mb-1">Continue a conversa</h3>
+              <p className="text-sm text-muted-foreground mb-4">Abra seu chat e converse com quem está online agora.</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
+                <Button onClick={() => navigate({ to: "/chat" })} className="gap-2">
+                  <MessageCircle className="size-4" /> Abrir Chat
+                </Button>
+                <Button variant="outline" onClick={() => navigate({ to: "/posts" })}>Ver feed completo</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold mb-1">Pronto pra entrar na conversa?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {stats ? `Junte-se a ${stats.total_members.toLocaleString("pt-BR")} brasileiros já na WaveChat.` : "Crie sua conta gratuita em segundos."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
+                <Button onClick={handleGoogle} disabled={googleBusy} className="gap-2">
+                  {googleBusy ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+                  Continuar com Google
+                </Button>
+                <Button variant="outline" onClick={() => navigate({ to: "/auth" })}>Outras formas</Button>
+              </div>
+            </>
+          )}
         </section>
+
       </main>
 
       <footer className="border-t border-border mt-10 py-6 text-center text-xs text-muted-foreground">
