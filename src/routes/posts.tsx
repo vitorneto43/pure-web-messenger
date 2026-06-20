@@ -42,7 +42,7 @@ function PostsPage() {
     getNextPageParam: (last, all) => (last.length < PAGE_SIZE ? undefined : all.length * PAGE_SIZE),
   });
 
-  const items = useMemo(() => query.data?.pages.flat() ?? [], [query.data]);
+  const items = useMemo(() => query.data?.pages.flat().filter((p) => !isPromoPost(p.post_id)) ?? [], [query.data]);
 
   function patch(postId: string, p: Partial<PostItem>) {
     qc.setQueryData(["posts-feed", user?.id ?? "guest"], (old: any) => {
