@@ -12,7 +12,7 @@ import { UserBadges } from "@/components/badges/UserBadges";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/descobrir-status")({
+export const Route = createFileRoute("/descobrir-status")({
   component: DiscoverStatusPage,
   head: () => ({
     meta: [

@@ -83,20 +83,35 @@ function DiscoverPage() {
               <h1 className="text-lg font-bold">Explore sem cadastro</h1>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Veja como o WaveChat funciona antes de criar sua conta. Quando quiser interagir, é grátis.
+              Veja tudo o que está acontecendo no WaveChat. Conta só quando quiser interagir.
             </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+              <Link to="/posts" className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-accent/40 transition text-sm font-semibold">
+                🔥 Posts
+              </Link>
+              <Link to="/descobrir-status" className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-accent/40 transition text-sm font-semibold">
+                ✨ Status
+              </Link>
+              <Link to="/live" className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-accent/40 transition text-sm font-semibold">
+                🔴 Lives
+              </Link>
+              <a href="#comunidades" className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-accent/40 transition text-sm font-semibold">
+                🌐 Grupos
+              </a>
+            </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
+              <FeatureItem icon="check" label="Ver posts e status" />
+              <FeatureItem icon="check" label="Assistir lives" />
               <FeatureItem icon="check" label="Ver perfis públicos" />
-              <FeatureItem icon="check" label="Ver pessoas recomendadas" />
-              <FeatureItem icon="check" label="Conhecer o app" />
-              <FeatureItem icon="check" label="Ver funcionalidades" />
+              <FeatureItem icon="check" label="Conhecer comunidades" />
               <FeatureItem icon="lock" label="Enviar mensagens" />
+              <FeatureItem icon="lock" label="Curtir e comentar" />
               <FeatureItem icon="lock" label="Seguir pessoas" />
-              <FeatureItem icon="lock" label="Criar status" />
               <FeatureItem icon="lock" label="Fazer chamadas" />
             </div>
           </section>
         )}
+
 
         <section>
           <div className="flex items-center gap-2 mb-3">
@@ -132,8 +147,9 @@ function DiscoverPage() {
           )}
         </section>
 
-        <section>
+        <section id="comunidades">
           <div className="flex items-center justify-between mb-3">
+
             <div className="flex items-center gap-2">
               <Globe className="size-5 text-primary" />
               <h2 className="text-base font-bold">Comunidades</h2>
