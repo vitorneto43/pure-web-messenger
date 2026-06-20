@@ -6,7 +6,14 @@ import {
   Loader2, MessageCircle, Users, Globe, Sparkles, ArrowRight,
   Radio, Eye, Coins, Monitor, Plus, Search, LogIn, Download,
   Newspaper, BookOpen, CircleHelp, Settings, Bell,
+  User as UserIcon, Rocket, Hash, CalendarClock, Video,
+  Shield, FileText, Lock, Info, LogOut, Mail,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -164,9 +171,91 @@ function HomeFeed() {
                 <Bell className="size-5" />
               </Button>
             )}
-            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))} title="Configurações">
-              <Settings className="size-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost" className="rounded-full" title="Configurações e mais">
+                  <Settings className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                {user ? (
+                  <>
+                    <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                      <UserIcon className="size-4 mr-2" /> Meu perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/chat" })}>
+                      <MessageCircle className="size-4 mr-2" /> Conversas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/scheduled" })}>
+                      <CalendarClock className="size-4 mr-2" /> Postagens agendadas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/recordings" })}>
+                      <Video className="size-4 mr-2" /> Gravações de chamadas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/hashtags" })}>
+                      <Hash className="size-4 mr-2" /> Hashtags
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Impulsionamentos</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/posts" }); toast.message("Escolha um post para impulsionar"); }}>
+                      <Rocket className="size-4 mr-2 text-primary" /> Impulsionar um post
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/descobrir-status" }); toast.message("Abra seu status para impulsionar"); }}>
+                      <Rocket className="size-4 mr-2 text-pink-500" /> Impulsionar um story
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigate({ to: "/live/new" }); }}>
+                      <Radio className="size-4 mr-2 text-destructive" /> Iniciar uma live
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem onClick={() => navigate({ to: "/auth" })}>
+                      <LogIn className="size-4 mr-2" /> Entrar / Criar conta
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Institucional</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate({ to: "/about" })}>
+                  <Info className="size-4 mr-2" /> Sobre o WaveChat
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/diretrizes" })}>
+                  <Shield className="size-4 mr-2" /> Diretrizes da comunidade
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/terms" })}>
+                  <FileText className="size-4 mr-2" /> Termos de uso
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/privacy" })}>
+                  <Lock className="size-4 mr-2" /> Política de privacidade
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/guide" })}>
+                  <BookOpen className="size-4 mr-2" /> Guia de uso
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/support" })}>
+                  <CircleHelp className="size-4 mr-2" /> Ajuda e suporte
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/contact" })}>
+                  <Mail className="size-4 mr-2" /> Fale conosco
+                </DropdownMenuItem>
+                {user && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        toast.success("Você saiu da conta");
+                        navigate({ to: "/auth" });
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="size-4 mr-2" /> Sair
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
