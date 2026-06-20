@@ -74,10 +74,6 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const [author, setAuthor] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [boostOpen, setBoostOpen] = useState(false);
   const [viewerCount, setViewerCount] = useState<number | null>(null);
-  const [adOpen, setAdOpen] = useState(false);
-  const [adCountdown, setAdCountdown] = useState(0);
-  const viewedRef = useRef(0);
-  const lastAdStatusRef = useRef<string | null>(null);
   const startedRef = useRef<number>(Date.now());
   const currentGroup = groups[groupIndex];
   const statuses = currentGroup?.statuses ?? [];
@@ -162,26 +158,6 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     };
   }, [current?.id, currentGroup?.user, user?.id]);
 
-  // intercalate an interstitial ad every 4 statuses viewed
-  useEffect(() => {
-    if (!current) return;
-    if (lastAdStatusRef.current === current.id) return;
-    lastAdStatusRef.current = current.id;
-    viewedRef.current += 1;
-    if (viewedRef.current > 0 && viewedRef.current % 4 === 0) {
-      setAdOpen(true);
-      setAdCountdown(5);
-    }
-  }, [current?.id]);
-
-  // ad countdown timer
-  useEffect(() => {
-    if (!adOpen) return;
-    const id = setInterval(() => {
-      setAdCountdown((c) => (c > 0 ? c - 1 : 0));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [adOpen]);
 
   // progress timer (skip for video which we let play out)
   useEffect(() => {
@@ -192,7 +168,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     startedRef.current = Date.now();
     setProgress(0);
     const id = setInterval(() => {
-      if (paused || boostOpen || adOpen) {
+      if (paused || boostOpen) {
         startedRef.current = Date.now() - progress * DURATION_MS;
         return;
       }
@@ -206,7 +182,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, index, paused, boostOpen, adOpen]);
+  }, [current?.id, index, paused, boostOpen]);
 
   function next() {
     if (index < statuses.length - 1) {
@@ -401,7 +377,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             startSec={(current as any).music_start_sec ?? 0}
             durationSec={(current as any).music_duration_sec ?? 15}
             volume={Number((current as any).music_volume ?? 0.8)}
-            paused={paused || adOpen || boostOpen}
+            paused={paused || boostOpen}
           />
         )}
         {current.kind === "text" && (
@@ -585,35 +561,6 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         )}
       </div>
 
-      {adOpen && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/95 grid place-items-center px-4"
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <div className="absolute top-4 left-0 right-0 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 bg-pink-500/90 text-white text-[10px] font-bold uppercase tracking-[0.18em] px-3 py-1.5 rounded-full shadow-lg">
-              <span className="size-1.5 rounded-full bg-white animate-pulse" />
-              {t("status.sponsored") || "Patrocinado"}
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-[11px] text-white/50 uppercase tracking-wider">
-              {t("status.adByPartner") || "Anúncio de parceiro"}
-            </div>
-            
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={adCountdown > 0}
-              onClick={() => setAdOpen(false)}
-              className="rounded-full min-w-[120px]"
-            >
-              {adCountdown > 0 ? `${t("status.skipIn") || "Pular em"} ${adCountdown}s` : t("status.skip") || "Pular anúncio"}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {isOwner && (
         <BoostDialog
