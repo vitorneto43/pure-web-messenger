@@ -478,18 +478,34 @@ function LandingPage() {
 
         {/* CTA final */}
         <section className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-6 text-center">
-          <h3 className="text-xl font-bold mb-1">Pronto pra entrar na conversa?</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {stats ? `Junte-se a ${stats.total_members.toLocaleString("pt-BR")} brasileiros já na WaveChat.` : "Crie sua conta gratuita em segundos."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
-            <Button onClick={handleGoogle} disabled={googleBusy} className="gap-2">
-              {googleBusy ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
-              Continuar com Google
-            </Button>
-            <Button variant="outline" onClick={() => navigate({ to: "/auth" })}>Outras formas</Button>
-          </div>
+          {user ? (
+            <>
+              <h3 className="text-xl font-bold mb-1">Continue a conversa</h3>
+              <p className="text-sm text-muted-foreground mb-4">Abra seu chat e converse com quem está online agora.</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
+                <Button onClick={() => navigate({ to: "/chat" })} className="gap-2">
+                  <MessageCircle className="size-4" /> Abrir Chat
+                </Button>
+                <Button variant="outline" onClick={() => navigate({ to: "/posts" })}>Ver feed completo</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold mb-1">Pronto pra entrar na conversa?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {stats ? `Junte-se a ${stats.total_members.toLocaleString("pt-BR")} brasileiros já na WaveChat.` : "Crie sua conta gratuita em segundos."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-md mx-auto">
+                <Button onClick={handleGoogle} disabled={googleBusy} className="gap-2">
+                  {googleBusy ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+                  Continuar com Google
+                </Button>
+                <Button variant="outline" onClick={() => navigate({ to: "/auth" })}>Outras formas</Button>
+              </div>
+            </>
+          )}
         </section>
+
       </main>
 
       <footer className="border-t border-border mt-10 py-6 text-center text-xs text-muted-foreground">
