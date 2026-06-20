@@ -85,7 +85,8 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
   const { t } = useTranslation();
   const callMatch = content.trim().match(CALL_REGEX);
   const segments = useMemo(() => (callMatch ? [] : parse(content)), [content, callMatch]);
-  const firstUrl = segments.find((s) => s.type === "url")?.value;
+  const firstUrlRaw = segments.find((s) => s.type === "url")?.value;
+  const firstUrl = firstUrlRaw ? normalizeUrl(firstUrlRaw) : undefined;
 
   if (callMatch) {
     const [, kind, outcome, durStr] = callMatch;
