@@ -155,7 +155,7 @@ function DiscoverStatusPage() {
           <span className="font-bold">Descobrir status</span>
         </div>
         {user ? <div className="size-9" /> : (
-          <Button size="sm" onClick={() => navigate({ to: "/auth" })}>Entrar</Button>
+          <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>Entrar</Button>
         )}
       </header>
 
