@@ -510,6 +510,15 @@ export function HomeFeed() {
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => feed.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
+
+      <Sheet open={chatSheetOpen} onOpenChange={setChatSheetOpen}>
+        <SheetContent side="right" className="p-0 w-full sm:max-w-md flex flex-col bg-sidebar text-sidebar-foreground">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Conversas</SheetTitle>
+          </SheetHeader>
+          <ChatSidebar />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
