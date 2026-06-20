@@ -4,7 +4,8 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 import {
   Loader2, MessageCircle, Users, Globe, Sparkles, ArrowRight,
-  Radio, Eye, Coins, Monitor, Plus, Search, LogIn,
+  Radio, Eye, Coins, Monitor, Plus, Search, LogIn, Download,
+  Newspaper, BookOpen, CircleHelp, Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { NotificationsBell } from "@/components/chat/NotificationsBell";
 import { track } from "@/lib/track";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 
@@ -118,20 +120,63 @@ function HomeFeed() {
     <div className="min-h-screen bg-background">
       {GateDialog}
 
-      {/* HEADER — logo, search, chat button */}
+      {/* HEADER — atalhos superiores + busca */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border">
-        <div className="mx-auto max-w-6xl flex items-center gap-2 px-3 sm:px-4 h-14">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={wavechatLogo.url} alt="WaveChat" className="size-8 rounded-lg" />
-            <span className="font-bold text-lg hidden sm:inline">WaveChat</span>
+        <div className="mx-auto max-w-6xl flex items-center gap-2 px-3 sm:px-4 min-h-16 py-2">
+          <Link to="/" className="flex items-center gap-2 min-w-0 shrink-0">
+            <img src={wavechatLogo.url} alt="WaveChat" className="size-11 rounded-full" />
+            <span className="min-w-0 hidden xs:block sm:block">
+              <span className="block truncate font-bold text-base leading-tight">WaveChat</span>
+              <span className="block max-w-28 sm:max-w-44 truncate text-xs text-muted-foreground">
+                {user?.email ?? "webconnectchat.com"}
+              </span>
+            </span>
           </Link>
 
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => navigate({ to: "/about" })}
+            className="shrink-0 gap-1 rounded-full px-2.5 sm:px-3"
+            title="Baixar app"
+          >
+            <Download className="size-4" />
+            <span className="hidden min-[380px]:inline">Baixar app</span>
+          </Button>
+
+          <div className="ml-auto flex items-center gap-1 shrink-0">
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/live" })} title="Lives">
+              <Radio className="size-5 text-destructive" />
+            </Button>
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/posts" })} title="Posts">
+              <Newspaper className="size-5" />
+            </Button>
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/terms" })} title="Termos de uso">
+              <BookOpen className="size-5" />
+            </Button>
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/support" })} title="Ajuda e suporte">
+              <CircleHelp className="size-5" />
+            </Button>
+            {user ? (
+              <NotificationsBell />
+            ) : (
+              <Button size="icon" variant="ghost" className="rounded-full" onClick={() => navigate({ to: "/auth" })} title="Notificações">
+                <MessageCircle className="size-5" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="rounded-full" onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))} title="Configurações">
+              <Settings className="size-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-6xl flex items-center gap-2 px-3 sm:px-4 pb-2">
           <button
             onClick={() => navigate({ to: "/descobrir" })}
-            className="flex-1 max-w-md mx-auto flex items-center gap-2 px-3 h-9 rounded-full bg-muted/60 hover:bg-muted text-left text-sm text-muted-foreground"
+            className="flex-1 flex items-center gap-2 px-3 h-10 rounded-full bg-muted/60 hover:bg-muted text-left text-sm text-muted-foreground"
           >
             <Search className="size-4" />
-            Buscar pessoas, comunidades…
+            Buscar conversas ou pessoas…
           </button>
 
           <div className="flex items-center gap-1.5 shrink-0">
