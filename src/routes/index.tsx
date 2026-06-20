@@ -32,6 +32,7 @@ import { NotificationsBell } from "@/components/chat/NotificationsBell";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { track } from "@/lib/track";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { isPromoPost } from "@/lib/feed-filters";
 
 type PublicStatus = {
