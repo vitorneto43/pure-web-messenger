@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
@@ -361,9 +362,9 @@ export function ChatSidebar({ activeConversationId }: { activeConversationId?: s
       {GateDialog}
       <div className="px-2 py-3 flex items-center justify-between gap-1 border-b border-border">
         <div className="flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center shadow">
-            <span className="text-primary-foreground font-bold text-sm">W</span>
-          </div>
+          <Link to="/" className="size-9 rounded-full overflow-hidden shadow shrink-0">
+            <img src={wavechatLogo.url} alt="WaveChat" className="size-full object-cover" />
+          </Link>
           <div>
             <div className="flex items-center gap-1.5">
               <div className="font-semibold text-sm leading-tight">Wavechat</div>

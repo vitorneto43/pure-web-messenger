@@ -327,11 +327,34 @@ function HomeFeed() {
           </div>
         </nav>
 
-        {/* STORIES STRIP */}
-        {statuses !== null && statuses.length > 0 && (
-          <div className="mx-auto max-w-6xl border-t border-border/60">
-            <div className="flex gap-3 overflow-x-auto px-3 sm:px-4 py-3 snap-x">
-              {statuses.map((s) => (
+        {/* STORIES STRIP — sempre visível */}
+        <div className="mx-auto max-w-6xl border-t border-border/60">
+          <div className="flex gap-3 overflow-x-auto px-3 sm:px-4 py-3 snap-x">
+            <button
+              onClick={() => (user ? gate("create_status", () => setComposerOpen(true)) : navigate({ to: "/auth" }))}
+              className="shrink-0 flex flex-col items-center gap-1 w-16 snap-start"
+              title="Criar story"
+            >
+              <div className="size-16 rounded-full p-[2px] bg-gradient-to-tr from-primary to-accent">
+                <div className="size-full rounded-full bg-background grid place-items-center ring-2 ring-background">
+                  <Plus className="size-6 text-primary" />
+                </div>
+              </div>
+              <span className="text-[10px] truncate w-full text-center font-medium">Seu story</span>
+            </button>
+            {statuses === null ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-16 snap-start">
+                  <div className="size-16 rounded-full bg-muted animate-pulse" />
+                  <div className="h-2 mt-1 rounded bg-muted animate-pulse" />
+                </div>
+              ))
+            ) : statuses.length === 0 ? (
+              <Link to="/descobrir-status" className="shrink-0 flex items-center gap-2 px-4 rounded-full bg-muted/60 hover:bg-muted text-xs text-muted-foreground self-center h-10">
+                <Sparkles className="size-4" /> Descobrir stories
+              </Link>
+            ) : (
+              statuses.map((s) => (
                 <Link
                   key={s.status_id}
                   to="/s/$statusId"
@@ -346,11 +369,12 @@ function HomeFeed() {
                   </div>
                   <span className="text-[10px] truncate w-full text-center">{s.display_name ?? s.username}</span>
                 </Link>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </header>
+
 
       {/* MAIN LAYOUT — feed + side rail */}
       <main className="mx-auto max-w-6xl px-3 sm:px-4 py-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
