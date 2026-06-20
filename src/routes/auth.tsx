@@ -61,7 +61,7 @@ function AuthPage() {
       // Use full assign for arbitrary paths to bypass typed router constraints.
       window.location.assign(redirectTo);
     } else {
-      navigate({ to: "/chat" });
+      navigate({ to: "/" });
     }
   };
   const [mode, setMode] = useState<Mode>(search.mode ?? "login");
@@ -84,6 +84,14 @@ function AuthPage() {
     email: "",
     password: "",
   });
+  const [isAndroidWeb, setIsAndroidWeb] = useState(false);
+
+  useEffect(() => {
+    setIsAndroidWeb(
+      /Android/i.test(navigator.userAgent) &&
+        !(window as any).Capacitor?.isNativePlatform?.(),
+    );
+  }, []);
 
   // Etapa 3 do funil: tela de cadastro realmente aberta
   useEffect(() => {
@@ -246,11 +254,6 @@ function AuthPage() {
       setBusy(false);
     }
   }
-
-  const isAndroidWeb =
-    typeof window !== "undefined" &&
-    /Android/i.test(navigator.userAgent) &&
-    !(window as any).Capacitor?.isNativePlatform?.();
 
   const features = [
     { icon: MessageCircle, label: "Chat privado" },

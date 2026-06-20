@@ -21,7 +21,7 @@ const WIDGET_H = 56; // button height in px (approx)
 const MARGIN = 20;   // 20px margin (Tailwind bottom-5 right-5)
 
 // Hide on routes where the widget would obscure UI.
-const HIDDEN_PATH_PREFIXES = ["/admin", "/auth", "/reset-password"];
+const HIDDEN_PATH_PREFIXES = ["/", "/admin", "/auth", "/reset-password"];
 
 function shouldHideOnPath(path: string) {
   return HIDDEN_PATH_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
@@ -37,9 +37,8 @@ function getDefaultPos() {
 
 export function NewsletterWidget() {
   const { user } = useAuth();
-  const [path, setPath] = useState(() =>
-    typeof window === "undefined" ? "/" : window.location.pathname,
-  );
+  const [mounted, setMounted] = useState(false);
+  const [path, setPath] = useState("/");
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"subscribe" | "feedback">("subscribe");
   const [email, setEmail] = useState("");
@@ -53,14 +52,7 @@ export function NewsletterWidget() {
   const subscribeFn = useServerFn(subscribeNewsletter);
   const feedbackFn = useServerFn(submitNewsletterFeedback);
 
-  const [pos, setPos] = useState<{ x: number; y: number }>(() => {
-    if (typeof window === "undefined") return { x: 0, y: 0 };
-    try {
-      const raw = localStorage.getItem(POS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return getDefaultPos();
-  });
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const draggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
@@ -68,6 +60,14 @@ export function NewsletterWidget() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    setMounted(true);
+    setPath(window.location.pathname);
+    try {
+      const raw = localStorage.getItem(POS_KEY);
+      setPos(raw ? JSON.parse(raw) : getDefaultPos());
+    } catch {
+      setPos(getDefaultPos());
+    }
     setSubscribed(localStorage.getItem(SUB_KEY) === "1");
     const storedConsent = localStorage.getItem(CONSENT_KEY) as
       | "accepted"
@@ -191,7 +191,7 @@ export function NewsletterWidget() {
     startDrag(touch.clientX, touch.clientY);
   }
 
-  if (shouldHideOnPath(path)) return null;
+  if (!mounted || shouldHideOnPath(path)) return null;
 
   async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault();
