@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { isPromoPost } from "@/lib/feed-filters";
 
 const PUBLIC_ORIGIN = "https://webconnectchat.com";
 const DEFAULT_POST_IMAGE = `${PUBLIC_ORIGIN}/post-share-default.png`;
