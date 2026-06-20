@@ -16,6 +16,7 @@ import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
 import { formatTime } from "@/lib/format-time";
+import { linkify } from "@/lib/linkify";
 
 export interface PostItem {
   post_id: string;
