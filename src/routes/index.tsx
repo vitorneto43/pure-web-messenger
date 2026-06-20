@@ -36,7 +36,7 @@ function HomePage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
       <ClientOnly fallback={<div className="flex-1" />}>
-        {() => <ChatSidebar />}
+        <ChatSidebar />
       </ClientOnly>
     </div>
   );
