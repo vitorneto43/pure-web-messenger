@@ -16,7 +16,19 @@ import { getActiveLives } from "@/lib/live.functions";
 import { signInWithGoogleNative } from "@/lib/native-google-auth";
 import { lovable } from "@/integrations/lovable";
 import { track } from "@/lib/track";
+import { supabase } from "@/integrations/supabase/client";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
+
+type PublicStatus = {
+  status_id: string; user_id: string; username: string; display_name: string | null;
+  avatar_url: string | null; kind: string; media_url: string | null; caption: string | null;
+  background: string | null; content: string | null; is_official: boolean;
+};
+type PublicPost = {
+  post_id: string; user_id: string; username: string; display_name: string | null;
+  avatar_url: string | null; kind: string; media_url: string | null; thumbnail_url: string | null;
+  content: string | null; reactions_count: number; comments_count: number; created_at: string;
+};
 
 const CATEGORY_LABEL: Record<GroupCategory, string> = {
   business: "Negócios", tech: "Tecnologia", games: "Games", music: "Música",
