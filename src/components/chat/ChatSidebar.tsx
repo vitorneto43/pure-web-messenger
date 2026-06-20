@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
 import { NewChatDialog } from "./NewChatDialog";
 import { NewGroupDialog } from "./NewGroupDialog";
 import { NotificationsBell } from "./NotificationsBell";
