@@ -76,7 +76,7 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-function HomeFeed() {
+export function HomeFeed() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
