@@ -370,7 +370,7 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
           </Link>
           <div>
             <div className="flex items-center gap-1.5">
-              <div className="font-semibold text-sm leading-tight">Wavechat</div>
+              <h1 className="font-semibold text-sm leading-tight">WaveChat - Rede Social Brasileira</h1>
               <a
                 href="https://play.google.com/store/apps/details?id=com.wavechat.app"
                 target="_blank"
