@@ -83,14 +83,20 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const blockFn = useServerFn(blockUser);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
+  // Track which status id has finished loading its image (avoids races with cached images)
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
+  const imgLoaded = !!current && loadedId === current.id;
+  const imgError = !!current && errorId === current.id;
 
-  // reset image-load state whenever the displayed status changes
+  // Safety net: if onLoad never fires (e.g. some Android WebView edge cases),
+  // start the progress bar after a max wait so the story is never stuck.
   useEffect(() => {
-    setImgLoaded(false);
-    setImgError(false);
-  }, [current?.id]);
+    if (!current || current.kind !== "image") return;
+    if (imgLoaded || imgError) return;
+    const t = setTimeout(() => setLoadedId(current.id), 4000);
+    return () => clearTimeout(t);
+  }, [current?.id, current?.kind, imgLoaded, imgError]);
 
   // preload next status media (image or video poster) to reduce blank frames
   useEffect(() => {
