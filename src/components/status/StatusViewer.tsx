@@ -440,6 +440,11 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             <img
               key={current.id}
               src={current.media_url}
+              ref={(el) => {
+                if (el && el.complete && el.naturalWidth > 0) {
+                  setLoadedId(current.id);
+                }
+              }}
               onLoad={() => setLoadedId(current.id)}
               onError={() => setErrorId(current.id)}
               decoding="async"
