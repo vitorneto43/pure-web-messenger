@@ -425,7 +425,23 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </div>
         )}
         {current.kind === "image" && current.media_url && (
-          <img src={current.media_url} className="max-h-full max-w-full object-contain pointer-events-none" alt="" />
+          <div className="absolute inset-0 grid place-items-center">
+            {!imgLoaded && !imgError && (
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="size-10 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              </div>
+            )}
+            <img
+              key={current.id}
+              src={current.media_url}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              decoding="async"
+              loading="eager"
+              className={`max-h-full max-w-full w-auto h-auto object-contain pointer-events-none transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              alt=""
+            />
+          </div>
         )}
         {current.kind === "video" && current.media_url && (
           <video
