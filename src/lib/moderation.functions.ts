@@ -283,6 +283,39 @@ export const applyModerationAction = createServerFn({ method: "POST" })
       await supabaseAdmin.from("profiles").update({ strike_count: (p?.strike_count ?? 0) + 1 }).eq("id", targetUser);
     }
 
+    // Remove o conteúdo denunciado quando a ação for content_removed
+    if (data.action === "content_removed") {
+      const tType = (report as any).target_type as string;
+      const tId = (report as any).target_id as string;
+      try {
+        if (tType === "post") {
+          await supabaseAdmin.from("posts").delete().eq("id", tId);
+        } else if (tType === "status") {
+          await supabaseAdmin.from("statuses").delete().eq("id", tId);
+        } else if (tType === "post_comment") {
+          await supabaseAdmin.from("post_comments").delete().eq("id", tId);
+        } else if (tType === "message") {
+          await supabaseAdmin
+            .from("messages")
+            .update({
+              deleted_for_everyone_at: new Date().toISOString(),
+              content: "",
+              attachment_url: null,
+              attachment_type: null,
+              attachment_name: null,
+            } as never)
+            .eq("id", tId);
+        } else if (tType === "live") {
+          await supabaseAdmin
+            .from("live_sessions")
+            .update({ status: "ended", ended_at: new Date().toISOString() })
+            .eq("id", tId);
+        }
+      } catch (e) {
+        console.error("[moderation] failed to remove content", tType, tId, e);
+      }
+    }
+
     // Log action
     await supabaseAdmin.from("moderation_actions").insert({
       moderator_id: userId,
