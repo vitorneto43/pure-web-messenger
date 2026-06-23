@@ -83,6 +83,31 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const blockFn = useServerFn(blockUser);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // reset image-load state whenever the displayed status changes
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [current?.id]);
+
+  // preload next status media (image or video poster) to reduce blank frames
+  useEffect(() => {
+    const nextItem =
+      statuses[index + 1] ??
+      (groups[groupIndex + 1]?.statuses?.[0] ?? null);
+    if (!nextItem?.media_url) return;
+    if (nextItem.kind === "image") {
+      const img = new Image();
+      img.src = nextItem.media_url;
+    } else if (nextItem.kind === "video") {
+      // hint the browser to start fetching
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.src = nextItem.media_url;
+    }
+  }, [current?.id, index, groupIndex, groups, statuses]);
 
   useEffect(() => {
     let mounted = true;
@@ -159,9 +184,14 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   }, [current?.id, currentGroup?.user, user?.id]);
 
 
-  // progress timer (skip for video which we let play out)
+  // progress timer (skip for video which we let play out; wait for image to fully load)
   useEffect(() => {
     if (!current || current.kind === "video") {
+      setProgress(0);
+      return;
+    }
+    // For images, don't start the timer/progress until the image is fully loaded.
+    if (current.kind === "image" && !imgLoaded && !imgError) {
       setProgress(0);
       return;
     }
@@ -182,7 +212,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, index, paused, boostOpen]);
+  }, [current?.id, index, paused, boostOpen, imgLoaded, imgError]);
 
   function next() {
     if (index < statuses.length - 1) {
@@ -395,7 +425,23 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
           </div>
         )}
         {current.kind === "image" && current.media_url && (
-          <img src={current.media_url} className="max-h-full max-w-full object-contain pointer-events-none" alt="" />
+          <div className="absolute inset-0 grid place-items-center">
+            {!imgLoaded && !imgError && (
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="size-10 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              </div>
+            )}
+            <img
+              key={current.id}
+              src={current.media_url}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              decoding="async"
+              loading="eager"
+              className={`max-h-full max-w-full w-auto h-auto object-contain pointer-events-none transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              alt=""
+            />
+          </div>
         )}
         {current.kind === "video" && current.media_url && (
           <video
