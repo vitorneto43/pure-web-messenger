@@ -299,9 +299,11 @@ export const applyModerationAction = createServerFn({ method: "POST" })
             .from("messages")
             .update({
               deleted_for_everyone_at: new Date().toISOString(),
-              content: null,
-              media_url: null,
-            })
+              content: "",
+              attachment_url: null,
+              attachment_type: null,
+              attachment_name: null,
+            } as never)
             .eq("id", tId);
         } else if (tType === "live") {
           await supabaseAdmin
