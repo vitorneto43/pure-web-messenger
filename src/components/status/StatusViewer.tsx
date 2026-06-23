@@ -184,9 +184,14 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   }, [current?.id, currentGroup?.user, user?.id]);
 
 
-  // progress timer (skip for video which we let play out)
+  // progress timer (skip for video which we let play out; wait for image to fully load)
   useEffect(() => {
     if (!current || current.kind === "video") {
+      setProgress(0);
+      return;
+    }
+    // For images, don't start the timer/progress until the image is fully loaded.
+    if (current.kind === "image" && !imgLoaded && !imgError) {
       setProgress(0);
       return;
     }
@@ -207,7 +212,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
     }, 50);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, index, paused, boostOpen]);
+  }, [current?.id, index, paused, boostOpen, imgLoaded, imgError]);
 
   function next() {
     if (index < statuses.length - 1) {
