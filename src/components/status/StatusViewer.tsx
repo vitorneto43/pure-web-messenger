@@ -440,8 +440,8 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
             <img
               key={current.id}
               src={current.media_url}
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
+              onLoad={() => setLoadedId(current.id)}
+              onError={() => setErrorId(current.id)}
               decoding="async"
               loading="eager"
               className={`max-h-full max-w-full w-auto h-auto object-contain pointer-events-none transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
