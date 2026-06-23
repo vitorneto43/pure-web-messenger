@@ -83,6 +83,31 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
   const blockFn = useServerFn(blockUser);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // reset image-load state whenever the displayed status changes
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [current?.id]);
+
+  // preload next status media (image or video poster) to reduce blank frames
+  useEffect(() => {
+    const nextItem =
+      statuses[index + 1] ??
+      (groups[groupIndex + 1]?.statuses?.[0] ?? null);
+    if (!nextItem?.media_url) return;
+    if (nextItem.kind === "image") {
+      const img = new Image();
+      img.src = nextItem.media_url;
+    } else if (nextItem.kind === "video") {
+      // hint the browser to start fetching
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.src = nextItem.media_url;
+    }
+  }, [current?.id, index, groupIndex, groups, statuses]);
 
   useEffect(() => {
     let mounted = true;
