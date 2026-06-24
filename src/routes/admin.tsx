@@ -461,6 +461,8 @@ function SourcesTab() {
 
   return (
     <div className="space-y-4">
+      <TrafficSourcesCard />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat label="Meta Ads" value={meta} icon={Megaphone} hint="Facebook / Instagram" />
         <Stat label="Google Ads" value={google} icon={Megaphone} hint="Pesquisa / Display" />
