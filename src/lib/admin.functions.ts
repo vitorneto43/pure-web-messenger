@@ -839,6 +839,14 @@ export const getTrafficBySource = createServerFn({ method: "POST" })
     const totalSessions = new Set<string>();
     let totalViews = 0;
 
+    // Paid click IDs from each ad network — counts unique sessions that arrived with a click ID.
+    const paidClicks = {
+      bing: new Set<string>(),       // msclkid (Microsoft / Bing Ads)
+      google: new Set<string>(),     // gclid
+      facebook: new Set<string>(),   // fbclid
+      tiktok: new Set<string>(),     // ttclid
+    };
+
     for (const r of list) {
       const md = (r.metadata ?? {}) as Record<string, unknown>;
       const source = String(md.source ?? "direct") || "direct";
@@ -848,6 +856,13 @@ export const getTrafficBySource = createServerFn({ method: "POST" })
 
       totalViews++;
       if (sid) totalSessions.add(sid);
+
+      if (sid) {
+        if (md.msclkid) paidClicks.bing.add(sid);
+        if (md.gclid) paidClicks.google.add(sid);
+        if (md.fbclid) paidClicks.facebook.add(sid);
+        if (md.ttclid) paidClicks.tiktok.add(sid);
+      }
 
       const s = bySource.get(source) ?? { views: 0, sessions: new Set<string>() };
       s.views++;
