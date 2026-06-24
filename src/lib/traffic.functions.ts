@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { EXCLUDED_ANALYTICS_USER_IDS_PG } from "@/lib/analytics-exclusions";
 
 /**
  * Métricas de tráfego do perfil do usuário autenticado (últimos 30 dias).
