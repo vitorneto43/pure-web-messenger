@@ -212,7 +212,7 @@ function AuthPage() {
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/chat`,
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
