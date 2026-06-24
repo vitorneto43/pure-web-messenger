@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isExcludedAnalyticsUser } from "@/lib/analytics-exclusions";
 
 const SESSION_KEY = "wc_session_id";
 const ATTRIBUTION_KEY = "wc_session_attribution";
