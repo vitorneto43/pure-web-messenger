@@ -816,6 +816,7 @@ export const getTrafficBySource = createServerFn({ method: "POST" })
       .select("session_id, metadata, created_at, path")
       .eq("event_name", "page_view")
       .gte("created_at", since)
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
       .limit(50000);
     if (error) throw new Error(error.message);
 
