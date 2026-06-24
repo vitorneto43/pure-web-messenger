@@ -798,3 +798,107 @@ export const getOnboardingSurveyStats = createServerFn({ method: "GET" })
       days: number;
     };
   });
+
+// ============ Traffic by source (UTM / referrer / fbclid) ============
+// Aggregates page_view events from analytics_events using metadata.source
+// captured by src/lib/track.ts. Lets the admin see Facebook/Instagram/TikTok/
+// Google clicks even when the referrer is stripped by in-app browsers.
+export const getTrafficBySource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ days: z.number().int().min(1).max(90).default(7) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const since = new Date(Date.now() - data.days * 24 * 3600_000).toISOString();
+    const { data: rows, error } = await supabaseAdmin
+      .from("analytics_events")
+      .select("session_id, metadata, created_at, path")
+      .eq("event_name", "page_view")
+      .gte("created_at", since)
+      .limit(50000);
+    if (error) throw new Error(error.message);
+
+    type Row = {
+      session_id: string | null;
+      metadata: Record<string, unknown> | null;
+      created_at: string;
+      path: string | null;
+    };
+    const list = (rows ?? []) as Row[];
+
+    const bySource = new Map<string, { views: number; sessions: Set<string> }>();
+    const byCampaign = new Map<
+      string,
+      { source: string; medium: string; campaign: string; views: number; sessions: Set<string> }
+    >();
+    const byDay = new Map<string, Map<string, number>>(); // date -> source -> views
+    const byPath = new Map<string, number>();
+    const totalSessions = new Set<string>();
+    let totalViews = 0;
+
+    for (const r of list) {
+      const md = (r.metadata ?? {}) as Record<string, unknown>;
+      const source = String(md.source ?? "direct") || "direct";
+      const medium = (md.utm_medium as string) ?? "";
+      const campaign = (md.utm_campaign as string) ?? "";
+      const sid = r.session_id ?? "";
+
+      totalViews++;
+      if (sid) totalSessions.add(sid);
+
+      const s = bySource.get(source) ?? { views: 0, sessions: new Set<string>() };
+      s.views++;
+      if (sid) s.sessions.add(sid);
+      bySource.set(source, s);
+
+      if (campaign || medium) {
+        const key = `${source}::${medium}::${campaign}`;
+        const c =
+          byCampaign.get(key) ??
+          { source, medium: medium || "—", campaign: campaign || "—", views: 0, sessions: new Set<string>() };
+        c.views++;
+        if (sid) c.sessions.add(sid);
+        byCampaign.set(key, c);
+      }
+
+      const day = r.created_at.slice(0, 10);
+      const dayMap = byDay.get(day) ?? new Map<string, number>();
+      dayMap.set(source, (dayMap.get(source) ?? 0) + 1);
+      byDay.set(day, dayMap);
+
+      if (r.path) byPath.set(r.path, (byPath.get(r.path) ?? 0) + 1);
+    }
+
+    const sources = [...bySource.entries()]
+      .map(([source, v]) => ({ source, views: v.views, sessions: v.sessions.size }))
+      .sort((a, b) => b.views - a.views);
+
+    const campaigns = [...byCampaign.values()]
+      .map((c) => ({ source: c.source, medium: c.medium, campaign: c.campaign, views: c.views, sessions: c.sessions.size }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 30);
+
+    const series = [...byDay.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, m]) => {
+        const o: Record<string, number | string> = { date };
+        for (const [src, v] of m.entries()) o[src] = v;
+        return o;
+      });
+
+    const topPaths = [...byPath.entries()]
+      .map(([path, views]) => ({ path, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 15);
+
+    return {
+      days: data.days,
+      totalViews,
+      totalSessions: totalSessions.size,
+      sources,
+      campaigns,
+      series,
+      topPaths,
+    };
+  });
