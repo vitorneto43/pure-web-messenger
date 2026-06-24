@@ -53,7 +53,8 @@ import { ConversionFunnelTab } from "@/components/admin/ConversionFunnelTab";
 import { BadgesTab } from "@/components/admin/BadgesTab";
 import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
 import { GroupReportsTab } from "@/components/admin/GroupReportsTab";
-import { Award, Music, Globe } from "lucide-react";
+import { LivesAdminTab } from "@/components/admin/LivesAdminTab";
+import { Award, Music, Globe, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -251,6 +252,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="survey"><ClipboardList className="size-4 mr-1.5" />Pesquisa</TabsTrigger>
               <TabsTrigger value="boosts"><Rocket className="size-4 mr-1.5" />Impulsos</TabsTrigger>
               <TabsTrigger value="status"><FileImage className="size-4 mr-1.5" />Status</TabsTrigger>
+              <TabsTrigger value="lives"><Radio className="size-4 mr-1.5" />Lives</TabsTrigger>
               <TabsTrigger value="music"><Music className="size-4 mr-1.5" />Músicas</TabsTrigger>
               <TabsTrigger value="followers"><Heart className="size-4 mr-1.5" />Seguidores</TabsTrigger>
               <TabsTrigger value="support"><LifeBuoy className="size-4 mr-1.5" />Suporte</TabsTrigger>
@@ -284,6 +286,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="survey" className="mt-4"><OnboardingSurveyTab /></TabsContent>
           <TabsContent value="boosts" className="mt-4"><BoostsTab /></TabsContent>
           <TabsContent value="status" className="mt-4"><StatusAdminTab /></TabsContent>
+          <TabsContent value="lives" className="mt-4"><LivesAdminTab /></TabsContent>
           <TabsContent value="music" className="mt-4"><MusicAdminTab /></TabsContent>
           <TabsContent value="followers" className="mt-4"><FollowersAdminTab /></TabsContent>
           <TabsContent value="support" className="mt-4"><SupportTab /></TabsContent>
