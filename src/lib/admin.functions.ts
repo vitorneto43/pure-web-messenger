@@ -917,5 +917,11 @@ export const getTrafficBySource = createServerFn({ method: "POST" })
       campaigns,
       series,
       topPaths,
+      paidClicks: {
+        bing: paidClicks.bing.size,
+        google: paidClicks.google.size,
+        facebook: paidClicks.facebook.size,
+        tiktok: paidClicks.tiktok.size,
+      },
     };
   });
