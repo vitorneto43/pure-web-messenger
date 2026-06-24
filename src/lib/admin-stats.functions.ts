@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { EXCLUDED_ANALYTICS_USER_IDS_PG } from "@/lib/analytics-exclusions";
 
 async function assertAdmin(userId: string) {
   const { data } = await supabaseAdmin
@@ -460,54 +461,63 @@ export const getAdminAppAcquisitionStats = createServerFn({ method: "POST" })
         .eq("event_name", "playstore_click")
         .gte("created_at", since30)
         .order("created_at", { ascending: false })
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(5000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at")
         .eq("event_name", "page_view")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(20000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at")
         .eq("event_name", "signup_click")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(5000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at")
         .eq("event_name", "login_click")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(5000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, user_id, created_at, user_agent, metadata")
         .eq("event_name", "signup_completed")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(5000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at, session_id")
         .eq("event_name", "app_install")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(10000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at, user_id")
         .eq("event_name", "app_first_open")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(10000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at, user_id")
         .eq("event_name", "app_signup")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(10000),
       supabaseAdmin
         .from("analytics_events")
         .select("id, created_at, user_id")
         .eq("event_name", "app_login")
         .gte("created_at", since30)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(20000),
       supabaseAdmin
         .from("profiles")

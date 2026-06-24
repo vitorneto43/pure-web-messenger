@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { EXCLUDED_ANALYTICS_USER_IDS_PG } from "@/lib/analytics-exclusions";
 
 /**
  * Métricas de tráfego do perfil do usuário autenticado (últimos 30 dias).
@@ -35,6 +36,7 @@ export const getMyProfileTraffic = createServerFn({ method: "GET" })
       const { count } = await supabaseAdmin
         .from("analytics_events")
         .select("id", { count: "exact", head: true })
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .eq("event_name", "public_profile_view")
         .eq("path", `/u/${username}`)
         .gte("created_at", since);
@@ -44,6 +46,7 @@ export const getMyProfileTraffic = createServerFn({ method: "GET" })
     const { count: socialClicks } = await supabaseAdmin
       .from("analytics_events")
       .select("id", { count: "exact", head: true })
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
       .eq("event_name", "social_link_click")
       .eq("user_id", userId)
       .gte("created_at", since);
@@ -53,6 +56,7 @@ export const getMyProfileTraffic = createServerFn({ method: "GET" })
       ? await supabaseAdmin
           .from("analytics_events")
           .select("id", { count: "exact", head: true })
+          .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
           .eq("event_name", "social_link_click_on_profile")
           .contains("metadata", { owner_username: username })
           .gte("created_at", since)
@@ -103,6 +107,7 @@ export const getProfileTrafficByUsername = createServerFn({ method: "GET" })
     const { count: pageViews } = await supabaseAdmin
       .from("analytics_events")
       .select("id", { count: "exact", head: true })
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
       .eq("event_name", "public_profile_view")
       .eq("path", `/u/${prof.username}`)
       .gte("created_at", since);
@@ -110,6 +115,7 @@ export const getProfileTrafficByUsername = createServerFn({ method: "GET" })
     const { count: socialClicks } = await supabaseAdmin
       .from("analytics_events")
       .select("id", { count: "exact", head: true })
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
       .eq("event_name", "social_link_click_on_profile")
       .contains("metadata", { owner_username: prof.username })
       .gte("created_at", since);
@@ -136,7 +142,8 @@ export const getSiteTrafficByHour = createServerFn({ method: "GET" })
       .from("analytics_events")
       .select("created_at")
       .gte("created_at", since)
-      .limit(50000);
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
+        .limit(50000);
 
     const buckets = new Array(24).fill(0) as number[];
     for (const row of data ?? []) {

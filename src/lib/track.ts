@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isExcludedAnalyticsUser } from "@/lib/analytics-exclusions";
 
 const SESSION_KEY = "wc_session_id";
 const ATTRIBUTION_KEY = "wc_session_attribution";
@@ -106,6 +107,8 @@ export async function track(
   try {
     const { data: auth } = await supabase.auth.getSession();
     const userId = auth?.session?.user?.id ?? null;
+    // Skip tracking for excluded users (superadmin, official WaveChat) to avoid skewing metrics.
+    if (isExcludedAnalyticsUser(userId)) return;
     const language =
       (typeof navigator !== "undefined" &&
         (navigator.language || (navigator.languages && navigator.languages[0]))) ||
