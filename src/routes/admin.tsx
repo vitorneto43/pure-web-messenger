@@ -44,6 +44,7 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
 import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
 import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
+import { TrafficSourcesCard } from "@/components/admin/TrafficSourcesCard";
 import { ModerationTab } from "@/components/admin/ModerationTab";
 import { ComplianceTab } from "@/components/admin/ComplianceTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
@@ -460,6 +461,8 @@ function SourcesTab() {
 
   return (
     <div className="space-y-4">
+      <TrafficSourcesCard />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat label="Meta Ads" value={meta} icon={Megaphone} hint="Facebook / Instagram" />
         <Stat label="Google Ads" value={google} icon={Megaphone} hint="Pesquisa / Display" />
