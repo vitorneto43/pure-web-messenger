@@ -98,6 +98,23 @@ export function TrafficSourcesCard() {
               />
             </div>
 
+            {data.paidClicks && (
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  Cliques pagos detectados (sessões únicas com ID de anúncio)
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <div><span className="font-bold tabular-nums">{data.paidClicks.bing}</span> <span className="text-muted-foreground">Bing Ads (msclkid)</span></div>
+                  <div><span className="font-bold tabular-nums">{data.paidClicks.google}</span> <span className="text-muted-foreground">Google Ads (gclid)</span></div>
+                  <div><span className="font-bold tabular-nums">{data.paidClicks.facebook}</span> <span className="text-muted-foreground">Meta Ads (fbclid)</span></div>
+                  <div><span className="font-bold tabular-nums">{data.paidClicks.tiktok}</span> <span className="text-muted-foreground">TikTok (ttclid)</span></div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                  Diferença vs painel do anunciante é normal (30–50%): cliques de bots, prefetch, fechamento antes da página carregar, ad-blockers e in-app browsers (MSN/Instagram/TikTok) que matam JS não chegam aqui. Só conta visita onde o site abriu de verdade.
+                </p>
+              </div>
+            )}
+
             <div className="grid md:grid-cols-2 gap-3">
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
