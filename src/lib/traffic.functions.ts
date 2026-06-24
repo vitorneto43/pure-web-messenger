@@ -136,7 +136,8 @@ export const getSiteTrafficByHour = createServerFn({ method: "GET" })
       .from("analytics_events")
       .select("created_at")
       .gte("created_at", since)
-      .limit(50000);
+      .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
+        .limit(50000);
 
     const buckets = new Array(24).fill(0) as number[];
     for (const row of data ?? []) {

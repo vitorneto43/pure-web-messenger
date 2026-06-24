@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { EXCLUDED_ANALYTICS_USER_IDS_PG } from "@/lib/analytics-exclusions";
 
 const periodSchema = z.object({
   period: z.enum(["today", "7d", "30d", "90d"]).default("7d"),
@@ -231,6 +232,7 @@ export const getConversionFunnel = createServerFn({ method: "POST" })
         .eq("event_name", "discover_list_view")
         .gte("created_at", since)
         .not("session_id", "is", null)
+        .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
         .limit(50000);
       const visitorSessions = new Set<string>();
       for (const r of a ?? []) if (r.session_id) visitorSessions.add(r.session_id as string);
@@ -241,7 +243,8 @@ export const getConversionFunnel = createServerFn({ method: "POST" })
           .eq("event_name", "signup_completed")
           .gte("created_at", since)
           .not("session_id", "is", null)
-          .limit(50000);
+          .not("user_id", "in", EXCLUDED_ANALYTICS_USER_IDS_PG)
+        .limit(50000);
         const seen = new Set<string>();
         for (const r of b ?? []) {
           const sid = r.session_id as string | null;
