@@ -44,6 +44,7 @@ import { SupportTab } from "@/components/admin/SupportTab";
 import { StatusAdminTab } from "@/components/admin/StatusAdminTab";
 import { FollowersAdminTab } from "@/components/admin/FollowersAdminTab";
 import { AppAcquisitionTab } from "@/components/admin/AppAcquisitionTab";
+import { TrafficSourcesCard } from "@/components/admin/TrafficSourcesCard";
 import { ModerationTab } from "@/components/admin/ModerationTab";
 import { ComplianceTab } from "@/components/admin/ComplianceTab";
 import { SecurityTab } from "@/components/admin/SecurityTab";
