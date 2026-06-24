@@ -212,7 +212,7 @@ function AuthPage() {
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/chat`,
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
@@ -501,7 +501,7 @@ function AuthPage() {
                       return;
                     }
                     const result = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: `${window.location.origin}/chat`,
+                      redirect_uri: `${window.location.origin}/`,
                     });
                     if (result.error) throw result.error;
                   } catch (err) {
