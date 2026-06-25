@@ -14,7 +14,10 @@ import {
   Newspaper,
   Radio,
   MessageCircle,
+  Share2,
+  Trophy,
 } from "lucide-react";
+import { InviteFriendsSheet } from "@/components/invite/InviteFriendsSheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -417,24 +420,43 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
             </Button>
           )}
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="rounded-full size-8">
-                  <Settings className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">{t("chat.myProfile")}</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
-                  <UsersRound className="size-4 mr-2" /> {t("chat.newGroup")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout} className="text-destructive">
-                  <LogOut className="size-4 mr-2" /> {t("chat.logout")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <InviteFriendsSheet
+                trigger={
+                  <Button size="icon" variant="ghost" className="rounded-full size-8" title="Convidar amigos">
+                    <Share2 className="size-4" />
+                  </Button>
+                }
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" className="rounded-full size-8">
+                    <Settings className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">{t("chat.myProfile")}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setNewGroupOpen(true)}>
+                    <UsersRound className="size-4 mr-2" /> {t("chat.newGroup")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/meus-convites">
+                      <UserPlus className="size-4 mr-2" /> Meus convites
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/embaixadores">
+                      <Trophy className="size-4 mr-2" /> Top Embaixadores
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="text-destructive">
+                    <LogOut className="size-4 mr-2" /> {t("chat.logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : null}
         </div>
       </div>

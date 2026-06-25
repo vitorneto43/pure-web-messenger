@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostsRouteImport } from './routes/posts'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as EmbaixadoresRouteImport } from './routes/embaixadores'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as DescobrirStatusRouteImport } from './routes/descobrir-status'
 import { Route as DescobrirRouteImport } from './routes/descobrir'
@@ -33,11 +34,13 @@ import { Route as PPostIdRouteImport } from './routes/p.$postId'
 import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
+import { Route as InviteInviterIdRouteImport } from './routes/invite.$inviterId'
 import { Route as GGroupIdRouteImport } from './routes/g.$groupId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
 import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authenticated/meus-convites'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -94,6 +97,11 @@ const PostsRoute = PostsRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbaixadoresRoute = EmbaixadoresRouteImport.update({
+  id: '/embaixadores',
+  path: '/embaixadores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiretrizesRoute = DiretrizesRouteImport.update({
@@ -175,6 +183,11 @@ const LiveLiveIdRoute = LiveLiveIdRouteImport.update({
   path: '/live/$liveId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteInviterIdRoute = InviteInviterIdRouteImport.update({
+  id: '/invite/$inviterId',
+  path: '/invite/$inviterId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GGroupIdRoute = GGroupIdRouteImport.update({
   id: '/g/$groupId',
   path: '/g/$groupId',
@@ -200,6 +213,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMeusConvitesRoute =
+  AuthenticatedMeusConvitesRouteImport.update({
+    id: '/meus-convites',
+    path: '/meus-convites',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHashtagsRoute = AuthenticatedHashtagsRouteImport.update({
   id: '/hashtags',
   path: '/hashtags',
@@ -305,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -315,11 +335,13 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
+  '/invite/$inviterId': typeof InviteInviterIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -352,6 +374,7 @@ export interface FileRoutesByTo {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -362,11 +385,13 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
+  '/invite/$inviterId': typeof InviteInviterIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -401,6 +426,7 @@ export interface FileRoutesById {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -411,11 +437,13 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
+  '/_authenticated/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
+  '/invite/$inviterId': typeof InviteInviterIdRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -450,6 +478,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -460,11 +489,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/hashtags'
+    | '/meus-convites'
     | '/profile'
     | '/recordings'
     | '/scheduled'
     | '/email/unsubscribe'
     | '/g/$groupId'
+    | '/invite/$inviterId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -497,6 +528,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -507,11 +539,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/hashtags'
+    | '/meus-convites'
     | '/profile'
     | '/recordings'
     | '/scheduled'
     | '/email/unsubscribe'
     | '/g/$groupId'
+    | '/invite/$inviterId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -545,6 +579,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -555,11 +590,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/chat'
     | '/_authenticated/hashtags'
+    | '/_authenticated/meus-convites'
     | '/_authenticated/profile'
     | '/_authenticated/recordings'
     | '/_authenticated/scheduled'
     | '/email/unsubscribe'
     | '/g/$groupId'
+    | '/invite/$inviterId'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -594,6 +631,7 @@ export interface RootRouteChildren {
   DescobrirRoute: typeof DescobrirRoute
   DescobrirStatusRoute: typeof DescobrirStatusRoute
   DiretrizesRoute: typeof DiretrizesRoute
+  EmbaixadoresRoute: typeof EmbaixadoresRoute
   GuideRoute: typeof GuideRoute
   PostsRoute: typeof PostsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -604,6 +642,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
+  InviteInviterIdRoute: typeof InviteInviterIdRoute
   LiveLiveIdRoute: typeof LiveLiveIdRoute
   LiveNewRoute: typeof LiveNewRoute
   MeetRoomIdRoute: typeof MeetRoomIdRoute
@@ -682,6 +721,13 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embaixadores': {
+      id: '/embaixadores'
+      path: '/embaixadores'
+      fullPath: '/embaixadores'
+      preLoaderRoute: typeof EmbaixadoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/diretrizes': {
@@ -796,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveLiveIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$inviterId': {
+      id: '/invite/$inviterId'
+      path: '/invite/$inviterId'
+      fullPath: '/invite/$inviterId'
+      preLoaderRoute: typeof InviteInviterIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/g/$groupId': {
       id: '/g/$groupId'
       path: '/g/$groupId'
@@ -829,6 +882,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meus-convites': {
+      id: '/_authenticated/meus-convites'
+      path: '/meus-convites'
+      fullPath: '/meus-convites'
+      preLoaderRoute: typeof AuthenticatedMeusConvitesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/hashtags': {
@@ -967,6 +1027,7 @@ const AuthenticatedChatRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
+  AuthenticatedMeusConvitesRoute: typeof AuthenticatedMeusConvitesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
   AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
@@ -976,6 +1037,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
+  AuthenticatedMeusConvitesRoute: AuthenticatedMeusConvitesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
   AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
@@ -996,6 +1058,7 @@ const rootRouteChildren: RootRouteChildren = {
   DescobrirRoute: DescobrirRoute,
   DescobrirStatusRoute: DescobrirStatusRoute,
   DiretrizesRoute: DiretrizesRoute,
+  EmbaixadoresRoute: EmbaixadoresRoute,
   GuideRoute: GuideRoute,
   PostsRoute: PostsRoute,
   PrivacyRoute: PrivacyRoute,
@@ -1006,6 +1069,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
+  InviteInviterIdRoute: InviteInviterIdRoute,
   LiveLiveIdRoute: LiveLiveIdRoute,
   LiveNewRoute: LiveNewRoute,
   MeetRoomIdRoute: MeetRoomIdRoute,
@@ -1031,13 +1095,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

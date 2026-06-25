@@ -30,6 +30,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_IN" && s?.user) {
         recordAppFirstOpenOnce(s.user.id);
         recordAppLogin(s.user.id);
+        // Link inviter (if any) — best effort
+        void (async () => {
+          try {
+            const { readPendingInviter, clearPendingInviter } = await import("@/lib/share-invite");
+            const pending = readPendingInviter();
+            if (!pending || pending.inviterId === s.user.id) return;
+            const { attachInviter } = await import("@/lib/invites.functions");
+            await attachInviter({
+              data: {
+                inviterId: pending.inviterId,
+                channel: pending.channel,
+                clickId: pending.clickId,
+              },
+            });
+            clearPendingInviter();
+          } catch (e) {
+            console.warn("attachInviter failed", e);
+          }
+        })();
       }
     });
     supabase.auth.getSession().then(({ data }) => {

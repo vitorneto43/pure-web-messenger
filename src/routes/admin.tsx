@@ -54,7 +54,8 @@ import { BadgesTab } from "@/components/admin/BadgesTab";
 import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
 import { GroupReportsTab } from "@/components/admin/GroupReportsTab";
 import { LivesAdminTab } from "@/components/admin/LivesAdminTab";
-import { Award, Music, Globe, Radio } from "lucide-react";
+import { InvitesAdminTab } from "@/components/admin/InvitesAdminTab";
+import { Award, Music, Globe, Radio, UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -236,6 +237,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
               <TabsTrigger value="funnel"><TrendingDown className="size-4 mr-1.5" />Funil</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="invites"><Gift className="size-4 mr-1.5" />Convites</TabsTrigger>
+              <TabsTrigger value="ambassadors"><UserPlus className="size-4 mr-1.5" />Embaixadores</TabsTrigger>
               <TabsTrigger value="sources"><Megaphone className="size-4 mr-1.5" />Origens</TabsTrigger>
               <TabsTrigger value="usage"><MousePointerClick className="size-4 mr-1.5" />Uso</TabsTrigger>
               <TabsTrigger value="users"><Users className="size-4 mr-1.5" />Usuários</TabsTrigger>
@@ -270,6 +272,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <TabsContent value="funnel" className="mt-4"><ConversionFunnelTab /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="invites" className="mt-4"><InvitesTab /></TabsContent>
+          <TabsContent value="ambassadors" className="mt-4"><InvitesAdminTab /></TabsContent>
           <TabsContent value="sources" className="mt-4"><SourcesTab /></TabsContent>
           <TabsContent value="usage" className="mt-4"><UsageTab /></TabsContent>
           <TabsContent value="users" className="mt-4"><UsersTab /></TabsContent>
