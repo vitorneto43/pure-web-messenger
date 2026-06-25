@@ -54,7 +54,8 @@ import { BadgesTab } from "@/components/admin/BadgesTab";
 import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
 import { GroupReportsTab } from "@/components/admin/GroupReportsTab";
 import { LivesAdminTab } from "@/components/admin/LivesAdminTab";
-import { Award, Music, Globe, Radio } from "lucide-react";
+import { InvitesAdminTab } from "@/components/admin/InvitesAdminTab";
+import { Award, Music, Globe, Radio, UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
