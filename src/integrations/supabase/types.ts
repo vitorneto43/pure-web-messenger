@@ -101,6 +101,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ambassador_settings: {
+        Row: {
+          id: boolean
+          ranking_public: boolean
+          rewards_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          ranking_public?: boolean
+          rewards_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          ranking_public?: boolean
+          rewards_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ambassador_tiers: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string
+          id: string
+          min_invites: number
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string
+          id?: string
+          min_invites: number
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string
+          id?: string
+          min_invites?: number
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -947,6 +1001,47 @@ export type Database = {
           },
         ]
       }
+      invite_clicks: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          inviter_id: string
+          ip_hash: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm: Json
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          inviter_id: string
+          ip_hash?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm?: Json
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          inviter_id?: string
+          ip_hash?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_clicks_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invite_rewards: {
         Row: {
           created_at: string
@@ -976,6 +1071,58 @@ export type Database = {
           views_amount?: number
         }
         Relationships: []
+      }
+      invite_signups: {
+        Row: {
+          channel: string
+          click_id: string | null
+          created_at: string
+          id: string
+          install_source: string | null
+          invited_user_id: string
+          inviter_id: string
+        }
+        Insert: {
+          channel?: string
+          click_id?: string | null
+          created_at?: string
+          id?: string
+          install_source?: string | null
+          invited_user_id: string
+          inviter_id: string
+        }
+        Update: {
+          channel?: string
+          click_id?: string | null
+          created_at?: string
+          id?: string
+          install_source?: string | null
+          invited_user_id?: string
+          inviter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_signups_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "invite_clicks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_signups_invited_user_id_fkey"
+            columns: ["invited_user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_signups_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ip_reputation: {
         Row: {
@@ -3619,6 +3766,8 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_admin_invite_overview: { Args: never; Returns: Json }
+      get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
       get_hashtag_people: {
         Args: { _limit?: number; _tag: string }
@@ -3646,6 +3795,7 @@ export type Database = {
           recipient_name: string
         }[]
       }
+      get_my_invite_stats: { Args: never; Returns: Json }
       get_my_restrictions: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
       get_people_you_may_know: {
@@ -3708,6 +3858,18 @@ export type Database = {
       }
       get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
+      get_top_ambassadors: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          invited: number
+          tier_icon: string
+          tier_name: string
+          user_id: string
+          username: string
+        }[]
+      }
       get_top_hosts_weekly: {
         Args: { p_limit?: number }
         Returns: {
