@@ -213,9 +213,17 @@ export function StatusBar() {
       <div className="flex gap-3 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1">
         {GateDialog}
         {/* My status */}
-        <button
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => gate("create_status", () => (mine.length && user ? openViewer(user.id) : setCreateOpen(true)))}
-          className="flex flex-col items-center gap-1 shrink-0 group"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              gate("create_status", () => (mine.length && user ? openViewer(user.id) : setCreateOpen(true)));
+            }
+          }}
+          className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer"
         >
           <div className="relative">
             <Avatar className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}>
@@ -238,7 +246,7 @@ export function StatusBar() {
           <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
             {mine.length ? t("status.myStatus") : t("status.add")}
           </span>
-        </button>
+        </div>
 
         {/* Discover public statuses */}
         <Link

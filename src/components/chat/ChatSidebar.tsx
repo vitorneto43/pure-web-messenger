@@ -17,7 +17,7 @@ import {
   Share2,
   Trophy,
 } from "lucide-react";
-import { InviteFriendsSheet } from "@/components/invite/InviteFriendsSheet";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -366,77 +366,72 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
   return (
     <>
       {GateDialog}
-      <div className="px-2 py-3 flex items-center justify-between gap-1 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <Link to="/" className="size-9 rounded-full overflow-hidden shadow shrink-0">
-            <img src={wavechatLogo.url} alt="WaveChat" className="size-full object-cover" />
-          </Link>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="font-semibold text-sm leading-tight">WaveChat - Rede Social Brasileira</h1>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.wavechat.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Baixe na Play Store"
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-accent/40 transition leading-none"
-              >
-                <svg className="size-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M3 20.5V3.5c0-.59.34-1.11.84-1.35L13.69 12 3.84 21.85A1.5 1.5 0 0 1 3 20.5Zm13.81-5.38L6.05 21.34 14.54 12.85l2.27 2.27Zm3.35-4.31a1.495 1.495 0 0 1 0 2.38l-2.27 1.31L15.39 12l2.27-2.5 2.27 1.31ZM6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66Z" />
-                </svg>
-                Baixar app
-              </a>
-            </div>
-            {user?.email && (
-              <div className="text-[11px] text-muted-foreground leading-tight">
-                {user.email}
+      <div className="px-2 py-3 flex flex-col gap-2 border-b border-border">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-2.5">
+            <Link to="/" className="size-9 rounded-full overflow-hidden shadow shrink-0">
+              <img src={wavechatLogo.url} alt="WaveChat" className="size-full object-cover" />
+            </Link>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.wavechat.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Baixe na Play Store"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-accent/40 transition leading-none"
+                >
+                  <svg className="size-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M3 20.5V3.5c0-.59.34-1.11.84-1.35L13.69 12 3.84 21.85A1.5 1.5 0 0 1 3 20.5Zm13.81-5.38L6.05 21.34 14.54 12.85l2.27 2.27Zm3.35-4.31a1.495 1.495 0 0 1 0 2.38l-2.27 1.31L15.39 12l2.27-2.5 2.27 1.31ZM6.05 2.66l10.76 6.22-2.27 2.27L6.05 2.66Z" />
+                  </svg>
+                  Baixar app
+                </a>
               </div>
-            )}
+              {user?.email && (
+                <div className="text-[11px] text-muted-foreground leading-tight">
+                  {user.email}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-0 shrink-0">
-          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
-            <Link to="/live" title="Lives">
-              <Radio className="size-4 text-red-500" />
-            </Link>
-          </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
-            <Link to="/posts" title="Posts">
-              <Newspaper className="size-4" />
-            </Link>
-          </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
-            <Link to="/diretrizes" title={t("nav.guidelines")}>
-              <BookOpen className="size-4" />
-            </Link>
-          </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-8" asChild>
-            <Link to="/guide" title={t("chat.help")}>
-              <HelpCircle className="size-4" />
-            </Link>
-          </Button>
-          {user ? <NotificationsBell /> : (
-            <Button size="icon" variant="ghost" className="rounded-full relative size-8" onClick={() => gate("default", () => undefined)}>
-              <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
-              <Settings className="size-4" />
-            </Button>
-          )}
-          {user ? (
-            <>
-              <InviteFriendsSheet
-                trigger={
-                  <Button size="icon" variant="ghost" className="rounded-full size-8" title="Convidar amigos">
-                    <Share2 className="size-4" />
-                  </Button>
-                }
-              />
+          <div className="flex items-center gap-0 shrink-0">
+            {user ? <NotificationsBell /> : (
+              <Button size="icon" variant="ghost" className="rounded-full relative size-8" onClick={() => gate("default", () => undefined)}>
+                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
+                <Settings className="size-4" />
+              </Button>
+            )}
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="icon" variant="ghost" className="rounded-full size-8">
                     <Settings className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem asChild>
+                    <Link to="/live">
+                      <Radio className="size-4 mr-2 text-red-500" /> Lives
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/posts">
+                      <Newspaper className="size-4 mr-2" /> Posts
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/diretrizes">
+                      <BookOpen className="size-4 mr-2" /> {t("nav.guidelines")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/guide">
+                      <HelpCircle className="size-4 mr-2" /> {t("chat.help")}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setInviteOpen(true)}>
+                    <Share2 className="size-4 mr-2" /> Convidar amigos
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/profile">{t("chat.myProfile")}</Link>
                   </DropdownMenuItem>
@@ -458,9 +453,12 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
-          ) : null}
+            ) : null}
+          </div>
         </div>
+        <h1 className="px-1 text-lg sm:text-2xl font-extrabold text-center leading-tight tracking-tight">
+          Wavechat a Rede Social Brasileira onde você faz tudo.
+        </h1>
       </div>
 
       <StatusBar />
