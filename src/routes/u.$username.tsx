@@ -176,6 +176,7 @@ function PublicProfile() {
               <UserBadges userId={data.id} max={4} />
             </h1>
             <p className="text-muted-foreground">@{data.username}</p>
+            <div className="mt-1"><AmbassadorBadge userId={data.id} /></div>
             {data.visibility === "private" && (
               <span className="inline-flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <Lock className="size-3" /> Perfil privado
