@@ -14,7 +14,10 @@ import {
   Newspaper,
   Radio,
   MessageCircle,
+  Share2,
+  Trophy,
 } from "lucide-react";
+import { InviteFriendsSheet } from "@/components/invite/InviteFriendsSheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
