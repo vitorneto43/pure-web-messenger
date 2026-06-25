@@ -39,6 +39,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
 import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authenticated/meus-convites'
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -206,6 +207,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMeusConvitesRoute =
+  AuthenticatedMeusConvitesRouteImport.update({
+    id: '/meus-convites',
+    path: '/meus-convites',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHashtagsRoute = AuthenticatedHashtagsRouteImport.update({
   id: '/hashtags',
   path: '/hashtags',
@@ -321,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
@@ -369,6 +377,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
+  '/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
@@ -419,6 +428,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
+  '/_authenticated/meus-convites': typeof AuthenticatedMeusConvitesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/hashtags'
+    | '/meus-convites'
     | '/profile'
     | '/recordings'
     | '/scheduled'
@@ -517,6 +528,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/chat'
     | '/hashtags'
+    | '/meus-convites'
     | '/profile'
     | '/recordings'
     | '/scheduled'
@@ -566,6 +578,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/chat'
     | '/_authenticated/hashtags'
+    | '/_authenticated/meus-convites'
     | '/_authenticated/profile'
     | '/_authenticated/recordings'
     | '/_authenticated/scheduled'
@@ -851,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/meus-convites': {
+      id: '/_authenticated/meus-convites'
+      path: '/meus-convites'
+      fullPath: '/meus-convites'
+      preLoaderRoute: typeof AuthenticatedMeusConvitesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hashtags': {
       id: '/_authenticated/hashtags'
       path: '/hashtags'
@@ -987,6 +1007,7 @@ const AuthenticatedChatRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
   AuthenticatedHashtagsRoute: typeof AuthenticatedHashtagsRoute
+  AuthenticatedMeusConvitesRoute: typeof AuthenticatedMeusConvitesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
   AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
@@ -996,6 +1017,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedHashtagsRoute: AuthenticatedHashtagsRoute,
+  AuthenticatedMeusConvitesRoute: AuthenticatedMeusConvitesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
   AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
