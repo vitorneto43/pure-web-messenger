@@ -387,9 +387,11 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
                 Baixar app
               </a>
             </div>
-            <div className="text-[11px] text-muted-foreground leading-tight">
-              {user?.email ?? "Visitante · 100% grátis"}
-            </div>
+            {user?.email && (
+              <div className="text-[11px] text-muted-foreground leading-tight">
+                {user.email}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-0 shrink-0">
