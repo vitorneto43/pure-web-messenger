@@ -25,9 +25,6 @@ interface Props {
 }
 
 const HIGHLIGHTS = [
-  "100% grátis",
-  "Sem assinatura",
-  "Sem cartão de crédito",
   "Conversas em tempo real",
   "Stories e comentários",
   "Chamadas de voz e vídeo",
