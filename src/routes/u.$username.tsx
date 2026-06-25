@@ -12,6 +12,7 @@ import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive"
 import { ProfilePostsArchive } from "@/components/profile/ProfilePostsArchive";
 
 import { UserBadges } from "@/components/badges/UserBadges";
+import { AmbassadorBadge } from "@/components/badges/AmbassadorBadge";
 import { AchievementsCard } from "@/components/badges/AchievementsCard";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
