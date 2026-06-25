@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostsRouteImport } from './routes/posts'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as EmbaixadoresRouteImport } from './routes/embaixadores'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as DescobrirStatusRouteImport } from './routes/descobrir-status'
 import { Route as DescobrirRouteImport } from './routes/descobrir'
@@ -96,6 +97,11 @@ const PostsRoute = PostsRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbaixadoresRoute = EmbaixadoresRouteImport.update({
+  id: '/embaixadores',
+  path: '/embaixadores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiretrizesRoute = DiretrizesRouteImport.update({
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
@@ -469,6 +478,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/descobrir'
     | '/descobrir-status'
     | '/diretrizes'
+    | '/embaixadores'
     | '/guide'
     | '/posts'
     | '/privacy'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   DescobrirRoute: typeof DescobrirRoute
   DescobrirStatusRoute: typeof DescobrirStatusRoute
   DiretrizesRoute: typeof DiretrizesRoute
+  EmbaixadoresRoute: typeof EmbaixadoresRoute
   GuideRoute: typeof GuideRoute
   PostsRoute: typeof PostsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -708,6 +721,13 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embaixadores': {
+      id: '/embaixadores'
+      path: '/embaixadores'
+      fullPath: '/embaixadores'
+      preLoaderRoute: typeof EmbaixadoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/diretrizes': {
@@ -1038,6 +1058,7 @@ const rootRouteChildren: RootRouteChildren = {
   DescobrirRoute: DescobrirRoute,
   DescobrirStatusRoute: DescobrirStatusRoute,
   DiretrizesRoute: DiretrizesRoute,
+  EmbaixadoresRoute: EmbaixadoresRoute,
   GuideRoute: GuideRoute,
   PostsRoute: PostsRoute,
   PrivacyRoute: PrivacyRoute,
