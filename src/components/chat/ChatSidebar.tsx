@@ -71,7 +71,13 @@ interface ConversationItem {
   unread: number;
 }
 
-export function ChatSidebar({ activeConversationId, initialView = "chat" }: { activeConversationId?: string; initialView?: "chat" | "posts" }) {
+export function ChatSidebar({
+  activeConversationId,
+  initialView = "chat",
+}: {
+  activeConversationId?: string;
+  initialView?: "chat" | "posts";
+}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { gate, GateDialog } = useAuthGate();
@@ -126,11 +132,7 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
       .in("conversation_id", convIds);
 
     const otherIds = Array.from(
-      new Set(
-        (allMembers ?? [])
-          .filter((m) => m.user_id !== user.id)
-          .map((m) => m.user_id)
-      )
+      new Set((allMembers ?? []).filter((m) => m.user_id !== user.id).map((m) => m.user_id)),
     );
 
     const { data: profiles } = otherIds.length
@@ -170,7 +172,7 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
 
     const items: ConversationItem[] = (convs ?? []).map((c) => {
       const otherMember = (allMembers ?? []).find(
-        (m) => m.conversation_id === c.id && m.user_id !== user.id
+        (m) => m.conversation_id === c.id && m.user_id !== user.id,
       );
       const other = otherMember ? profileMap.get(otherMember.user_id) : undefined;
       return {
@@ -219,7 +221,9 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
     const handle = setTimeout(async () => {
       const [usersRes, groupsRes] = await Promise.all([
         (supabase as any).rpc(user ? "search_users" : "public_search_users", { q }),
-        import("@/lib/groups.functions").then((m) => m.searchGroupsPublic({ data: { q } })).catch(() => ({ groups: [] })),
+        import("@/lib/groups.functions")
+          .then((m) => m.searchGroupsPublic({ data: { q } }))
+          .catch(() => ({ groups: [] })),
       ]);
       if (cancelled) return;
       setUserResults((usersRes.data as any[]) ?? []);
@@ -255,7 +259,6 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
     }
   }
 
-
   // When the user opens a conversation, immediately clear its unread badge
   // locally so the number disappears as soon as they tap the message —
   // don't wait for the background mark-as-read + reload round trip.
@@ -288,34 +291,49 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
         (payload) => {
           const msg = payload.new as any;
           loadConversations();
-          if (
-            msg.sender_id !== user.id &&
-            msg.conversation_id !== activeConversationId
-          ) {
+          if (msg.sender_id !== user.id && msg.conversation_id !== activeConversationId) {
             playNotification();
-            showBrowserNotification(t("chat.newMessage"), msg.content ?? t("chat.attachmentReceived"));
+            showBrowserNotification(
+              t("chat.newMessage"),
+              msg.content ?? t("chat.attachmentReceived"),
+            );
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
-        () => loadConversations()
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversation_members",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadConversations(),
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "conversation_members", filter: `user_id=eq.${user.id}` },
-        () => loadConversations()
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "conversation_members",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadConversations(),
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
         (payload) => {
           const n = payload.new as { title: string; body: string | null };
           playNotification();
           toast.success(n.title, { description: n.body ?? undefined, duration: 6000 });
           showBrowserNotification(n.title, n.body ?? "");
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -344,7 +362,7 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
     else if (filter === "direct") list = list.filter((c) => !c.is_group);
     if (!q) return list;
     return list.filter((c) => {
-      const name = c.is_group ? c.name ?? t("chat.group") : c.other_user?.display_name ?? "";
+      const name = c.is_group ? (c.name ?? t("chat.group")) : (c.other_user?.display_name ?? "");
       const uname = c.other_user?.username ?? "";
       return name.toLowerCase().includes(q) || uname.toLowerCase().includes(q);
     });
@@ -354,13 +372,9 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
   const newUserResults = useMemo(() => {
     if (!search.trim()) return [];
     const existingDirectIds = new Set(
-      conversations
-        .filter((c) => !c.is_group && c.other_user?.id)
-        .map((c) => c.other_user!.id),
+      conversations.filter((c) => !c.is_group && c.other_user?.id).map((c) => c.other_user!.id),
     );
-    return userResults.filter(
-      (u) => u.id !== user?.id && !existingDirectIds.has(u.id),
-    );
+    return userResults.filter((u) => u.id !== user?.id && !existingDirectIds.has(u.id));
   }, [userResults, conversations, search, user?.id]);
 
   return (
@@ -388,15 +402,20 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
                 </a>
               </div>
               {user?.email && (
-                <div className="text-[11px] text-muted-foreground leading-tight">
-                  {user.email}
-                </div>
+                <div className="text-[11px] text-muted-foreground leading-tight">{user.email}</div>
               )}
             </div>
           </div>
           <div className="flex items-center gap-0 shrink-0">
-            {user ? <NotificationsBell /> : (
-              <Button size="icon" variant="ghost" className="rounded-full relative size-8" onClick={() => gate("default", () => undefined)}>
+            {user ? (
+              <NotificationsBell />
+            ) : (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="rounded-full relative size-8"
+                onClick={() => gate("default", () => undefined)}
+              >
                 <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
                 <Settings className="size-4" />
               </Button>
@@ -482,7 +501,10 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
             <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
           </Button>
           <Button asChild size="sm" variant="secondary" className="rounded-full">
-            <Link to="/live"><Radio className="size-4 mr-1.5 text-red-500" />Lives</Link>
+            <Link to="/live">
+              <Radio className="size-4 mr-1.5 text-red-500" />
+              Lives
+            </Link>
           </Button>
           <Button
             onClick={() => setView((v) => (v === "posts" ? "chat" : "posts"))}
@@ -491,9 +513,15 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
             className="rounded-full"
           >
             {view === "posts" ? (
-              <><MessageCircle className="size-4 mr-1.5" />Chat</>
+              <>
+                <MessageCircle className="size-4 mr-1.5" />
+                Chat
+              </>
             ) : (
-              <><Newspaper className="size-4 mr-1.5" />Posts</>
+              <>
+                <Newspaper className="size-4 mr-1.5" />
+                Posts
+              </>
             )}
           </Button>
           <Button
@@ -525,111 +553,118 @@ export function ChatSidebar({ activeConversationId, initialView = "chat" }: { ac
                   : "bg-sidebar-hover text-muted-foreground hover:text-foreground"
               }`}
             >
-              {key === "all" ? t("chat.filterAll") : key === "direct" ? t("chat.filterDirect") : t("chat.filterGroups")}
+              {key === "all"
+                ? t("chat.filterAll")
+                : key === "direct"
+                  ? t("chat.filterDirect")
+                  : t("chat.filterGroups")}
             </button>
           ))}
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
-        
         <ProfileCompletionBanner />
-        
 
         {view === "posts" ? (
           <PostsFeed />
         ) : (
-        <>
-        {loading ? (
-          <div className="grid place-items-center py-10">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
           <>
-            {filtered.length === 0 && newUserResults.length === 0 && !searchingUsers && (
-              <p className="text-center text-sm text-muted-foreground py-10 px-4">
-                {search.trim() ? (
-                  t("chat.noUsersFound")
-                ) : (
-                  <>
-                    {t("chat.noConversationsBefore")}
-                    <b>{t("chat.noConversationsBold")}</b>
-                    {t("chat.noConversationsAfter")}
-                  </>
+            {loading ? (
+              <div className="grid place-items-center py-10">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {filtered.length === 0 && newUserResults.length === 0 && !searchingUsers && (
+                  <p className="text-center text-sm text-muted-foreground py-10 px-4">
+                    {search.trim() ? (
+                      t("chat.noUsersFound")
+                    ) : (
+                      <>
+                        {t("chat.noConversationsBefore")}
+                        <b>{t("chat.noConversationsBold")}</b>
+                        {t("chat.noConversationsAfter")}
+                      </>
+                    )}
+                  </p>
                 )}
-              </p>
-            )}
-            {filtered.map((c) => (
-              <ConversationRow
-                key={c.id}
-                conv={c}
-                active={c.id === activeConversationId}
-                currentUserId={user!.id}
-              />
-            ))}
-            {search.trim() && (newUserResults.length > 0 || searchingUsers) && (
-              <div className="mt-2">
-                <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                  <UserIcon className="size-3" />
-                  {t("chat.startNewConversation")}
-                </div>
-                {searchingUsers && (
-                  <div className="grid place-items-center py-3">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                {filtered.map((c) => (
+                  <ConversationRow
+                    key={c.id}
+                    conv={c}
+                    active={c.id === activeConversationId}
+                    currentUserId={user!.id}
+                  />
+                ))}
+                {search.trim() && (newUserResults.length > 0 || searchingUsers) && (
+                  <div className="mt-2">
+                    <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                      <UserIcon className="size-3" />
+                      {t("chat.startNewConversation")}
+                    </div>
+                    {searchingUsers && (
+                      <div className="grid place-items-center py-3">
+                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                    {newUserResults.map((u) => (
+                      <button
+                        key={u.id}
+                        disabled={startingChat}
+                        onClick={() => openDirectWith(u.id)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
+                      >
+                        <Avatar className="size-10">
+                          <AvatarImage src={u.avatar_url ?? undefined} />
+                          <AvatarFallback className="bg-secondary text-sm">
+                            {u.display_name?.[0]?.toUpperCase() ?? "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{u.display_name}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            @{u.username}
+                          </div>
+                        </div>
+                        <MessageSquarePlus className="size-4 text-primary shrink-0" />
+                      </button>
+                    ))}
                   </div>
                 )}
-                {newUserResults.map((u) => (
-                  <button
-                    key={u.id}
-                    disabled={startingChat}
-                    onClick={() => openDirectWith(u.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
-                  >
-                    <Avatar className="size-10">
-                      <AvatarImage src={u.avatar_url ?? undefined} />
-                      <AvatarFallback className="bg-secondary text-sm">
-                        {u.display_name?.[0]?.toUpperCase() ?? "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{u.display_name}</div>
-                      <div className="text-xs text-muted-foreground truncate">@{u.username}</div>
+                {search.trim() && groupResults.length > 0 && (
+                  <div className="mt-2">
+                    <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                      <UsersRound className="size-3" /> Comunidades
                     </div>
-                    <MessageSquarePlus className="size-4 text-primary shrink-0" />
-                  </button>
-                ))}
-              </div>
-            )}
-            {search.trim() && groupResults.length > 0 && (
-              <div className="mt-2">
-                <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                  <UsersRound className="size-3" /> Comunidades
-                </div>
-                {groupResults.map((g) => (
-                  <Link
-                    key={g.id}
-                    to="/g/$groupId"
-                    params={{ groupId: g.id }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 text-left"
-                  >
-                    <Avatar className="size-10">
-                      <AvatarImage src={g.avatar_url ?? undefined} />
-                      <AvatarFallback className="bg-secondary text-sm">{g.name?.slice(0,2).toUpperCase() ?? "GR"}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{g.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{g.member_count} membros</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    {groupResults.map((g) => (
+                      <Link
+                        key={g.id}
+                        to="/g/$groupId"
+                        params={{ groupId: g.id }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 text-left"
+                      >
+                        <Avatar className="size-10">
+                          <AvatarImage src={g.avatar_url ?? undefined} />
+                          <AvatarFallback className="bg-secondary text-sm">
+                            {g.name?.slice(0, 2).toUpperCase() ?? "GR"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{g.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {g.member_count} membros
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
-        </>
-        )}
       </div>
-
 
       <NewChatDialog
         open={newChatOpen}
@@ -662,7 +697,9 @@ function ConversationRow({
   currentUserId: string;
 }) {
   const { t } = useTranslation();
-  const name = conv.is_group ? conv.name ?? t("chat.group") : conv.other_user?.display_name ?? t("chat.user");
+  const name = conv.is_group
+    ? (conv.name ?? t("chat.group"))
+    : (conv.other_user?.display_name ?? t("chat.user"));
   const avatar = conv.is_group ? conv.avatar_url : conv.other_user?.avatar_url;
   const online =
     !conv.is_group &&
@@ -670,7 +707,9 @@ function ConversationRow({
     Date.now() - new Date(conv.other_user.last_seen).getTime() < 2 * 60_000;
 
   const rawContent = conv.last_message?.content ?? "";
-  const callMatch = rawContent.match(/^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):\d+\]\]$/);
+  const callMatch = rawContent.match(
+    /^\[\[CALL:(audio|video):(missed|cancelled|declined|completed):\d+\]\]$/,
+  );
   let previewBody = rawContent;
   if (callMatch) {
     const [, kind, outcome] = callMatch;

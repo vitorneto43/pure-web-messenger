@@ -44,12 +44,19 @@ export function StatusBar() {
   const [mine, setMine] = useState<StatusRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [viewing, setViewing] = useState<{ groups: UserGroup[]; groupIndex: number; statusIndex: number } | null>(null);
+  const [viewing, setViewing] = useState<{
+    groups: UserGroup[];
+    groupIndex: number;
+    statusIndex: number;
+  } | null>(null);
 
   async function load() {
     setLoading(true);
     if (!user) {
-      const { data } = await (supabase as any).rpc("discover_public_statuses", { _limit: 30, _offset: 0 });
+      const { data } = await (supabase as any).rpc("discover_public_statuses", {
+        _limit: 30,
+        _offset: 0,
+      });
       const byUser = new Map<string, UserGroup>();
       for (const r of data ?? []) {
         const status: StatusRow = {
@@ -68,15 +75,16 @@ export function StatusBar() {
         };
         const current = byUser.get(r.user_id);
         if (current) current.statuses.push(status);
-        else byUser.set(r.user_id, {
-          user: { id: r.user_id, display_name: r.display_name, avatar_url: r.avatar_url },
-          statuses: [status],
-          hasUnseen: true,
-          isOfficial: !!r.is_official,
-          isSponsored: !!r.is_boosted,
-          firstUnseenIndex: 0,
-          sponsoredStatusIds: r.is_boosted ? [r.status_id] : [],
-        });
+        else
+          byUser.set(r.user_id, {
+            user: { id: r.user_id, display_name: r.display_name, avatar_url: r.avatar_url },
+            statuses: [status],
+            hasUnseen: true,
+            isOfficial: !!r.is_official,
+            isSponsored: !!r.is_boosted,
+            firstUnseenIndex: 0,
+            sponsoredStatusIds: r.is_boosted ? [r.status_id] : [],
+          });
       }
       setMine([]);
       setGroups(Array.from(byUser.values()));
@@ -93,7 +101,9 @@ export function StatusBar() {
     const myRows = rows.filter((r) => r.user_id === user.id);
     setMine(myRows);
 
-    const otherIds = Array.from(new Set(rows.filter((r) => r.user_id !== user.id).map((r) => r.user_id)));
+    const otherIds = Array.from(
+      new Set(rows.filter((r) => r.user_id !== user.id).map((r) => r.user_id)),
+    );
     let profilesMap = new Map<string, any>();
     if (otherIds.length) {
       const { data: profs } = await (supabase as any).rpc("get_status_profile_cards", {
@@ -118,9 +128,11 @@ export function StatusBar() {
     let sponsoredSet = new Set<string>();
     try {
       const { data: spon } = await (supabase as any).rpc("get_my_sponsored_status_ids");
-      sponsoredSet = new Set(((spon ?? []) as Array<string | { get_my_sponsored_status_ids: string }>).map(
-        (v) => (typeof v === "string" ? v : v.get_my_sponsored_status_ids),
-      ));
+      sponsoredSet = new Set(
+        ((spon ?? []) as Array<string | { get_my_sponsored_status_ids: string }>).map((v) =>
+          typeof v === "string" ? v : v.get_my_sponsored_status_ids,
+        ),
+      );
     } catch (e) {
       console.warn("sponsored fetch failed", e);
     }
@@ -143,7 +155,10 @@ export function StatusBar() {
         isOfficial: list.some((s) => s.is_official === true),
         isSponsored: sponsoredIds.length > 0,
         sponsoredStatusIds: sponsoredIds,
-        firstUnseenIndex: Math.max(list.findIndex((s) => !seenSet.has(s.id)), 0),
+        firstUnseenIndex: Math.max(
+          list.findIndex((s) => !seenSet.has(s.id)),
+          0,
+        ),
       });
     }
     grouped.sort((a, b) => {
@@ -198,7 +213,11 @@ export function StatusBar() {
     const groupIndex = viewerGroups.findIndex((g) => g.user.id === userId);
     if (groupIndex >= 0) {
       const group = viewerGroups[groupIndex];
-      setViewing({ groups: viewerGroups, groupIndex, statusIndex: statusIndex ?? group.firstUnseenIndex });
+      setViewing({
+        groups: viewerGroups,
+        groupIndex,
+        statusIndex: statusIndex ?? group.firstUnseenIndex,
+      });
     }
   }
 
@@ -216,17 +235,25 @@ export function StatusBar() {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => gate("create_status", () => (mine.length && user ? openViewer(user.id) : setCreateOpen(true)))}
+          onClick={() =>
+            gate("create_status", () =>
+              mine.length && user ? openViewer(user.id) : setCreateOpen(true),
+            )
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              gate("create_status", () => (mine.length && user ? openViewer(user.id) : setCreateOpen(true)));
+              gate("create_status", () =>
+                mine.length && user ? openViewer(user.id) : setCreateOpen(true),
+              );
             }
           }}
           className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer"
         >
           <div className="relative">
-            <Avatar className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}>
+            <Avatar
+              className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}
+            >
               <AvatarImage src={(user?.user_metadata as any)?.avatar_url} />
               <AvatarFallback className="bg-secondary text-sm">
                 {(user?.email?.[0] ?? "V").toUpperCase()}
@@ -249,16 +276,11 @@ export function StatusBar() {
         </div>
 
         {/* Discover public statuses */}
-        <Link
-          to="/descobrir-status"
-          className="flex flex-col items-center gap-1 shrink-0"
-        >
+        <Link to="/descobrir-status" className="flex flex-col items-center gap-1 shrink-0">
           <div className="size-14 rounded-full grid place-items-center bg-gradient-to-br from-primary via-fuchsia-500 to-pink-500 ring-2 ring-offset-2 ring-offset-sidebar ring-primary/40 shadow-lg">
             <Globe2 className="size-6 text-white" />
           </div>
-          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
-            Descobrir
-          </span>
+          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">Descobrir</span>
         </Link>
 
         {/* Trending hashtags */}
@@ -266,12 +288,8 @@ export function StatusBar() {
           <div className="size-14 rounded-full grid place-items-center bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 ring-2 ring-offset-2 ring-offset-sidebar ring-orange-400/40 shadow-lg">
             <Hash className="size-6 text-white" />
           </div>
-          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">
-            Em alta
-          </span>
+          <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">Em alta</span>
         </Link>
-
-
 
         {/* Others */}
         {groups.map((g) => (
