@@ -82,6 +82,11 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [musicTitle, setMusicTitle] = useState<string | null>(null);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
 
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const contentMention = useMentionSuggest({ value: content, setValue: setContent, inputRef: contentRef });
+  const descriptionMention = useMentionSuggest({ value: description, setValue: setDescription, inputRef: descriptionRef });
+
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
