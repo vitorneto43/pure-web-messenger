@@ -447,7 +447,7 @@ function StatusPublicPage() {
               {mention && (
                 <span className="text-primary font-medium">@{mention} </span>
               )}
-              {c.content}
+              <MentionText text={c.content} />
             </p>
           </div>
 
