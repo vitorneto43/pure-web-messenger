@@ -721,24 +721,30 @@ function StatusPublicPage() {
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Input
-                  id="comment-input"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      postComment();
+                <div className="relative flex-1">
+                  <Input
+                    id="comment-input"
+                    ref={commentInputRef}
+                    value={text}
+                    onChange={mentionSuggest.onChange}
+                    onKeyDown={(e) => {
+                      mentionSuggest.onKeyDown(e);
+                      if (e.defaultPrevented) return;
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        postComment();
+                      }
+                    }}
+                    placeholder={
+                      replyTo
+                        ? `Responder a ${replyTo.author?.display_name ?? "comentário"}...`
+                        : "Comente... use @ para mencionar"
                     }
-                  }}
-                  placeholder={
-                    replyTo
-                      ? `Responder a ${replyTo.author?.display_name ?? "comentário"}...`
-                      : "Escreva um comentário..."
-                  }
-                  maxLength={1000}
-                  disabled={sending}
-                />
+                    maxLength={1000}
+                    disabled={sending}
+                  />
+                  {mentionSuggest.popover}
+                </div>
                 <Button
                   size="icon"
                   onClick={postComment}
