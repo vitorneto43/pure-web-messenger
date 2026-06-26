@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Loader2, Globe2, Hash } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -10,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { CreateStatusDialog } from "./CreateStatusDialog";
 import { StatusViewer } from "./StatusViewer";
 import { useTranslation } from "react-i18next";
+import { getActiveLives } from "@/lib/live.functions";
+import { useLiveHosts } from "@/hooks/use-live-hosts";
 
 export interface StatusRow {
   id: string;
@@ -49,6 +53,15 @@ export function StatusBar() {
     groupIndex: number;
     statusIndex: number;
   } | null>(null);
+
+  const fetchActiveLives = useServerFn(getActiveLives);
+  const liveHostsMap = useLiveHosts();
+  const { data: activeLives = [] } = useQuery({
+    queryKey: ["status-bar-active-lives", Array.from(liveHostsMap.keys()).sort().join(",")],
+    queryFn: () => fetchActiveLives(),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
 
   async function load() {
     setLoading(true);
@@ -290,6 +303,33 @@ export function StatusBar() {
           </div>
           <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">Em alta</span>
         </Link>
+
+        {/* Live hosts (no story yet) */}
+        {activeLives
+          .filter((l) => !groups.some((g) => g.user.id === l.host_id))
+          .map((l) => {
+            const name = l.host?.display_name || l.host?.username || "Ao vivo";
+            return (
+              <Link
+                key={`live-${l.id}`}
+                to="/live/$liveId"
+                params={{ liveId: l.id }}
+                className="flex flex-col items-center gap-1 shrink-0"
+              >
+                <LiveAvatarRing hostId={l.host_id} showPill clickable={false}>
+                  <Avatar className="size-14">
+                    <AvatarImage src={l.host?.avatar_url ?? undefined} />
+                    <AvatarFallback className="bg-secondary text-sm">
+                      {name[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </LiveAvatarRing>
+                <span className="text-[10px] max-w-[64px] truncate text-red-500 font-semibold">
+                  {name}
+                </span>
+              </Link>
+            );
+          })}
 
         {/* Others */}
         {groups.map((g) => (
