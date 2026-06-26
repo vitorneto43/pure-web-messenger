@@ -142,8 +142,21 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
             </div>
           )}
           <div className="flex gap-2">
-            <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={user ? "Escreva..." : "Entre para comentar"} maxLength={500}
-              onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
+            <div className="relative flex-1">
+              <Input
+                ref={inputRef}
+                value={text}
+                onChange={mention.onChange}
+                placeholder={user ? "Escreva... use @ para mencionar" : "Entre para comentar"}
+                maxLength={500}
+                onKeyDown={(e) => {
+                  mention.onKeyDown(e);
+                  if (e.defaultPrevented) return;
+                  if (e.key === "Enter") send();
+                }}
+              />
+              {mention.popover}
+            </div>
             <Button onClick={send} disabled={sending || !text.trim()} size="icon">
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             </Button>
