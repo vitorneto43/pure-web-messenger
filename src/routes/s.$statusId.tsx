@@ -98,7 +98,7 @@ function StatusPublicPage() {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const mention = useMentionSuggest({ value: text, setValue: setText, inputRef: commentInputRef });
+  const mentionSuggest = useMentionSuggest({ value: text, setValue: setText, inputRef: commentInputRef });
   const [sending, setSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [reportTarget, setReportTarget] = useState<Comment | null>(null);
