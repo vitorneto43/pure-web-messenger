@@ -185,7 +185,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
             </div>
             <p className="text-sm whitespace-pre-wrap break-words">
               {replyToUsername && <span className="text-primary font-medium mr-1">@{replyToUsername}</span>}
-              {c.content}
+              <MentionText text={c.content} />
             </p>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
