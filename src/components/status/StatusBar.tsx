@@ -304,6 +304,33 @@ export function StatusBar() {
           <span className="text-[10px] text-muted-foreground max-w-[64px] truncate">Em alta</span>
         </Link>
 
+        {/* Live hosts (no story yet) */}
+        {activeLives
+          .filter((l) => !groups.some((g) => g.user.id === l.host_id))
+          .map((l) => {
+            const name = l.host?.display_name || l.host?.username || "Ao vivo";
+            return (
+              <Link
+                key={`live-${l.id}`}
+                to="/live/$liveId"
+                params={{ liveId: l.id }}
+                className="flex flex-col items-center gap-1 shrink-0"
+              >
+                <LiveAvatarRing hostId={l.host_id} showPill clickable={false}>
+                  <Avatar className="size-14">
+                    <AvatarImage src={l.host?.avatar_url ?? undefined} />
+                    <AvatarFallback className="bg-secondary text-sm">
+                      {name[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </LiveAvatarRing>
+                <span className="text-[10px] max-w-[64px] truncate text-red-500 font-semibold">
+                  {name}
+                </span>
+              </Link>
+            );
+          })}
+
         {/* Others */}
         {groups.map((g) => (
           <button
