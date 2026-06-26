@@ -115,6 +115,33 @@ function LiveView() {
     };
   }, [live]);
 
+  // Host: ping heartbeat so the server knows we're still broadcasting; on
+  // tab close, best-effort end the live so it stops appearing in Stories.
+  useEffect(() => {
+    if (!live || !isHost || ended) return;
+    let stopped = false;
+    const ping = () => {
+      supabase.rpc("host_live_heartbeat", { p_live_id: live.id }).then(() => {});
+    };
+    ping();
+    const id = setInterval(() => {
+      if (!stopped) ping();
+    }, 20_000);
+    const onUnload = () => {
+      try {
+        supabase.rpc("end_live", { p_live_id: live.id });
+      } catch {}
+    };
+    window.addEventListener("pagehide", onUnload);
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      stopped = true;
+      clearInterval(id);
+      window.removeEventListener("pagehide", onUnload);
+      window.removeEventListener("beforeunload", onUnload);
+    };
+  }, [live, isHost, ended]);
+
   // Mint a token (host > approved guest > viewer)
   useEffect(() => {
     if (!live || ended) return;
