@@ -125,13 +125,18 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
       </div>
       {userId ? (
         <form onSubmit={send} className="p-2 flex gap-2 bg-black/40 backdrop-blur">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Diga algo…"
-            maxLength={500}
-            className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
-          />
+          <div className="relative flex-1">
+            <Input
+              ref={inputRef}
+              value={text}
+              onChange={mention.onChange}
+              onKeyDown={mention.onKeyDown}
+              placeholder="Diga algo… use @ para mencionar"
+              maxLength={500}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+            />
+            {mention.popover}
+          </div>
           <Button type="submit" size="icon" disabled={busy || !text.trim()}>
             <Send className="w-4 h-4" />
           </Button>
