@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Send, MessageSquare, Heart } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 interface CommentRow {
   id: string;
@@ -42,6 +44,8 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<CommentRow | null>(null);
   const [sending, setSending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mention = useMentionSuggest({ value: text, setValue: setText, inputRef });
 
   async function load() {
     setLoading(true);
@@ -138,8 +142,21 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
             </div>
           )}
           <div className="flex gap-2">
-            <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={user ? "Escreva..." : "Entre para comentar"} maxLength={500}
-              onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
+            <div className="relative flex-1">
+              <Input
+                ref={inputRef}
+                value={text}
+                onChange={mention.onChange}
+                placeholder={user ? "Escreva... use @ para mencionar" : "Entre para comentar"}
+                maxLength={500}
+                onKeyDown={(e) => {
+                  mention.onKeyDown(e);
+                  if (e.defaultPrevented) return;
+                  if (e.key === "Enter") send();
+                }}
+              />
+              {mention.popover}
+            </div>
             <Button onClick={send} disabled={sending || !text.trim()} size="icon">
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             </Button>
@@ -168,7 +185,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
             </div>
             <p className="text-sm whitespace-pre-wrap break-words">
               {replyToUsername && <span className="text-primary font-medium mr-1">@{replyToUsername}</span>}
-              {c.content}
+              <MentionText text={c.content} />
             </p>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">

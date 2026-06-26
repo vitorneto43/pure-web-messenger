@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 import {
   Popover,
   PopoverContent,
@@ -120,6 +121,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const lastTypingPing = useRef<number>(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mention = useMentionSuggest({
+    value: text,
+    setValue: setText,
+    inputRef: textareaRef,
+  });
 
   // Audio recording
   const [recording, setRecording] = useState(false);
@@ -1212,31 +1218,36 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
             </div>
 
             <div className="flex items-end gap-2">
-              <Textarea
-                ref={textareaRef}
-                value={text}
-                onChange={(e) => {
-                  setText(e.target.value);
-                  handleTyping();
-                  const el = e.target;
-                  el.style.height = "auto";
-                  el.style.height = Math.min(el.scrollHeight, 120) + "px";
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage(text);
-                    const el = textareaRef.current;
-                    if (el) {
-                      el.style.height = "auto";
+              <div className="relative flex-1 min-w-0">
+                <Textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={(e) => {
+                    mention.onChange(e);
+                    handleTyping();
+                    const el = e.target;
+                    el.style.height = "auto";
+                    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+                  }}
+                  onKeyDown={(e) => {
+                    mention.onKeyDown(e);
+                    if (e.defaultPrevented) return;
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage(text);
+                      const el = textareaRef.current;
+                      if (el) {
+                        el.style.height = "auto";
+                      }
                     }
-                  }
-                }}
-                placeholder={t("chat.writeMessage")}
-                className="flex-1 min-w-0 rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
-                maxLength={4000}
-                rows={1}
-              />
+                  }}
+                  placeholder={t("chat.writeMessage")}
+                  className="w-full rounded-2xl bg-background/80 resize-none py-2.5 px-4 min-h-[44px] max-h-[120px] overflow-y-auto leading-normal"
+                  maxLength={4000}
+                  rows={1}
+                />
+                {mention.popover}
+              </div>
 
               {text.trim() ? (
                 <Button

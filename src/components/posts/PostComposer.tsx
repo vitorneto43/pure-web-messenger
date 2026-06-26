@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 import { Loader2, ImagePlus, Video, Type, X, Music, Sparkles, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -80,6 +81,11 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [musicTrackId, setMusicTrackId] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState<string | null>(null);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const contentMention = useMentionSuggest({ value: content, setValue: setContent, inputRef: contentRef });
+  const descriptionMention = useMentionSuggest({ value: description, setValue: setDescription, inputRef: descriptionRef });
 
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
@@ -194,7 +200,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           {kind === "text" && (
-            <Textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="O que você quer dizer?" rows={5} maxLength={500} className="mt-3" />
+            <div className="relative mt-3">
+              <Textarea ref={contentRef} value={content} onChange={contentMention.onChange} onKeyDown={contentMention.onKeyDown} placeholder="O que você quer dizer? Use @ para mencionar" rows={5} maxLength={500} />
+              {contentMention.popover}
+            </div>
           )}
 
           {(kind === "image" || kind === "video") && (
@@ -220,13 +229,18 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
 
           <div className="mt-3 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Descrição</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva seu post, conte uma história, marque amigos…"
-              rows={3}
-              maxLength={500}
-            />
+            <div className="relative">
+              <Textarea
+                ref={descriptionRef}
+                value={description}
+                onChange={descriptionMention.onChange}
+                onKeyDown={descriptionMention.onKeyDown}
+                placeholder="Descreva seu post, conte uma história, mencione com @amigos…"
+                rows={3}
+                maxLength={500}
+              />
+              {descriptionMention.popover}
+            </div>
           </div>
 
           <div className="mt-3 space-y-1.5">

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, MessageCircle } from "lucide-react";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 interface Msg {
   id: string;
@@ -23,6 +25,8 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mention = useMentionSuggest({ value: text, setValue: setText, inputRef, variant: "dark" });
 
   useEffect(() => {
     let active = true;
@@ -104,7 +108,7 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
           <div key={m.id} className="text-white drop-shadow leading-tight flex items-start gap-1.5">
             <div className="flex-1 min-w-0">
               <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
-              <span className="opacity-95 break-words">{m.body}</span>
+              <MentionText text={m.body} className="opacity-95 break-words" mentionClassName="font-bold text-primary underline" />
             </div>
             {userId && m.user_id !== userId && (
               <button
@@ -121,13 +125,18 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
       </div>
       {userId ? (
         <form onSubmit={send} className="p-2 flex gap-2 bg-black/40 backdrop-blur">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Diga algo…"
-            maxLength={500}
-            className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
-          />
+          <div className="relative flex-1">
+            <Input
+              ref={inputRef}
+              value={text}
+              onChange={mention.onChange}
+              onKeyDown={mention.onKeyDown}
+              placeholder="Diga algo… use @ para mencionar"
+              maxLength={500}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+            />
+            {mention.popover}
+          </div>
           <Button type="submit" size="icon" disabled={busy || !text.trim()}>
             <Send className="w-4 h-4" />
           </Button>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Send, Trash2, MessageCircle, Eye, Flag, Reply, Share2, SmilePlus } from "lucide-react";
 import {
   Popover,
@@ -33,6 +33,8 @@ import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { sendStatusPush } from "@/lib/status-push.functions";
 import { UserBadges } from "@/components/badges/UserBadges";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
@@ -95,6 +97,8 @@ function StatusPublicPage() {
   const [sharing, setSharing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  const mentionSuggest = useMentionSuggest({ value: text, setValue: setText, inputRef: commentInputRef });
   const [sending, setSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [reportTarget, setReportTarget] = useState<Comment | null>(null);
@@ -443,7 +447,7 @@ function StatusPublicPage() {
               {mention && (
                 <span className="text-primary font-medium">@{mention} </span>
               )}
-              {c.content}
+              <MentionText text={c.content} />
             </p>
           </div>
 
@@ -717,24 +721,30 @@ function StatusPublicPage() {
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Input
-                  id="comment-input"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      postComment();
+                <div className="relative flex-1">
+                  <Input
+                    id="comment-input"
+                    ref={commentInputRef}
+                    value={text}
+                    onChange={mentionSuggest.onChange}
+                    onKeyDown={(e) => {
+                      mentionSuggest.onKeyDown(e);
+                      if (e.defaultPrevented) return;
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        postComment();
+                      }
+                    }}
+                    placeholder={
+                      replyTo
+                        ? `Responder a ${replyTo.author?.display_name ?? "comentário"}...`
+                        : "Comente... use @ para mencionar"
                     }
-                  }}
-                  placeholder={
-                    replyTo
-                      ? `Responder a ${replyTo.author?.display_name ?? "comentário"}...`
-                      : "Escreva um comentário..."
-                  }
-                  maxLength={1000}
-                  disabled={sending}
-                />
+                    maxLength={1000}
+                    disabled={sending}
+                  />
+                  {mentionSuggest.popover}
+                </div>
                 <Button
                   size="icon"
                   onClick={postComment}

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { PIX_REGEX, decodePixMessage, buildPixPayload, type PixMessage } from "@/lib/pix";
 import { fetchLinkPreview, type LinkPreview } from "@/lib/link-preview.functions";
 import { getEmbedInfo } from "@/lib/link-embed";
+import { MentionText } from "@/components/mentions/MentionText";
 
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -159,7 +160,7 @@ export function MessageContent({ content, isMine }: { content: string; isMine: b
           if (s.type === "pix" && s.pix) {
             return <PixCard key={i} pix={s.pix} isMine={isMine} />;
           }
-          return <span key={i}>{s.value}</span>;
+          return <MentionText key={i} text={s.value} mentionClassName={isMine ? "font-bold text-bubble-out-foreground underline" : "font-bold text-primary hover:underline"} />;
         })}
       </div>
       {firstUrl && <LinkPreviewCard url={firstUrl} isMine={isMine} />}
