@@ -1453,6 +1453,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           host_id: string
+          host_last_seen: string
           id: string
           livekit_room: string
           peak_viewers: number
@@ -1470,6 +1471,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           host_id: string
+          host_last_seen?: string
           id?: string
           livekit_room: string
           peak_viewers?: number
@@ -1487,6 +1489,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           host_id?: string
+          host_last_seen?: string
           id?: string
           livekit_room?: string
           peak_viewers?: number
@@ -3671,6 +3674,7 @@ export type Database = {
         Returns: Json
       }
       claim_invite_reward: { Args: never; Returns: Json }
+      cleanup_stale_lives: { Args: { p_minutes?: number }; Returns: number }
       complete_onboarding: {
         Args: { _display_name: string; _username: string }
         Returns: Json
@@ -3956,6 +3960,7 @@ export type Database = {
         Returns: boolean
       }
       heartbeat_viewer: { Args: { p_live_id: string }; Returns: number }
+      host_live_heartbeat: { Args: { p_live_id: string }; Returns: undefined }
       increment_music_play_count: {
         Args: { _track_id: string }
         Returns: undefined
@@ -4220,6 +4225,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           host_id: string
+          host_last_seen: string
           id: string
           livekit_room: string
           peak_viewers: number
