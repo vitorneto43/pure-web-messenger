@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, MessageCircle } from "lucide-react";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 interface Msg {
   id: string;
