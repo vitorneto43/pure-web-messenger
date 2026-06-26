@@ -229,13 +229,18 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
 
           <div className="mt-3 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Descrição</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descreva seu post, conte uma história, marque amigos…"
-              rows={3}
-              maxLength={500}
-            />
+            <div className="relative">
+              <Textarea
+                ref={descriptionRef}
+                value={description}
+                onChange={descriptionMention.onChange}
+                onKeyDown={descriptionMention.onKeyDown}
+                placeholder="Descreva seu post, conte uma história, mencione com @amigos…"
+                rows={3}
+                maxLength={500}
+              />
+              {descriptionMention.popover}
+            </div>
           </div>
 
           <div className="mt-3 space-y-1.5">
