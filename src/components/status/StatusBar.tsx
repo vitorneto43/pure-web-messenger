@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Loader2, Globe2, Hash } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -10,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { CreateStatusDialog } from "./CreateStatusDialog";
 import { StatusViewer } from "./StatusViewer";
 import { useTranslation } from "react-i18next";
+import { getActiveLives } from "@/lib/live.functions";
+import { useLiveHosts } from "@/hooks/use-live-hosts";
 
 export interface StatusRow {
   id: string;
