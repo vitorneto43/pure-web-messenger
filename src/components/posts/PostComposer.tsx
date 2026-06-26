@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 import { Loader2, ImagePlus, Video, Type, X, Music, Sparkles, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
