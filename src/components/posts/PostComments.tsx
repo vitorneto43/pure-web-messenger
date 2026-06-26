@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Send, MessageSquare, Heart } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 interface CommentRow {
   id: string;
