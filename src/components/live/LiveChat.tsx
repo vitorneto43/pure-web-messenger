@@ -25,6 +25,8 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mention = useMentionSuggest({ value: text, setValue: setText, inputRef, variant: "dark" });
 
   useEffect(() => {
     let active = true;
