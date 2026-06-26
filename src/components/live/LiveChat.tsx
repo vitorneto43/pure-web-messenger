@@ -108,7 +108,7 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
           <div key={m.id} className="text-white drop-shadow leading-tight flex items-start gap-1.5">
             <div className="flex-1 min-w-0">
               <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
-              <span className="opacity-95 break-words">{m.body}</span>
+              <MentionText text={m.body} className="opacity-95 break-words" mentionClassName="font-bold text-primary underline" />
             </div>
             {userId && m.user_id !== userId && (
               <button
