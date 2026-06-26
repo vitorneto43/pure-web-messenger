@@ -54,6 +54,15 @@ export function StatusBar() {
     statusIndex: number;
   } | null>(null);
 
+  const fetchActiveLives = useServerFn(getActiveLives);
+  const liveHostsMap = useLiveHosts();
+  const { data: activeLives = [] } = useQuery({
+    queryKey: ["status-bar-active-lives", Array.from(liveHostsMap.keys()).sort().join(",")],
+    queryFn: () => fetchActiveLives(),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+
   async function load() {
     setLoading(true);
     if (!user) {
