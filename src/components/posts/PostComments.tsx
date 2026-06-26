@@ -44,6 +44,8 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<CommentRow | null>(null);
   const [sending, setSending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mention = useMentionSuggest({ value: text, setValue: setText, inputRef });
 
   async function load() {
     setLoading(true);
