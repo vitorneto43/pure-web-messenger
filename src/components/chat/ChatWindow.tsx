@@ -121,6 +121,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   const lastTypingPing = useRef<number>(0);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mention = useMentionSuggest({
+    value: text,
+    setValue: setText,
+    inputRef: textareaRef,
+  });
 
   // Audio recording
   const [recording, setRecording] = useState(false);
