@@ -81,6 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     void ping();
     void recordDeviceInfo(session.user.id);
+    // Opportunistic country backfill from edge headers (cf-ipcountry).
+    // No-op when already set; resolves the 48 legacy "unknown country" rows
+    // as those users return.
+    void (async () => {
+      try {
+        const { backfillCountryFromEdge } = await import("@/lib/geo.functions");
+        await backfillCountryFromEdge();
+      } catch (e) {
+        console.warn("backfillCountryFromEdge failed", e);
+      }
+    })();
     const id = setInterval(() => { void ping(); }, 60_000);
     return () => clearInterval(id);
   }, [session?.user?.id]);
