@@ -26,6 +26,13 @@ export const getTopHostsWeekly = createServerFn({ method: "GET" })
 
 export const getActiveLives = createServerFn({ method: "GET" }).handler(async () => {
   const sb = publicClient();
+  // Best-effort: end any live whose host hasn't pinged in 2 minutes so the
+  // feed/stories don't keep showing ghost broadcasts after a tab close/crash.
+  try {
+    await sb.rpc("cleanup_stale_lives", { p_minutes: 2 });
+  } catch (e) {
+    console.warn("cleanup_stale_lives failed", e);
+  }
   const { data, error } = await sb
     .from("live_sessions")
     .select("id,title,cover_url,viewer_count,host_id,started_at,total_gift_coins")
