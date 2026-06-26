@@ -200,7 +200,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           {kind === "text" && (
-            <Textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="O que você quer dizer?" rows={5} maxLength={500} className="mt-3" />
+            <div className="relative mt-3">
+              <Textarea ref={contentRef} value={content} onChange={contentMention.onChange} onKeyDown={contentMention.onKeyDown} placeholder="O que você quer dizer? Use @ para mencionar" rows={5} maxLength={500} />
+              {contentMention.popover}
+            </div>
           )}
 
           {(kind === "image" || kind === "video") && (
