@@ -33,6 +33,8 @@ import { formatTime } from "@/lib/format-time";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { sendStatusPush } from "@/lib/status-push.functions";
 import { UserBadges } from "@/components/badges/UserBadges";
+import { MentionText } from "@/components/mentions/MentionText";
+import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 
 export const Route = createFileRoute("/s/$statusId")({
   component: StatusPublicPage,
