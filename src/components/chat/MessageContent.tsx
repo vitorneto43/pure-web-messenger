@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { PIX_REGEX, decodePixMessage, buildPixPayload, type PixMessage } from "@/lib/pix";
 import { fetchLinkPreview, type LinkPreview } from "@/lib/link-preview.functions";
 import { getEmbedInfo } from "@/lib/link-embed";
+import { MentionText } from "@/components/mentions/MentionText";
 
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
