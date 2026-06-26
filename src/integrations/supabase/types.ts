@@ -3770,6 +3770,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      extract_mentions: { Args: { p_text: string }; Returns: string[] }
       get_admin_invite_overview: { Args: never; Returns: Json }
       get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
