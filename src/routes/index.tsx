@@ -9,6 +9,7 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "WaveChat — Rede social brasileira: posts, stories, lives e comunidades" },
       { name: "description", content: "Veja posts, stories, lives e comunidades em tempo real. Conheça pessoas, participe de grupos e converse no WaveChat." },
+      { name: "yandex-verification", content: "4f34e83836d5c856" },
       { property: "og:title", content: "WaveChat — Rede social brasileira" },
       { property: "og:description", content: "Posts, stories, lives, comunidades e chamadas em um só lugar." },
       { property: "og:url", content: "https://webconnectchat.com" },
