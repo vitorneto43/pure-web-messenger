@@ -58,44 +58,65 @@ function AudioBootstrap() {
   const { localParticipant } = useLocalParticipant();
   const did = useRef(false);
   useEffect(() => {
-    if (!room || did.current) return;
+    if (!room) return;
+    const log = (...a: any[]) => console.log("[call/audio]", ...a);
     const run = async () => {
+      log("room connected, state=", room.state, "remote=", room.remoteParticipants.size);
       try {
         await localParticipant.setMicrophoneEnabled(true);
+        const pub = localParticipant.getTrackPublication(Track.Source.Microphone);
+        log("mic published?", !!pub, "muted=", pub?.isMuted, "track=", !!pub?.track);
       } catch (e) {
-        console.error("Failed to enable microphone", e);
+        console.error("[call/audio] enable mic failed", e);
         toast.error("Não foi possível acessar o microfone. Verifique a permissão.");
       }
       try {
-        // Some browsers (iOS Safari, some Android WebViews) require an explicit
-        // startAudio() before the AudioContext will play remote tracks.
         await room.startAudio();
-      } catch {
-        /* user gesture may still be required — StartAudio button handles that */
+        log("startAudio ok, canPlayback=", room.canPlaybackAudio);
+      } catch (e) {
+        log("startAudio blocked (will need user gesture)", e);
       }
     };
     if (room.state === "connected") {
-      did.current = true;
-      void run();
-    } else {
-      const onConnected = () => {
-        if (did.current) return;
+      if (!did.current) {
         did.current = true;
         void run();
-      };
-      room.on("connected" as any, onConnected);
-      return () => {
-        room.off("connected" as any, onConnected);
-      };
+      }
     }
+    const onConnected = () => {
+      if (did.current) return;
+      did.current = true;
+      void run();
+    };
+    const onTrackSub = (track: any, pub: any, participant: any) => {
+      console.log("[call/audio] remote track subscribed", track.kind, "from", participant.identity);
+    };
+    const onMediaFailed = (e: any) => {
+      console.error("[call/audio] media devices failed", e);
+      toast.error("Falha de dispositivos de mídia: " + (e?.message ?? e));
+    };
+    const onPlaybackChanged = () => {
+      console.log("[call/audio] canPlaybackAudio=", room.canPlaybackAudio);
+    };
+    room.on("connected" as any, onConnected);
+    room.on("trackSubscribed" as any, onTrackSub);
+    room.on("mediaDevicesError" as any, onMediaFailed);
+    room.on("audioPlaybackChanged" as any, onPlaybackChanged);
+    return () => {
+      room.off("connected" as any, onConnected);
+      room.off("trackSubscribed" as any, onTrackSub);
+      room.off("mediaDevicesError" as any, onMediaFailed);
+      room.off("audioPlaybackChanged" as any, onPlaybackChanged);
+    };
   }, [room, localParticipant]);
   return (
     <StartAudio
-      label="Tocar áudio"
-      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/80 text-white text-lg font-medium"
+      label="Toque para ativar o áudio"
+      className="absolute inset-x-0 top-20 z-[110] mx-auto w-fit px-4 py-2 rounded-full bg-yellow-500 text-black text-sm font-semibold shadow-lg"
     />
   );
 }
+
 
 function CallShell({ children }: { children: React.ReactNode }) {
   return (
