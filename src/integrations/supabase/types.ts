@@ -1384,6 +1384,7 @@ export type Database = {
       }
       live_recordings: {
         Row: {
+          call_id: string | null
           created_at: string
           duration_sec: number | null
           ended_at: string | null
@@ -1392,7 +1393,7 @@ export type Database = {
           host_id: string
           id: string
           is_public: boolean
-          live_id: string
+          live_id: string | null
           livekit_egress_id: string | null
           size_bytes: number | null
           started_at: string | null
@@ -1402,6 +1403,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          call_id?: string | null
           created_at?: string
           duration_sec?: number | null
           ended_at?: string | null
@@ -1410,7 +1412,7 @@ export type Database = {
           host_id: string
           id?: string
           is_public?: boolean
-          live_id: string
+          live_id?: string | null
           livekit_egress_id?: string | null
           size_bytes?: number | null
           started_at?: string | null
@@ -1420,6 +1422,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          call_id?: string | null
           created_at?: string
           duration_sec?: number | null
           ended_at?: string | null
@@ -1428,7 +1431,7 @@ export type Database = {
           host_id?: string
           id?: string
           is_public?: boolean
-          live_id?: string
+          live_id?: string | null
           livekit_egress_id?: string | null
           size_bytes?: number | null
           started_at?: string | null
@@ -1438,6 +1441,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "live_recordings_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "live_recordings_live_id_fkey"
             columns: ["live_id"]

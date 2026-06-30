@@ -585,17 +585,40 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
           </div>
         </div>
         {conv?.is_group && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-auto py-1 px-2 flex flex-col items-center gap-0.5 text-[10px] leading-tight rounded-lg sm:flex-row sm:gap-1 sm:text-xs"
-            onClick={() => setGroupSettingsOpen(true)}
-            title={t("chat.viewGroupDetails")}
-          >
-            <Settings className="size-4" />
-            <span className="sm:inline">{t("chat.viewGroupDetails")}</span>
-          </Button>
+          <>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-full"
+              title="Chamada em grupo"
+              onClick={async () => {
+                try {
+                  await supabase.from("messages").insert({
+                    conversation_id: conversationId,
+                    sender_id: user!.id,
+                    content: `[[GROUPCALL:${conversationId}:main]]`,
+                  });
+                  navigate({ to: "/meet/$roomId", params: { roomId: `g-${conversationId}` } });
+                } catch (e: any) {
+                  toast.error("Falha ao iniciar chamada em grupo: " + e.message);
+                }
+              }}
+            >
+              <Video className="size-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-auto py-1 px-2 flex flex-col items-center gap-0.5 text-[10px] leading-tight rounded-lg sm:flex-row sm:gap-1 sm:text-xs"
+              onClick={() => setGroupSettingsOpen(true)}
+              title={t("chat.viewGroupDetails")}
+            >
+              <Settings className="size-4" />
+              <span className="sm:inline">{t("chat.viewGroupDetails")}</span>
+            </Button>
+          </>
         )}
+
         {!conv?.is_group && otherUser?.username && (
           <Button
             size="sm"

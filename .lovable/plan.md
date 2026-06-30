@@ -1,100 +1,64 @@
-# Sistema de Convites WaveChat
+# Migração de Chamadas para LiveKit
 
-Implementação completa sem alterar nenhuma funcionalidade existente. Tudo somado em cima.
+## Situação atual
 
-## 1. Banco de dados (migração)
+- **Lives e Meet**: já rodam em LiveKit (`LiveRoomShell`, `livekit-token.server.ts`, `livekit-egress.server.ts`). Nada muda.
+- **Chamadas 1:1 do chat**: WebRTC manual (~940 linhas em `use-call.tsx`) com signaling via Supabase Realtime e ICE/TURN próprios. **É o que está falhando** e o que vamos substituir.
+- **Chamadas em grupo do chat**: não existem hoje. Serão adicionadas reaproveitando o mesmo fluxo.
 
-Novas tabelas:
+## O que muda
 
-- `invite_links` — link único por usuário (slug curto opcional além do user_id), contadores agregados (clicks, signups, installs).
-- `invite_clicks` — cada acesso ao link `/invite/:id`: canal (whatsapp, facebook, instagram, tiktok, kwai, share, copy, other), IP hash, user agent, referrer, utm, timestamp.
-- `invite_signups` — vínculo "quem convidou quem": inviter_id, invited_user_id, channel, click_id, criado em.
-- `ambassador_tiers` — níveis configuráveis (nome, ícone, min_invites, ativo). Seed: 1, 5, 10, 25, 50, 100, 250, 500, 1000.
-- `ambassador_settings` — flags do super admin: ranking_public, rewards_enabled.
+### Backend (server functions)
+1. Nova função `createCallToken` em `src/lib/calls.functions.ts`:
+   - Recebe `{ callId, role: 'caller'|'callee' }`, valida via `requireSupabaseAuth` que o usuário é parte da call.
+   - Gera token LiveKit com `room = call-${callId}`, `canPublish: true`, identity = userId.
+   - Reaproveita `createLiveKitToken` já existente.
+2. Função `startCallRecording` / `stopCallRecording` espelhando `startLiveRecording` (reaproveita `livekit-egress.server.ts` e bucket `live-recordings`, adiciona coluna `call_id` em `live_recordings` ou cria tabela `call_recordings` paralela — usaremos `live_recordings` com `call_id` nullable pra simplificar).
+3. Manter tabela `calls` como está (mesmo schema de status/signaling de ringing/accepted/declined/ended).
 
-RLS: usuário vê só seus próprios convites/clicks; admin vê tudo (via `has_role`). `invite_clicks` aceita INSERT anônimo (para rastrear cliques pré-login). Grants padrão (authenticated + service_role; anon SELECT só em `ambassador_tiers` e ranking público).
+### Frontend
+4. Reescrever `src/hooks/use-call.tsx`:
+   - Remover toda a lógica de `RTCPeerConnection`, ICE candidates, offer/answer, `getUserMedia`, `setupSignaling` baseado em Realtime.
+   - Manter intactos: ringing (toque), `IncomingCallDialog`, push notifications, `IncomingCallKit` nativo (Android), inserção da mensagem de chamada (`[[CALL:...]]`), histórico, registro em `calls`.
+   - Substituir conexão de mídia por: assim que `accepted`, ambos chamam `createCallToken` e renderizam um `<LiveKitRoom>` invisível dentro do `CallScreen`.
+5. Adaptar `src/components/call/CallScreen.tsx`:
+   - **Visual idêntico ao atual** (avatar grande, timer, controles mic/cam/end).
+   - Por baixo: usar `useTracks`, `useLocalParticipant`, `useRemoteParticipants` do `@livekit/components-react` para vídeo/áudio e toggles.
+   - Botão "Gravar" (só pro caller) que chama `startCallRecording`.
+6. Sinalização restante (ringing, accept, decline, end) continua via tabela `calls` + Realtime — só a parte de mídia muda.
 
-Funções:
-- `get_my_invite_stats()` — totais do usuário logado por canal.
-- `get_ambassador_level(user_id)` — retorna tier atual.
-- `get_top_ambassadors(limit)` — ranking público.
-- Trigger em `auth.users` (ou no signup flow) que lê cookie/localStorage `wc_invited_by` e cria linha em `invite_signups`.
+### Group calls (chat de grupo)
+7. Botão "Chamar grupo" no header do `ChatWindow` quando `conversation.is_group`.
+8. Cria uma `call` com `kind` + `room = call-${callId}` e push para todos os membros. Mesmo fluxo do 1:1, mas `<LiveKitRoom>` aceita N participantes naturalmente.
 
-## 2. Captura do convite (frontend)
-
-- Nova rota pública `src/routes/invite.$inviterId.tsx`:
-  - Server loader registra um `invite_clicks` (canal vem de `?c=wa|fb|ig|tt|kw|share|copy`).
-  - Salva `wc_invited_by` em localStorage + cookie de 30 dias.
-  - Redireciona para `/` (feed) — visitante vê tudo, ao se cadastrar o vínculo é gravado.
-- Em `src/routes/auth.tsx`, no sucesso do signup, chamar server fn `attachInviter` que lê o cookie e insere em `invite_signups` + dispara verificação de tier.
-
-## 3. UI — Convidar amigos
-
-Novo componente `src/components/invite/InviteFriendsSheet.tsx` (Sheet/Dialog):
-- Botões: WhatsApp, Facebook, Instagram, TikTok, Kwai, Compartilhar (Web Share API + Capacitor Share), Copiar link.
-- Cada botão monta a URL com `?c=<canal>` e abre o deep link/intent apropriado.
-- Mensagem padrão pt-BR (igual ao briefing) + i18n.
-
-Pontos de entrada (adicionar sem remover nada):
-- Item no menu de engrenagem (dropdown da Home) → "👥 Convidar amigos".
-- Card opcional reaproveitando o `InviteRewardsCard` existente.
-
-## 4. UI — Meus convites
-
-Nova rota `src/routes/_authenticated/meus-convites.tsx`:
-- Cards: enviados (cliques únicos), cadastros gerados, ativos (last_seen <30d), nível atual.
-- Ranking de canais (barra).
-- Progresso até o próximo tier Embaixador.
-
-## 5. Selo Embaixador
-
-- `src/components/badges/AmbassadorBadge.tsx` — exibe 🏅 + tier + contador "X pessoas convidadas".
-- Inserir no perfil (`/u/$username` e `/_authenticated/profile`) sem mexer no resto do layout.
-
-## 6. Ranking público
-
-Nova rota `src/routes/embaixadores.tsx`:
-- Lista top N com foto, nome, nº convidados, tier.
-- Some quando `ambassador_settings.ranking_public = false`.
-
-## 7. Admin
-
-Nova aba "Convites" em `src/routes/admin.tsx` (`src/components/admin/InvitesAdminTab.tsx`):
-- Totais globais, gráfico de crescimento (line), pizza por canal.
-- Tabela "quem convidou quem" com busca.
-- Editor de tiers (CRUD `ambassador_tiers`).
-- Toggles: ranking público, recompensas ativas.
-
-## 8. Server functions
-
-`src/lib/invites.functions.ts`:
-- `recordInviteClick({ inviterId, channel, meta })` — público.
-- `getMyInviteStats()` — autenticado.
-- `attachInviter()` — autenticado, lê cookie e grava signup.
-- `getTopAmbassadors({ limit })` — público.
-- `getAdminInviteOverview()` / `listInviteRelations()` / `upsertTier()` / `setAmbassadorSetting()` — admin (checa `has_role`).
-
-## 9. Compartilhamento nativo
-
-`src/lib/share.ts`:
-- Detecta Capacitor → `@capacitor/share`.
-- Senão Web Share API.
-- Fallback: copiar para clipboard + toast.
-
-## 10. Preparação para analytics externos
-
-Disparar evento `invite_sent` / `invite_click` / `invite_signup` via `track()` com metadata `{ channel, inviter_id }` — já fica pronto para mapear em GA4/Meta/AppsFlyer depois.
+### Limpeza
+9. Deletar `src/lib/ice-servers.functions.ts` (não há mais signaling manual).
+10. Remover dependência implícita de TURN próprio.
 
 ## Detalhes técnicos
 
-- Não tocar em: `client.ts`, `auth-middleware.ts`, `types.ts`, layout `_authenticated/route.tsx`.
-- RLS estrita; `invite_clicks` aceita anon INSERT só com `inviter_id` válido (FK em `profiles`).
-- Tiers via `has_role('admin')` para escrita.
-- Rota `/invite/$inviterId` é pública (SSR ok, sem auth).
-- i18n: adicionar chaves em `src/i18n/dicts/`.
-- Index em `invite_clicks(inviter_id, created_at)` e `invite_signups(inviter_id)` para escala.
+```text
+Fluxo da chamada 1:1
+────────────────────
+caller clica ligar
+  └─> insert em `calls` (status=ringing)
+  └─> push + IncomingCallKit no callee
+callee aceita
+  └─> update calls.status=accepted
+  └─> ambos chamam createCallToken({callId, role})
+  └─> ambos montam <LiveKitRoom token={...}> dentro do CallScreen
+  └─> LiveKit cuida de SDP/ICE/TURN automaticamente
+qualquer um encerra
+  └─> update calls.status=ended, duration
+  └─> LiveKitRoom desmonta → desconecta
+```
 
-## Fora de escopo (mas estruturado para receber depois)
+## Riscos / fora de escopo
 
-- Integração real com Firebase/AppsFlyer/Meta SDK — só os hooks de evento ficam prontos.
-- Atribuição de instalação Android via Play Install Referrer — campo `install_source` reservado em `invite_signups`.
+- Não vou mexer em `LiveRoomShell`, `live.$liveId.tsx`, `meet.$roomId.tsx` (já LiveKit).
+- Não vou tocar em `IncomingCallKit` Android — o plugin nativo continua sendo apenas o "telefone tocando", a mídia vem do LiveKit depois.
+- Gravação 1:1 grava o **room composite** (igual lives). Sem opção de gravar só áudio nesta fase.
+- Custo LiveKit por participante-minuto se aplica a 1:1 também (~US$0.0015/min vídeo, áudio mais barato). Para 100 ligações de 5min, ~US$1,50.
+
+## Pode confirmar?
+Posso seguir e implementar tudo isso de uma vez?

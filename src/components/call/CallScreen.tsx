@@ -1,94 +1,196 @@
-import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Phone, Video, VideoOff, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Mic, MicOff, Phone, Video, VideoOff, Volume2, VolumeX, RotateCcw, Circle, StopCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useCall } from "@/hooks/use-call";
 import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  LiveKitRoom,
+  RoomAudioRenderer,
+  useLocalParticipant,
+  useTracks,
+  VideoTrack,
+} from "@livekit/components-react";
+import { Track, createLocalVideoTrack } from "livekit-client";
+import { useServerFn } from "@tanstack/react-start";
+import { startCallRecording, stopCallRecording } from "@/lib/calls.functions";
+import { toast } from "sonner";
 
 export function CallScreen() {
+  const { active, livekit, connecting } = useCall();
+  if (!active) return null;
+
+  // Outer shell is always rendered (ringing UI). LiveKit mounts once we have a token.
+  return (
+    <CallShell>
+      {livekit && active.status === "accepted" ? (
+        <LiveKitRoom
+          token={livekit.token}
+          serverUrl={livekit.serverUrl}
+          connect
+          audio
+          video={active.kind === "video"}
+          // No layout — we render UI ourselves.
+          className="contents"
+        >
+          <RoomAudioRenderer />
+          <CallMedia />
+        </LiveKitRoom>
+      ) : null}
+      <CallControls />
+    </CallShell>
+  );
+}
+
+function CallShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col overflow-hidden">
+      {children}
+    </div>
+  );
+}
+
+/** Renders remote video + local PiP for video calls. */
+function CallMedia() {
+  const { active } = useCall();
+  const { localParticipant, isCameraEnabled, isMicrophoneEnabled } =
+    useLocalParticipant();
+  const {
+    micOn,
+    camOn,
+    micToggleSignal,
+    camToggleSignal,
+    setMediaState,
+  } = useCall();
+
+  // Sync hook state -> LiveKit participant on toggle signals
+  const lastMicSig = useRef(0);
+  const lastCamSig = useRef(0);
+  useEffect(() => {
+    if (micToggleSignal !== lastMicSig.current) {
+      lastMicSig.current = micToggleSignal;
+      void localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+    }
+  }, [micToggleSignal, localParticipant, isMicrophoneEnabled]);
+
+  useEffect(() => {
+    if (camToggleSignal !== lastCamSig.current) {
+      lastCamSig.current = camToggleSignal;
+      void localParticipant.setCameraEnabled(!isCameraEnabled);
+    }
+  }, [camToggleSignal, localParticipant, isCameraEnabled]);
+
+  // Mirror LiveKit publication state back to the hook so the UI buttons reflect reality
+  useEffect(() => {
+    if (micOn !== isMicrophoneEnabled) setMediaState({ micOn: isMicrophoneEnabled });
+  }, [isMicrophoneEnabled, micOn, setMediaState]);
+  useEffect(() => {
+    if (camOn !== isCameraEnabled) setMediaState({ camOn: isCameraEnabled });
+  }, [isCameraEnabled, camOn, setMediaState]);
+
+  const remoteVideoTracks = useTracks(
+    [Track.Source.Camera, Track.Source.ScreenShare],
+    { onlySubscribed: true },
+  ).filter((tr) => tr.participant.identity !== localParticipant.identity);
+
+  const localCamRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const pub = localParticipant.getTrackPublication(Track.Source.Camera);
+    const el = localCamRef.current;
+    if (!el) return;
+    if (pub?.track) pub.track.attach(el);
+    return () => {
+      if (pub?.track && el) pub.track.detach(el);
+    };
+  }, [localParticipant, isCameraEnabled]);
+
+  const isVideo = active?.kind === "video";
+  const remoteCam = remoteVideoTracks.find((t) => t.source === Track.Source.Camera);
+
+  if (!isVideo) return null;
+
+  return (
+    <>
+      <div className="absolute inset-0">
+        {remoteCam ? (
+          <VideoTrack
+            trackRef={remoteCam}
+            className="w-full h-full object-cover bg-zinc-900"
+          />
+        ) : null}
+      </div>
+      {isCameraEnabled && (
+        <div className="absolute bottom-44 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-zinc-800 ring-2 ring-white/10 z-10">
+          <video
+            ref={localCamRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ transform: "scaleX(-1)" }}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function CallControls() {
   const { t } = useTranslation();
   const {
     active,
-    localStream,
-    remoteStream,
+    livekit,
     micOn,
     camOn,
     connecting,
     endCall,
-    toggleMic,
-    toggleCam,
+    toggleMicRequest,
+    toggleCamRequest,
   } = useCall();
 
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [callDuration, setCallDuration] = useState(0);
   const [speakerOn, setSpeakerOn] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recPending, setRecPending] = useState(false);
+  const startRecFn = useServerFn(startCallRecording);
+  const stopRecFn = useServerFn(stopCallRecording);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update call duration every second
   useEffect(() => {
     if (!active || active.status !== "accepted") return;
-
     durationIntervalRef.current = setInterval(() => {
-      setCallDuration((prev) => prev + 1);
+      setCallDuration((p) => p + 1);
     }, 1000);
-
     return () => {
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-      }
+      if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
     };
   }, [active]);
 
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      // CRITICAL: feed ONLY the video tracks to the local preview.
-      // If the full stream (incl. mic) is attached, some WebViews ignore
-      // `muted` and play the local mic back to the user → they hear themselves.
-      const videoOnly = new MediaStream(localStream.getVideoTracks());
-      localVideoRef.current.srcObject = videoOnly;
-      localVideoRef.current.muted = true;
-      (localVideoRef.current as HTMLVideoElement).volume = 0;
-    }
-  }, [localStream]);
-
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      // Video element gets video-only; audio always routed through <audio>.
-      const videoOnly = new MediaStream(remoteStream.getVideoTracks());
-      remoteVideoRef.current.srcObject = videoOnly;
-      remoteVideoRef.current.muted = true;
-      (remoteVideoRef.current as HTMLVideoElement).volume = 0;
-    }
-    if (remoteAudioRef.current && remoteStream) {
-      const audioOnly = new MediaStream(remoteStream.getAudioTracks());
-      remoteAudioRef.current.srcObject = audioOnly;
-      remoteAudioRef.current.volume = 1;
-      // Force playback to start (Android WebView sometimes pauses on attach).
-      remoteAudioRef.current.play?.().catch(() => {});
-    }
-  }, [remoteStream, active?.kind]);
-
-  // Apply speaker toggle to native audio routing.
-  useEffect(() => {
     void setNativeSpeakerphone(speakerOn);
   }, [speakerOn]);
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+  // Auto-stop recording when call ends
+  useEffect(() => {
+    return () => {
+      // best-effort stop on unmount if user was recording
+      if (recording && active?.id) {
+        void stopRecFn({ data: { callId: active.id } }).catch(() => {});
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   if (!active) return null;
-
   const peer = active.peerProfile;
   const isVideo = active.kind === "video";
   const statusLabel =
@@ -96,29 +198,38 @@ export function CallScreen() {
       ? active.isCaller
         ? t("call.statusRinging")
         : t("call.statusConnecting")
-      : connecting
+      : connecting || !livekit
         ? t("call.statusConnecting")
         : active.status === "accepted"
           ? formatDuration(callDuration)
           : t("call.statusInCall");
 
+  async function toggleRecording() {
+    if (!active || !active.isCaller) return;
+    if (recPending) return;
+    setRecPending(true);
+    try {
+      if (recording) {
+        await stopRecFn({ data: { callId: active.id } });
+        setRecording(false);
+        toast.success("Gravação encerrada");
+      } else {
+        await startRecFn({ data: { callId: active.id } });
+        setRecording(true);
+        toast.success("Gravando chamada");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha na gravação");
+    } finally {
+      setRecPending(false);
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col overflow-hidden">
-      {/* Remote video / avatar */}
-      <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-zinc-900 to-black">
-        {isVideo ? (
-          <>
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              muted={false}
-              className="absolute inset-0 w-full h-full object-cover bg-zinc-900"
-            />
-            {/* Gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
-          </>
-        ) : (
+    <>
+      {/* Background placeholder when no remote video */}
+      {!isVideo || !livekit ? (
+        <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-zinc-900 to-black">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
             <Avatar className="size-40 border-4 border-white/20">
               <AvatarImage src={peer?.avatar_url ?? undefined} />
@@ -133,11 +244,10 @@ export function CallScreen() {
               <div className="text-sm text-zinc-300 mt-2 font-medium">{statusLabel}</div>
             </div>
           </div>
-        )}
-
-        {/* Top info bar - only show in video calls */}
-        {isVideo && (
-          <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-none">
+        </div>
+      ) : (
+        <div className="flex-1 relative">
+          <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between pointer-events-none z-20">
             <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -148,31 +258,10 @@ export function CallScreen() {
               {statusLabel}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Local PiP — mirrored (selfie view) */}
-        {isVideo && localStream && (
-          <div className="absolute bottom-24 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-zinc-800 ring-2 ring-white/10">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ transform: "scaleX(-1)" }}
-              className="w-full h-full object-cover"
-            />
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-          </div>
-        )}
-
-        {/* Hidden audio element when video is off (audio still plays via video element if present) */}
-        <audio ref={remoteAudioRef} autoPlay />
-      </div>
-
-      {/* Controls - Professional WhatsApp/Telegram style */}
-      <div className="shrink-0 px-4 py-8 pb-12 flex flex-col items-center gap-6 bg-gradient-to-t from-black via-black/80 to-transparent">
-        {/* Call status and duration */}
+      <div className="shrink-0 px-4 py-8 pb-12 flex flex-col items-center gap-6 bg-gradient-to-t from-black via-black/80 to-transparent z-20">
         {active.status === "accepted" && (
           <div className="text-center">
             <div className="text-sm text-zinc-400 font-medium">{t("call.callDuration")}</div>
@@ -180,13 +269,11 @@ export function CallScreen() {
           </div>
         )}
 
-        {/* Primary controls row */}
         <div className="flex items-center justify-center gap-4 sm:gap-6">
-          {/* Mic toggle */}
           <Button
             size="icon"
-            onClick={toggleMic}
-            className={`size-16 sm:size-18 rounded-full transition-all duration-200 ${
+            onClick={toggleMicRequest}
+            className={`size-16 sm:size-18 rounded-full ${
               micOn
                 ? "bg-white/10 hover:bg-white/20 text-white"
                 : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
@@ -196,12 +283,11 @@ export function CallScreen() {
             {micOn ? <Mic className="size-7" /> : <MicOff className="size-7" />}
           </Button>
 
-          {/* Video toggle (only for video calls) */}
           {isVideo && (
             <Button
               size="icon"
-              onClick={toggleCam}
-              className={`size-16 sm:size-18 rounded-full transition-all duration-200 ${
+              onClick={toggleCamRequest}
+              className={`size-16 sm:size-18 rounded-full ${
                 camOn
                   ? "bg-white/10 hover:bg-white/20 text-white"
                   : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
@@ -212,11 +298,10 @@ export function CallScreen() {
             </Button>
           )}
 
-          {/* Speaker toggle */}
           <Button
             size="icon"
             onClick={() => setSpeakerOn(!speakerOn)}
-            className={`size-16 sm:size-18 rounded-full transition-all duration-200 ${
+            className={`size-16 sm:size-18 rounded-full ${
               speakerOn
                 ? "bg-white/10 hover:bg-white/20 text-white"
                 : "bg-white/5 hover:bg-white/10 text-zinc-400"
@@ -226,33 +311,37 @@ export function CallScreen() {
             {speakerOn ? <Volume2 className="size-7" /> : <VolumeX className="size-7" />}
           </Button>
 
-          {/* Flip camera (only for video calls) */}
-          {isVideo && (
+          {active.isCaller && active.status === "accepted" && (
             <Button
               size="icon"
-              className="size-16 sm:size-18 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 transition-all duration-200"
-              title={t("call.flipCamera")}
+              onClick={toggleRecording}
+              disabled={recPending}
+              className={`size-16 sm:size-18 rounded-full ${
+                recording
+                  ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                  : "bg-white/5 hover:bg-white/10 text-zinc-400"
+              }`}
+              title={recording ? "Parar gravação" : "Gravar chamada"}
             >
-              <RotateCcw className="size-7" />
+              {recording ? <StopCircle className="size-7" /> : <Circle className="size-7" />}
             </Button>
           )}
         </div>
 
-        {/* End call button - prominent red */}
         <Button
           size="icon"
           onClick={endCall}
-          className="size-20 sm:size-24 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
+          className="size-20 sm:size-24 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg active:scale-95"
           title={t("call.endCall")}
         >
           <Phone className="size-9 sm:size-10 rotate-[135deg]" />
         </Button>
 
-        {/* Call info text */}
         <div className="text-xs text-zinc-500 text-center">
-          {isVideo ? t("call.videoCall") : t("call.voiceCall")} • {active.isCaller ? t("call.youStarted") : t("call.callReceived")}
+          {isVideo ? t("call.videoCall") : t("call.voiceCall")} •{" "}
+          {active.isCaller ? t("call.youStarted") : t("call.callReceived")}
         </div>
       </div>
-    </div>
+    </>
   );
 }
