@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
+import { signInWithGoogleNative, isNativePlatform } from "@/lib/native-google-auth";
 import { track } from "@/lib/track";
 import { cn } from "@/lib/utils";
 
