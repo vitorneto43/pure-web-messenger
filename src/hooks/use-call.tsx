@@ -324,8 +324,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
         toast.error("Você já está em uma chamada");
         return;
       }
+      // Trigger permission prompt synchronously with the call button click.
+      const ok = await ensureMediaPermission(kind);
+      if (!ok) return;
       setConnecting(true);
       try {
+
         const { data, error } = await supabase
           .from("calls")
           .insert({
