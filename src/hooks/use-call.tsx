@@ -386,6 +386,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopRingback();
     if (isNativeApp()) await stopNativeRinging(call.id);
     setConnecting(true);
+    // Ask for mic/cam permission INSIDE the accept gesture. If we wait until
+    // LiveKit auto-publishes the prompt may be dismissed silently on some
+    // Android WebViews and the user ends up in a call with no audio.
+    const ok = await ensureMediaPermission(call.kind);
+    if (!ok) {
+      setConnecting(false);
+      await supabase
+        .from("calls")
+        .update({ status: "declined", ended_at: new Date().toISOString() })
+        .eq("id", call.id);
+      setIncoming(null);
+      return;
+    }
     try {
       await supabase
         .from("calls")
@@ -403,6 +416,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       startedAtRef.current = Date.now();
 
       await connectLiveKit(call.id, call.kind);
+
     } catch (e: any) {
       toast.error("Falha ao atender: " + e.message);
       cleanup();
