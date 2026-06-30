@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  StartAudio,
   useLocalParticipant,
+  useRoomContext,
   useTracks,
   VideoTrack,
 } from "@livekit/components-react";
@@ -34,12 +36,64 @@ export function CallScreen() {
           // No layout — we render UI ourselves.
           className="contents"
         >
-          <RoomAudioRenderer />
+          <RoomAudioRenderer volume={1} />
+          <AudioBootstrap />
           <CallMedia />
         </LiveKitRoom>
       ) : null}
       <CallControls />
     </CallShell>
+  );
+}
+
+/**
+ * Ensures the microphone is actually published once the room is connected and
+ * unblocks remote audio playback for browsers that gate autoplay. Without this
+ * the callee often hears nothing because the <LiveKitRoom audio /> prop only
+ * sets the initial intent — if permission resolves after `connect` finishes,
+ * the local track is never published and the AudioContext stays suspended.
+ */
+function AudioBootstrap() {
+  const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
+  const did = useRef(false);
+  useEffect(() => {
+    if (!room || did.current) return;
+    const run = async () => {
+      try {
+        await localParticipant.setMicrophoneEnabled(true);
+      } catch (e) {
+        console.error("Failed to enable microphone", e);
+        toast.error("Não foi possível acessar o microfone. Verifique a permissão.");
+      }
+      try {
+        // Some browsers (iOS Safari, some Android WebViews) require an explicit
+        // startAudio() before the AudioContext will play remote tracks.
+        await room.startAudio();
+      } catch {
+        /* user gesture may still be required — StartAudio button handles that */
+      }
+    };
+    if (room.state === "connected") {
+      did.current = true;
+      void run();
+    } else {
+      const onConnected = () => {
+        if (did.current) return;
+        did.current = true;
+        void run();
+      };
+      room.on("connected" as any, onConnected);
+      return () => {
+        room.off("connected" as any, onConnected);
+      };
+    }
+  }, [room, localParticipant]);
+  return (
+    <StartAudio
+      label="Tocar áudio"
+      className="absolute inset-0 z-[110] flex items-center justify-center bg-black/80 text-white text-lg font-medium"
+    />
   );
 }
 
