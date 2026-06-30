@@ -29,6 +29,43 @@ import { createCallToken } from "@/lib/calls.functions";
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
 
+/**
+ * Triggers the browser/OS media permission prompt inside a user gesture
+ * (Accept / Call button click). LiveKit's auto-publish path can swallow
+ * NotAllowedError silently in some Android WebViews — by asking first we
+ * surface a clear toast and we also "warm up" the audio device so the
+ * subsequent publish succeeds. The tracks are stopped immediately because
+ * LiveKit will request its own.
+ */
+async function ensureMediaPermission(kind: Kind): Promise<boolean> {
+  try {
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      toast.error("Este navegador não suporta áudio/vídeo");
+      return false;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: kind === "video",
+    });
+    stream.getTracks().forEach((t) => t.stop());
+    return true;
+  } catch (e: any) {
+    const name = e?.name || "Error";
+    console.error("[call] getUserMedia failed", name, e);
+    if (name === "NotAllowedError" || name === "SecurityError") {
+      toast.error("Permissão de microfone negada. Libere nas configurações.");
+    } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+      toast.error("Microfone não encontrado neste dispositivo.");
+    } else if (name === "NotReadableError") {
+      toast.error("Microfone em uso por outro app.");
+    } else {
+      toast.error("Falha ao acessar o microfone: " + (e?.message ?? name));
+    }
+    return false;
+  }
+}
+
+
 export interface CallInfo {
   id: string;
   conversationId: string;
@@ -287,8 +324,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
         toast.error("Você já está em uma chamada");
         return;
       }
+      // Trigger permission prompt synchronously with the call button click.
+      const ok = await ensureMediaPermission(kind);
+      if (!ok) return;
       setConnecting(true);
       try {
+
         const { data, error } = await supabase
           .from("calls")
           .insert({
@@ -349,6 +390,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopRingback();
     if (isNativeApp()) await stopNativeRinging(call.id);
     setConnecting(true);
+    // Ask for mic/cam permission INSIDE the accept gesture. If we wait until
+    // LiveKit auto-publishes the prompt may be dismissed silently on some
+    // Android WebViews and the user ends up in a call with no audio.
+    const ok = await ensureMediaPermission(call.kind);
+    if (!ok) {
+      setConnecting(false);
+      await supabase
+        .from("calls")
+        .update({ status: "declined", ended_at: new Date().toISOString() })
+        .eq("id", call.id);
+      setIncoming(null);
+      return;
+    }
     try {
       await supabase
         .from("calls")
@@ -366,6 +420,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       startedAtRef.current = Date.now();
 
       await connectLiveKit(call.id, call.kind);
+
     } catch (e: any) {
       toast.error("Falha ao atender: " + e.message);
       cleanup();
