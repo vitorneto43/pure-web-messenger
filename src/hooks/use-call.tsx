@@ -24,7 +24,7 @@ import {
 } from "@/integrations/native-call";
 import { saveNativeToken, sendNativeCallCancelPush, sendNativeCallPush } from "@/lib/native-push.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { getIceServers } from "@/lib/ice-servers.functions";
+import { createCallToken } from "@/lib/calls.functions";
 
 type Kind = "audio" | "video";
 type Status = "ringing" | "accepted" | "declined" | "missed" | "ended" | "cancelled";
@@ -44,14 +44,22 @@ export interface CallInfo {
   };
 }
 
+export interface LiveKitCallSession {
+  token: string;
+  serverUrl: string;
+  callId: string;
+}
+
 interface CallContextValue {
   active: CallInfo | null;
   incoming: CallInfo | null;
-  localStream: MediaStream | null;
-  remoteStream: MediaStream | null;
+  /** LiveKit session details when call has been accepted. */
+  livekit: LiveKitCallSession | null;
   micOn: boolean;
   camOn: boolean;
   connecting: boolean;
+  /** Reported by CallScreen via setMediaState — used so the hook tracks toggles centrally. */
+  setMediaState: (state: { micOn?: boolean; camOn?: boolean }) => void;
   startCall: (params: {
     conversationId: string;
     calleeId: string;
@@ -61,56 +69,39 @@ interface CallContextValue {
   acceptIncoming: () => Promise<void>;
   declineIncoming: () => Promise<void>;
   endCall: () => Promise<void>;
-  toggleMic: () => void;
-  toggleCam: () => void;
+  toggleMicRequest: () => void;
+  toggleCamRequest: () => void;
+  /** Counter that increments when user clicks the toggle; CallScreen subscribes. */
+  micToggleSignal: number;
+  camToggleSignal: number;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
 
-// Fallback ICE servers used if the Metered TURN fetch fails.
-// On call setup we fetch fresh dynamic credentials from Metered (see
-// getIceServers serverFn) and cache them for 1h.
-const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
-  { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-  { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
-];
-
-let cachedIceServers: { servers: RTCIceServer[]; expiresAt: number } | null = null;
-
-// Call timeout constants
-const CALL_RING_TIMEOUT = 45_000; // 45 seconds
-const CALL_CONNECTION_TIMEOUT = 30_000; // 30 seconds for WebRTC connection
+// Call timeout: how long the callee's phone rings without answer
+const CALL_RING_TIMEOUT = 45_000;
 
 export function CallProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [active, setActive] = useState<CallInfo | null>(null);
   const [incoming, setIncoming] = useState<CallInfo | null>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [livekit, setLivekit] = useState<LiveKitCallSession | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [micToggleSignal, setMicToggleSignal] = useState(0);
+  const [camToggleSignal, setCamToggleSignal] = useState(0);
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const signalChanRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
   const activeRef = useRef<CallInfo | null>(null);
   const incomingRef = useRef<CallInfo | null>(null);
-  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
-  const remoteSetRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
   const callMsgInsertedRef = useRef<Set<string>>(new Set());
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeTokenSavedRef = useRef(false);
   const processedNativeActionsRef = useRef<Set<string>>(new Set());
-  
-  // FIX: Add timeout tracking for connection establishment
-  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
+  const fetchCallToken = useServerFn(createCallToken);
   const sendNativeCallPushFn = useServerFn(sendNativeCallPush);
   const sendNativeCallCancelPushFn = useServerFn(sendNativeCallCancelPush);
 
@@ -143,11 +134,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
     incomingRef.current = incoming;
   }, [incoming]);
 
-  // Initialize native call listeners and push registration when in native app
+  // Native call listeners + push registration
   useEffect(() => {
     if (!isNativeApp() || !user) return;
 
-    // Register FCM token
     if (!nativeTokenSavedRef.current) {
       registerNativePush(async (token, platform) => {
         await saveNativeToken({ data: { token, platform } });
@@ -155,35 +145,18 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }).catch(console.error);
     }
 
-    // Setup native call listeners
     initNativeCallListeners({
       onAccept: (callId, extra) => {
-        window.dispatchEvent(
-          new CustomEvent('wavechat-call-action', {
-            detail: { action: 'accept', callId, extra },
-          }),
-        );
+        window.dispatchEvent(new CustomEvent('wavechat-call-action', { detail: { action: 'accept', callId, extra } }));
       },
       onDecline: (callId) => {
-        window.dispatchEvent(
-          new CustomEvent('wavechat-call-action', {
-            detail: { action: 'decline', callId },
-          }),
-        );
+        window.dispatchEvent(new CustomEvent('wavechat-call-action', { detail: { action: 'decline', callId } }));
       },
       onEnd: (callId) => {
-        window.dispatchEvent(
-          new CustomEvent('wavechat-call-action', {
-            detail: { action: 'end', callId },
-          }),
-        );
+        window.dispatchEvent(new CustomEvent('wavechat-call-action', { detail: { action: 'end', callId } }));
       },
       onTimeout: (callId) => {
-        window.dispatchEvent(
-          new CustomEvent('wavechat-call-action', {
-            detail: { action: 'timeout', callId },
-          }),
-        );
+        window.dispatchEvent(new CustomEvent('wavechat-call-action', { detail: { action: 'timeout', callId } }));
       },
     }).then((cleanupFn) => {
       nativeCleanupRef.current = cleanupFn;
@@ -199,55 +172,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   const cleanup = useCallback(() => {
-    // FIX: Clear all timeouts to prevent lingering effects
-    if (connectionTimeoutRef.current) {
-      clearTimeout(connectionTimeoutRef.current);
-      connectionTimeoutRef.current = null;
-    }
     if (ringTimeoutRef.current) {
       clearTimeout(ringTimeoutRef.current);
       ringTimeoutRef.current = null;
     }
-
     stopRingtone();
     stopRingback();
-    
-    // FIX: Reset native audio properly before cleanup
     if (isNativeApp()) void resetNativeCallAudio();
-    
-    if (pcRef.current) {
-      pcRef.current.onicecandidate = null;
-      pcRef.current.ontrack = null;
-      pcRef.current.onconnectionstatechange = null;
-      try {
-        pcRef.current.close();
-      } catch {
-        /* ignore */
-      }
-      pcRef.current = null;
-    }
-    
-    if (signalChanRef.current) {
-      supabase.removeChannel(signalChanRef.current);
-      signalChanRef.current = null;
-    }
-    
-    // FIX: Properly stop all tracks before clearing stream
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => {
-        t.stop();
-        t.enabled = false;
-      });
-      localStreamRef.current = null;
-    }
-    
-    setLocalStream(null);
-    setRemoteStream(null);
+    setLivekit(null);
     setConnecting(false);
     setMicOn(true);
     setCamOn(true);
-    pendingCandidatesRef.current = [];
-    remoteSetRef.current = false;
   }, []);
 
   const loadIncomingCall = useCallback(async (callId: string) => {
@@ -280,230 +215,23 @@ export function CallProvider({ children }: { children: ReactNode }) {
     return incomingInfo;
   }, [user?.id]);
 
-  const setupSignaling = useCallback(
-    (callId: string, isCaller: boolean, kind: Kind) => {
-      const channel = supabase.channel(`call:${callId}`, {
-        config: { broadcast: { self: false, ack: false } },
-      });
-
-      const drainCandidates = async () => {
-        if (!pcRef.current || !remoteSetRef.current) return;
-        const queued = pendingCandidatesRef.current.splice(0);
-        for (const c of queued) {
-          try {
-            await pcRef.current.addIceCandidate(c);
-          } catch {
-            /* ignore */
-          }
-        }
-      };
-
-      channel.on("broadcast", { event: "offer" }, async ({ payload }) => {
-        if (!pcRef.current || isCaller) return;
-        try {
-          await pcRef.current.setRemoteDescription(payload.sdp);
-          remoteSetRef.current = true;
-          const answer = await pcRef.current.createAnswer();
-          await pcRef.current.setLocalDescription(answer);
-          await channel.send({
-            type: "broadcast",
-            event: "answer",
-            payload: { sdp: pcRef.current.localDescription },
-          });
-          await drainCandidates();
-        } catch (e: any) {
-          toast.error("Falha ao conectar: " + e.message);
-        }
-      });
-
-      channel.on("broadcast", { event: "answer" }, async ({ payload }) => {
-        if (!pcRef.current || !isCaller) return;
-        try {
-          stopRingback();
-          await pcRef.current.setRemoteDescription(payload.sdp);
-          remoteSetRef.current = true;
-          await drainCandidates();
-        } catch {
-          /* ignore */
-        }
-      });
-
-      channel.on("broadcast", { event: "candidate" }, async ({ payload }) => {
-        if (!pcRef.current) return;
-        if (!remoteSetRef.current) {
-          pendingCandidatesRef.current.push(payload.candidate);
-          return;
-        }
-        try {
-          await pcRef.current.addIceCandidate(payload.candidate);
-        } catch {
-          /* ignore */
-        }
-      });
-
-      // When callee is ready, ask caller to send offer
-      channel.on("broadcast", { event: "ready" }, async () => {
-        if (!isCaller || !pcRef.current) return;
-        try {
-          stopRingback();
-          const offer = await pcRef.current.createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: kind === "video",
-          });
-          await pcRef.current.setLocalDescription(offer);
-          await channel.send({
-            type: "broadcast",
-            event: "offer",
-            payload: { sdp: pcRef.current.localDescription },
-          });
-        } catch (e: any) {
-          toast.error("Falha ao iniciar: " + e.message);
-        }
-      });
-
-      channel.subscribe(async (status) => {
-        if (status === "SUBSCRIBED" && !isCaller) {
-          // callee tells caller it's ready
-          await channel.send({ type: "broadcast", event: "ready", payload: {} });
-        }
-      });
-
-      signalChanRef.current = channel;
-    },
-    []
-  );
-
-  const fetchIce = useServerFn(getIceServers);
-
-  const createPeerConnection = useCallback(
-    async (kind: Kind, isCaller: boolean) => {
-      // Fetch dynamic TURN credentials (cached 1h), fallback if it fails.
-      let iceServers: RTCIceServer[] = FALLBACK_ICE_SERVERS;
-      try {
-        if (cachedIceServers && cachedIceServers.expiresAt > Date.now()) {
-          iceServers = cachedIceServers.servers;
-        } else {
-          const res = await fetchIce();
-          if (res?.iceServers?.length) {
-            iceServers = res.iceServers;
-            cachedIceServers = { servers: iceServers, expiresAt: Date.now() + 60 * 60 * 1000 };
-          }
-        }
-      } catch (e) {
-        console.error("Failed to fetch ICE servers, using fallback:", e);
-      }
-
-      const pc = new RTCPeerConnection({
-        iceServers,
-        iceCandidatePoolSize: 4,
-        bundlePolicy: "max-bundle",
-        rtcpMuxPolicy: "require",
-      });
-      pcRef.current = pc;
-
+  /** Fetch LiveKit token for the call and hand it to CallScreen. */
+  const connectLiveKit = useCallback(async (callId: string, kind: Kind) => {
+    try {
+      const res = await fetchCallToken({ data: { callId } });
       if (isNativeApp()) await configureNativeCallAudio();
+      setLivekit({ token: res.token, serverUrl: res.wsUrl, callId });
+      setCamOn(kind === "video");
+      setMicOn(true);
+      setConnecting(false);
+    } catch (e: any) {
+      toast.error("Falha ao conectar áudio/vídeo: " + (e?.message ?? "erro"));
+      // bail: end the call
+      void endCallInternalRef.current?.("ended");
+    }
+  }, [fetchCallToken]);
 
-      // FIX: Improved audio constraints for better quality and echo cancellation
-      // - echoCancellation: true - removes echo
-      // - noiseSuppression: true - removes background noise
-      // - autoGainControl: true - normalizes volume
-      // - channelCount: 1 - mono audio (better for calls)
-      // - sampleRate: 48000 - high quality
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: { ideal: 48000 },
-          sampleSize: { ideal: 16 },
-        },
-        video: kind === "video" ? { 
-          width: { ideal: 1280 }, 
-          height: { ideal: 720 },
-          facingMode: "user" // FIX: Explicitly set front camera
-        } : false,
-      });
-      
-      localStreamRef.current = stream;
-      setLocalStream(stream);
-      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-
-      const remote = new MediaStream();
-      setRemoteStream(remote);
-
-      pc.ontrack = (e) => {
-        e.streams[0].getTracks().forEach((t) => {
-          if (!remote.getTracks().find((x) => x.id === t.id)) remote.addTrack(t);
-        });
-        setRemoteStream(new MediaStream(remote.getTracks()));
-      };
-
-      pc.onicecandidate = (e) => {
-        if (e.candidate && signalChanRef.current) {
-          signalChanRef.current.send({
-            type: "broadcast",
-            event: "candidate",
-            payload: { candidate: e.candidate.toJSON() },
-          });
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        const state = pc.connectionState;
-        if (state === "connected") {
-          if (connectionTimeoutRef.current) {
-            clearTimeout(connectionTimeoutRef.current);
-            connectionTimeoutRef.current = null;
-          }
-          stopRingback();
-          stopRingtone();
-          setConnecting(false);
-          if (isNativeApp()) {
-            void configureNativeCallAudio();
-            setTimeout(() => { void configureNativeCallAudio(); }, 600);
-          }
-        }
-        if (state === "disconnected") {
-          // STABILITY: try to recover instead of ending immediately.
-          // ICE restart re-negotiates a new path (useful on cell↔wifi switch).
-          if (isCaller && pcRef.current) {
-            try {
-              pcRef.current.restartIce?.();
-            } catch { /* ignore */ }
-          }
-          // If still down after 8s, end the call.
-          setTimeout(() => {
-            const s = pcRef.current?.connectionState;
-            if (s === "disconnected" || s === "failed") {
-              toast.error("Chamada desconectada");
-              void endCallInternal("ended");
-            }
-          }, 8000);
-          return;
-        }
-        if (state === "failed") {
-          toast.error("Chamada desconectada");
-          void endCallInternal("ended");
-        }
-      };
-
-      // FIX: Add connection timeout to prevent hanging connections
-      if (connectionTimeoutRef.current) {
-        clearTimeout(connectionTimeoutRef.current);
-      }
-      connectionTimeoutRef.current = setTimeout(() => {
-        if (pc.connectionState === "connecting" || pc.connectionState === "new") {
-          toast.error("Timeout na conexão");
-          void endCallInternal("ended");
-        }
-      }, CALL_CONNECTION_TIMEOUT);
-
-      return pc;
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const endCallInternalRef = useRef<((status: Status) => Promise<void>) | null>(null);
 
   const endCallInternal = useCallback(
     async (status: Status) => {
@@ -545,8 +273,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [cleanup, sendNativeCallCancelPushFn]
+    [cleanup, sendNativeCallCancelPushFn],
   );
+
+  useEffect(() => {
+    endCallInternalRef.current = endCallInternal;
+  }, [endCallInternal]);
 
   const startCall = useCallback<CallContextValue["startCall"]>(
     async ({ conversationId, calleeId, kind, peerProfile }) => {
@@ -584,37 +316,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setActive(callInfo);
         activeRef.current = callInfo;
 
-        await createPeerConnection(kind, true);
-        setupSignaling(data.id, true, kind);
-
         startRingback();
 
         const callerName = user.user_metadata?.display_name || "Alguém";
         void sendCallPush({
-          data: {
-            callId: data.id,
-            calleeId,
-            conversationId,
-            kind,
-            callerName,
-          },
+          data: { callId: data.id, calleeId, conversationId, kind, callerName },
         }).catch((e) => console.error("sendCallPush failed", e));
-
-        // Also send native FCM push for the Capacitor app (if callee has native token)
         void sendNativeCallPushFn({
-          data: {
-            callId: data.id,
-            calleeId,
-            conversationId,
-            kind,
-            callerName,
-          },
+          data: { callId: data.id, calleeId, conversationId, kind, callerName },
         }).catch((e) => console.error("sendNativeCallPush failed", e));
 
-        // FIX: Track ring timeout to auto-cancel if not answered
-        if (ringTimeoutRef.current) {
-          clearTimeout(ringTimeoutRef.current);
-        }
+        if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
         ringTimeoutRef.current = setTimeout(() => {
           const cur = activeRef.current;
           if (cur && cur.id === data.id && cur.status === "ringing") {
@@ -628,7 +340,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setActive(null);
       }
     },
-    [user, createPeerConnection, setupSignaling, endCallInternal, cleanup, sendNativeCallPushFn]
+    [user, cleanup, endCallInternal, sendNativeCallPushFn],
   );
 
   const acceptIncomingCall = useCallback(async (call: CallInfo) => {
@@ -651,16 +363,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       setActive(info);
       activeRef.current = info;
       setIncoming(null);
+      startedAtRef.current = Date.now();
 
-      await createPeerConnection(call.kind, false);
-      setupSignaling(call.id, false, call.kind);
+      await connectLiveKit(call.id, call.kind);
     } catch (e: any) {
       toast.error("Falha ao atender: " + e.message);
       cleanup();
       setActive(null);
       setIncoming(null);
     }
-  }, [incoming, createPeerConnection, setupSignaling, cleanup]);
+  }, [connectLiveKit, cleanup]);
 
   const acceptIncoming = useCallback(async () => {
     if (!incomingRef.current) return;
@@ -689,24 +401,20 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const endCall = useCallback(async () => {
     const current = activeRef.current;
-    await endCallInternal(current?.isCaller && current.status === "ringing" ? "cancelled" : "ended");
+    await endCallInternal(
+      current?.isCaller && current.status === "ringing" ? "cancelled" : "ended",
+    );
   }, [endCallInternal]);
 
-  const toggleMic = useCallback(() => {
-    const s = localStreamRef.current;
-    if (!s) return;
-    s.getAudioTracks().forEach((t) => (t.enabled = !t.enabled));
-    setMicOn(s.getAudioTracks()[0]?.enabled ?? true);
+  const setMediaState = useCallback((state: { micOn?: boolean; camOn?: boolean }) => {
+    if (typeof state.micOn === "boolean") setMicOn(state.micOn);
+    if (typeof state.camOn === "boolean") setCamOn(state.camOn);
   }, []);
 
-  const toggleCam = useCallback(() => {
-    const s = localStreamRef.current;
-    if (!s) return;
-    s.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
-    setCamOn(s.getVideoTracks()[0]?.enabled ?? true);
-  }, []);
+  const toggleMicRequest = useCallback(() => setMicToggleSignal((n) => n + 1), []);
+  const toggleCamRequest = useCallback(() => setCamToggleSignal((n) => n + 1), []);
 
-  // Global listener for incoming calls and remote cancellation
+  // Global listener for incoming calls and remote status updates
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -744,16 +452,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
             status: "ringing",
             isCaller: false,
             peerProfile: prof
-              ? {
-                  id: prof.id,
-                  display_name: prof.display_name,
-                  avatar_url: prof.avatar_url,
-                }
+              ? { id: prof.id, display_name: prof.display_name, avatar_url: prof.avatar_url }
               : undefined,
           };
           setIncoming(incomingInfo);
 
-          // Show native incoming call UI when in Capacitor app
           if (isNativeApp()) {
             void showNativeIncomingCall({
               callId: row.id,
@@ -768,27 +471,27 @@ export function CallProvider({ children }: { children: ReactNode }) {
           }
 
           if (!isNativeApp()) startRingtone();
-        }
+        },
       )
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "calls",
-        },
+        { event: "UPDATE", schema: "public", table: "calls" },
         (payload) => {
           const row = payload.new as any;
-          // Caller side: callee accepted -> mark active accepted
+          // Caller side: callee accepted -> connect LiveKit
           if (
             activeRef.current &&
             activeRef.current.id === row.id &&
             activeRef.current.isCaller &&
-            row.status === "accepted"
+            row.status === "accepted" &&
+            !livekit
           ) {
             stopRingback();
             startedAtRef.current = Date.now();
-            setActive({ ...activeRef.current, status: "accepted" });
+            const info = { ...activeRef.current, status: "accepted" as const };
+            setActive(info);
+            activeRef.current = info;
+            void connectLiveKit(row.id, info.kind);
           }
           // Caller side: callee declined / ended
           if (
@@ -831,7 +534,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             }
             return curr;
           });
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -840,7 +543,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Listen for native call actions (from Capacitor plugin or push)
+  // Native call action handlers (FCM / IncomingCallKit)
   useEffect(() => {
     if (!isNativeApp()) return;
     const runAction = async (detail: { action?: string; callId?: string }) => {
@@ -869,19 +572,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
     };
 
     const actionHandler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as {
-        action: string;
-        callId: string;
-        extra?: Record<string, string>;
-      };
+      const detail = (e as CustomEvent).detail as { action: string; callId: string; extra?: Record<string, string> };
       void runAction(detail);
     };
-
     const intentHandler = (e: Event) => {
       const event = e as CustomEvent & { action?: string; callId?: string };
       void runAction(event.detail ?? { action: event.action, callId: event.callId });
     };
-
     const pushHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { callId?: string };
       void runAction({ action: 'open', callId: detail?.callId });
@@ -913,17 +610,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
       value={{
         active,
         incoming,
-        localStream,
-        remoteStream,
+        livekit,
         micOn,
         camOn,
         connecting,
+        setMediaState,
         startCall,
         acceptIncoming,
         declineIncoming,
         endCall,
-        toggleMic,
-        toggleCam,
+        toggleMicRequest,
+        toggleCamRequest,
+        micToggleSignal,
+        camToggleSignal,
       }}
     >
       {children}
