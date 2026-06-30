@@ -45,6 +45,16 @@ export function AuthGateDialog({ open, onOpenChange, action = "default" }: Props
     setGoogleBusy(true);
     try {
       void track("guest_google_signin_click", { action });
+      // No app Android nativo, usa o plugin de Google Sign-In (abre o seletor
+      // de conta dentro do app). Sem isso, o fluxo OAuth web abre a versão
+      // desktop do site dentro do WebView.
+      if (await isNativePlatform()) {
+        const ok = await signInWithGoogleNative();
+        if (ok) {
+          onOpenChange(false);
+          return;
+        }
+      }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: typeof window !== "undefined" ? window.location.origin : undefined,
       });
