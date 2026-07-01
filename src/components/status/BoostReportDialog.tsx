@@ -3,7 +3,7 @@ import { Loader2, BarChart3 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getBoostReport } from "@/lib/boost-analytics.functions";
+import { getBoostReport, getPostBoostReport } from "@/lib/boost-analytics.functions";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
