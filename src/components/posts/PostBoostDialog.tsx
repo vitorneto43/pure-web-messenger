@@ -378,6 +378,35 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
                     </div>
                   </Field>
 
+                  <div className="rounded-xl border border-pink-500/30 bg-pink-500/5 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold">Botão de ação (CTA)</p>
+                      <span className="text-[10px] text-muted-foreground">Aumenta cliques</span>
+                    </div>
+                    <select
+                      value={ctaLabel}
+                      onChange={(e) => setCtaLabel(e.target.value)}
+                      className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="">Saiba mais</option>
+                      <option value="Cadastre-se">Cadastre-se</option>
+                      <option value="Comprar agora">Comprar agora</option>
+                      <option value="Baixar">Baixar</option>
+                      <option value="Assistir">Assistir</option>
+                      <option value="Agendar">Agendar</option>
+                      <option value="Fale conosco">Fale conosco</option>
+                      <option value="Ver oferta">Ver oferta</option>
+                    </select>
+                    <input
+                      value={ctaUrl}
+                      onChange={(e) => setCtaUrl(e.target.value)}
+                      placeholder="https://seusite.com"
+                      inputMode="url"
+                      className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    />
+                  </div>
+
+
                   <Field label={t("boost.custom.objective")}>
                     <div className="grid grid-cols-1 gap-1.5">
                       {OBJECTIVES.map((o) => (
