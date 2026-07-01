@@ -16,6 +16,18 @@ export const getBoostReport = createServerFn({ method: "POST" })
     return report as any;
   });
 
+export const getPostBoostReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: z.infer<typeof schema>) => schema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context as { supabase: any };
+    const { data: report, error } = await supabase.rpc("get_post_boost_report", {
+      _boost_id: data.boostId,
+    });
+    if (error) throw new Error(error.message);
+    return report as any;
+  });
+
 const adminSchema = z.object({ days: z.number().int().min(1).max(365).default(30) });
 
 export const getAdminBoostStats = createServerFn({ method: "POST" })
