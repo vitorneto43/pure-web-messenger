@@ -40,6 +40,8 @@ export interface PostItem {
   is_boosted: boolean;
   viewer_already_liked: boolean;
   pinned?: boolean;
+  cta_label?: string | null;
+  cta_url?: string | null;
 }
 
 interface Props {
