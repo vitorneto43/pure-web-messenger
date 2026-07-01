@@ -89,6 +89,7 @@ export const createPostBoostCheckout = createServerFn({ method: "POST" })
       boostRow.target_age_min = c.ageMin;
       boostRow.target_age_max = c.ageMax;
       boostRow.target_gender = c.gender;
+      boostRow.target_interests = c.interests ?? [];
       boostRow.objective = c.objective;
       boostRow.cpm_cents = cpmCents;
       boostRow.ends_at = new Date(Date.now() + c.durationDays * 24 * 3600 * 1000).toISOString();
