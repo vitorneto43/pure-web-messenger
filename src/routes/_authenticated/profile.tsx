@@ -23,6 +23,7 @@ import {
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { RingtoneSettings } from "@/components/RingtoneSettings";
 import { BoostHistory } from "@/components/profile/BoostHistory";
+import { PostBoostHistory } from "@/components/profile/PostBoostHistory";
 import { InviteRewardsCard } from "@/components/InviteRewardsCard";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
 import { ProfilePostsArchive } from "@/components/profile/ProfilePostsArchive";
@@ -541,6 +542,7 @@ function ProfilePage() {
         <TrafficInsightsCard />
         <InviteRewardsCard />
         <BoostHistory />
+        <PostBoostHistory />
       </div>
 
       <div className="mt-6 glass border border-destructive/40 rounded-2xl p-6">

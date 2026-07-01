@@ -3775,6 +3775,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       end_live: { Args: { p_live_id: string }; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -3824,6 +3825,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_post_boost_report: { Args: { _boost_id: string }; Returns: Json }
       get_public_post: {
         Args: { _post_id: string }
         Returns: {

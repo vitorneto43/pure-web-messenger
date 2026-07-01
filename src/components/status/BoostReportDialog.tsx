@@ -3,7 +3,7 @@ import { Loader2, BarChart3 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getBoostReport } from "@/lib/boost-analytics.functions";
+import { getBoostReport, getPostBoostReport } from "@/lib/boost-analytics.functions";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend,
@@ -23,15 +23,19 @@ export function BoostReportDialog({
   boostId,
   open,
   onOpenChange,
+  kind = "status",
 }: {
   boostId: string | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  kind?: "status" | "post";
 }) {
   const { t, i18n } = useTranslation();
   void i18n.language;
   const locale = currentLocale();
-  const fn = useServerFn(getBoostReport);
+  const statusFn = useServerFn(getBoostReport);
+  const postFn = useServerFn(getPostBoostReport);
+  const fn = kind === "post" ? postFn : statusFn;
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +46,7 @@ export function BoostReportDialog({
       .then((r) => setData(r))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [open, boostId]);
+  }, [open, boostId, kind]);
 
   const currency: Currency = (data?.boost?.currency?.toString().toUpperCase() ?? "BRL") as Currency;
   const money = (cents: number) =>

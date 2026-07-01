@@ -26,6 +26,7 @@ const customSchema = z.object({
   ageMax: z.number().int().min(13).max(80),
   gender: z.enum(["male", "female", "all"]),
   objective: z.enum(["views","comments","profile_visits","chat","network","website","cross_platform"]),
+  interests: z.array(z.string().min(1).max(40)).max(20).optional(),
 });
 const inputSchema = z.object({
   postId: z.string().uuid(),
@@ -54,8 +55,8 @@ export const createPostBoostCheckout = createServerFn({ method: "POST" })
     let views: number; let amountCents: number; let cpmCents: number | null = null;
     if (isCustom) {
       const c = data.custom!;
-      cpmCents = calculateCpm({ countries: c.countries, states: c.states, ageMin: c.ageMin, ageMax: c.ageMax, gender: c.gender, objective: c.objective });
-      views = estimateViews({ ...c });
+      cpmCents = calculateCpm({ countries: c.countries, states: c.states, ageMin: c.ageMin, ageMax: c.ageMax, gender: c.gender, objective: c.objective, interests: c.interests });
+      views = estimateViews({ ...c, interests: c.interests });
       if (views < 1) throw new Error("Orçamento muito baixo");
       amountCents = c.budgetCents * c.durationDays;
     } else {
@@ -88,6 +89,7 @@ export const createPostBoostCheckout = createServerFn({ method: "POST" })
       boostRow.target_age_min = c.ageMin;
       boostRow.target_age_max = c.ageMax;
       boostRow.target_gender = c.gender;
+      boostRow.target_interests = c.interests ?? [];
       boostRow.objective = c.objective;
       boostRow.cpm_cents = cpmCents;
       boostRow.ends_at = new Date(Date.now() + c.durationDays * 24 * 3600 * 1000).toISOString();
