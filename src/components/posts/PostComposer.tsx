@@ -81,6 +81,8 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [musicTrackId, setMusicTrackId] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState<string | null>(null);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
 
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -90,7 +92,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
-    setScheduledAt(null);
+    setScheduledAt(null); setCtaLabel(""); setCtaUrl("");
   }
 
   async function handleFile(file: File, expected: "image" | "video") {
