@@ -121,11 +121,37 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   const totalUserCcy = convertFromBRL(budget * days, currency);
   const cpmUserCcy = convertFromBRL(cpmCents / 100, currency);
 
+  async function saveCta(): Promise<boolean> {
+    const trimmed = ctaUrl.trim();
+    let url: string | null = null;
+    if (trimmed) {
+      try {
+        const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+        if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("bad protocol");
+        url = u.toString();
+      } catch {
+        toast.error("Link do botão inválido");
+        return false;
+      }
+    }
+    const label = ctaLabel.trim().slice(0, 30) || (url ? "Saiba mais" : null);
+    const { error } = await (supabase as any)
+      .from("posts")
+      .update({ cta_url: url, cta_label: label })
+      .eq("id", postId);
+    if (error) {
+      toast.error("Falha ao salvar CTA", { description: error.message });
+      return false;
+    }
+    return true;
+  }
+
   async function runReview(): Promise<boolean> {
     setReviewing(true);
     try {
-      if (!postText.trim()) return true;
-      const verdict = await moderate({ data: { text: postText, kind: "boost" } });
+      const text = [postText, ctaLabel, ctaUrl].filter(Boolean).join(" · ");
+      if (!text.trim()) return true;
+      const verdict = await moderate({ data: { text, kind: "boost" } });
       if (verdict.verdict === "rejected") {
         toast.error("Impulso reprovado na análise", {
           description: `${verdict.reason || "Conteúdo contra as Diretrizes."} Consulte /diretrizes.`,
