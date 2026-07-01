@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMentionSuggest } from "@/hooks/use-mention-suggest";
-import { Loader2, ImagePlus, Video, Type, X, Music, Sparkles, Hash } from "lucide-react";
+import { Loader2, ImagePlus, Video, Type, X, Music, Sparkles, Hash, MousePointerClick } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +81,8 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const [musicTrackId, setMusicTrackId] = useState<string | null>(null);
   const [musicTitle, setMusicTitle] = useState<string | null>(null);
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
 
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -90,7 +92,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   function reset() {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
-    setScheduledAt(null);
+    setScheduledAt(null); setCtaLabel(""); setCtaUrl("");
   }
 
   async function handleFile(file: File, expected: "image" | "video") {
@@ -152,6 +154,21 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       const inline = Array.from((content + " " + description).matchAll(/#(\w+)/g)).map(m => m[1].toLowerCase());
       const explicit = parseHashtags(hashtagsRaw);
       const hashtags = Array.from(new Set([...explicit, ...inline])).slice(0, 12);
+      let cta_url: string | null = null;
+      const ctaTrim = ctaUrl.trim();
+      if (ctaTrim) {
+        try {
+          const u = new URL(ctaTrim.startsWith("http") ? ctaTrim : `https://${ctaTrim}`);
+          if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("bad protocol");
+          cta_url = u.toString();
+        } catch {
+          toast.error("Link do botão inválido");
+          setSaving(false);
+          return;
+        }
+      }
+      const cta_label = ctaLabel.trim().slice(0, 30) || (cta_url ? "Saiba mais" : null);
+
       const payload = {
         kind,
         content: kind === "text" ? content.trim() : null,
@@ -162,6 +179,8 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         hashtags,
         music_track_id: musicTrackId,
         visibility: "public" as const,
+        cta_url,
+        cta_label,
       };
 
       if (scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000) {
@@ -258,6 +277,40 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
             />
             <p className="text-[11px] text-muted-foreground">Separe por espaço. Até 12 tags.</p>
           </div>
+
+          <div className="mt-3 rounded-xl border border-border p-3 space-y-2 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold flex items-center gap-1.5">
+                <MousePointerClick className="size-3.5 text-pink-500" />
+                Botão de ação (CTA)
+              </Label>
+              <span className="text-[10px] text-muted-foreground">Opcional</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Adicione um botão clicável no seu post — funciona mesmo sem impulsionar. Ideal para vender, divulgar link, WhatsApp, canal, etc.
+            </p>
+            <select
+              value={ctaLabel}
+              onChange={(e) => setCtaLabel(e.target.value)}
+              className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">Saiba mais</option>
+              <option value="Cadastre-se">Cadastre-se</option>
+              <option value="Comprar agora">Comprar agora</option>
+              <option value="Baixar">Baixar</option>
+              <option value="Assistir">Assistir</option>
+              <option value="Agendar">Agendar</option>
+              <option value="Fale conosco">Fale conosco</option>
+              <option value="Ver oferta">Ver oferta</option>
+            </select>
+            <Input
+              value={ctaUrl}
+              onChange={(e) => setCtaUrl(e.target.value)}
+              placeholder="https://seusite.com  ou  wa.me/5511999999999"
+              inputMode="url"
+            />
+          </div>
+
 
           <PolicyHint
             text={`${content} ${description} ${hashtagsRaw}`}

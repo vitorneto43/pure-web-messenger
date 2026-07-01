@@ -61,6 +61,8 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   const [gender, setGender] = useState<BoostGender>("all");
   const [objective, setObjective] = useState<BoostObjective>("views");
   const [interests, setInterests] = useState<string[]>([]);
+  const [ctaLabel, setCtaLabel] = useState<string>("");
+  const [ctaUrl, setCtaUrl] = useState<string>("");
   const [reviewing, setReviewing] = useState(false);
 
   const startCheckout = useServerFn(createPostBoostCheckout);
@@ -71,7 +73,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
     (async () => {
       const { data } = await (supabase as any)
         .from("posts")
-        .select("content, caption, hashtags")
+        .select("content, caption, hashtags, cta_label, cta_url")
         .eq("id", postId)
         .maybeSingle();
       if (data) {
@@ -79,6 +81,8 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
           ? (data as any).hashtags.map((h: string) => "#" + h).join(" ")
           : "";
         setPostText([(data as any).content, (data as any).caption, tags].filter(Boolean).join(" · "));
+        setCtaLabel((data as any).cta_label ?? "");
+        setCtaUrl((data as any).cta_url ?? "");
       }
     })();
   }, [open, postId]);
@@ -117,11 +121,37 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   const totalUserCcy = convertFromBRL(budget * days, currency);
   const cpmUserCcy = convertFromBRL(cpmCents / 100, currency);
 
+  async function saveCta(): Promise<boolean> {
+    const trimmed = ctaUrl.trim();
+    let url: string | null = null;
+    if (trimmed) {
+      try {
+        const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+        if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("bad protocol");
+        url = u.toString();
+      } catch {
+        toast.error("Link do botão inválido");
+        return false;
+      }
+    }
+    const label = ctaLabel.trim().slice(0, 30) || (url ? "Saiba mais" : null);
+    const { error } = await (supabase as any)
+      .from("posts")
+      .update({ cta_url: url, cta_label: label })
+      .eq("id", postId);
+    if (error) {
+      toast.error("Falha ao salvar CTA", { description: error.message });
+      return false;
+    }
+    return true;
+  }
+
   async function runReview(): Promise<boolean> {
     setReviewing(true);
     try {
-      if (!postText.trim()) return true;
-      const verdict = await moderate({ data: { text: postText, kind: "boost" } });
+      const text = [postText, ctaLabel, ctaUrl].filter(Boolean).join(" · ");
+      if (!text.trim()) return true;
+      const verdict = await moderate({ data: { text, kind: "boost" } });
       if (verdict.verdict === "rejected") {
         toast.error("Impulso reprovado na análise", {
           description: `${verdict.reason || "Conteúdo contra as Diretrizes."} Consulte /diretrizes.`,
@@ -136,6 +166,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   async function pickPackage(key: PackKey) {
     setLoading(key);
     try {
+      if (!(await saveCta())) { setLoading(null); return; }
       const approved = await runReview();
       if (!approved) { setLoading(null); return; }
       const result = await startCheckout({ data: {
@@ -155,6 +186,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
     if (estimatedViews < 1) { toast.error(t("boost.custom.budgetTooLow")); return; }
     setLoading("custom");
     try {
+      if (!(await saveCta())) { setLoading(null); return; }
       const approved = await runReview();
       if (!approved) { setLoading(null); return; }
       const result = await startCheckout({ data: {
@@ -345,6 +377,35 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
                       })}
                     </div>
                   </Field>
+
+                  <div className="rounded-xl border border-pink-500/30 bg-pink-500/5 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold">Botão de ação (CTA)</p>
+                      <span className="text-[10px] text-muted-foreground">Aumenta cliques</span>
+                    </div>
+                    <select
+                      value={ctaLabel}
+                      onChange={(e) => setCtaLabel(e.target.value)}
+                      className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="">Saiba mais</option>
+                      <option value="Cadastre-se">Cadastre-se</option>
+                      <option value="Comprar agora">Comprar agora</option>
+                      <option value="Baixar">Baixar</option>
+                      <option value="Assistir">Assistir</option>
+                      <option value="Agendar">Agendar</option>
+                      <option value="Fale conosco">Fale conosco</option>
+                      <option value="Ver oferta">Ver oferta</option>
+                    </select>
+                    <input
+                      value={ctaUrl}
+                      onChange={(e) => setCtaUrl(e.target.value)}
+                      placeholder="https://seusite.com"
+                      inputMode="url"
+                      className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    />
+                  </div>
+
 
                   <Field label={t("boost.custom.objective")}>
                     <div className="grid grid-cols-1 gap-1.5">
