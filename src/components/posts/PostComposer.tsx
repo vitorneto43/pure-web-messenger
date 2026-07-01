@@ -154,6 +154,21 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       const inline = Array.from((content + " " + description).matchAll(/#(\w+)/g)).map(m => m[1].toLowerCase());
       const explicit = parseHashtags(hashtagsRaw);
       const hashtags = Array.from(new Set([...explicit, ...inline])).slice(0, 12);
+      let cta_url: string | null = null;
+      const ctaTrim = ctaUrl.trim();
+      if (ctaTrim) {
+        try {
+          const u = new URL(ctaTrim.startsWith("http") ? ctaTrim : `https://${ctaTrim}`);
+          if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("bad protocol");
+          cta_url = u.toString();
+        } catch {
+          toast.error("Link do botão inválido");
+          setSaving(false);
+          return;
+        }
+      }
+      const cta_label = ctaLabel.trim().slice(0, 30) || (cta_url ? "Saiba mais" : null);
+
       const payload = {
         kind,
         content: kind === "text" ? content.trim() : null,
@@ -164,6 +179,8 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         hashtags,
         music_track_id: musicTrackId,
         visibility: "public" as const,
+        cta_url,
+        cta_label,
       };
 
       if (scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000) {
