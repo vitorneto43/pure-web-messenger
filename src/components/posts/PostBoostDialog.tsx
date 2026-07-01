@@ -166,6 +166,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   async function pickPackage(key: PackKey) {
     setLoading(key);
     try {
+      if (!(await saveCta())) { setLoading(null); return; }
       const approved = await runReview();
       if (!approved) { setLoading(null); return; }
       const result = await startCheckout({ data: {
@@ -185,6 +186,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
     if (estimatedViews < 1) { toast.error(t("boost.custom.budgetTooLow")); return; }
     setLoading("custom");
     try {
+      if (!(await saveCta())) { setLoading(null); return; }
       const approved = await runReview();
       if (!approved) { setLoading(null); return; }
       const result = await startCheckout({ data: {
