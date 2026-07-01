@@ -3825,6 +3825,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_post_boost_report: { Args: { _boost_id: string }; Returns: Json }
       get_public_post: {
         Args: { _post_id: string }
         Returns: {
