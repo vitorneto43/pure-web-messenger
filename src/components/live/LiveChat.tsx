@@ -8,6 +8,7 @@ import { Send, MessageCircle } from "lucide-react";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { MentionText } from "@/components/mentions/MentionText";
 import { useMentionSuggest } from "@/hooks/use-mention-suggest";
+import { TranslateButton } from "@/components/TranslateButton";
 
 interface Msg {
   id: string;
@@ -105,22 +106,12 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 text-sm">
         {messages.map((m) => (
-          <div key={m.id} className="text-white drop-shadow leading-tight flex items-start gap-1.5">
-            <div className="flex-1 min-w-0">
-              <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
-              <MentionText text={m.body} className="opacity-95 break-words" mentionClassName="font-bold text-primary underline" />
-            </div>
-            {userId && m.user_id !== userId && (
-              <button
-                type="button"
-                onClick={() => chatWith(m.user_id)}
-                className="shrink-0 p-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition"
-                aria-label={`Conversar com ${m.display_name || m.username || "usuário"}`}
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-white" />
-              </button>
-            )}
-          </div>
+          <LiveChatMessage
+            key={m.id}
+            m={m}
+            canChat={!!userId && m.user_id !== userId}
+            onChat={() => chatWith(m.user_id)}
+          />
         ))}
       </div>
       {userId ? (
@@ -143,6 +134,29 @@ export function LiveChat({ liveId, userId }: { liveId: string; userId: string | 
         </form>
       ) : (
         <div className="p-3 text-center text-xs text-white/80 bg-black/40">Entre na conta para conversar</div>
+      )}
+    </div>
+  );
+}
+
+function LiveChatMessage({ m, canChat, onChat }: { m: Msg; canChat: boolean; onChat: () => void }) {
+  const [translated, setTranslated] = useState<string | null>(null);
+  return (
+    <div className="text-white drop-shadow leading-tight flex items-start gap-1.5">
+      <div className="flex-1 min-w-0">
+        <span className="font-semibold text-primary mr-1">{m.display_name || m.username || "User"}</span>
+        <MentionText text={translated ?? m.body} className="opacity-95 break-words" mentionClassName="font-bold text-primary underline" />
+        <TranslateButton text={m.body} variant="dark" size="xs" className="ml-2 align-middle" onTranslated={setTranslated} />
+      </div>
+      {canChat && (
+        <button
+          type="button"
+          onClick={onChat}
+          className="shrink-0 p-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition"
+          aria-label="Conversar"
+        >
+          <MessageCircle className="w-3.5 h-3.5 text-white" />
+        </button>
       )}
     </div>
   );

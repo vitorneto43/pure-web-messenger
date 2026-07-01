@@ -14,6 +14,7 @@ import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
 import { MentionText } from "@/components/mentions/MentionText";
 import { useMentionSuggest } from "@/hooks/use-mention-suggest";
+import { TranslateButton } from "@/components/TranslateButton";
 
 interface CommentRow {
   id: string;
@@ -170,6 +171,7 @@ export function PostComments({ open, onOpenChange, postId, onCountChange }: Prop
 function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, children }: {
   c: CommentRow; onReply?: () => void; onChat: () => void; onReact: () => void; compact?: boolean; replyToUsername?: string | null; children?: React.ReactNode;
 }) {
+  const [translated, setTranslated] = useState<string | null>(null);
   return (
     <div>
       <div className="flex gap-2">
@@ -185,7 +187,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
             </div>
             <p className="text-sm whitespace-pre-wrap break-words">
               {replyToUsername && <span className="text-primary font-medium mr-1">@{replyToUsername}</span>}
-              <MentionText text={c.content} />
+              <MentionText text={translated ?? c.content} />
             </p>
           </div>
           <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
@@ -193,6 +195,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
             <button onClick={onReact} className="flex items-center gap-1 hover:text-rose-500"><Heart className="size-3" />{c.reactions_count || ""}</button>
             {onReply && <button onClick={onReply} className="hover:text-foreground">Responder</button>}
             <button onClick={onChat} className="flex items-center gap-1 hover:text-foreground"><MessageSquare className="size-3" />Chat</button>
+            <TranslateButton text={c.content} onTranslated={setTranslated} />
           </div>
           {children}
         </div>
