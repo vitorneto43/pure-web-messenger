@@ -55,8 +55,8 @@ export const createPostBoostCheckout = createServerFn({ method: "POST" })
     let views: number; let amountCents: number; let cpmCents: number | null = null;
     if (isCustom) {
       const c = data.custom!;
-      cpmCents = calculateCpm({ countries: c.countries, states: c.states, ageMin: c.ageMin, ageMax: c.ageMax, gender: c.gender, objective: c.objective });
-      views = estimateViews({ ...c });
+      cpmCents = calculateCpm({ countries: c.countries, states: c.states, ageMin: c.ageMin, ageMax: c.ageMax, gender: c.gender, objective: c.objective, interests: c.interests });
+      views = estimateViews({ ...c, interests: c.interests });
       if (views < 1) throw new Error("Orçamento muito baixo");
       amountCents = c.budgetCents * c.durationDays;
     } else {
