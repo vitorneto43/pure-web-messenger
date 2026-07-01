@@ -272,6 +272,27 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         </p>
       )}
 
+      {/* CTA button */}
+      {post.cta_url && (
+        <div className="px-4 pb-3">
+          <a
+            href={post.cta_url}
+            target="_blank"
+            rel="noopener noreferrer nofollow ugc"
+            onClick={() => { void track("post_cta_click", { post_id: post.post_id, boosted: post.is_boosted }); }}
+            className={cn(
+              "flex items-center justify-center gap-2 w-full h-10 rounded-full text-sm font-semibold transition",
+              post.is_boosted
+                ? "bg-gradient-to-r from-pink-500 to-amber-500 text-white hover:opacity-90"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            )}
+          >
+            {post.cta_label || "Saiba mais"} →
+          </a>
+        </div>
+      )}
+
+
       {/* Music tag — at the bottom of the post */}
       {post.music_track_id && (
         <div className="px-3 pb-3">
