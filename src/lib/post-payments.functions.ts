@@ -26,6 +26,7 @@ const customSchema = z.object({
   ageMax: z.number().int().min(13).max(80),
   gender: z.enum(["male", "female", "all"]),
   objective: z.enum(["views","comments","profile_visits","chat","network","website","cross_platform"]),
+  interests: z.array(z.string().min(1).max(40)).max(20).optional(),
 });
 const inputSchema = z.object({
   postId: z.string().uuid(),
