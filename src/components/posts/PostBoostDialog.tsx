@@ -73,7 +73,7 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
     (async () => {
       const { data } = await (supabase as any)
         .from("posts")
-        .select("content, caption, hashtags")
+        .select("content, caption, hashtags, cta_label, cta_url")
         .eq("id", postId)
         .maybeSingle();
       if (data) {
@@ -81,6 +81,8 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
           ? (data as any).hashtags.map((h: string) => "#" + h).join(" ")
           : "";
         setPostText([(data as any).content, (data as any).caption, tags].filter(Boolean).join(" · "));
+        setCtaLabel((data as any).cta_label ?? "");
+        setCtaUrl((data as any).cta_url ?? "");
       }
     })();
   }, [open, postId]);
