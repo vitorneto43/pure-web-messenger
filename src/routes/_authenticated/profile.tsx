@@ -542,6 +542,7 @@ function ProfilePage() {
         <TrafficInsightsCard />
         <InviteRewardsCard />
         <BoostHistory />
+        <PostBoostHistory />
       </div>
 
       <div className="mt-6 glass border border-destructive/40 rounded-2xl p-6">
