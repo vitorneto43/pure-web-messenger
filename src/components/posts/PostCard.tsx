@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
 import { formatTime } from "@/lib/format-time";
 import { linkify } from "@/lib/linkify";
+import { TranslateButton } from "@/components/TranslateButton";
 
 export interface PostItem {
   post_id: string;
@@ -53,6 +54,8 @@ interface Props {
 }
 
 export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }: Props) {
+  const [captionTranslated, setCaptionTranslated] = useState<string | null>(null);
+  const [contentTranslated, setContentTranslated] = useState<string | null>(null);
   const { user } = useAuth();
   const { gate, GateDialog } = useAuthGate();
   const navigate = useNavigate();
@@ -226,7 +229,10 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       {/* Body */}
       {post.kind === "text" && (
         <div className="px-4 py-8 text-center" style={{ background: post.background ?? "linear-gradient(135deg,#6366f1,#ec4899)", color: "white" }}>
-          <p className="text-xl font-semibold whitespace-pre-wrap">{linkify(post.content, "underline break-all")}</p>
+          <p className="text-xl font-semibold whitespace-pre-wrap">{linkify(contentTranslated ?? post.content, "underline break-all")}</p>
+          <div className="mt-3 flex justify-center">
+            <TranslateButton text={post.content} variant="dark" onTranslated={setContentTranslated} />
+          </div>
         </div>
       )}
       {isMedia && post.kind === "image" && (
@@ -266,10 +272,15 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
       {/* Caption */}
       {post.caption && (
-        <p className="px-4 pb-3 text-sm whitespace-pre-wrap break-words">
-          <span className="font-semibold mr-2">@{post.username}</span>
-          {linkify(post.caption)}
-        </p>
+        <div className="px-4 pb-3">
+          <p className="text-sm whitespace-pre-wrap break-words">
+            <span className="font-semibold mr-2">@{post.username}</span>
+            {linkify(captionTranslated ?? post.caption)}
+          </p>
+          <div className="mt-1">
+            <TranslateButton text={post.caption} onTranslated={setCaptionTranslated} />
+          </div>
+        </div>
       )}
 
       {/* CTA button */}
