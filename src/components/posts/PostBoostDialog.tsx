@@ -61,6 +61,8 @@ export function PostBoostDialog({ open, onOpenChange, postId }: { open: boolean;
   const [gender, setGender] = useState<BoostGender>("all");
   const [objective, setObjective] = useState<BoostObjective>("views");
   const [interests, setInterests] = useState<string[]>([]);
+  const [ctaLabel, setCtaLabel] = useState<string>("");
+  const [ctaUrl, setCtaUrl] = useState<string>("");
   const [reviewing, setReviewing] = useState(false);
 
   const startCheckout = useServerFn(createPostBoostCheckout);
