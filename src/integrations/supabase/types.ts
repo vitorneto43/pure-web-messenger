@@ -2292,6 +2292,8 @@ export type Database = {
           caption: string | null
           content: string | null
           created_at: string
+          cta_label: string | null
+          cta_url: string | null
           hashtags: string[]
           id: string
           is_official: boolean
@@ -2312,6 +2314,8 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           hashtags?: string[]
           id?: string
           is_official?: boolean
@@ -2332,6 +2336,8 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           hashtags?: string[]
           id?: string
           is_official?: boolean
@@ -3717,6 +3723,8 @@ export type Database = {
           comments_count: number
           content: string
           created_at: string
+          cta_label: string
+          cta_url: string
           display_name: string
           hashtags: string[]
           is_boosted: boolean
