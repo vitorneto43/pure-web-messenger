@@ -424,7 +424,7 @@ export function ChatSidebar({
                 </a>
               </div>
               {user?.email && (
-                <div className="text-[11px] text-muted-foreground leading-tight">{user.email}</div>
+                <div className="hidden sm:block text-[11px] text-muted-foreground leading-tight">{user.email}</div>
               )}
             </div>
           </div>
