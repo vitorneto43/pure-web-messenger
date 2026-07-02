@@ -594,7 +594,7 @@ export function ChatSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-3">
         <ProfileCompletionBanner />
 
         {view === "posts" ? (
