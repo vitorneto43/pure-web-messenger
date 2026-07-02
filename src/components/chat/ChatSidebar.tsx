@@ -94,6 +94,28 @@ export function ChatSidebar({
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [startingChat, setStartingChat] = useState(false);
   const [groupResults, setGroupResults] = useState<any[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollRef = useRef(0);
+  const [toolbarHidden, setToolbarHidden] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const top = el.scrollTop;
+      const delta = top - lastScrollRef.current;
+      if (top < 40) {
+        setToolbarHidden(false);
+      } else if (delta > 6) {
+        setToolbarHidden(true);
+      } else if (delta < -6) {
+        setToolbarHidden(false);
+      }
+      lastScrollRef.current = top;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [view]);
 
   useEffect(() => {
     if (user) requestBrowserNotificationPermission();
