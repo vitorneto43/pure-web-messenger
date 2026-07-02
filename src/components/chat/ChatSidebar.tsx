@@ -402,7 +402,7 @@ export function ChatSidebar({
   return (
     <>
       {GateDialog}
-      <div className="px-2 py-3 flex flex-col gap-2 border-b border-border">
+      <div className="px-2 py-2 sm:py-3 flex flex-col gap-1.5 sm:gap-2 border-b border-border">
         <div className="flex items-center justify-between gap-1">
           <div className="flex items-center gap-2.5">
             <Link to="/" className="size-9 rounded-full overflow-hidden shadow shrink-0">
