@@ -514,55 +514,64 @@ export function ChatSidebar({
             className="pl-9 bg-sidebar-hover border-transparent focus-visible:bg-card"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            onClick={() => gate("message", () => setNewChatOpen(true))}
-            size="sm"
-            className="flex-1 rounded-full"
-          >
-            <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
-          </Button>
-          <Button asChild size="sm" variant="secondary" className="rounded-full">
-            <Link to="/live">
-              <Radio className="size-4 mr-1.5 text-red-500" />
-              Lives
-            </Link>
-          </Button>
-          <Button
-            onClick={() => setView((v) => (v === "posts" ? "chat" : "posts"))}
-            size="sm"
-            variant="secondary"
-            className="rounded-full"
-          >
-            {view === "posts" ? (
-              <>
-                <MessageCircle className="size-4 mr-1.5" />
-                Chat
-              </>
-            ) : (
-              <>
-                <Newspaper className="size-4 mr-1.5" />
-                Posts
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={() => gate("join_group", () => setNewGroupOpen(true))}
-            size="sm"
-            variant="secondary"
-            className="rounded-full"
-          >
-            <UsersRound className="size-4 mr-1.5" /> {t("chat.group")}
-          </Button>
-          <Button
-            onClick={inviteFriend}
-            size="sm"
-            variant="secondary"
-            className="rounded-full"
-            title={t("chat.copyInviteLink")}
-          >
-            <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
-          </Button>
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-out ${
+            toolbarHidden
+              ? "max-h-0 opacity-0 -translate-y-1 pointer-events-none sm:max-h-none sm:opacity-100 sm:translate-y-0 sm:pointer-events-auto"
+              : "max-h-24 opacity-100 translate-y-0"
+          }`}
+          aria-hidden={toolbarHidden}
+        >
+          <div className="flex gap-2 flex-nowrap overflow-x-auto scrollbar-thin sm:flex-wrap sm:overflow-visible -mx-1 px-1 pb-1">
+            <Button
+              onClick={() => gate("message", () => setNewChatOpen(true))}
+              size="sm"
+              className="shrink-0 sm:flex-1 rounded-full"
+            >
+              <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
+            </Button>
+            <Button asChild size="sm" variant="secondary" className="shrink-0 rounded-full">
+              <Link to="/live">
+                <Radio className="size-4 mr-1.5 text-red-500" />
+                Lives
+              </Link>
+            </Button>
+            <Button
+              onClick={() => setView((v) => (v === "posts" ? "chat" : "posts"))}
+              size="sm"
+              variant="secondary"
+              className="shrink-0 rounded-full"
+            >
+              {view === "posts" ? (
+                <>
+                  <MessageCircle className="size-4 mr-1.5" />
+                  Chat
+                </>
+              ) : (
+                <>
+                  <Newspaper className="size-4 mr-1.5" />
+                  Posts
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={() => gate("join_group", () => setNewGroupOpen(true))}
+              size="sm"
+              variant="secondary"
+              className="shrink-0 rounded-full"
+            >
+              <UsersRound className="size-4 mr-1.5" /> {t("chat.group")}
+            </Button>
+            <Button
+              onClick={inviteFriend}
+              size="sm"
+              variant="secondary"
+              className="shrink-0 rounded-full"
+              title={t("chat.copyInviteLink")}
+            >
+              <UserPlus className="size-4 mr-1.5" /> {t("chat.invite")}
+            </Button>
+          </div>
         </div>
         <div className="flex gap-1.5 pt-0.5">
           {(["all", "direct", "groups"] as const).map((key) => (
