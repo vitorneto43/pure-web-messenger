@@ -497,7 +497,7 @@ export function ChatSidebar({
             ) : null}
           </div>
         </div>
-        <h1 className="px-1 text-lg sm:text-2xl font-extrabold text-center leading-tight tracking-tight">
+        <h1 className="px-1 text-[13px] sm:text-2xl font-extrabold text-center leading-tight tracking-tight line-clamp-2 sm:line-clamp-none">
           Wavechat a Rede Social Brasileira onde você faz tudo.
         </h1>
       </div>
