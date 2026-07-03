@@ -78,10 +78,36 @@ export function getEmbedInfo(rawUrl: string): EmbedInfo | null {
     }
   }
 
-  // Facebook: o iframe plugins.facebook.com costuma ser bloqueado por
-  // X-Frame-Options/CSP em apps de terceiros ("conexão recusada").
-  // Em vez disso, deixamos cair no card de preview tradicional (OG tags),
-  // que mostra imagem, título e descrição do post/vídeo.
+  // Facebook video/reels/watch. Public posts render inline via the video plugin;
+  // private posts return an empty iframe and the OG card fallback still shows below.
+  if (
+    host === "facebook.com" ||
+    host === "web.facebook.com" ||
+    host === "m.facebook.com" ||
+    host === "fb.watch"
+  ) {
+    const isVideo =
+      /\/(videos?|reel|reels|watch)\//.test(path) ||
+      u.searchParams.has("v") ||
+      host === "fb.watch";
+    if (isVideo) {
+      const href = encodeURIComponent(rawUrl);
+      const isReel = /\/reels?\//.test(path);
+      return {
+        src: `https://www.facebook.com/plugins/video.php?href=${href}&show_text=false&autoplay=false`,
+        aspect: isReel ? "aspect-[9/16]" : "aspect-video",
+        allow: "autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share",
+        title: "Facebook video",
+      };
+    }
+  }
+
+  // Kwai — sem embed oficial; retorna null para cair no card de preview
+  // (miniatura + botão "Assistir na plataforma original").
+  if (host === "kwai.com" || host.endsWith(".kwai.com") || host === "kw.ai") {
+    return null;
+  }
+
 
   // Spotify
   if (host === "open.spotify.com") {
