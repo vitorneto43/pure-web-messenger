@@ -18,6 +18,8 @@ import { track } from "@/lib/track";
 import { formatTime } from "@/lib/format-time";
 import { linkify } from "@/lib/linkify";
 import { TranslateButton } from "@/components/TranslateButton";
+import { StatusLinkPreview, extractFirstUrl } from "@/components/status/StatusLinkPreview";
+
 
 export interface PostItem {
   post_id: string;
