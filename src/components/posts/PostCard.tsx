@@ -244,6 +244,18 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline muted preload="metadata" />
       )}
 
+      {/* Auto-embed de links de vídeo (YouTube, TikTok, Instagram, Facebook, X, Vimeo, Kwai...) */}
+      {(() => {
+        const url = extractFirstUrl(post.caption) ?? extractFirstUrl(post.content);
+        if (!url) return null;
+        return (
+          <div className="px-3 pt-2">
+            <StatusLinkPreview url={url} />
+          </div>
+        );
+      })()}
+
+
       {/* Actions */}
       <div className="flex items-center gap-1 px-2 py-2">
         <Button variant="ghost" size="sm" onClick={toggleLike}>
