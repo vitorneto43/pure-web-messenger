@@ -9,9 +9,18 @@ export function extractFirstUrl(text: string | null | undefined): string | null 
   if (!text) return null;
   const m = text.match(URL_REGEX);
   if (!m) return null;
-  const raw = m[0];
-  return raw.startsWith("http") ? raw : `https://${raw}`;
+  const raw = m[0].replace(/[)\].,;:!?]+$/, "");
+  const candidate = raw.startsWith("http") ? raw : `https://${raw}`;
+  try {
+    const u = new URL(candidate);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    if (!u.hostname.includes(".")) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
 }
+
 
 export function StatusLinkPreview({ url }: { url: string }) {
   const [preview, setPreview] = useState<LinkPreview | null>(null);
@@ -24,7 +33,16 @@ export function StatusLinkPreview({ url }: { url: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    const cacheKey = `lp:${url}`;
+    // Guard: only call server if URL is actually parseable + http(s)
+    let safe: string;
+    try {
+      const u = new URL(url);
+      if (u.protocol !== "http:" && u.protocol !== "https:") return;
+      safe = u.toString();
+    } catch {
+      return;
+    }
+    const cacheKey = `lp:${safe}`;
     try {
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
@@ -33,7 +51,7 @@ export function StatusLinkPreview({ url }: { url: string }) {
         return;
       }
     } catch {}
-    fetchPreview({ data: { url } })
+    fetchPreview({ data: { url: safe } })
       .then((p) => {
         if (cancelled) return;
         setPreview(p);
@@ -43,6 +61,7 @@ export function StatusLinkPreview({ url }: { url: string }) {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [url]);
+
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
