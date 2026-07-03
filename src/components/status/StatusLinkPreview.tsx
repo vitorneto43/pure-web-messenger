@@ -9,9 +9,18 @@ export function extractFirstUrl(text: string | null | undefined): string | null 
   if (!text) return null;
   const m = text.match(URL_REGEX);
   if (!m) return null;
-  const raw = m[0];
-  return raw.startsWith("http") ? raw : `https://${raw}`;
+  const raw = m[0].replace(/[)\].,;:!?]+$/, "");
+  const candidate = raw.startsWith("http") ? raw : `https://${raw}`;
+  try {
+    const u = new URL(candidate);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    if (!u.hostname.includes(".")) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
 }
+
 
 export function StatusLinkPreview({ url }: { url: string }) {
   const [preview, setPreview] = useState<LinkPreview | null>(null);
