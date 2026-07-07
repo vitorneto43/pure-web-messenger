@@ -12,7 +12,7 @@ import { useLiveLocationBroadcast } from "@/hooks/use-live-location-broadcast";
 import { OnlinePresenceProvider } from "@/hooks/use-online-presence";
 import { useMessageNotificationIntent } from "@/hooks/use-message-notification-intent";
 import { OnboardingNameDialog } from "@/components/OnboardingNameDialog";
-import { OnboardingSurveyDialog } from "@/components/OnboardingSurveyDialog";
+
 import { ModerationGate } from "@/components/ModerationGate";
 import { GuestBanner } from "@/components/GuestBanner";
 import { track } from "@/lib/track";
@@ -44,7 +44,7 @@ function AuthGuard() {
         <PushBootstrap />
         <ModerationGate>
           <OnboardingNameDialog />
-          <OnboardingSurveyDialog />
+          
           <Outlet />
           <CallScreen />
           <IncomingCallDialog />
