@@ -65,115 +65,84 @@ export function StatusBar() {
 
   async function load() {
     setLoading(true);
-    if (!user) {
-      const { data } = await (supabase as any).rpc("discover_public_statuses", {
-        _limit: 30,
-        _offset: 0,
-      });
-      const byUser = new Map<string, UserGroup>();
-      for (const r of data ?? []) {
-        const status: StatusRow = {
-          id: r.status_id,
-          user_id: r.user_id,
-          kind: r.kind,
-          content: r.content,
-          media_url: r.media_url,
-          caption: r.caption,
-          background: r.background,
-          is_official: r.is_official,
-          created_at: r.created_at,
-          expires_at: r.expires_at,
-          cta_url: r.cta_url,
-          cta_label: r.cta_label,
-        };
-        const current = byUser.get(r.user_id);
-        if (current) current.statuses.push(status);
-        else
-          byUser.set(r.user_id, {
-            user: { id: r.user_id, display_name: r.display_name, avatar_url: r.avatar_url },
-            statuses: [status],
-            hasUnseen: true,
-            isOfficial: !!r.is_official,
-            isSponsored: !!r.is_boosted,
-            firstUnseenIndex: 0,
-            sponsoredStatusIds: r.is_boosted ? [r.status_id] : [],
-          });
-      }
-      setMine([]);
-      setGroups(Array.from(byUser.values()));
-      setLoading(false);
-      return;
-    }
-    const { data } = await supabase
-      .from("statuses")
-      .select("*")
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: true });
-    const rows = (data ?? []) as StatusRow[];
 
-    const myRows = rows.filter((r) => r.user_id === user.id);
+    // Load my own statuses (only if signed in)
+    let myRows: StatusRow[] = [];
+    if (user) {
+      const { data: mineData } = await supabase
+        .from("statuses")
+        .select("*")
+        .eq("user_id", user.id)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: true });
+      myRows = (mineData ?? []) as StatusRow[];
+    }
     setMine(myRows);
 
-    const otherIds = Array.from(
-      new Set(rows.filter((r) => r.user_id !== user.id).map((r) => r.user_id)),
-    );
-    let profilesMap = new Map<string, any>();
-    if (otherIds.length) {
-      const { data: profs } = await (supabase as any).rpc("get_status_profile_cards", {
-        _user_ids: otherIds,
-      });
-      profilesMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
-    }
+    // Load everyone else's public statuses via the open discovery RPC.
+    // This ensures stories from users with no relationship also appear.
+    const { data } = await (supabase as any).rpc("discover_public_statuses", {
+      _limit: 60,
+      _offset: 0,
+    });
 
-    // load my view records to mark unseen
-    const otherStatusIds = rows.filter((r) => r.user_id !== user.id).map((r) => r.id);
+    // Mark seen for signed-in viewers
     let seenSet = new Set<string>();
-    if (otherStatusIds.length) {
-      const { data: views } = await supabase
-        .from("status_views")
-        .select("status_id")
-        .eq("viewer_id", user.id)
-        .in("status_id", otherStatusIds);
-      seenSet = new Set((views ?? []).map((v) => v.status_id));
+    if (user) {
+      const otherStatusIds = (data ?? []).map((r: any) => r.status_id);
+      if (otherStatusIds.length) {
+        const { data: views } = await supabase
+          .from("status_views")
+          .select("status_id")
+          .eq("viewer_id", user.id)
+          .in("status_id", otherStatusIds);
+        seenSet = new Set((views ?? []).map((v) => v.status_id));
+      }
     }
 
-    // Fetch which statuses are sponsored (boosted) FOR ME (non-contact owners)
-    let sponsoredSet = new Set<string>();
-    try {
-      const { data: spon } = await (supabase as any).rpc("get_my_sponsored_status_ids");
-      sponsoredSet = new Set(
-        ((spon ?? []) as Array<string | { get_my_sponsored_status_ids: string }>).map((v) =>
-          typeof v === "string" ? v : v.get_my_sponsored_status_ids,
-        ),
-      );
-    } catch (e) {
-      console.warn("sponsored fetch failed", e);
+    const byUser = new Map<string, UserGroup>();
+    for (const r of data ?? []) {
+      const status: StatusRow = {
+        id: r.status_id,
+        user_id: r.user_id,
+        kind: r.kind,
+        content: r.content,
+        media_url: r.media_url,
+        caption: r.caption,
+        background: r.background,
+        is_official: r.is_official,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        cta_url: r.cta_url,
+        cta_label: r.cta_label,
+      };
+      const current = byUser.get(r.user_id);
+      if (current) {
+        current.statuses.push(status);
+        if (!seenSet.has(status.id)) current.hasUnseen = true;
+        if (r.is_boosted) {
+          current.isSponsored = true;
+          current.sponsoredStatusIds = [...(current.sponsoredStatusIds ?? []), r.status_id];
+        }
+      } else {
+        byUser.set(r.user_id, {
+          user: { id: r.user_id, display_name: r.display_name, avatar_url: r.avatar_url },
+          statuses: [status],
+          hasUnseen: !seenSet.has(status.id),
+          isOfficial: !!r.is_official,
+          isSponsored: !!r.is_boosted,
+          firstUnseenIndex: 0,
+          sponsoredStatusIds: r.is_boosted ? [r.status_id] : [],
+        });
+      }
     }
-
-    const byUser = new Map<string, StatusRow[]>();
-    for (const r of rows) {
-      if (r.user_id === user.id) continue;
-      if (!byUser.has(r.user_id)) byUser.set(r.user_id, []);
-      byUser.get(r.user_id)!.push(r);
-    }
-    const grouped: UserGroup[] = [];
-    for (const [uid, list] of byUser) {
-      const prof = profilesMap.get(uid);
-      if (!prof) continue;
-      const sponsoredIds = list.filter((s) => sponsoredSet.has(s.id)).map((s) => s.id);
-      grouped.push({
-        user: prof,
-        statuses: list,
-        hasUnseen: list.some((s) => !seenSet.has(s.id)),
-        isOfficial: list.some((s) => s.is_official === true),
-        isSponsored: sponsoredIds.length > 0,
-        sponsoredStatusIds: sponsoredIds,
-        firstUnseenIndex: Math.max(
-          list.findIndex((s) => !seenSet.has(s.id)),
-          0,
-        ),
-      });
-    }
+    const grouped = Array.from(byUser.values()).map((g) => ({
+      ...g,
+      firstUnseenIndex: Math.max(
+        g.statuses.findIndex((s) => !seenSet.has(s.id)),
+        0,
+      ),
+    }));
     grouped.sort((a, b) => {
       if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
       if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
@@ -183,6 +152,7 @@ export function StatusBar() {
     setGroups(grouped);
     setLoading(false);
   }
+
 
   useEffect(() => {
     load();
