@@ -36,10 +36,12 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
-      <ClientOnly fallback={<div className="flex-1" />}>
-        <ChatSidebar initialView="posts" />
-      </ClientOnly>
+    <div className="h-screen flex justify-center overflow-hidden text-sidebar-foreground bg-background">
+      <div className="w-full max-w-[560px] flex flex-col overflow-hidden bg-sidebar border-x border-border/60 shadow-2xl">
+        <ClientOnly fallback={<div className="flex-1" />}>
+          <ChatSidebar initialView="posts" />
+        </ClientOnly>
+      </div>
     </div>
   );
 }
