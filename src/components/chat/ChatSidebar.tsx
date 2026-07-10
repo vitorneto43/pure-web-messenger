@@ -16,6 +16,12 @@ import {
   MessageCircle,
   Share2,
   Trophy,
+  Shield,
+  FileText,
+  Info,
+  Mail,
+  AlertTriangle,
+  LifeBuoy,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -30,6 +36,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import wavechatLogo from "@/assets/wavechat-logo.png.asset.json";
@@ -432,15 +440,67 @@ export function ChatSidebar({
             {user ? (
               <NotificationsBell />
             ) : (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="rounded-full relative size-8"
-                onClick={() => gate("default", () => undefined)}
-              >
-                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
-                <Settings className="size-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full relative size-8"
+                  >
+                    <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
+                    <Settings className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Informações e ajuda
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link to="/about">
+                      <Info className="size-4 mr-2" /> Sobre a WaveChat
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/support">
+                      <LifeBuoy className="size-4 mr-2" /> Central de Ajuda / FAQ
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/diretrizes">
+                      <BookOpen className="size-4 mr-2" /> Diretrizes da Comunidade
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/seguranca">
+                      <Shield className="size-4 mr-2" /> Segurança
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/privacy">
+                      <Shield className="size-4 mr-2" /> Política de Privacidade
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/terms">
+                      <FileText className="size-4 mr-2" /> Termos de Uso
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:contato@webconnectchat.com">
+                      <Mail className="size-4 mr-2" /> Contato
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:contato@webconnectchat.com?subject=Denúncia%20de%20abuso">
+                      <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => gate("default", () => undefined)}>
+                    <UserIcon className="size-4 mr-2" /> Entrar / Cadastrar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             {user ? (
               <DropdownMenu>
@@ -489,6 +549,46 @@ export function ChatSidebar({
                       <Trophy className="size-4 mr-2" /> Top Embaixadores
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Informações e ajuda
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link to="/about">
+                      <Info className="size-4 mr-2" /> Sobre a WaveChat
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/support">
+                      <LifeBuoy className="size-4 mr-2" /> Central de Ajuda / FAQ
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/seguranca">
+                      <Shield className="size-4 mr-2" /> Segurança
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/privacy">
+                      <Shield className="size-4 mr-2" /> Política de Privacidade
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/terms">
+                      <FileText className="size-4 mr-2" /> Termos de Uso
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:contato@webconnectchat.com">
+                      <Mail className="size-4 mr-2" /> Contato
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:contato@webconnectchat.com?subject=Denúncia%20de%20abuso">
+                      <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive">
                     <LogOut className="size-4 mr-2" /> {t("chat.logout")}
                   </DropdownMenuItem>
