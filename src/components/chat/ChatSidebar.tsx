@@ -698,7 +698,27 @@ export function ChatSidebar({
         <ProfileCompletionBanner />
 
         {view === "posts" ? (
-          <PostsFeed />
+          <>
+            <Link
+              to="/conhecer-pessoas"
+              className="mb-3 flex items-center gap-3 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-accent/8 to-transparent px-3 py-2.5 hover:from-primary/20 transition group"
+            >
+              <div className="size-10 rounded-full bg-gradient-to-br from-primary to-accent grid place-items-center shadow-sm shrink-0">
+                <UserIcon className="size-5 text-primary-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold leading-tight flex items-center gap-1">
+                  Conhecer pessoas
+                  <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">novo</span>
+                </div>
+                <div className="text-[11px] text-muted-foreground leading-tight truncate">
+                  Perto de você · sua cidade · interesses em comum
+                </div>
+              </div>
+              <span className="text-primary text-lg group-hover:translate-x-0.5 transition shrink-0">→</span>
+            </Link>
+            <PostsFeed />
+          </>
         ) : (
           <>
             {loading ? (
