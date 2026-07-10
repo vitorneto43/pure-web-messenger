@@ -440,20 +440,14 @@ export function ChatSidebar({
             {user ? (
               <NotificationsBell />
             ) : (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="rounded-full relative size-8"
-                onClick={() => gate("default", () => undefined)}
-              >
-                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
-                <Settings className="size-4" />
-              </Button>
-            )}
-            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="rounded-full size-8">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full relative size-8"
+                  >
+                    <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary" />
                     <Settings className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -501,9 +495,13 @@ export function ChatSidebar({
                       <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
                     </a>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => gate("default", () => undefined)}>
+                    <UserIcon className="size-4 mr-2" /> Entrar / Cadastrar
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : null}
+            )}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
