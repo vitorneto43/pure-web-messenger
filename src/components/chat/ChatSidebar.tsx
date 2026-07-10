@@ -16,6 +16,12 @@ import {
   MessageCircle,
   Share2,
   Trophy,
+  Shield,
+  FileText,
+  Info,
+  Mail,
+  AlertTriangle,
+  LifeBuoy,
 } from "lucide-react";
 
 import { toast } from "sonner";

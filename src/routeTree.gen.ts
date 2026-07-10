@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostsRouteImport } from './routes/posts'
@@ -77,6 +78,11 @@ const SupportRoute = SupportRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -329,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -431,6 +439,7 @@ export interface FileRoutesById {
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/posts'
     | '/privacy'
     | '/reset-password'
+    | '/seguranca'
     | '/sitemap.xml'
     | '/support'
     | '/terms'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/posts'
     | '/privacy'
     | '/reset-password'
+    | '/seguranca'
     | '/sitemap.xml'
     | '/support'
     | '/terms'
@@ -584,6 +595,7 @@ export interface FileRouteTypes {
     | '/posts'
     | '/privacy'
     | '/reset-password'
+    | '/seguranca'
     | '/sitemap.xml'
     | '/support'
     | '/terms'
@@ -636,6 +648,7 @@ export interface RootRouteChildren {
   PostsRoute: typeof PostsRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SegurancaRoute: typeof SegurancaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
@@ -693,6 +706,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1063,6 +1083,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostsRoute: PostsRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SegurancaRoute: SegurancaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
@@ -1095,13 +1116,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
