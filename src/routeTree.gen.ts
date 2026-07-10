@@ -23,6 +23,7 @@ import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as DescobrirStatusRouteImport } from './routes/descobrir-status'
 import { Route as DescobrirRouteImport } from './routes/descobrir'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ConhecerPessoasRouteImport } from './routes/conhecer-pessoas'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -128,6 +129,11 @@ const DescobrirRoute = DescobrirRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConhecerPessoasRoute = ConhecerPessoasRouteImport.update({
+  id: '/conhecer-pessoas',
+  path: '/conhecer-pessoas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/conhecer-pessoas': typeof ConhecerPessoasRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/conhecer-pessoas': typeof ConhecerPessoasRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/conhecer-pessoas': typeof ConhecerPessoasRoute
   '/contact': typeof ContactRoute
   '/descobrir': typeof DescobrirRoute
   '/descobrir-status': typeof DescobrirStatusRoute
@@ -483,6 +492,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
+    | '/conhecer-pessoas'
     | '/contact'
     | '/descobrir'
     | '/descobrir-status'
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
+    | '/conhecer-pessoas'
     | '/contact'
     | '/descobrir'
     | '/descobrir-status'
@@ -586,6 +597,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
+    | '/conhecer-pessoas'
     | '/contact'
     | '/descobrir'
     | '/descobrir-status'
@@ -639,6 +651,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  ConhecerPessoasRoute: typeof ConhecerPessoasRoute
   ContactRoute: typeof ContactRoute
   DescobrirRoute: typeof DescobrirRoute
   DescobrirStatusRoute: typeof DescobrirStatusRoute
@@ -776,6 +789,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conhecer-pessoas': {
+      id: '/conhecer-pessoas'
+      path: '/conhecer-pessoas'
+      fullPath: '/conhecer-pessoas'
+      preLoaderRoute: typeof ConhecerPessoasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1074,6 +1094,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  ConhecerPessoasRoute: ConhecerPessoasRoute,
   ContactRoute: ContactRoute,
   DescobrirRoute: DescobrirRoute,
   DescobrirStatusRoute: DescobrirStatusRoute,
@@ -1116,13 +1137,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
