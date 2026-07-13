@@ -565,6 +565,11 @@ export function ChatSidebar({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/movimento">
+                      <Activity className="size-4 mr-2 text-primary" /> Mapa de movimento
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/support">
                       <LifeBuoy className="size-4 mr-2" /> Central de Ajuda / FAQ
                     </Link>
