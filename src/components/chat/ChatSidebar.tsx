@@ -48,6 +48,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
 import { OnlineUsersStrip } from "@/components/OnlineUsersStrip";
 import { InviteDialog } from "@/components/InviteDialog";
+import { ReportAbuseDialog } from "@/components/ReportAbuseDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
@@ -97,6 +98,7 @@ export function ChatSidebar({
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [abuseOpen, setAbuseOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
   const [view, setView] = useState<"chat" | "posts">(initialView);
   const [userResults, setUserResults] = useState<any[]>([]);
@@ -496,10 +498,8 @@ export function ChatSidebar({
                       <Mail className="size-4 mr-2" /> Contato
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="mailto:contato@webconnectchat.com?subject=Denúncia%20de%20abuso">
-                      <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
-                    </a>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setAbuseOpen(true); }}>
+                    <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => gate("default", () => undefined)}>
@@ -594,10 +594,8 @@ export function ChatSidebar({
                       <Mail className="size-4 mr-2" /> Contato
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="mailto:contato@webconnectchat.com?subject=Denúncia%20de%20abuso">
-                      <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
-                    </a>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setAbuseOpen(true); }}>
+                    <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive">
@@ -845,6 +843,7 @@ export function ChatSidebar({
         }}
       />
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <ReportAbuseDialog open={abuseOpen} onOpenChange={setAbuseOpen} />
     </>
   );
 }
