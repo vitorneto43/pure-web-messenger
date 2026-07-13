@@ -24,13 +24,14 @@ async function assertAdmin(supabaseAdmin: AdminClient, userId: string) {
   if (!ok) throw new Error("Acesso negado");
 }
 
-// Public: subscribe
+// Subscribe (auth optional — anonymous visitors can subscribe an email that
+// is NOT tied to any account; logged-in users can subscribe only their own
+// verified email).
 export const subscribeNewsletter = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
         email: emailSchema,
-        userId: z.string().uuid().optional().nullable(),
         source: z.string().max(40).optional(),
       })
       .parse(d),
@@ -38,6 +39,29 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
+
+    // If the caller is authenticated, only allow linking to their OWN email.
+    // Anonymous callers subscribe with user_id = null.
+    let callerUserId: string | null = null;
+    try {
+      const { getRequestHeader } = await import("@tanstack/react-start/server");
+      const authHeader = getRequestHeader("authorization") || "";
+      const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+      if (token) {
+        const { data: userRes } = await supabaseAdmin.auth.getUser(token);
+        const authEmail = userRes?.user?.email?.toLowerCase() ?? null;
+        if (userRes?.user?.id) {
+          if (authEmail !== email) {
+            throw new Error("Email does not match authenticated account");
+          }
+          callerUserId = userRes.user.id;
+        }
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("does not match")) throw e;
+      // ignore token parse errors — treat as anonymous
+    }
+
     const { data: existing } = await supabaseAdmin
       .from("newsletter_subscribers")
       .select("id, status, user_id")
@@ -50,14 +74,14 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
         unsubscribed_at: string | null;
         user_id?: string;
       } = { status: "active", unsubscribed_at: null };
-      if (data.userId && !existing.user_id) patch.user_id = data.userId;
+      if (callerUserId && !existing.user_id) patch.user_id = callerUserId;
       await supabaseAdmin.from("newsletter_subscribers").update(patch).eq("id", existing.id);
       return { ok: true, already: true };
     }
 
     const { error } = await supabaseAdmin.from("newsletter_subscribers").insert({
       email,
-      user_id: data.userId ?? null,
+      user_id: callerUserId,
       source: data.source ?? "widget",
       status: "active",
     });
