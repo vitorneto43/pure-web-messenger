@@ -202,7 +202,7 @@ export function NewsletterWidget() {
     setBusy(true);
     try {
       await subscribeFn({
-        data: { email, userId: user?.id ?? null, source: "floating_widget" },
+        data: { email, source: "floating_widget" },
       });
       localStorage.setItem(SUB_KEY, "1");
       setSubscribed(true);
@@ -256,7 +256,7 @@ export function NewsletterWidget() {
       setBusy(true);
       try {
         await subscribeFn({
-          data: { email: user.email, userId: user.id, source: "consent_prompt" },
+          data: { email: user.email, source: "consent_prompt" },
         });
         localStorage.setItem(SUB_KEY, "1");
         setSubscribed(true);

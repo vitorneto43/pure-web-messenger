@@ -186,7 +186,7 @@ function LinkPreviewCard({ url, isMine }: { url: string; isMine: boolean }) {
       }
     } catch {}
     fetchPreview({ data: { url } })
-      .then((p) => {
+      .then((p: import("@/lib/link-preview.functions").LinkPreview) => {
         if (cancelled) return;
         setPreview(p);
         try { sessionStorage.setItem(cacheKey, JSON.stringify(p)); } catch {}

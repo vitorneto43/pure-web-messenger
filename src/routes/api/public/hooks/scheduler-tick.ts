@@ -8,8 +8,10 @@ export const Route = createFileRoute("/api/public/hooks/scheduler-tick")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get("apikey");
-        if (!apikey || apikey !== process.env.SUPABASE_PUBLISHABLE_KEY) {
+        // Cron auth: dedicated CRON_SECRET (never the public anon key)
+        const provided = request.headers.get("x-cron-secret") || "";
+        const expected = process.env.CRON_SECRET || "";
+        if (!provided || !expected || provided !== expected) {
           return new Response("Unauthorized", { status: 401 });
         }
         const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

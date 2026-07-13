@@ -157,6 +157,17 @@ export const sendMessagePush = createServerFn({ method: "POST" })
     const { userId } = context;
     configureWebPush();
 
+    // Verify caller is a member of the target conversation before dispatching.
+    const { data: membership } = await supabaseAdmin
+      .from("conversation_members")
+      .select("user_id")
+      .eq("conversation_id", data.conversationId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!membership) {
+      throw new Error("Forbidden: not a conversation member");
+    }
+
     // Resolve sender display name + conversation info
     const [{ data: sender }, { data: conv }, { data: members }] = await Promise.all([
       supabaseAdmin.from("profiles").select("display_name, username").eq("id", userId).single(),

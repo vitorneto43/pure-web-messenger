@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface LinkPreview {
   url: string;
@@ -75,6 +76,7 @@ function isBlockedHost(hostname: string): boolean {
 }
 
 export const fetchLinkPreview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ url: z.string().url().max(2000) }).parse(input))
   .handler(async ({ data }): Promise<LinkPreview> => {
     let parsedUrl: URL;

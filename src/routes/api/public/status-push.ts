@@ -4,10 +4,21 @@ import webpush from "web-push";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendNativeStatusInteraction } from "@/lib/native-push.functions";
 
-// Shared anti-spam token. Mirrored in the Postgres trigger that calls this
-// endpoint via pg_net. It is not a high-value secret; it just prevents random
-// callers from spamming status owners with fake push notifications.
-const SHARED_SECRET = "wc_status_push_v1_92f3a1e8b6d44c11";
+// Shared anti-spam token. The value is stored in Supabase Vault (name
+// STATUS_PUSH_SECRET) and read at request time via a SECURITY DEFINER RPC.
+// The Postgres trigger that calls this endpoint reads the same vault value.
+let _cachedSecret: string | null = null;
+async function getExpectedSecret(): Promise<string | null> {
+  if (_cachedSecret) return _cachedSecret;
+  try {
+    const { data, error } = await (supabaseAdmin.rpc as any)("get_status_push_secret");
+    if (error) return null;
+    _cachedSecret = (data as string | null) ?? null;
+    return _cachedSecret;
+  } catch {
+    return null;
+  }
+}
 
 const BodySchema = z.object({
   status_id: z.string().uuid(),
@@ -30,8 +41,9 @@ export const Route = createFileRoute("/api/public/status-push")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = request.headers.get("x-dispatch-secret") || "";
-        if (secret !== SHARED_SECRET) {
+        const provided = request.headers.get("x-dispatch-secret") || "";
+        const expected = await getExpectedSecret();
+        if (!expected || !provided || provided !== expected) {
           return new Response("Unauthorized", { status: 401 });
         }
 
