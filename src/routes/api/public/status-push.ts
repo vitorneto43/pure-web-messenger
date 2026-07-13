@@ -41,8 +41,9 @@ export const Route = createFileRoute("/api/public/status-push")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = request.headers.get("x-dispatch-secret") || "";
-        if (secret !== SHARED_SECRET) {
+        const provided = request.headers.get("x-dispatch-secret") || "";
+        const expected = await getExpectedSecret();
+        if (!expected || !provided || provided !== expected) {
           return new Response("Unauthorized", { status: 401 });
         }
 
