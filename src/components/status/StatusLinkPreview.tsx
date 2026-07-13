@@ -52,7 +52,7 @@ export function StatusLinkPreview({ url }: { url: string }) {
       }
     } catch {}
     fetchPreview({ data: { url: safe } })
-      .then((p) => {
+      .then((p: import("@/lib/link-preview.functions").LinkPreview) => {
         if (cancelled) return;
         setPreview(p);
         try { sessionStorage.setItem(cacheKey, JSON.stringify(p)); } catch {}
