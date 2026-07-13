@@ -17,6 +17,7 @@ import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PostsRouteImport } from './routes/posts'
+import { Route as MovimentoRouteImport } from './routes/movimento'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as EmbaixadoresRouteImport } from './routes/embaixadores'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
@@ -99,6 +100,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PostsRoute = PostsRouteImport.update({
   id: '/posts',
   path: '/posts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MovimentoRoute = MovimentoRouteImport.update({
+  id: '/movimento',
+  path: '/movimento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuideRoute = GuideRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/diretrizes': typeof DiretrizesRoute
   '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
+  '/movimento': typeof MovimentoRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/diretrizes': typeof DiretrizesRoute
   '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
+  '/movimento': typeof MovimentoRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -445,6 +453,7 @@ export interface FileRoutesById {
   '/diretrizes': typeof DiretrizesRoute
   '/embaixadores': typeof EmbaixadoresRoute
   '/guide': typeof GuideRoute
+  '/movimento': typeof MovimentoRoute
   '/posts': typeof PostsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -499,6 +508,7 @@ export interface FileRouteTypes {
     | '/diretrizes'
     | '/embaixadores'
     | '/guide'
+    | '/movimento'
     | '/posts'
     | '/privacy'
     | '/reset-password'
@@ -551,6 +561,7 @@ export interface FileRouteTypes {
     | '/diretrizes'
     | '/embaixadores'
     | '/guide'
+    | '/movimento'
     | '/posts'
     | '/privacy'
     | '/reset-password'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/diretrizes'
     | '/embaixadores'
     | '/guide'
+    | '/movimento'
     | '/posts'
     | '/privacy'
     | '/reset-password'
@@ -658,6 +670,7 @@ export interface RootRouteChildren {
   DiretrizesRoute: typeof DiretrizesRoute
   EmbaixadoresRoute: typeof EmbaixadoresRoute
   GuideRoute: typeof GuideRoute
+  MovimentoRoute: typeof MovimentoRoute
   PostsRoute: typeof PostsRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -747,6 +760,13 @@ declare module '@tanstack/react-router' {
       path: '/posts'
       fullPath: '/posts'
       preLoaderRoute: typeof PostsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/movimento': {
+      id: '/movimento'
+      path: '/movimento'
+      fullPath: '/movimento'
+      preLoaderRoute: typeof MovimentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/guide': {
@@ -1101,6 +1121,7 @@ const rootRouteChildren: RootRouteChildren = {
   DiretrizesRoute: DiretrizesRoute,
   EmbaixadoresRoute: EmbaixadoresRoute,
   GuideRoute: GuideRoute,
+  MovimentoRoute: MovimentoRoute,
   PostsRoute: PostsRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
