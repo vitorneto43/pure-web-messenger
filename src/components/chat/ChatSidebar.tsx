@@ -594,10 +594,8 @@ export function ChatSidebar({
                       <Mail className="size-4 mr-2" /> Contato
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="mailto:contato@webconnectchat.com?subject=Denúncia%20de%20abuso">
-                      <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
-                    </a>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setAbuseOpen(true); }}>
+                    <AlertTriangle className="size-4 mr-2 text-destructive" /> Denunciar abuso
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive">
