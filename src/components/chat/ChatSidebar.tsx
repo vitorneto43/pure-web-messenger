@@ -22,6 +22,7 @@ import {
   Mail,
   AlertTriangle,
   LifeBuoy,
+  Activity,
 } from "lucide-react";
 
 import { toast } from "sonner";
