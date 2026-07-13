@@ -11,7 +11,7 @@ let _cachedSecret: string | null = null;
 async function getExpectedSecret(): Promise<string | null> {
   if (_cachedSecret) return _cachedSecret;
   try {
-    const { data, error } = await supabaseAdmin.rpc("get_status_push_secret");
+    const { data, error } = await (supabaseAdmin.rpc as any)("get_status_push_secret");
     if (error) return null;
     _cachedSecret = (data as string | null) ?? null;
     return _cachedSecret;
