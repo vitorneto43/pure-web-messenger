@@ -48,6 +48,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { StatusBar } from "@/components/status/StatusBar";
 import { OnlineUsersStrip } from "@/components/OnlineUsersStrip";
 import { InviteDialog } from "@/components/InviteDialog";
+import { ReportAbuseDialog } from "@/components/ReportAbuseDialog";
 import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
