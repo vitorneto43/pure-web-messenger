@@ -98,6 +98,7 @@ export function ChatSidebar({
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [abuseOpen, setAbuseOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "groups" | "direct">("all");
   const [view, setView] = useState<"chat" | "posts">(initialView);
   const [userResults, setUserResults] = useState<any[]>([]);
