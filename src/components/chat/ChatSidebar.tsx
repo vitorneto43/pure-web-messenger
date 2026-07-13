@@ -843,6 +843,7 @@ export function ChatSidebar({
         }}
       />
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <ReportAbuseDialog open={abuseOpen} onOpenChange={setAbuseOpen} />
     </>
   );
 }
