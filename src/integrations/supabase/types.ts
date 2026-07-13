@@ -3881,6 +3881,7 @@ export type Database = {
           id: string
         }[]
       }
+      get_status_push_secret: { Args: never; Returns: string }
       get_status_share_count: { Args: { _status_id: string }; Returns: number }
       get_status_view_count: { Args: { _status_id: string }; Returns: number }
       get_top_ambassadors: {
