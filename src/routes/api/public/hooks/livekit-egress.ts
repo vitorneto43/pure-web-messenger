@@ -15,15 +15,17 @@ export const Route = createFileRoute("/api/public/hooks/livekit-egress")({
         const body = await request.text();
 
         // Optional shared-secret signature (recommended). LiveKit sends `Authorization: <token>`.
+        // Require signature validation — reject if secret is not configured.
         const wantSecret = process.env.LIVEKIT_WEBHOOK_SECRET;
-        if (wantSecret) {
-          const sigHeader = request.headers.get("x-livekit-signature") ?? request.headers.get("authorization") ?? "";
-          const expected = createHmac("sha256", wantSecret).update(body).digest("hex");
-          const a = Buffer.from(sigHeader);
-          const b = Buffer.from(expected);
-          if (a.length !== b.length || !timingSafeEqual(a, b)) {
-            return new Response("Invalid signature", { status: 401 });
-          }
+        if (!wantSecret) {
+          return new Response("Webhook secret not configured", { status: 503 });
+        }
+        const sigHeader = request.headers.get("x-livekit-signature") ?? request.headers.get("authorization") ?? "";
+        const expected = createHmac("sha256", wantSecret).update(body).digest("hex");
+        const a = Buffer.from(sigHeader);
+        const b = Buffer.from(expected);
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          return new Response("Invalid signature", { status: 401 });
         }
 
         let payload: {
