@@ -55,7 +55,8 @@ import { MusicAdminTab } from "@/components/admin/MusicAdminTab";
 import { GroupReportsTab } from "@/components/admin/GroupReportsTab";
 import { LivesAdminTab } from "@/components/admin/LivesAdminTab";
 import { InvitesAdminTab } from "@/components/admin/InvitesAdminTab";
-import { Award, Music, Globe, Radio, UserPlus } from "lucide-react";
+import { GrowthAITab } from "@/components/admin/GrowthAITab";
+import { Award, Music, Globe, Radio, UserPlus, Brain } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminGate,
@@ -234,6 +235,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin -mx-1 px-1">
             <TabsList className="w-max flex">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
+              <TabsTrigger value="growth-ai"><Brain className="size-4 mr-1.5" />Growth AI</TabsTrigger>
               <TabsTrigger value="funnel"><TrendingDown className="size-4 mr-1.5" />Funil</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="invites"><Gift className="size-4 mr-1.5" />Convites</TabsTrigger>
@@ -269,6 +271,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
           </div>
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
+          <TabsContent value="growth-ai" className="mt-4"><GrowthAITab /></TabsContent>
           <TabsContent value="funnel" className="mt-4"><ConversionFunnelTab /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="invites" className="mt-4"><InvitesTab /></TabsContent>
