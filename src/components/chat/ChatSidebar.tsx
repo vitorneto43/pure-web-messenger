@@ -53,6 +53,7 @@ import { InviteMissionBanner } from "./InviteMissionBanner";
 import { MeetPeopleCard } from "./MeetPeopleCard";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
 import { PostsFeed } from "@/components/posts/PostsFeed";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
@@ -440,6 +441,7 @@ export function ChatSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0 shrink-0">
+            <LanguageSwitcher compact />
             {user ? (
               <NotificationsBell />
             ) : (

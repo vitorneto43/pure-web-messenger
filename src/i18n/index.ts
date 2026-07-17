@@ -15,14 +15,14 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources: RESOURCES,
-      lng: "pt",
       fallbackLng: "en",
       supportedLngs: SUPPORTED_LOCALES,
       load: "languageOnly",
       nonExplicitSupportedLngs: true,
       interpolation: { escapeValue: false },
       detection: {
-        order: [],
+        // Respect saved choice first, then browser/OS language, then HTML tag.
+        order: ["localStorage", "navigator", "htmlTag"],
         caches: ["localStorage"],
         lookupLocalStorage: I18N_STORAGE_KEY,
       },
