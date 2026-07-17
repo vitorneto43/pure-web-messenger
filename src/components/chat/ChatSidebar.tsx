@@ -441,6 +441,7 @@ export function ChatSidebar({
             </div>
           </div>
           <div className="flex items-center gap-0 shrink-0">
+            <LanguageSwitcher compact />
             {user ? (
               <NotificationsBell />
             ) : (
