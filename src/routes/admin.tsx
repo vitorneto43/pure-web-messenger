@@ -237,6 +237,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
             <TabsList className="w-max flex">
               <TabsTrigger value="overview"><Activity className="size-4 mr-1.5" />Visão</TabsTrigger>
               <TabsTrigger value="growth-ai"><Brain className="size-4 mr-1.5" />Growth AI</TabsTrigger>
+              <TabsTrigger value="activity-rewards"><Flame className="size-4 mr-1.5" />Recompensas</TabsTrigger>
               <TabsTrigger value="funnel"><TrendingDown className="size-4 mr-1.5" />Funil</TabsTrigger>
               <TabsTrigger value="signups"><MailCheck className="size-4 mr-1.5" />Cadastros</TabsTrigger>
               <TabsTrigger value="invites"><Gift className="size-4 mr-1.5" />Convites</TabsTrigger>
