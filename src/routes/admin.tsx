@@ -274,6 +274,7 @@ function AdminPanel({ role, isSuperadmin }: { role: string; isSuperadmin: boolea
 
           <TabsContent value="overview" className="mt-4"><Overview /></TabsContent>
           <TabsContent value="growth-ai" className="mt-4"><GrowthAITab /></TabsContent>
+          <TabsContent value="activity-rewards" className="mt-4"><ActivityRewardsTab /></TabsContent>
           <TabsContent value="funnel" className="mt-4"><ConversionFunnelTab /></TabsContent>
           <TabsContent value="signups" className="mt-4"><SignupsTab /></TabsContent>
           <TabsContent value="invites" className="mt-4"><InvitesTab /></TabsContent>
