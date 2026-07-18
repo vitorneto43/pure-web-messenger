@@ -3490,8 +3490,53 @@ export type Database = {
           },
         ]
       }
+      user_activity_streaks: {
+        Row: {
+          content_creator_since: string | null
+          current_streak: number
+          last_publish_date: string | null
+          longest_streak: number
+          organic_boost: boolean
+          organic_boost_since: string | null
+          updated_at: string
+          user_id: string
+          verified_since: string | null
+        }
+        Insert: {
+          content_creator_since?: string | null
+          current_streak?: number
+          last_publish_date?: string | null
+          longest_streak?: number
+          organic_boost?: boolean
+          organic_boost_since?: string | null
+          updated_at?: string
+          user_id: string
+          verified_since?: string | null
+        }
+        Update: {
+          content_creator_since?: string | null
+          current_streak?: number
+          last_publish_date?: string | null
+          longest_streak?: number
+          organic_boost?: boolean
+          organic_boost_since?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_since?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
+          activity_awarded: boolean
           awarded_at: string
           awarded_by: string | null
           badge_id: string
@@ -3499,6 +3544,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activity_awarded?: boolean
           awarded_at?: string
           awarded_by?: string | null
           badge_id: string
@@ -3506,6 +3552,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activity_awarded?: boolean
           awarded_at?: string
           awarded_by?: string | null
           badge_id?: string
@@ -3661,6 +3708,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_activity_rewards: {
+        Args: {
+          _filter?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          avatar_url: string
+          content_creator_since: string
+          current_streak: number
+          display_name: string
+          is_activity_verified: boolean
+          is_content_creator: boolean
+          last_publish_date: string
+          longest_streak: number
+          organic_boost: boolean
+          organic_boost_since: string
+          user_id: string
+          username: string
+          verified_since: string
+        }[]
+      }
       admin_award_badge: {
         Args: { _badge_code: string; _user_id: string }
         Returns: undefined
@@ -3680,6 +3751,10 @@ export type Database = {
       admin_usage_analytics: { Args: { _days?: number }; Returns: Json }
       admin_user_activity_stats: { Args: never; Returns: Json }
       admin_user_confirmation_stats: { Args: never; Returns: Json }
+      bump_activity_streak: {
+        Args: { _pub_date: string; _user_id: string }
+        Returns: undefined
+      }
       can_view_full_profile: { Args: { _owner: string }; Returns: boolean }
       can_view_profile: {
         Args: { _owner: string; _viewer: string }
@@ -4131,6 +4206,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recompute_activity_streak: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       recompute_device_risk: { Args: { _fp_hash: string }; Returns: string }
       recompute_ip_risk: { Args: { _ip_hash: string }; Returns: string }
       recompute_trust_score: { Args: { _user_id: string }; Returns: number }
@@ -4268,6 +4347,8 @@ export type Database = {
         }
       }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
+      sweep_activity_streaks: { Args: never; Returns: number }
+      sync_activity_rewards: { Args: { _user_id: string }; Returns: undefined }
       toggle_follow: { Args: { _target: string }; Returns: boolean }
       toggle_post_pin: { Args: { _post_id: string }; Returns: boolean }
       toggle_status_pin: { Args: { _status_id: string }; Returns: boolean }
