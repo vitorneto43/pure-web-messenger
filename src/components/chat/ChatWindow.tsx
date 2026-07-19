@@ -54,6 +54,8 @@ import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
 import { ShareLocationDialog } from "./ShareLocationDialog";
 import { LocationMessage } from "./LocationMessage";
 import { useTranslation } from "react-i18next";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 interface AIRequest {
   action: AIAction;
@@ -347,6 +349,19 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     () => (conv && !conv.is_group ? members.find((m) => m.id !== user?.id) : null),
     [conv, members, user?.id]
   );
+  const [mutualFollow, setMutualFollow] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!user || !conv) return;
+    if (conv.is_group) { setMutualFollow(true); return; }
+    if (!otherUser) return;
+    let cancelled = false;
+    setMutualFollow(null);
+    isMutualFollow(user.id, otherUser.id).then((ok) => {
+      if (!cancelled) setMutualFollow(ok);
+    });
+    return () => { cancelled = true; };
+  }, [user, conv, otherUser]);
+
   const headerTitle = conv?.is_group ? conv.name : otherUser?.display_name ?? "...";
   const headerAvatar = conv?.is_group ? conv.avatar_url : otherUser?.avatar_url;
   const headerSub = useMemo(() => {
@@ -372,6 +387,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   }) {
     if (!user) return;
     if (!content.trim() && !attachment) return;
+    if (conv && !conv.is_group && mutualFollow === false) {
+      toast.error(MUTUAL_FOLLOW_MESSAGE);
+      return;
+    }
+
     setSending(true);
     try {
       // Rate limit para contas novas / baixo trust (não lê conteúdo da mensagem).
@@ -1240,7 +1260,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
             </div>
 
+            {conv && !conv.is_group && mutualFollow === false && (
+              <div className="mb-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+                {MUTUAL_FOLLOW_MESSAGE}
+              </div>
+            )}
             <div className="flex items-end gap-2">
+
               <div className="relative flex-1 min-w-0">
                 <Textarea
                   ref={textareaRef}

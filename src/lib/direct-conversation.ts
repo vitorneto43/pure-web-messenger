@@ -1,10 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 /** Find or create a 1:1 conversation between the current user and another user. */
 export async function getOrCreateDirectConversation(
   meId: string,
   otherUserId: string,
 ): Promise<string> {
+  if (!(await isMutualFollow(meId, otherUserId))) {
+    throw new Error(MUTUAL_FOLLOW_MESSAGE);
+  }
+
   const { data: myConvs } = await supabase
     .from("conversation_members")
     .select("conversation_id, conversations!inner(is_group)")

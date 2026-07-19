@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
 import { useTranslation } from "react-i18next";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 interface Props {
   open: boolean;
@@ -55,7 +57,12 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
       toast.error(t("chat.cannotChatWithSelf"));
       return;
     }
+    if (!(await isMutualFollow(user.id, otherUserId))) {
+      toast.error(MUTUAL_FOLLOW_MESSAGE);
+      return;
+    }
     setCreating(true);
+
     try {
       // Find existing 1:1
       const { data: myConvs } = await supabase
