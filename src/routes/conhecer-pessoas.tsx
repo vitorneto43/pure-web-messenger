@@ -179,9 +179,91 @@ function MeetPeoplePage() {
             </p>
           </div>
         </div>
+        <div className="mx-auto max-w-[640px] px-3 pb-2.5">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nome ou @usuário"
+              className="pl-9 pr-9 h-10 rounded-full"
+              aria-label="Buscar pessoas"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-accent/50"
+                aria-label="Limpar busca"
+              >
+                <X className="size-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="mx-auto max-w-[640px] px-3 py-4 space-y-6">
+        {query.trim() ? (
+          <section className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <div className="size-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 grid place-items-center">
+                <Search className="size-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold leading-tight">Resultados da busca</h2>
+                <p className="text-[11px] text-muted-foreground leading-tight">
+                  Encontre qualquer pessoa por nome ou @usuário
+                </p>
+              </div>
+            </div>
+            {searching || searchResults === null ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center py-10 text-sm text-muted-foreground">
+                Nenhuma pessoa encontrada para “{query}”.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {searchResults.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm"
+                  >
+                    <Link to="/u/$username" params={{ username: p.username }} className="shrink-0">
+                      <Avatar className="size-12 ring-2 ring-primary/10">
+                        <AvatarImage src={p.avatar_url ?? undefined} />
+                        <AvatarFallback>{p.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <Link to="/u/$username" params={{ username: p.username }} className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate">{p.display_name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">@{p.username}</div>
+                    </Link>
+                    <Button
+                      size="sm"
+                      className="h-8 rounded-full text-[12px]"
+                      disabled={starting === p.id}
+                      onClick={() => startChat(p.id)}
+                    >
+                      {starting === p.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <MessageCircle className="size-3.5 mr-1" /> Conversar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <></>
+        )}
+
         {!user && (
           <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 text-sm">
             <p className="font-semibold mb-0.5">Entre para conhecer pessoas de verdade</p>
