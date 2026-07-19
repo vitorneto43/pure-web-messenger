@@ -86,6 +86,36 @@ function MeetPeoplePage() {
   const navigate = useNavigate();
   const [people, setPeople] = useState<Person[] | null>(null);
   const [starting, setStarting] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Person[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const { data } = await supabase.rpc("search_users", { q });
+      const mapped: Person[] = ((data as any[]) ?? []).map((r) => ({
+        id: r.id,
+        username: r.username,
+        display_name: r.display_name,
+        avatar_url: r.avatar_url,
+        city: r.city ?? null,
+        region: r.region ?? null,
+        country: r.country ?? null,
+        mutual_count: 0,
+        reason: "Resultado da busca",
+      })).filter((p) => !!p.username);
+      setSearchResults(mapped);
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     (async () => {
