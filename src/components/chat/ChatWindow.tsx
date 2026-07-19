@@ -1260,7 +1260,13 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
             </div>
 
+            {conv && !conv.is_group && mutualFollow === false && (
+              <div className="mb-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+                {MUTUAL_FOLLOW_MESSAGE}
+              </div>
+            )}
             <div className="flex items-end gap-2">
+
               <div className="relative flex-1 min-w-0">
                 <Textarea
                   ref={textareaRef}
