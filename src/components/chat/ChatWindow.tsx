@@ -349,6 +349,19 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
     () => (conv && !conv.is_group ? members.find((m) => m.id !== user?.id) : null),
     [conv, members, user?.id]
   );
+  const [mutualFollow, setMutualFollow] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!user || !conv) return;
+    if (conv.is_group) { setMutualFollow(true); return; }
+    if (!otherUser) return;
+    let cancelled = false;
+    setMutualFollow(null);
+    isMutualFollow(user.id, otherUser.id).then((ok) => {
+      if (!cancelled) setMutualFollow(ok);
+    });
+    return () => { cancelled = true; };
+  }, [user, conv, otherUser]);
+
   const headerTitle = conv?.is_group ? conv.name : otherUser?.display_name ?? "...";
   const headerAvatar = conv?.is_group ? conv.avatar_url : otherUser?.avatar_url;
   const headerSub = useMemo(() => {
