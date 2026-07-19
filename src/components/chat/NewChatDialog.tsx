@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
 import { useTranslation } from "react-i18next";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 interface Props {
   open: boolean;
