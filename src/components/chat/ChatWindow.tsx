@@ -54,6 +54,8 @@ import { AIAssistantDialog, type AIAction } from "./AIAssistantDialog";
 import { ShareLocationDialog } from "./ShareLocationDialog";
 import { LocationMessage } from "./LocationMessage";
 import { useTranslation } from "react-i18next";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 interface AIRequest {
   action: AIAction;
