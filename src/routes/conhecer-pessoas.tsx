@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2, MapPin, MessageCircle, Sparkles, Users, Heart, Compass, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, MessageCircle, Search, Sparkles, Users, Heart, Compass, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 
 interface Person {
