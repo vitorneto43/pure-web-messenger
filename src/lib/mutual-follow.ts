@@ -23,4 +23,4 @@ export async function isMutualFollow(userA: string, userB: string): Promise<bool
 }
 
 export const MUTUAL_FOLLOW_MESSAGE =
-  "Vocês só podem conversar se ambos se seguirem. Siga essa pessoa e peça que ela também te siga.";
+  "Para conversarem no chat, vocês dois precisam se seguir! Que tal interagir curtindo ou comentando um post da pessoa primeiro?";
