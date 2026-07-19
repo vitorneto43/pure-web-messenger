@@ -387,6 +387,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
   }) {
     if (!user) return;
     if (!content.trim() && !attachment) return;
+    if (conv && !conv.is_group && mutualFollow === false) {
+      toast.error(MUTUAL_FOLLOW_MESSAGE);
+      return;
+    }
+
     setSending(true);
     try {
       // Rate limit para contas novas / baixo trust (não lê conteúdo da mensagem).
