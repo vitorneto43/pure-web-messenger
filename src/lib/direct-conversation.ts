@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isMutualFollow, MUTUAL_FOLLOW_MESSAGE } from "@/lib/mutual-follow";
+
 
 /** Find or create a 1:1 conversation between the current user and another user. */
 export async function getOrCreateDirectConversation(
