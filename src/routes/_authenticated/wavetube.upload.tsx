@@ -16,6 +16,9 @@ import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    short: s.short === "1" || s.short === 1 || s.short === true ? 1 : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Enviar vídeo — WaveTube" },
