@@ -169,10 +169,10 @@ function UploadPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-3 py-3 flex items-center gap-2">
           <Button asChild size="icon" variant="ghost">
-            <Link to="/wavetube"><ArrowLeft className="size-5" /></Link>
+            <Link to={forcedShort ? "/waveshorts" : "/wavetube"}><ArrowLeft className="size-5" /></Link>
           </Button>
-          <PlaySquare className="size-6 text-red-600" />
-          <h1 className="text-lg font-bold">Enviar vídeo</h1>
+          <PlaySquare className={`size-6 ${forcedShort ? "text-pink-500" : "text-red-600"}`} />
+          <h1 className="text-lg font-bold">{forcedShort ? "Enviar Short (9:16)" : "Enviar vídeo"}</h1>
         </div>
       </header>
 
