@@ -3934,6 +3934,32 @@ export type Database = {
           },
         ]
       }
+      video_saves: {
+        Row: {
+          created_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_saves_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_views: {
         Row: {
           country: string | null
@@ -3987,11 +4013,13 @@ export type Database = {
           hashtags: string[] | null
           hls_url: string | null
           id: string
+          is_short: boolean
           likes_count: number
           live_session_id: string | null
           owner_id: string
           pix_key: string | null
           published_at: string | null
+          saves_count: number
           status: Database["public"]["Enums"]["video_status"]
           thumbnail_url: string | null
           title: string
@@ -4013,11 +4041,13 @@ export type Database = {
           hashtags?: string[] | null
           hls_url?: string | null
           id?: string
+          is_short?: boolean
           likes_count?: number
           live_session_id?: string | null
           owner_id: string
           pix_key?: string | null
           published_at?: string | null
+          saves_count?: number
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title: string
@@ -4039,11 +4069,13 @@ export type Database = {
           hashtags?: string[] | null
           hls_url?: string | null
           id?: string
+          is_short?: boolean
           likes_count?: number
           live_session_id?: string | null
           owner_id?: string
           pix_key?: string | null
           published_at?: string | null
+          saves_count?: number
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
           title?: string
@@ -4194,6 +4226,31 @@ export type Database = {
           username: string
           viewer_already_follows: boolean
           viewer_already_liked: boolean
+          views_count: number
+        }[]
+      }
+      discover_waveshorts: {
+        Args: { _cursor?: string; _limit?: number }
+        Returns: {
+          allow_pix: boolean
+          category: string
+          comments_count: number
+          cta_label: string
+          cta_url: string
+          description: string
+          duration_sec: number
+          file_url: string
+          id: string
+          likes_count: number
+          owner_avatar_url: string
+          owner_display_name: string
+          owner_id: string
+          owner_username: string
+          pix_key: string
+          published_at: string
+          saves_count: number
+          thumbnail_url: string
+          title: string
           views_count: number
         }[]
       }
