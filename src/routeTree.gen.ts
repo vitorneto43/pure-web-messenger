@@ -54,6 +54,7 @@ import { Route as ApiPublicSupportRouteImport } from './routes/api/public/suppor
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
 import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
+import { Route as AuthenticatedWavetubeAnalyticsRouteImport } from './routes/_authenticated/wavetube.analytics'
 import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -293,6 +294,12 @@ const AuthenticatedWavetubeUploadRoute =
     path: '/wavetube/upload',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedWavetubeAnalyticsRoute =
+  AuthenticatedWavetubeAnalyticsRouteImport.update({
+    id: '/wavetube/analytics',
+    path: '/wavetube/analytics',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHashtagTagRoute = AuthenticatedHashtagTagRouteImport.update({
   id: '/hashtag/$tag',
   path: '/hashtag/$tag',
@@ -406,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -464,6 +472,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -524,6 +533,7 @@ export interface FileRoutesById {
   '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/_authenticated/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
@@ -584,6 +594,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
@@ -701,6 +713,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
+    | '/_authenticated/wavetube/analytics'
     | '/_authenticated/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
@@ -1086,6 +1099,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWavetubeUploadRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/wavetube/analytics': {
+      id: '/_authenticated/wavetube/analytics'
+      path: '/wavetube/analytics'
+      fullPath: '/wavetube/analytics'
+      preLoaderRoute: typeof AuthenticatedWavetubeAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hashtag/$tag': {
       id: '/_authenticated/hashtag/$tag'
       path: '/hashtag/$tag'
@@ -1192,6 +1212,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
   AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
+  AuthenticatedWavetubeAnalyticsRoute: typeof AuthenticatedWavetubeAnalyticsRoute
   AuthenticatedWavetubeUploadRoute: typeof AuthenticatedWavetubeUploadRoute
 }
 
@@ -1203,6 +1224,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
   AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
+  AuthenticatedWavetubeAnalyticsRoute: AuthenticatedWavetubeAnalyticsRoute,
   AuthenticatedWavetubeUploadRoute: AuthenticatedWavetubeUploadRoute,
 }
 
