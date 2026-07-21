@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   LifeBuoy,
   Activity,
+  PlaySquare,
 } from "lucide-react";
 
 import { toast } from "sonner";
