@@ -1466,6 +1466,7 @@ export type Database = {
           host_last_seen: string
           id: string
           livekit_room: string
+          orientation: string
           peak_viewers: number
           scheduled_live_id: string | null
           started_at: string
@@ -1484,6 +1485,7 @@ export type Database = {
           host_last_seen?: string
           id?: string
           livekit_room: string
+          orientation?: string
           peak_viewers?: number
           scheduled_live_id?: string | null
           started_at?: string
@@ -1502,6 +1504,7 @@ export type Database = {
           host_last_seen?: string
           id?: string
           livekit_room?: string
+          orientation?: string
           peak_viewers?: number
           scheduled_live_id?: string | null
           started_at?: string
@@ -3703,6 +3706,353 @@ export type Database = {
         }
         Relationships: []
       }
+      video_boost_clicks: {
+        Row: {
+          boost_id: string
+          country: string | null
+          created_at: string
+          id: string
+          state: string | null
+          user_id: string | null
+          video_id: string
+        }
+        Insert: {
+          boost_id: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          user_id?: string | null
+          video_id: string
+        }
+        Update: {
+          boost_id?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          user_id?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_boost_clicks_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "video_boosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_boost_clicks_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_boosts: {
+        Row: {
+          amount_cents: number
+          clicks: number
+          created_at: string
+          currency: string
+          duration_days: number
+          ends_at: string | null
+          id: string
+          impressions: number
+          owner_id: string
+          starts_at: string | null
+          status: string
+          stripe_session_id: string | null
+          target_age_max: number | null
+          target_age_min: number | null
+          target_countries: string[] | null
+          target_genders: string[] | null
+          target_interests: string[] | null
+          target_states: string[] | null
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          clicks?: number
+          created_at?: string
+          currency?: string
+          duration_days?: number
+          ends_at?: string | null
+          id?: string
+          impressions?: number
+          owner_id: string
+          starts_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_countries?: string[] | null
+          target_genders?: string[] | null
+          target_interests?: string[] | null
+          target_states?: string[] | null
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          amount_cents?: number
+          clicks?: number
+          created_at?: string
+          currency?: string
+          duration_days?: number
+          ends_at?: string | null
+          id?: string
+          impressions?: number
+          owner_id?: string
+          starts_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          target_age_max?: number | null
+          target_age_min?: number | null
+          target_countries?: string[] | null
+          target_genders?: string[] | null
+          target_interests?: string[] | null
+          target_states?: string[] | null
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_boosts_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "video_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "video_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["video_reaction_kind"]
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_reactions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_views: {
+        Row: {
+          country: string | null
+          created_at: string
+          id: string
+          state: string | null
+          video_id: string
+          viewer_id: string | null
+          watched_seconds: number
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          video_id: string
+          viewer_id?: string | null
+          watched_seconds?: number
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          video_id?: string
+          viewer_id?: string | null
+          watched_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          allow_pix: boolean
+          category: string | null
+          comments_count: number
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          description: string | null
+          dislikes_count: number
+          duration_sec: number | null
+          file_url: string | null
+          hashtags: string[] | null
+          hls_url: string | null
+          id: string
+          likes_count: number
+          live_session_id: string | null
+          owner_id: string
+          pix_key: string | null
+          published_at: string | null
+          status: Database["public"]["Enums"]["video_status"]
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          views_count: number
+          visibility: Database["public"]["Enums"]["video_visibility"]
+        }
+        Insert: {
+          allow_pix?: boolean
+          category?: string | null
+          comments_count?: number
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          description?: string | null
+          dislikes_count?: number
+          duration_sec?: number | null
+          file_url?: string | null
+          hashtags?: string[] | null
+          hls_url?: string | null
+          id?: string
+          likes_count?: number
+          live_session_id?: string | null
+          owner_id: string
+          pix_key?: string | null
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          views_count?: number
+          visibility?: Database["public"]["Enums"]["video_visibility"]
+        }
+        Update: {
+          allow_pix?: boolean
+          category?: string | null
+          comments_count?: number
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          description?: string | null
+          dislikes_count?: number
+          duration_sec?: number | null
+          file_url?: string | null
+          hashtags?: string[] | null
+          hls_url?: string | null
+          id?: string
+          likes_count?: number
+          live_session_id?: string | null
+          owner_id?: string
+          pix_key?: string | null
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+          visibility?: Database["public"]["Enums"]["video_visibility"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3844,6 +4194,30 @@ export type Database = {
           username: string
           viewer_already_follows: boolean
           viewer_already_liked: boolean
+          views_count: number
+        }[]
+      }
+      discover_wavetube_videos: {
+        Args: {
+          _category?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          category: string
+          description: string
+          duration_sec: number
+          id: string
+          likes_count: number
+          owner_avatar_url: string
+          owner_display_name: string
+          owner_id: string
+          owner_username: string
+          published_at: string
+          thumbnail_url: string
+          title: string
           views_count: number
         }[]
       }
@@ -4340,6 +4714,7 @@ export type Database = {
           host_last_seen: string
           id: string
           livekit_room: string
+          orientation: string
           peak_viewers: number
           scheduled_live_id: string | null
           started_at: string
@@ -4455,6 +4830,17 @@ export type Database = {
         | "rejected"
         | "kicked"
         | "left"
+      video_reaction_kind:
+        | "like"
+        | "dislike"
+        | "heart"
+        | "fire"
+        | "clap"
+        | "laugh"
+        | "wow"
+        | "sad"
+      video_status: "uploading" | "processing" | "ready" | "failed"
+      video_visibility: "public" | "unlisted" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4638,6 +5024,18 @@ export const Constants = {
         "kicked",
         "left",
       ],
+      video_reaction_kind: [
+        "like",
+        "dislike",
+        "heart",
+        "fire",
+        "clap",
+        "laugh",
+        "wow",
+        "sad",
+      ],
+      video_status: ["uploading", "processing", "ready", "failed"],
+      video_visibility: ["public", "unlisted", "private"],
     },
   },
 } as const

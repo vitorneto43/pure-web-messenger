@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WavetubeRouteImport } from './routes/wavetube'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
@@ -31,6 +32,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
+import { Route as VVideoIdRouteImport } from './routes/v.$videoId'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as PPostIdRouteImport } from './routes/p.$postId'
@@ -50,6 +52,7 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
+import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
 import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -63,6 +66,11 @@ import { Route as ApiPublicHooksLivekitEgressRouteImport } from './routes/api/pu
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/public/auth/check-signup-ip'
 
+const WavetubeRoute = WavetubeRouteImport.update({
+  id: '/wavetube',
+  path: '/wavetube',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
@@ -172,6 +180,11 @@ const LiveIndexRoute = LiveIndexRouteImport.update({
   path: '/live/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VVideoIdRoute = VVideoIdRouteImport.update({
+  id: '/v/$videoId',
+  path: '/v/$videoId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -268,6 +281,12 @@ const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
   path: '/api/public/post-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWavetubeUploadRoute =
+  AuthenticatedWavetubeUploadRouteImport.update({
+    id: '/wavetube/upload',
+    path: '/wavetube/upload',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHashtagTagRoute = AuthenticatedHashtagTagRouteImport.update({
   id: '/hashtag/$tag',
   path: '/hashtag/$tag',
@@ -360,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -375,9 +395,11 @@ export interface FileRoutesByFullPath {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -414,6 +436,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -429,9 +452,11 @@ export interface FileRoutesByTo {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -470,6 +495,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -485,9 +511,11 @@ export interface FileRoutesById {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -526,6 +554,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/chat'
     | '/hashtags'
     | '/meus-convites'
@@ -541,9 +570,11 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -580,6 +611,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/chat'
     | '/hashtags'
     | '/meus-convites'
@@ -595,9 +627,11 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -635,6 +669,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/_authenticated/chat'
     | '/_authenticated/hashtags'
     | '/_authenticated/meus-convites'
@@ -650,9 +685,11 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
+    | '/_authenticated/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -691,6 +728,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WavetubeRoute: typeof WavetubeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
   InviteInviterIdRoute: typeof InviteInviterIdRoute
@@ -700,6 +738,7 @@ export interface RootRouteChildren {
   PPostIdRoute: typeof PPostIdRoute
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  VVideoIdRoute: typeof VVideoIdRoute
   LiveIndexRoute: typeof LiveIndexRoute
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
@@ -719,6 +758,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wavetube': {
+      id: '/wavetube'
+      path: '/wavetube'
+      fullPath: '/wavetube'
+      preLoaderRoute: typeof WavetubeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/unsubscribe': {
       id: '/unsubscribe'
       path: '/unsubscribe'
@@ -873,6 +919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v/$videoId': {
+      id: '/v/$videoId'
+      path: '/v/$videoId'
+      fullPath: '/v/$videoId'
+      preLoaderRoute: typeof VVideoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -1006,6 +1059,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPostPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/wavetube/upload': {
+      id: '/_authenticated/wavetube/upload'
+      path: '/wavetube/upload'
+      fullPath: '/wavetube/upload'
+      preLoaderRoute: typeof AuthenticatedWavetubeUploadRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hashtag/$tag': {
       id: '/_authenticated/hashtag/$tag'
       path: '/hashtag/$tag'
@@ -1112,6 +1172,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
   AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
+  AuthenticatedWavetubeUploadRoute: typeof AuthenticatedWavetubeUploadRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1122,6 +1183,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
   AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
+  AuthenticatedWavetubeUploadRoute: AuthenticatedWavetubeUploadRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -1150,6 +1212,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WavetubeRoute: WavetubeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
   InviteInviterIdRoute: InviteInviterIdRoute,
@@ -1159,6 +1222,7 @@ const rootRouteChildren: RootRouteChildren = {
   PPostIdRoute: PPostIdRoute,
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
+  VVideoIdRoute: VVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
@@ -1179,13 +1243,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   LifeBuoy,
   Activity,
+  PlaySquare,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -645,6 +646,12 @@ export function ChatSidebar({
               <Link to="/live">
                 <Radio className="size-4 mr-1.5 text-red-500" />
                 Lives
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="secondary" className="shrink-0 rounded-full">
+              <Link to="/wavetube">
+                <PlaySquare className="size-4 mr-1.5 text-red-600" />
+                WaveTube
               </Link>
             </Button>
             <Button
