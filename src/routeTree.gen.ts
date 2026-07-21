@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WavetubeRouteImport } from './routes/wavetube'
+import { Route as WaveshortsRouteImport } from './routes/waveshorts'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
@@ -69,6 +70,11 @@ import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/pub
 const WavetubeRoute = WavetubeRouteImport.update({
   id: '/wavetube',
   path: '/wavetube',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WaveshortsRoute = WaveshortsRouteImport.update({
+  id: '/waveshorts',
+  path: '/waveshorts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -379,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waveshorts': typeof WaveshortsRoute
   '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
@@ -436,6 +443,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waveshorts': typeof WaveshortsRoute
   '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/waveshorts': typeof WaveshortsRoute
   '/wavetube': typeof WavetubeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
@@ -554,6 +563,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/waveshorts'
     | '/wavetube'
     | '/chat'
     | '/hashtags'
@@ -611,6 +621,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/waveshorts'
     | '/wavetube'
     | '/chat'
     | '/hashtags'
@@ -669,6 +680,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/waveshorts'
     | '/wavetube'
     | '/_authenticated/chat'
     | '/_authenticated/hashtags'
@@ -728,6 +740,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WaveshortsRoute: typeof WaveshortsRoute
   WavetubeRoute: typeof WavetubeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
@@ -763,6 +776,13 @@ declare module '@tanstack/react-router' {
       path: '/wavetube'
       fullPath: '/wavetube'
       preLoaderRoute: typeof WavetubeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/waveshorts': {
+      id: '/waveshorts'
+      path: '/waveshorts'
+      fullPath: '/waveshorts'
+      preLoaderRoute: typeof WaveshortsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -1212,6 +1232,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WaveshortsRoute: WaveshortsRoute,
   WavetubeRoute: WavetubeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
