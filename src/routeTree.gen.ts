@@ -32,6 +32,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
+import { Route as VVideoIdRouteImport } from './routes/v.$videoId'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as SStatusIdRouteImport } from './routes/s.$statusId'
 import { Route as PPostIdRouteImport } from './routes/p.$postId'
@@ -177,6 +178,11 @@ const IndexRoute = IndexRouteImport.update({
 const LiveIndexRoute = LiveIndexRouteImport.update({
   id: '/live/',
   path: '/live/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VVideoIdRoute = VVideoIdRouteImport.update({
+  id: '/v/$videoId',
+  path: '/v/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
@@ -445,6 +452,7 @@ export interface FileRoutesByTo {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
@@ -503,6 +511,7 @@ export interface FileRoutesById {
   '/p/$postId': typeof PPostIdRoute
   '/s/$statusId': typeof SStatusIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/v/$videoId': typeof VVideoIdRoute
   '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
@@ -561,6 +570,7 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/p/$postId'
     | '/s/$statusId'
     | '/u/$username'
+    | '/v/$videoId'
     | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
@@ -726,6 +738,7 @@ export interface RootRouteChildren {
   PPostIdRoute: typeof PPostIdRoute
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  VVideoIdRoute: typeof VVideoIdRoute
   LiveIndexRoute: typeof LiveIndexRoute
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
@@ -904,6 +917,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/live/'
       preLoaderRoute: typeof LiveIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v/$videoId': {
+      id: '/v/$videoId'
+      path: '/v/$videoId'
+      fullPath: '/v/$videoId'
+      preLoaderRoute: typeof VVideoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/u/$username': {
@@ -1202,6 +1222,7 @@ const rootRouteChildren: RootRouteChildren = {
   PPostIdRoute: PPostIdRoute,
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
+  VVideoIdRoute: VVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,

@@ -265,7 +265,7 @@ function VideoPage() {
               {video.description}
               {video.hashtags?.length ? (
                 <p className="mt-2 text-primary">
-                  {video.hashtags.map((h) => `#${h}`).join(" ")}
+                  {video.hashtags.map((h: string) => `#${h}`).join(" ")}
                 </p>
               ) : null}
             </div>
