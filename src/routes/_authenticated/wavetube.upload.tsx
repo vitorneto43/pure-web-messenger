@@ -40,6 +40,7 @@ function UploadPage() {
   const [allowPix, setAllowPix] = useState(true);
   const [pixKey, setPixKey] = useState("");
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
+  const [isShort, setIsShort] = useState(false);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
 
@@ -120,6 +121,7 @@ function UploadPage() {
           cta_url: ctaUrl.trim() || null,
           allow_pix: allowPix,
           pix_key: allowPix ? pixKey.trim() || null : null,
+          is_short: isShort,
           published_at: nowIso,
         } as any)
         .select("id")
@@ -217,6 +219,14 @@ function UploadPage() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-border p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold">Publicar como WaveShorts (vertical 9:16)</p>
+            <p className="text-xs text-muted-foreground">Ideal para vídeos curtos de até ~90s. Aparece no feed vertical.</p>
+          </div>
+          <Switch checked={isShort} onCheckedChange={setIsShort} />
         </div>
 
         <div className="space-y-2">

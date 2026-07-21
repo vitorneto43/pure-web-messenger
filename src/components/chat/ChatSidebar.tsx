@@ -24,6 +24,7 @@ import {
   LifeBuoy,
   Activity,
   PlaySquare,
+  Flame,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -652,6 +653,12 @@ export function ChatSidebar({
               <Link to="/wavetube">
                 <PlaySquare className="size-4 mr-1.5 text-red-600" />
                 WaveTube
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="secondary" className="shrink-0 rounded-full">
+              <Link to="/waveshorts">
+                <Flame className="size-4 mr-1.5 text-pink-500" />
+                Shorts
               </Link>
             </Button>
             <Button
