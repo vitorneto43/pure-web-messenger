@@ -152,6 +152,10 @@ function UploadPage() {
       if (insErr) throw insErr;
 
       setProgress(100);
+      const newVideoId = (inserted as any).id as string;
+      notifyFollowersOfContent({
+        data: { kind: isShort ? "short" : "video", contentId: newVideoId },
+      }).catch((e) => console.error("notifyFollowersOfContent (video) failed", e));
       toast.success(isShort ? "Short publicado!" : "Vídeo publicado!");
       if (isShort) {
         navigate({ to: "/waveshorts" });
