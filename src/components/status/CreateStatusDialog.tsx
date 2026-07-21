@@ -23,6 +23,7 @@ import { moodEmoji } from "@/lib/story-music";
 import { FeatureTip } from "@/components/FeatureTip";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { scheduleStatus } from "@/lib/schedule.functions";
+import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
 
