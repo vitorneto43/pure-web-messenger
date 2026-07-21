@@ -226,6 +226,7 @@ function VideoPage() {
                 <p className="text-xs text-muted-foreground truncate">@{owner?.username ?? ""}</p>
               </div>
             </Link>
+            {video.owner_id && <FollowButton targetUserId={video.owner_id} className="rounded-full" />}
 
             <div className="ml-auto flex items-center gap-2">
               <Button
