@@ -200,6 +200,9 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       }).select("id").single();
       if (error) throw error;
       toast.success("Post publicado!");
+      notifyFollowersOfContent({ data: { kind: "post", contentId: data.id } }).catch((e) =>
+        console.error("notifyFollowersOfContent (post) failed", e),
+      );
       reset();
       onOpenChange(false);
       onCreated?.(data.id);
