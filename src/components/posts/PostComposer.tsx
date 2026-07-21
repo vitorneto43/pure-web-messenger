@@ -14,6 +14,7 @@ import { MusicPickerSheet } from "@/components/status/MusicPickerSheet";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { schedulePost } from "@/lib/schedule.functions";
+import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
 
