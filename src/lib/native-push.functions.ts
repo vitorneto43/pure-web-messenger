@@ -342,6 +342,35 @@ export async function sendNativeLiveStart(args: {
   return { sent: total };
 }
 
+export async function sendNativeFollowerContent(args: {
+  recipientIds: string[];
+  kind: "post" | "status" | "video" | "short";
+  contentId: string;
+  url: string;
+  title: string;
+  body: string;
+}) {
+  let total = 0;
+  await Promise.all(
+    args.recipientIds.map(async (rid) => {
+      const r = await sendNativePayloadToUser(
+        rid,
+        {
+          type: `follow_${args.kind}`,
+          contentId: args.contentId,
+          url: args.url,
+          timestamp: String(Date.now()),
+        },
+        "3600s",
+        { title: args.title, body: args.body },
+        { kind: `follow_${args.kind}` },
+      );
+      total += r.sent ?? 0;
+    }),
+  );
+  return { sent: total };
+}
+
 
 
 

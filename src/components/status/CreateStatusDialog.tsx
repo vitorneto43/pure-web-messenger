@@ -23,6 +23,7 @@ import { moodEmoji } from "@/lib/story-music";
 import { FeatureTip } from "@/components/FeatureTip";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { scheduleStatus } from "@/lib/schedule.functions";
+import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
 
@@ -152,12 +153,21 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
         if (isScheduled) {
           await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
         } else {
-          const { error } = await supabase.from("statuses").insert({
-            user_id: user.id,
-            ...basePayload,
-            is_official: isOfficialAccount && isOfficial,
-          } as any);
+          const { data: inserted, error } = await supabase
+            .from("statuses")
+            .insert({
+              user_id: user.id,
+              ...basePayload,
+              is_official: isOfficialAccount && isOfficial,
+            } as any)
+            .select("id")
+            .single();
           if (error) throw error;
+          if ((inserted as any)?.id) {
+            notifyFollowersOfContent({
+              data: { kind: "status", contentId: (inserted as any).id },
+            }).catch((e) => console.error("notifyFollowersOfContent (status) failed", e));
+          }
         }
       } else {
         if (!file) {
@@ -209,12 +219,21 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
         if (isScheduled) {
           await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
         } else {
-          const { error } = await supabase.from("statuses").insert({
-            user_id: user.id,
-            ...basePayload,
-            is_official: isOfficialAccount && isOfficial,
-          } as any);
+          const { data: inserted, error } = await supabase
+            .from("statuses")
+            .insert({
+              user_id: user.id,
+              ...basePayload,
+              is_official: isOfficialAccount && isOfficial,
+            } as any)
+            .select("id")
+            .single();
           if (error) throw error;
+          if ((inserted as any)?.id) {
+            notifyFollowersOfContent({
+              data: { kind: "status", contentId: (inserted as any).id },
+            }).catch((e) => console.error("notifyFollowersOfContent (status) failed", e));
+          }
         }
       }
       toast.success(isScheduled ? "Stories agendado!" : t("status.published"));

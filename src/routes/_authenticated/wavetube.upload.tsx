@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/lib/wavetube";
+import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
@@ -151,6 +152,10 @@ function UploadPage() {
       if (insErr) throw insErr;
 
       setProgress(100);
+      const newVideoId = (inserted as any).id as string;
+      notifyFollowersOfContent({
+        data: { kind: isShort ? "short" : "video", contentId: newVideoId },
+      }).catch((e) => console.error("notifyFollowersOfContent (video) failed", e));
       toast.success(isShort ? "Short publicado!" : "Vídeo publicado!");
       if (isShort) {
         navigate({ to: "/waveshorts" });
