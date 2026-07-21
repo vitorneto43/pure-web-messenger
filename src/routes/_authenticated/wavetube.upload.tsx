@@ -247,12 +247,16 @@ function UploadPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-4 flex items-center justify-between">
+        <div className={`rounded-xl border p-4 flex items-center justify-between ${isShort ? "border-pink-500/50 bg-pink-500/5" : "border-border"}`}>
           <div>
             <p className="text-sm font-semibold">Publicar como WaveShorts (vertical 9:16)</p>
-            <p className="text-xs text-muted-foreground">Ideal para vídeos curtos de até ~90s. Aparece no feed vertical.</p>
+            <p className="text-xs text-muted-foreground">
+              {forcedShort
+                ? "Você está enviando pelo WaveShorts. O vídeo vai direto para o feed vertical."
+                : "Detectamos automaticamente vídeos verticais. Ideal para vídeos curtos de até ~90s."}
+            </p>
           </div>
-          <Switch checked={isShort} onCheckedChange={setIsShort} />
+          <Switch checked={isShort} onCheckedChange={setIsShort} disabled={forcedShort} />
         </div>
 
         <div className="space-y-2">
