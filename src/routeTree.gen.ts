@@ -49,6 +49,7 @@ import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/c
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
+import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
 import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -262,6 +263,11 @@ const ApiPublicStatusPushRoute = ApiPublicStatusPushRouteImport.update({
   path: '/api/public/status-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
+  id: '/api/public/post-push',
+  path: '/api/public/post-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedHashtagTagRoute = AuthenticatedHashtagTagRouteImport.update({
   id: '/hashtag/$tag',
   path: '/hashtag/$tag',
@@ -372,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -425,6 +432,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
+    | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
     | '/lovable/email/suppression'
@@ -689,6 +701,7 @@ export interface RootRouteChildren {
   SStatusIdRoute: typeof SStatusIdRoute
   UUsernameRoute: typeof UUsernameRoute
   LiveIndexRoute: typeof LiveIndexRoute
+  ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -986,6 +999,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStatusPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/post-push': {
+      id: '/api/public/post-push'
+      path: '/api/public/post-push'
+      fullPath: '/api/public/post-push'
+      preLoaderRoute: typeof ApiPublicPostPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/hashtag/$tag': {
       id: '/_authenticated/hashtag/$tag'
       path: '/hashtag/$tag'
@@ -1140,6 +1160,7 @@ const rootRouteChildren: RootRouteChildren = {
   SStatusIdRoute: SStatusIdRoute,
   UUsernameRoute: UUsernameRoute,
   LiveIndexRoute: LiveIndexRoute,
+  ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
@@ -1158,13 +1179,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
