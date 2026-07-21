@@ -151,8 +151,12 @@ function UploadPage() {
       if (insErr) throw insErr;
 
       setProgress(100);
-      toast.success("Vídeo publicado!");
-      navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+      toast.success(isShort ? "Short publicado!" : "Vídeo publicado!");
+      if (isShort) {
+        navigate({ to: "/waveshorts" });
+      } else {
+        navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+      }
     } catch (e: any) {
       toast.error("Falha ao enviar", { description: e?.message ?? String(e) });
     } finally {
