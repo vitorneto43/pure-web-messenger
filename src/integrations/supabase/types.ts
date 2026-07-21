@@ -3847,6 +3847,17 @@ export type Database = {
           views_count: number
         }[]
       }
+      dispatch_post_push: {
+        Args: {
+          _comment_id: string
+          _emoji: string
+          _kind: string
+          _post_id: string
+          _preview: string
+          _sender_id: string
+        }
+        Returns: undefined
+      }
       dispatch_status_push: {
         Args: {
           _comment_id: string
