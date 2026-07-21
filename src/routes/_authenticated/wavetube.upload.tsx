@@ -32,6 +32,8 @@ const MAX_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 function UploadPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/_authenticated/wavetube/upload" }) as { short?: number };
+  const forcedShort = search.short === 1;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -43,9 +45,13 @@ function UploadPage() {
   const [allowPix, setAllowPix] = useState(true);
   const [pixKey, setPixKey] = useState("");
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
-  const [isShort, setIsShort] = useState(false);
+  const [isShort, setIsShort] = useState(forcedShort);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (forcedShort) setIsShort(true);
+  }, [forcedShort]);
 
   const pickFile = (f: File | undefined | null) => {
     if (!f) return;
