@@ -175,7 +175,7 @@ function WaveShortsPage() {
             <Loader2 className="size-8 animate-spin text-white/60" />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState onUpload={() => gate("default", () => (window.location.href = "/wavetube/upload"))} />
+          <EmptyState onUpload={() => gate("default", () => (window.location.href = "/wavetube/upload?short=1"))} />
         ) : (
           items.map((s, i) => (
             <ShortCard
