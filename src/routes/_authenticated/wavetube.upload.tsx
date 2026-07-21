@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, PlaySquare, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,9 @@ import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    short: s.short === "1" || s.short === 1 || s.short === true ? 1 : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Enviar vídeo — WaveTube" },
@@ -29,6 +32,8 @@ const MAX_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 function UploadPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/_authenticated/wavetube/upload" }) as { short?: number };
+  const forcedShort = search.short === 1;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -40,9 +45,13 @@ function UploadPage() {
   const [allowPix, setAllowPix] = useState(true);
   const [pixKey, setPixKey] = useState("");
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
-  const [isShort, setIsShort] = useState(false);
+  const [isShort, setIsShort] = useState(forcedShort);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (forcedShort) setIsShort(true);
+  }, [forcedShort]);
 
   const pickFile = (f: File | undefined | null) => {
     if (!f) return;
@@ -56,6 +65,19 @@ function UploadPage() {
     }
     setFile(f);
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").slice(0, 90));
+    // Auto-detect orientation
+    try {
+      const url = URL.createObjectURL(f);
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.src = url;
+      v.onloadedmetadata = () => {
+        const vertical = v.videoHeight > v.videoWidth;
+        if (vertical) setIsShort(true);
+        else if (!forcedShort) setIsShort(false);
+        URL.revokeObjectURL(url);
+      };
+    } catch { /* ignore */ }
   };
 
   async function handleSubmit() {
@@ -129,8 +151,12 @@ function UploadPage() {
       if (insErr) throw insErr;
 
       setProgress(100);
-      toast.success("Vídeo publicado!");
-      navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+      toast.success(isShort ? "Short publicado!" : "Vídeo publicado!");
+      if (isShort) {
+        navigate({ to: "/waveshorts" });
+      } else {
+        navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+      }
     } catch (e: any) {
       toast.error("Falha ao enviar", { description: e?.message ?? String(e) });
     } finally {
@@ -143,10 +169,10 @@ function UploadPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-3 py-3 flex items-center gap-2">
           <Button asChild size="icon" variant="ghost">
-            <Link to="/wavetube"><ArrowLeft className="size-5" /></Link>
+            <Link to={forcedShort ? "/waveshorts" : "/wavetube"}><ArrowLeft className="size-5" /></Link>
           </Button>
-          <PlaySquare className="size-6 text-red-600" />
-          <h1 className="text-lg font-bold">Enviar vídeo</h1>
+          <PlaySquare className={`size-6 ${forcedShort ? "text-pink-500" : "text-red-600"}`} />
+          <h1 className="text-lg font-bold">{forcedShort ? "Enviar Short (9:16)" : "Enviar vídeo"}</h1>
         </div>
       </header>
 
@@ -221,12 +247,16 @@ function UploadPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-4 flex items-center justify-between">
+        <div className={`rounded-xl border p-4 flex items-center justify-between ${isShort ? "border-pink-500/50 bg-pink-500/5" : "border-border"}`}>
           <div>
             <p className="text-sm font-semibold">Publicar como WaveShorts (vertical 9:16)</p>
-            <p className="text-xs text-muted-foreground">Ideal para vídeos curtos de até ~90s. Aparece no feed vertical.</p>
+            <p className="text-xs text-muted-foreground">
+              {forcedShort
+                ? "Você está enviando pelo WaveShorts. O vídeo vai direto para o feed vertical."
+                : "Detectamos automaticamente vídeos verticais. Ideal para vídeos curtos de até ~90s."}
+            </p>
           </div>
-          <Switch checked={isShort} onCheckedChange={setIsShort} />
+          <Switch checked={isShort} onCheckedChange={setIsShort} disabled={forcedShort} />
         </div>
 
         <div className="space-y-2">

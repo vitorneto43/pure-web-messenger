@@ -158,7 +158,7 @@ function WaveShortsPage() {
           <Button
             size="sm"
             className="rounded-full bg-pink-500 hover:bg-pink-600 text-white"
-            onClick={() => gate("default", () => (window.location.href = "/wavetube/upload"))}
+            onClick={() => gate("default", () => (window.location.href = "/wavetube/upload?short=1"))}
           >
             <Upload className="size-4 mr-1.5" /> Enviar
           </Button>
@@ -175,7 +175,7 @@ function WaveShortsPage() {
             <Loader2 className="size-8 animate-spin text-white/60" />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState onUpload={() => gate("default", () => (window.location.href = "/wavetube/upload"))} />
+          <EmptyState onUpload={() => gate("default", () => (window.location.href = "/wavetube/upload?short=1"))} />
         ) : (
           items.map((s, i) => (
             <ShortCard
