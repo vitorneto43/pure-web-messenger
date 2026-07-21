@@ -158,7 +158,7 @@ function WaveShortsPage() {
           <Button
             size="sm"
             className="rounded-full bg-pink-500 hover:bg-pink-600 text-white"
-            onClick={() => gate("default", () => (window.location.href = "/wavetube/upload"))}
+            onClick={() => gate("default", () => (window.location.href = "/wavetube/upload?short=1"))}
           >
             <Upload className="size-4 mr-1.5" /> Enviar
           </Button>
