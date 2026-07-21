@@ -260,6 +260,29 @@ export async function sendNativeStatusInteraction(args: {
   );
 }
 
+export async function sendNativePostInteraction(args: {
+  recipientId: string;
+  senderId: string;
+  postId: string;
+  title: string;
+  body: string;
+  kind: "comment" | "reply" | "post_reaction" | "comment_reaction";
+}) {
+  return sendNativePayloadToUser(
+    args.recipientId,
+    {
+      type: "post_interaction",
+      postId: args.postId,
+      url: `/p/${args.postId}`,
+      kind: args.kind,
+      timestamp: String(Date.now()),
+    },
+    "120s",
+    { title: args.title, body: args.body || args.title },
+    { senderId: args.senderId, kind: `post_${args.kind}` },
+  );
+}
+
 export async function sendNativeMessage(args: {
 
   recipientId: string;
