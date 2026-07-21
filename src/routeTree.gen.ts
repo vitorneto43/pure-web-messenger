@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WavetubeRouteImport } from './routes/wavetube'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
@@ -63,6 +64,11 @@ import { Route as ApiPublicHooksLivekitEgressRouteImport } from './routes/api/pu
 import { Route as ApiPublicCallsStatusRouteImport } from './routes/api/public/calls/status'
 import { Route as ApiPublicAuthCheckSignupIpRouteImport } from './routes/api/public/auth/check-signup-ip'
 
+const WavetubeRoute = WavetubeRouteImport.update({
+  id: '/wavetube',
+  path: '/wavetube',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
@@ -360,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -414,6 +421,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/hashtags': typeof AuthenticatedHashtagsRoute
   '/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -470,6 +478,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/wavetube': typeof WavetubeRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/hashtags': typeof AuthenticatedHashtagsRoute
   '/_authenticated/meus-convites': typeof AuthenticatedMeusConvitesRoute
@@ -526,6 +535,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/chat'
     | '/hashtags'
     | '/meus-convites'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/chat'
     | '/hashtags'
     | '/meus-convites'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/unsubscribe'
+    | '/wavetube'
     | '/_authenticated/chat'
     | '/_authenticated/hashtags'
     | '/_authenticated/meus-convites'
@@ -691,6 +703,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WavetubeRoute: typeof WavetubeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
   InviteInviterIdRoute: typeof InviteInviterIdRoute
@@ -719,6 +732,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wavetube': {
+      id: '/wavetube'
+      path: '/wavetube'
+      fullPath: '/wavetube'
+      preLoaderRoute: typeof WavetubeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/unsubscribe': {
       id: '/unsubscribe'
       path: '/unsubscribe'
@@ -1150,6 +1170,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WavetubeRoute: WavetubeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
   InviteInviterIdRoute: InviteInviterIdRoute,

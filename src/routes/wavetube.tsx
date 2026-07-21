@@ -60,11 +60,11 @@ function WaveTubePage() {
     (async () => {
       const { data } = await supabase.rpc("discover_wavetube_videos", {
         _sort: sort,
-        _category: category,
-        _search: search.trim() || null,
+        _category: category ?? undefined,
+        _search: search.trim() || undefined,
         _limit: 48,
         _offset: 0,
-      });
+      } as any);
       if (!alive) return;
       setRows((data as Row[]) ?? []);
       setLoading(false);
