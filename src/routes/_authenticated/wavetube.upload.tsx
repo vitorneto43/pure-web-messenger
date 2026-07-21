@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/lib/wavetube";
+import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
