@@ -51,6 +51,7 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
+import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
 import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
 import { Route as AuthenticatedChatConversationIdRouteImport } from './routes/_authenticated/chat.$conversationId'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -274,6 +275,12 @@ const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
   path: '/api/public/post-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWavetubeUploadRoute =
+  AuthenticatedWavetubeUploadRouteImport.update({
+    id: '/wavetube/upload',
+    path: '/wavetube/upload',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHashtagTagRoute = AuthenticatedHashtagTagRouteImport.update({
   id: '/hashtag/$tag',
   path: '/hashtag/$tag',
@@ -385,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/live/': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -440,6 +448,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveIndexRoute
   '/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -497,6 +506,7 @@ export interface FileRoutesById {
   '/live/': typeof LiveIndexRoute
   '/_authenticated/chat/$conversationId': typeof AuthenticatedChatConversationIdRoute
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
+  '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -554,6 +564,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -609,6 +620,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/chat/$conversationId'
     | '/hashtag/$tag'
+    | '/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -665,6 +677,7 @@ export interface FileRouteTypes {
     | '/live/'
     | '/_authenticated/chat/$conversationId'
     | '/_authenticated/hashtag/$tag'
+    | '/_authenticated/wavetube/upload'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -1026,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPostPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/wavetube/upload': {
+      id: '/_authenticated/wavetube/upload'
+      path: '/wavetube/upload'
+      fullPath: '/wavetube/upload'
+      preLoaderRoute: typeof AuthenticatedWavetubeUploadRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hashtag/$tag': {
       id: '/_authenticated/hashtag/$tag'
       path: '/hashtag/$tag'
@@ -1132,6 +1152,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecordingsRoute: typeof AuthenticatedRecordingsRoute
   AuthenticatedScheduledRoute: typeof AuthenticatedScheduledRoute
   AuthenticatedHashtagTagRoute: typeof AuthenticatedHashtagTagRoute
+  AuthenticatedWavetubeUploadRoute: typeof AuthenticatedWavetubeUploadRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1142,6 +1163,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecordingsRoute: AuthenticatedRecordingsRoute,
   AuthenticatedScheduledRoute: AuthenticatedScheduledRoute,
   AuthenticatedHashtagTagRoute: AuthenticatedHashtagTagRoute,
+  AuthenticatedWavetubeUploadRoute: AuthenticatedWavetubeUploadRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
