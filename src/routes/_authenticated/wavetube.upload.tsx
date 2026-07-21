@@ -65,6 +65,19 @@ function UploadPage() {
     }
     setFile(f);
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").slice(0, 90));
+    // Auto-detect orientation
+    try {
+      const url = URL.createObjectURL(f);
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.src = url;
+      v.onloadedmetadata = () => {
+        const vertical = v.videoHeight > v.videoWidth;
+        if (vertical) setIsShort(true);
+        else if (!forcedShort) setIsShort(false);
+        URL.revokeObjectURL(url);
+      };
+    } catch { /* ignore */ }
   };
 
   async function handleSubmit() {
