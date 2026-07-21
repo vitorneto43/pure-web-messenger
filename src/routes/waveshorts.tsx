@@ -20,6 +20,7 @@ import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { signWavetubeUrl, formatViews } from "@/lib/wavetube";
+import { FollowButton } from "@/components/FollowButton";
 
 export const Route = createFileRoute("/waveshorts")({
   component: WaveShortsPage,
@@ -398,23 +399,30 @@ function ShortCard({
 
         {/* Bottom gradient + author/caption */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-16 pb-6 px-4">
-          <Link
-            to="/u/$username"
-            params={{ username: short.owner_username ?? "" }}
-            className="flex items-center gap-2 mb-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Avatar className="size-9 ring-2 ring-white/70">
-              <AvatarImage src={short.owner_avatar_url ?? undefined} />
-              <AvatarFallback>{authorLabel.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="text-sm font-bold truncate">{authorLabel}</p>
-              {short.owner_username && (
-                <p className="text-[11px] text-white/70 truncate">@{short.owner_username}</p>
-              )}
-            </div>
-          </Link>
+          <div className="flex items-center gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
+            <Link
+              to="/u/$username"
+              params={{ username: short.owner_username ?? "" }}
+              className="flex items-center gap-2 min-w-0 flex-1"
+            >
+              <Avatar className="size-9 ring-2 ring-white/70">
+                <AvatarImage src={short.owner_avatar_url ?? undefined} />
+                <AvatarFallback>{authorLabel.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate">{authorLabel}</p>
+                {short.owner_username && (
+                  <p className="text-[11px] text-white/70 truncate">@{short.owner_username}</p>
+                )}
+              </div>
+            </Link>
+            <FollowButton
+              targetUserId={short.owner_id}
+              size="sm"
+              className="rounded-full h-8 px-3 bg-white text-black hover:bg-white/90"
+              variant="default"
+            />
+          </div>
           <p className="text-sm font-semibold leading-snug line-clamp-3">{short.title}</p>
           {short.description && (
             <p className="text-xs text-white/80 mt-1 line-clamp-2">{short.description}</p>

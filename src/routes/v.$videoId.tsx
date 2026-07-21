@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatViews, signWavetubeUrl } from "@/lib/wavetube";
+import { FollowButton } from "@/components/FollowButton";
 
 export const Route = createFileRoute("/v/$videoId")({
   loader: async ({ params }) => {
@@ -225,6 +226,7 @@ function VideoPage() {
                 <p className="text-xs text-muted-foreground truncate">@{owner?.username ?? ""}</p>
               </div>
             </Link>
+            {video.owner_id && <FollowButton targetUserId={video.owner_id} className="rounded-full" />}
 
             <div className="ml-auto flex items-center gap-2">
               <Button

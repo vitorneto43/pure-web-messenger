@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Upload, Radio, PlaySquare } from "lucide-react";
+import { ArrowLeft, Search, Upload, Radio, PlaySquare, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -112,6 +112,13 @@ function WaveTubePage() {
             />
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {user && (
+              <Button asChild size="sm" variant="ghost" className="rounded-full hidden sm:inline-flex">
+                <Link to="/wavetube/analytics">
+                  <BarChart3 className="size-4 mr-1.5" /> Métricas
+                </Link>
+              </Button>
+            )}
             <Button
               size="sm"
               variant="secondary"
