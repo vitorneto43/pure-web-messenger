@@ -50,7 +50,21 @@ const signupSchema = z.object({
   displayName: z.string().trim().min(1, "Obrigatório").max(60),
   email: z.string().trim().email("Email inválido").max(255),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  birthDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe sua data de nascimento"),
 });
+
+function computeAge(birth: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birth)) return null;
+  const d = new Date(birth + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 const loginSchema = z.object({
   email: z.string().trim().email("Email inválido"),
   password: z.string().min(1, "Obrigatório"),
@@ -76,6 +90,7 @@ function AuthPage() {
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [showConfirmEmail, setShowConfirmEmail] = useState(false);
   const [isHuman, setIsHuman] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [honeypot, setHoneypot] = useState(""); // anti-bot: deve ficar vazio
   const [formStartedAt] = useState(() => Date.now());
   const [focusedOnce, setFocusedOnce] = useState(false);
@@ -89,6 +104,7 @@ function AuthPage() {
     displayName: "",
     email: "",
     password: "",
+    birthDate: "",
   });
   const [isAndroidWeb, setIsAndroidWeb] = useState(false);
 
@@ -174,6 +190,10 @@ function AuthPage() {
           toast.error("Confirme que você não é um robô antes de continuar.");
           return;
         }
+        if (!acceptedTerms) {
+          toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+          return;
+        }
         if (Date.now() - formStartedAt < 2000) {
           toast.error("Aguarde um instante antes de enviar o cadastro.");
           return;
@@ -185,8 +205,15 @@ function AuthPage() {
         if (!parsed.success) {
           const issue = parsed.error.issues[0];
           toast.error(
-            `${issue.path[0] === "username" ? "Nome de usuário" : "Cadastro"}: ${issue.message}`,
+            `${issue.path[0] === "username" ? "Nome de usuário" : issue.path[0] === "birthDate" ? "Data de nascimento" : "Cadastro"}: ${issue.message}`,
           );
+          return;
+        }
+        const age = computeAge(parsed.data.birthDate);
+        if (age === null || age < 15) {
+          toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+            duration: 8000,
+          });
           return;
         }
         // Bloqueio de cadastro a partir de IPs previamente banidos por abuso.
@@ -216,6 +243,7 @@ function AuthPage() {
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
+              birth_date: parsed.data.birthDate,
               ...(inviteUsername ? { invite: inviteUsername } : {}),
               ...attribution,
             },
@@ -366,6 +394,20 @@ function AuthPage() {
                     placeholder="João Silva"
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="birthDate">Data de nascimento</Label>
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={form.birthDate}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => update("birthDate", e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    É necessário ter pelo menos 15 anos para usar a Wavechat.
+                  </p>
+                </div>
               </>
             )}
 
@@ -461,10 +503,34 @@ function AuthPage() {
                     .
                   </span>
                 </label>
+
+                <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 size-5 accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm text-foreground">
+                    Li e aceito os{" "}
+                    <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                      Termos de Uso
+                    </Link>{" "}
+                    e a{" "}
+                    <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Privacidade
+                    </Link>
+                    .
+                  </span>
+                </label>
               </>
             )}
 
-            <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !isHuman)}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={busy || (mode === "signup" && (!isHuman || !acceptedTerms))}
+            >
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
               {mode === "login" && t("auth.submit.login")}
               {mode === "signup" && t("auth.submit.signup")}
