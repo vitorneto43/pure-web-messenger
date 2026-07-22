@@ -19,6 +19,7 @@ import { formatTime } from "@/lib/format-time";
 import { linkify } from "@/lib/linkify";
 import { TranslateButton } from "@/components/TranslateButton";
 import { StatusLinkPreview, extractFirstUrl } from "@/components/status/StatusLinkPreview";
+import { AutoplayVideo } from "@/components/AutoplayVideo";
 
 
 export interface PostItem {
@@ -241,7 +242,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
         <img src={post.media_url!} alt="" className="w-full max-h-[600px] object-contain bg-black" loading="lazy" />
       )}
       {isMedia && post.kind === "video" && (
-        <video src={post.media_url!} className="w-full max-h-[600px] bg-black" controls playsInline muted preload="metadata" />
+        <AutoplayVideo src={post.media_url!} poster={post.thumbnail_url ?? undefined} />
       )}
 
       {/* Auto-embed de links de vídeo (YouTube, TikTok, Instagram, Facebook, X, Vimeo, Kwai...) */}
