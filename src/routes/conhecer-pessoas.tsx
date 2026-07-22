@@ -33,28 +33,28 @@ const BUCKETS: {
 }[] = [
   {
     key: "city",
-    title: "Pessoas da sua cidade",
-    subtitle: "Quem mora perto pra combinar de conversar",
+    title: "Perfis da sua cidade",
+    subtitle: "Perfis da sua região",
     icon: MapPin,
     match: (p) => /cidade/i.test(p.reason),
   },
   {
     key: "region",
-    title: "Pessoas do seu estado",
-    subtitle: "Do mesmo estado ou região que você",
+    title: "Perfis do seu estado",
+    subtitle: "Perfis organizados por localização",
     icon: Compass,
     match: (p) => /regi[aã]o|estado|pa[ií]s/i.test(p.reason),
   },
   {
     key: "interests",
-    title: "Interesses em comum",
-    subtitle: "Vocês curtem coisas parecidas",
+    title: "Categorias em comum",
+    subtitle: "Perfis organizados por interesses semelhantes",
     icon: Heart,
     match: (p) => /interesse/i.test(p.reason),
   },
   {
     key: "nearby",
-    title: "Amigos em comum",
+    title: "Conexões em comum",
     subtitle: "Já conhecem alguém que você conhece",
     icon: Users,
     match: (p) => /amigos/i.test(p.reason) || p.mutual_count > 0,
@@ -72,10 +72,10 @@ export const Route = createFileRoute("/conhecer-pessoas")({
   component: MeetPeoplePage,
   head: () => ({
     meta: [
-      { title: "Conhecer pessoas — WaveChat" },
-      { name: "description", content: "Descubra pessoas perto de você, da sua cidade, do seu estado e com os mesmos interesses no WaveChat." },
-      { property: "og:title", content: "Conhecer pessoas — WaveChat" },
-      { property: "og:description", content: "Encontre gente nova pra conversar: perto de você, da sua cidade e com interesses em comum." },
+      { title: "Explorar comunidades — WaveChat" },
+      { name: "description", content: "Explore perfis e conteúdos organizados por localização e interesses no WaveChat." },
+      { property: "og:title", content: "Explorar comunidades — WaveChat" },
+      { property: "og:description", content: "Explore perfis e conteúdos organizados por localização e interesses." },
     ],
   }),
 });
@@ -172,10 +172,10 @@ function MeetPeoplePage() {
           </Button>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold leading-tight flex items-center gap-1.5">
-              <Sparkles className="size-4 text-primary" /> Conhecer pessoas
+              <Sparkles className="size-4 text-primary" /> Explorar comunidades
             </h1>
             <p className="text-[11px] text-muted-foreground leading-tight">
-              Perto de você, da sua cidade e com os mesmos interesses
+              Explore perfis e conteúdos organizados por localização e interesses.
             </p>
           </div>
         </div>
