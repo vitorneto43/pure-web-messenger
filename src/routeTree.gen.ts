@@ -54,6 +54,7 @@ import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/vide
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
+import { Route as ApiPublicLiveJoinPushRouteImport } from './routes/api/public/live-join-push'
 import { Route as ApiPublicFollowerContentPushRouteImport } from './routes/api/public/follower-content-push'
 import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
 import { Route as AuthenticatedWavetubeAnalyticsRouteImport } from './routes/_authenticated/wavetube.analytics'
@@ -295,6 +296,11 @@ const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
   path: '/api/public/post-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLiveJoinPushRoute = ApiPublicLiveJoinPushRouteImport.update({
+  id: '/api/public/live-join-push',
+  path: '/api/public/live-join-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFollowerContentPushRoute =
   ApiPublicFollowerContentPushRouteImport.update({
     id: '/api/public/follower-content-push',
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -553,6 +561,7 @@ export interface FileRoutesById {
   '/_authenticated/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -616,6 +625,7 @@ export interface FileRouteTypes {
     | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -677,6 +687,7 @@ export interface FileRouteTypes {
     | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wavetube/analytics'
     | '/_authenticated/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -792,6 +804,7 @@ export interface RootRouteChildren {
   VVideoIdRoute: typeof VVideoIdRoute
   LiveIndexRoute: typeof LiveIndexRoute
   ApiPublicFollowerContentPushRoute: typeof ApiPublicFollowerContentPushRoute
+  ApiPublicLiveJoinPushRoute: typeof ApiPublicLiveJoinPushRoute
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
@@ -1126,6 +1139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPostPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/live-join-push': {
+      id: '/api/public/live-join-push'
+      path: '/api/public/live-join-push'
+      fullPath: '/api/public/live-join-push'
+      preLoaderRoute: typeof ApiPublicLiveJoinPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/follower-content-push': {
       id: '/api/public/follower-content-push'
       path: '/api/public/follower-content-push'
@@ -1309,6 +1329,7 @@ const rootRouteChildren: RootRouteChildren = {
   VVideoIdRoute: VVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   ApiPublicFollowerContentPushRoute: ApiPublicFollowerContentPushRoute,
+  ApiPublicLiveJoinPushRoute: ApiPublicLiveJoinPushRoute,
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
