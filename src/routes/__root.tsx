@@ -20,6 +20,7 @@ import "@/i18n";
 import { applyHtmlLang, currentLocale, setLocale, I18N_STORAGE_KEY } from "@/i18n";
 import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
 import { detectLocaleFromIp } from "@/lib/geo.functions";
+import { BirthDateGate } from "@/components/BirthDateGate";
 
 
 import appCss from "../styles.css?url";
