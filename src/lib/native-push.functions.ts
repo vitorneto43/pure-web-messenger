@@ -342,6 +342,51 @@ export async function sendNativeLiveStart(args: {
   return { sent: total };
 }
 
+export async function sendNativeVideoInteraction(args: {
+  recipientId: string;
+  senderId: string;
+  videoId: string;
+  isShort?: boolean;
+  title: string;
+  body: string;
+  kind: "comment" | "reply" | "video_reaction" | "comment_reaction";
+}) {
+  return sendNativePayloadToUser(
+    args.recipientId,
+    {
+      type: "video_interaction",
+      videoId: args.videoId,
+      url: args.isShort ? `/waveshorts?v=${args.videoId}` : `/v/${args.videoId}`,
+      kind: args.kind,
+      timestamp: String(Date.now()),
+    },
+    "120s",
+    { title: args.title, body: args.body || args.title },
+    { senderId: args.senderId, kind: `video_${args.kind}` },
+  );
+}
+
+export async function sendNativeLiveJoin(args: {
+  recipientId: string;
+  viewerId: string;
+  liveId: string;
+  title: string;
+  body: string;
+}) {
+  return sendNativePayloadToUser(
+    args.recipientId,
+    {
+      type: "live_join",
+      liveId: args.liveId,
+      url: `/live/${args.liveId}`,
+      timestamp: String(Date.now()),
+    },
+    "60s",
+    { title: args.title, body: args.body },
+    { senderId: args.viewerId, kind: "live_join" },
+  );
+}
+
 export async function sendNativeFollowerContent(args: {
   recipientIds: string[];
   kind: "post" | "status" | "video" | "short";
