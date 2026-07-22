@@ -50,7 +50,21 @@ const signupSchema = z.object({
   displayName: z.string().trim().min(1, "Obrigatório").max(60),
   email: z.string().trim().email("Email inválido").max(255),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  birthDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe sua data de nascimento"),
 });
+
+function computeAge(birth: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birth)) return null;
+  const d = new Date(birth + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 const loginSchema = z.object({
   email: z.string().trim().email("Email inválido"),
   password: z.string().min(1, "Obrigatório"),
