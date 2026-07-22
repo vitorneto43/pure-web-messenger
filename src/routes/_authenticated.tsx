@@ -44,6 +44,7 @@ function AuthGuard() {
       <OnlinePresenceProvider>
         <PushBootstrap />
         <ModerationGate>
+          <BirthDateGate />
           <OnboardingNameDialog />
           
           <Outlet />
