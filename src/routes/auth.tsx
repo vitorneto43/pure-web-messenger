@@ -190,6 +190,10 @@ function AuthPage() {
           toast.error("Confirme que você não é um robô antes de continuar.");
           return;
         }
+        if (!acceptedTerms) {
+          toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+          return;
+        }
         if (Date.now() - formStartedAt < 2000) {
           toast.error("Aguarde um instante antes de enviar o cadastro.");
           return;
@@ -201,8 +205,15 @@ function AuthPage() {
         if (!parsed.success) {
           const issue = parsed.error.issues[0];
           toast.error(
-            `${issue.path[0] === "username" ? "Nome de usuário" : "Cadastro"}: ${issue.message}`,
+            `${issue.path[0] === "username" ? "Nome de usuário" : issue.path[0] === "birthDate" ? "Data de nascimento" : "Cadastro"}: ${issue.message}`,
           );
+          return;
+        }
+        const age = computeAge(parsed.data.birthDate);
+        if (age === null || age < 15) {
+          toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+            duration: 8000,
+          });
           return;
         }
         // Bloqueio de cadastro a partir de IPs previamente banidos por abuso.
