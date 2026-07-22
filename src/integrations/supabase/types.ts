@@ -2486,6 +2486,7 @@ export type Database = {
           social_links: Json
           strike_count: number
           suspended_until: string | null
+          terms_accepted_at: string | null
           updated_at: string
           username: string
           visibility: string
@@ -2513,6 +2514,7 @@ export type Database = {
           social_links?: Json
           strike_count?: number
           suspended_until?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           username: string
           visibility?: string
@@ -2540,6 +2542,7 @@ export type Database = {
           social_links?: Json
           strike_count?: number
           suspended_until?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           username?: string
           visibility?: string
@@ -4090,6 +4093,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_terms: { Args: never; Returns: undefined }
       admin_activity_rewards: {
         Args: {
           _filter?: string
