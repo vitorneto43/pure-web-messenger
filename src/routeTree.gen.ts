@@ -50,6 +50,7 @@ import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authent
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
@@ -274,6 +275,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVideoPushRoute = ApiPublicVideoPushRouteImport.update({
+  id: '/api/public/video-push',
+  path: '/api/public/video-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSupportRoute = ApiPublicSupportRouteImport.update({
   id: '/api/public/support',
   path: '/api/public/support',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -486,6 +493,7 @@ export interface FileRoutesByTo {
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -548,6 +556,7 @@ export interface FileRoutesById {
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -610,6 +619,7 @@ export interface FileRouteTypes {
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -670,6 +680,7 @@ export interface FileRouteTypes {
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -731,6 +742,7 @@ export interface FileRouteTypes {
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -783,6 +795,7 @@ export interface RootRouteChildren {
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
+  ApiPublicVideoPushRoute: typeof ApiPublicVideoPushRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
@@ -1085,6 +1098,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/video-push': {
+      id: '/api/public/video-push'
+      path: '/api/public/video-push'
+      fullPath: '/api/public/video-push'
+      preLoaderRoute: typeof ApiPublicVideoPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/support': {
       id: '/api/public/support'
       path: '/api/public/support'
@@ -1292,6 +1312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
+  ApiPublicVideoPushRoute: ApiPublicVideoPushRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
