@@ -4780,6 +4780,7 @@ export type Database = {
         Args: { p_emoji: string; p_live_id: string }
         Returns: undefined
       }
+      set_birth_date: { Args: { _birth_date: string }; Returns: undefined }
       start_live: {
         Args: { p_cover_url?: string; p_title: string }
         Returns: {
