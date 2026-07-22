@@ -82,20 +82,24 @@ export function BirthDateGate() {
     }
     setBusy(true);
     try {
-      const { error: bErr } = await supabase.rpc("set_birth_date", { _birth_date: birth });
-      if (bErr) {
-        if (/15 anos/i.test(bErr.message)) {
-          toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
-            duration: 8000,
-          });
-          await supabase.auth.signOut();
-          setOpen(false);
-          return;
+      if (needsBirth) {
+        const { error: bErr } = await supabase.rpc("set_birth_date", { _birth_date: birth });
+        if (bErr) {
+          if (/15 anos/i.test(bErr.message)) {
+            toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+              duration: 8000,
+            });
+            await supabase.auth.signOut();
+            setOpen(false);
+            return;
+          }
+          throw bErr;
         }
-        throw bErr;
       }
-      const { error: tErr } = await supabase.rpc("accept_terms" as never);
-      if (tErr) throw tErr;
+      if (needsTerms) {
+        const { error: tErr } = await supabase.rpc("accept_terms" as never);
+        if (tErr) throw tErr;
+      }
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
