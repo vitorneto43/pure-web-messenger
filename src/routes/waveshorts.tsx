@@ -368,12 +368,13 @@ function ShortCard({
         {src ? (
           <video
             ref={videoRef}
-            src={src}
-            poster={undefined}
+            src={src.includes("#") ? src : `${src}#t=0.1`}
+            poster={short.thumbnail_url ?? undefined}
             playsInline
             loop
             muted={muted}
             preload={active ? "auto" : "metadata"}
+            autoPlay={active}
             className="h-full w-full object-contain bg-black"
           />
         ) : (

@@ -456,9 +456,12 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
         )}
         {current.kind === "video" && current.media_url && (
           <video
-            src={current.media_url}
+            src={current.media_url.includes("#") ? current.media_url : `${current.media_url}#t=0.1`}
+            poster={(current as any).thumbnail_url ?? undefined}
             autoPlay={!boostOpen}
             playsInline
+            muted
+            preload="auto"
             controls={false}
             onEnded={next}
             ref={(el) => {
