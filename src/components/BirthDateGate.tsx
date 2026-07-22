@@ -121,45 +121,41 @@ export function BirthDateGate() {
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {needsBirth && (
-            <div className="space-y-1.5">
-              <Label htmlFor="bd-birth">Data de nascimento</Label>
-              <Input
-                id="bd-birth"
-                type="date"
-                value={birth}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setBirth(e.target.value)}
-                autoFocus
-              />
-            </div>
-          )}
+          <div className="space-y-1.5">
+            <Label htmlFor="bd-birth">Data de nascimento</Label>
+            <Input
+              id="bd-birth"
+              type="date"
+              value={birth}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setBirth(e.target.value)}
+              autoFocus
+            />
+          </div>
 
-          {needsTerms && (
-            <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
-              <input
-                type="checkbox"
-                checked={accepted}
-                onChange={(e) => setAccepted(e.target.checked)}
-                className="mt-0.5 size-5 accent-primary cursor-pointer"
-              />
-              <span className="text-sm text-foreground">
-                Li e aceito os{" "}
-                <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
-                  Termos de Uso
-                </Link>{" "}
-                e a{" "}
-                <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">
-                  Política de Privacidade
-                </Link>
-                .
-              </span>
-            </label>
-          )}
+          <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-0.5 size-5 accent-primary cursor-pointer"
+            />
+            <span className="text-sm text-foreground">
+              Li e aceito os{" "}
+              <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">
+                Política de Privacidade
+              </Link>
+              .
+            </span>
+          </label>
 
           <Button
             onClick={handleSave}
-            disabled={busy || (needsTerms && !accepted) || (needsBirth && !birth)}
+            disabled={busy || !accepted || !birth}
             className="w-full"
           >
             {busy && <Loader2 className="size-4 animate-spin mr-2" />}
