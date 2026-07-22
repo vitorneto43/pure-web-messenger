@@ -503,10 +503,34 @@ function AuthPage() {
                     .
                   </span>
                 </label>
+
+                <label className="flex items-start gap-3 rounded-lg border border-border bg-card/40 p-3 cursor-pointer hover:bg-accent/30 transition">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 size-5 accent-primary cursor-pointer"
+                  />
+                  <span className="text-sm text-foreground">
+                    Li e aceito os{" "}
+                    <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                      Termos de Uso
+                    </Link>{" "}
+                    e a{" "}
+                    <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">
+                      Política de Privacidade
+                    </Link>
+                    .
+                  </span>
+                </label>
               </>
             )}
 
-            <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && !isHuman)}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={busy || (mode === "signup" && (!isHuman || !acceptedTerms))}
+            >
               {busy && <Loader2 className="size-4 animate-spin mr-2" />}
               {mode === "login" && t("auth.submit.login")}
               {mode === "signup" && t("auth.submit.signup")}
