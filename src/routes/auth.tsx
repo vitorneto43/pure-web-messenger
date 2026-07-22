@@ -76,6 +76,7 @@ function AuthPage() {
   const [inviteUsername, setInviteUsername] = useState<string | null>(null);
   const [showConfirmEmail, setShowConfirmEmail] = useState(false);
   const [isHuman, setIsHuman] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [honeypot, setHoneypot] = useState(""); // anti-bot: deve ficar vazio
   const [formStartedAt] = useState(() => Date.now());
   const [focusedOnce, setFocusedOnce] = useState(false);
@@ -89,6 +90,7 @@ function AuthPage() {
     displayName: "",
     email: "",
     password: "",
+    birthDate: "",
   });
   const [isAndroidWeb, setIsAndroidWeb] = useState(false);
 
