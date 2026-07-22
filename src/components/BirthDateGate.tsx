@@ -49,6 +49,7 @@ export function BirthDateGate() {
       const nt = !data.terms_accepted_at;
       setNeedsBirth(nb);
       setNeedsTerms(nt);
+      if (data.birth_date) setBirth(data.birth_date as string);
       if (nb || nt) setOpen(true);
     })();
     return () => {
