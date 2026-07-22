@@ -242,6 +242,7 @@ function RootComponent() {
         <UtmCapture />
         <PageViewTracker />
         <PlayStorePromoBanner />
+        <BirthDateGate />
         <Outlet />
         <NewsletterWidget />
         <Toaster richColors position="top-right" />
