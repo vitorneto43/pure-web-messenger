@@ -29,6 +29,8 @@ function ageFrom(birth: string): number | null {
 export function BirthDateGate() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [needsBirth, setNeedsBirth] = useState(false);
+  const [needsTerms, setNeedsTerms] = useState(false);
   const [birth, setBirth] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -39,11 +41,15 @@ export function BirthDateGate() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("birth_date")
+        .select("birth_date, terms_accepted_at")
         .eq("id", user.id)
         .maybeSingle();
-      if (cancelled) return;
-      if (data && !data.birth_date) setOpen(true);
+      if (cancelled || !data) return;
+      const nb = !data.birth_date;
+      const nt = !data.terms_accepted_at;
+      setNeedsBirth(nb);
+      setNeedsTerms(nt);
+      if (nb || nt) setOpen(true);
     })();
     return () => {
       cancelled = true;
@@ -51,41 +57,49 @@ export function BirthDateGate() {
   }, [user]);
 
   async function handleSave() {
-    if (!accepted) {
+    if (needsTerms && !accepted) {
       toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
       return;
     }
-    const age = ageFrom(birth);
-    if (age === null) {
-      toast.error("Informe uma data de nascimento válida.");
-      return;
-    }
-    if (age < 15) {
-      toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
-        duration: 8000,
-      });
-      setBusy(true);
-      try {
-        await supabase.auth.signOut();
-      } finally {
-        setBusy(false);
-        setOpen(false);
+    if (needsBirth) {
+      const age = ageFrom(birth);
+      if (age === null) {
+        toast.error("Informe uma data de nascimento válida.");
+        return;
       }
-      return;
+      if (age < 15) {
+        toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+          duration: 8000,
+        });
+        setBusy(true);
+        try {
+          await supabase.auth.signOut();
+        } finally {
+          setBusy(false);
+          setOpen(false);
+        }
+        return;
+      }
     }
     setBusy(true);
     try {
-      const { error } = await supabase.rpc("set_birth_date", { _birth_date: birth });
-      if (error) {
-        if (/15 anos/i.test(error.message)) {
-          toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
-            duration: 8000,
-          });
-          await supabase.auth.signOut();
-          setOpen(false);
-          return;
+      if (needsBirth) {
+        const { error } = await supabase.rpc("set_birth_date", { _birth_date: birth });
+        if (error) {
+          if (/15 anos/i.test(error.message)) {
+            toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+              duration: 8000,
+            });
+            await supabase.auth.signOut();
+            setOpen(false);
+            return;
+          }
+          throw error;
         }
-        throw error;
+      }
+      if (needsTerms) {
+        const { error } = await supabase.rpc("accept_terms" as never);
+        if (error) throw error;
       }
       setOpen(false);
     } catch (err) {
