@@ -4278,6 +4278,10 @@ export type Database = {
           views_count: number
         }[]
       }
+      dispatch_follower_content_push: {
+        Args: { _author_id: string; _content_id: string; _kind: string }
+        Returns: undefined
+      }
       dispatch_post_push: {
         Args: {
           _comment_id: string

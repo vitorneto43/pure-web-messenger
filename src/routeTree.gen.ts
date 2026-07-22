@@ -53,6 +53,7 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
+import { Route as ApiPublicFollowerContentPushRouteImport } from './routes/api/public/follower-content-push'
 import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
 import { Route as AuthenticatedWavetubeAnalyticsRouteImport } from './routes/_authenticated/wavetube.analytics'
 import { Route as AuthenticatedHashtagTagRouteImport } from './routes/_authenticated/hashtag.$tag'
@@ -288,6 +289,12 @@ const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
   path: '/api/public/post-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicFollowerContentPushRoute =
+  ApiPublicFollowerContentPushRouteImport.update({
+    id: '/api/public/follower-content-push',
+    path: '/api/public/follower-content-push',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedWavetubeUploadRoute =
   AuthenticatedWavetubeUploadRouteImport.update({
     id: '/wavetube/upload',
@@ -415,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
+  '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -474,6 +482,7 @@ export interface FileRoutesByTo {
   '/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
+  '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -535,6 +544,7 @@ export interface FileRoutesById {
   '/_authenticated/hashtag/$tag': typeof AuthenticatedHashtagTagRoute
   '/_authenticated/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
+  '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
@@ -596,6 +606,7 @@ export interface FileRouteTypes {
     | '/hashtag/$tag'
     | '/wavetube/analytics'
     | '/wavetube/upload'
+    | '/api/public/follower-content-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/hashtag/$tag'
     | '/wavetube/analytics'
     | '/wavetube/upload'
+    | '/api/public/follower-content-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -715,6 +727,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hashtag/$tag'
     | '/_authenticated/wavetube/analytics'
     | '/_authenticated/wavetube/upload'
+    | '/api/public/follower-content-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
@@ -766,6 +779,7 @@ export interface RootRouteChildren {
   UUsernameRoute: typeof UUsernameRoute
   VVideoIdRoute: typeof VVideoIdRoute
   LiveIndexRoute: typeof LiveIndexRoute
+  ApiPublicFollowerContentPushRoute: typeof ApiPublicFollowerContentPushRoute
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
@@ -1092,6 +1106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPostPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/follower-content-push': {
+      id: '/api/public/follower-content-push'
+      path: '/api/public/follower-content-push'
+      fullPath: '/api/public/follower-content-push'
+      preLoaderRoute: typeof ApiPublicFollowerContentPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/wavetube/upload': {
       id: '/_authenticated/wavetube/upload'
       path: '/wavetube/upload'
@@ -1267,6 +1288,7 @@ const rootRouteChildren: RootRouteChildren = {
   UUsernameRoute: UUsernameRoute,
   VVideoIdRoute: VVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
+  ApiPublicFollowerContentPushRoute: ApiPublicFollowerContentPushRoute,
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
