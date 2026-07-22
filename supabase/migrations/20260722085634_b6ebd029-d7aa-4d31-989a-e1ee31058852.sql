@@ -1,0 +1,2 @@
+revoke execute on function public.dispatch_video_push(uuid, uuid, text, uuid, text, text) from public, anon, authenticated;
+revoke execute on function public.dispatch_live_join_push(uuid, uuid) from public, anon, authenticated;

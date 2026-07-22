@@ -4282,6 +4282,10 @@ export type Database = {
         Args: { _author_id: string; _content_id: string; _kind: string }
         Returns: undefined
       }
+      dispatch_live_join_push: {
+        Args: { _live_id: string; _viewer_id: string }
+        Returns: undefined
+      }
       dispatch_post_push: {
         Args: {
           _comment_id: string
@@ -4301,6 +4305,17 @@ export type Database = {
           _preview: string
           _sender_id: string
           _status_id: string
+        }
+        Returns: undefined
+      }
+      dispatch_video_push: {
+        Args: {
+          _comment_id: string
+          _emoji: string
+          _kind: string
+          _preview: string
+          _sender_id: string
+          _video_id: string
         }
         Returns: undefined
       }

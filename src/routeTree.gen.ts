@@ -50,9 +50,11 @@ import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authent
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
 import { Route as ApiPublicPostPushRouteImport } from './routes/api/public/post-push'
+import { Route as ApiPublicLiveJoinPushRouteImport } from './routes/api/public/live-join-push'
 import { Route as ApiPublicFollowerContentPushRouteImport } from './routes/api/public/follower-content-push'
 import { Route as AuthenticatedWavetubeUploadRouteImport } from './routes/_authenticated/wavetube.upload'
 import { Route as AuthenticatedWavetubeAnalyticsRouteImport } from './routes/_authenticated/wavetube.analytics'
@@ -274,6 +276,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVideoPushRoute = ApiPublicVideoPushRouteImport.update({
+  id: '/api/public/video-push',
+  path: '/api/public/video-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSupportRoute = ApiPublicSupportRouteImport.update({
   id: '/api/public/support',
   path: '/api/public/support',
@@ -287,6 +294,11 @@ const ApiPublicStatusPushRoute = ApiPublicStatusPushRouteImport.update({
 const ApiPublicPostPushRoute = ApiPublicPostPushRouteImport.update({
   id: '/api/public/post-push',
   path: '/api/public/post-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLiveJoinPushRoute = ApiPublicLiveJoinPushRouteImport.update({
+  id: '/api/public/live-join-push',
+  path: '/api/public/live-join-push',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicFollowerContentPushRoute =
@@ -423,9 +435,11 @@ export interface FileRoutesByFullPath {
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -483,9 +497,11 @@ export interface FileRoutesByTo {
   '/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -545,9 +561,11 @@ export interface FileRoutesById {
   '/_authenticated/wavetube/analytics': typeof AuthenticatedWavetubeAnalyticsRoute
   '/_authenticated/wavetube/upload': typeof AuthenticatedWavetubeUploadRoute
   '/api/public/follower-content-push': typeof ApiPublicFollowerContentPushRoute
+  '/api/public/live-join-push': typeof ApiPublicLiveJoinPushRoute
   '/api/public/post-push': typeof ApiPublicPostPushRoute
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
+  '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -607,9 +625,11 @@ export interface FileRouteTypes {
     | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -667,9 +687,11 @@ export interface FileRouteTypes {
     | '/wavetube/analytics'
     | '/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -728,9 +750,11 @@ export interface FileRouteTypes {
     | '/_authenticated/wavetube/analytics'
     | '/_authenticated/wavetube/upload'
     | '/api/public/follower-content-push'
+    | '/api/public/live-join-push'
     | '/api/public/post-push'
     | '/api/public/status-push'
     | '/api/public/support'
+    | '/api/public/video-push'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -780,9 +804,11 @@ export interface RootRouteChildren {
   VVideoIdRoute: typeof VVideoIdRoute
   LiveIndexRoute: typeof LiveIndexRoute
   ApiPublicFollowerContentPushRoute: typeof ApiPublicFollowerContentPushRoute
+  ApiPublicLiveJoinPushRoute: typeof ApiPublicLiveJoinPushRoute
   ApiPublicPostPushRoute: typeof ApiPublicPostPushRoute
   ApiPublicStatusPushRoute: typeof ApiPublicStatusPushRoute
   ApiPublicSupportRoute: typeof ApiPublicSupportRoute
+  ApiPublicVideoPushRoute: typeof ApiPublicVideoPushRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAuthCheckSignupIpRoute: typeof ApiPublicAuthCheckSignupIpRoute
   ApiPublicCallsStatusRoute: typeof ApiPublicCallsStatusRoute
@@ -1085,6 +1111,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/video-push': {
+      id: '/api/public/video-push'
+      path: '/api/public/video-push'
+      fullPath: '/api/public/video-push'
+      preLoaderRoute: typeof ApiPublicVideoPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/support': {
       id: '/api/public/support'
       path: '/api/public/support'
@@ -1104,6 +1137,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/post-push'
       fullPath: '/api/public/post-push'
       preLoaderRoute: typeof ApiPublicPostPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/live-join-push': {
+      id: '/api/public/live-join-push'
+      path: '/api/public/live-join-push'
+      fullPath: '/api/public/live-join-push'
+      preLoaderRoute: typeof ApiPublicLiveJoinPushRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/follower-content-push': {
@@ -1289,9 +1329,11 @@ const rootRouteChildren: RootRouteChildren = {
   VVideoIdRoute: VVideoIdRoute,
   LiveIndexRoute: LiveIndexRoute,
   ApiPublicFollowerContentPushRoute: ApiPublicFollowerContentPushRoute,
+  ApiPublicLiveJoinPushRoute: ApiPublicLiveJoinPushRoute,
   ApiPublicPostPushRoute: ApiPublicPostPushRoute,
   ApiPublicStatusPushRoute: ApiPublicStatusPushRoute,
   ApiPublicSupportRoute: ApiPublicSupportRoute,
+  ApiPublicVideoPushRoute: ApiPublicVideoPushRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAuthCheckSignupIpRoute: ApiPublicAuthCheckSignupIpRoute,
   ApiPublicCallsStatusRoute: ApiPublicCallsStatusRoute,
