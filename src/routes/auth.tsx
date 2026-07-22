@@ -394,6 +394,20 @@ function AuthPage() {
                     placeholder="João Silva"
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="birthDate">Data de nascimento</Label>
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={form.birthDate}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => update("birthDate", e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    É necessário ter pelo menos 15 anos para usar a Wavechat.
+                  </p>
+                </div>
               </>
             )}
 
