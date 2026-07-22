@@ -57,50 +57,44 @@ export function BirthDateGate() {
   }, [user]);
 
   async function handleSave() {
-    if (needsTerms && !accepted) {
+    if (!accepted) {
       toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
       return;
     }
-    if (needsBirth) {
-      const age = ageFrom(birth);
-      if (age === null) {
-        toast.error("Informe uma data de nascimento válida.");
-        return;
+    const age = ageFrom(birth);
+    if (age === null) {
+      toast.error("Informe uma data de nascimento válida.");
+      return;
+    }
+    if (age < 15) {
+      toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+        duration: 8000,
+      });
+      setBusy(true);
+      try {
+        await supabase.auth.signOut();
+      } finally {
+        setBusy(false);
+        setOpen(false);
       }
-      if (age < 15) {
-        toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
-          duration: 8000,
-        });
-        setBusy(true);
-        try {
-          await supabase.auth.signOut();
-        } finally {
-          setBusy(false);
-          setOpen(false);
-        }
-        return;
-      }
+      return;
     }
     setBusy(true);
     try {
-      if (needsBirth) {
-        const { error } = await supabase.rpc("set_birth_date", { _birth_date: birth });
-        if (error) {
-          if (/15 anos/i.test(error.message)) {
-            toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
-              duration: 8000,
-            });
-            await supabase.auth.signOut();
-            setOpen(false);
-            return;
-          }
-          throw error;
+      const { error: bErr } = await supabase.rpc("set_birth_date", { _birth_date: birth });
+      if (bErr) {
+        if (/15 anos/i.test(bErr.message)) {
+          toast.error("Você precisa ter pelo menos 15 anos para utilizar a Wavechat.", {
+            duration: 8000,
+          });
+          await supabase.auth.signOut();
+          setOpen(false);
+          return;
         }
+        throw bErr;
       }
-      if (needsTerms) {
-        const { error } = await supabase.rpc("accept_terms" as never);
-        if (error) throw error;
-      }
+      const { error: tErr } = await supabase.rpc("accept_terms" as never);
+      if (tErr) throw tErr;
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
