@@ -243,6 +243,7 @@ function AuthPage() {
             data: {
               username: parsed.data.username,
               display_name: parsed.data.displayName,
+              birth_date: parsed.data.birthDate,
               ...(inviteUsername ? { invite: inviteUsername } : {}),
               ...attribution,
             },
