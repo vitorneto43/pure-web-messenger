@@ -477,6 +477,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
         </div>
 
+        <PublishTargetPicker value={target} onChange={setTarget} />
+
         <PolicyHint
           text={`${text} ${caption} ${description} ${ctaLabel} ${ctaUrl}`}
           kind="status"
