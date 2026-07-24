@@ -53,6 +53,7 @@ import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authent
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ESlugAdminRouteImport } from './routes/e.$slug.admin'
 import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
 import { Route as ApiPublicStatusPushRouteImport } from './routes/api/public/status-push'
@@ -294,6 +295,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ESlugAdminRoute = ESlugAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => ESlugRoute,
+} as any)
 const ApiPublicVideoPushRoute = ApiPublicVideoPushRouteImport.update({
   id: '/api/public/video-push',
   path: '/api/public/video-push',
@@ -437,7 +443,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
-  '/e/$slug': typeof ESlugRoute
+  '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
@@ -461,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
+  '/e/$slug/admin': typeof ESlugAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -502,7 +509,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
-  '/e/$slug': typeof ESlugRoute
+  '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
@@ -526,6 +533,7 @@ export interface FileRoutesByTo {
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
+  '/e/$slug/admin': typeof ESlugAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -569,7 +577,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
-  '/e/$slug': typeof ESlugRoute
+  '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
@@ -593,6 +601,7 @@ export interface FileRoutesById {
   '/api/public/status-push': typeof ApiPublicStatusPushRoute
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
+  '/e/$slug/admin': typeof ESlugAdminRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/api/public/status-push'
     | '/api/public/support'
     | '/api/public/video-push'
+    | '/e/$slug/admin'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -725,6 +735,7 @@ export interface FileRouteTypes {
     | '/api/public/status-push'
     | '/api/public/support'
     | '/api/public/video-push'
+    | '/e/$slug/admin'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -791,6 +802,7 @@ export interface FileRouteTypes {
     | '/api/public/status-push'
     | '/api/public/support'
     | '/api/public/video-push'
+    | '/e/$slug/admin'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -828,7 +840,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaveshortsRoute: typeof WaveshortsRoute
   WavetubeRoute: typeof WavetubeRoute
-  ESlugRoute: typeof ESlugRoute
+  ESlugRoute: typeof ESlugRouteWithChildren
   EcosystemsNewRoute: typeof EcosystemsNewRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
@@ -1171,6 +1183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e/$slug/admin': {
+      id: '/e/$slug/admin'
+      path: '/admin'
+      fullPath: '/e/$slug/admin'
+      preLoaderRoute: typeof ESlugAdminRouteImport
+      parentRoute: typeof ESlugRoute
+    }
     '/api/public/video-push': {
       id: '/api/public/video-push'
       path: '/api/public/video-push'
@@ -1353,6 +1372,16 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ESlugRouteChildren {
+  ESlugAdminRoute: typeof ESlugAdminRoute
+}
+
+const ESlugRouteChildren: ESlugRouteChildren = {
+  ESlugAdminRoute: ESlugAdminRoute,
+}
+
+const ESlugRouteWithChildren = ESlugRoute._addFileChildren(ESlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
@@ -1377,7 +1406,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   WaveshortsRoute: WaveshortsRoute,
   WavetubeRoute: WavetubeRoute,
-  ESlugRoute: ESlugRoute,
+  ESlugRoute: ESlugRouteWithChildren,
   EcosystemsNewRoute: EcosystemsNewRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,

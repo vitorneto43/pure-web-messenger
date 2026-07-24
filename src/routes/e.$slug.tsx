@@ -100,8 +100,10 @@ function EcosystemHome() {
             <p className="text-[11px] text-muted-foreground leading-tight truncate">{catLabel}</p>
           </div>
           {isAdmin && (
-            <Button size="icon" variant="ghost" aria-label="Configurações" disabled title="Em breve">
-              <Settings2 className="size-5" />
+            <Button asChild size="icon" variant="ghost" aria-label="Configurações">
+              <Link to="/e/$slug/admin" params={{ slug }}>
+                <Settings2 className="size-5" />
+              </Link>
             </Button>
           )}
         </div>
