@@ -317,6 +317,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
             <p className="text-[11px] text-muted-foreground">Separe por espaço. Até 12 tags.</p>
           </div>
 
+          <PublishTargetPicker value={target} onChange={setTarget} className="mt-3" />
+
+
+
           <div className="mt-3 rounded-xl border border-border p-3 space-y-2 bg-muted/30">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
