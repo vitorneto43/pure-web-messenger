@@ -54,6 +54,7 @@ import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ESlugMetricsRouteImport } from './routes/e.$slug.metrics'
+import { Route as ESlugBillingRouteImport } from './routes/e.$slug.billing'
 import { Route as ESlugAdminRouteImport } from './routes/e.$slug.admin'
 import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
@@ -301,6 +302,11 @@ const ESlugMetricsRoute = ESlugMetricsRouteImport.update({
   path: '/metrics',
   getParentRoute: () => ESlugRoute,
 } as any)
+const ESlugBillingRoute = ESlugBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => ESlugRoute,
+} as any)
 const ESlugAdminRoute = ESlugAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/billing': typeof ESlugBillingRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
@@ -541,6 +548,7 @@ export interface FileRoutesByTo {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/billing': typeof ESlugBillingRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
@@ -610,6 +618,7 @@ export interface FileRoutesById {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/billing': typeof ESlugBillingRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
@@ -679,6 +688,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/billing'
     | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
@@ -746,6 +756,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/billing'
     | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
@@ -814,6 +825,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/billing'
     | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
@@ -1202,6 +1214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ESlugMetricsRouteImport
       parentRoute: typeof ESlugRoute
     }
+    '/e/$slug/billing': {
+      id: '/e/$slug/billing'
+      path: '/billing'
+      fullPath: '/e/$slug/billing'
+      preLoaderRoute: typeof ESlugBillingRouteImport
+      parentRoute: typeof ESlugRoute
+    }
     '/e/$slug/admin': {
       id: '/e/$slug/admin'
       path: '/admin'
@@ -1393,11 +1412,13 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface ESlugRouteChildren {
   ESlugAdminRoute: typeof ESlugAdminRoute
+  ESlugBillingRoute: typeof ESlugBillingRoute
   ESlugMetricsRoute: typeof ESlugMetricsRoute
 }
 
 const ESlugRouteChildren: ESlugRouteChildren = {
   ESlugAdminRoute: ESlugAdminRoute,
+  ESlugBillingRoute: ESlugBillingRoute,
   ESlugMetricsRoute: ESlugMetricsRoute,
 }
 

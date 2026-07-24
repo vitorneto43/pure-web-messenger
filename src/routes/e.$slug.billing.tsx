@@ -29,7 +29,7 @@ export const Route = createFileRoute("/e/$slug/billing")({
   }),
 });
 
-const PLAN_ICON: Record<EcosystemPlanTier, JSX.Element> = {
+const PLAN_ICON: Record<EcosystemPlanTier, React.ReactNode> = {
   free: <Zap className="w-5 h-5" />,
   pro: <Rocket className="w-5 h-5" />,
   business: <Building2 className="w-5 h-5" />,
