@@ -222,15 +222,15 @@ function EcosystemBillingPage() {
                   )}
                 </div>
                 <ul className="space-y-1.5 text-sm mb-4 flex-1">
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.member_limit.toLocaleString("pt-BR")} membros</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.posts_per_month.toLocaleString("pt-BR")} posts/mês</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.videos_per_month.toLocaleString("pt-BR")} vídeos/mês</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.lives_per_month.toLocaleString("pt-BR")} lives/mês</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Até {p.member_limit >= 1000000 ? "membros ilimitados" : `${p.member_limit.toLocaleString("pt-BR")} membros`}</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Posts, stories, vídeos e lives <strong>ilimitados</strong></li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Chat e grupos internos ilimitados</li>
                   {p.custom_branding && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Marca personalizada</li>}
                   {p.advanced_metrics && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Métricas avançadas</li>}
                   {p.custom_subdomain && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Subdomínio próprio em <strong>webconnectchat.com</strong></li>}
                   {p.priority_support && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Suporte prioritário</li>}
                 </ul>
+
                 <Button
                   disabled={isCurrent || pendingTier === p.tier}
                   variant={isCurrent ? "outline" : isDowngrade ? "secondary" : "default"}
