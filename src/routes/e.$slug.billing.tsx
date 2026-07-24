@@ -167,10 +167,11 @@ function EcosystemBillingPage() {
 
           <div className="space-y-3">
             <UsageBar label="Membros ativos" used={billing.usage.members} ceiling={billing.limits.members} />
-            <UsageBar label="Posts (30 dias)" used={billing.usage.posts_month} ceiling={billing.limits.posts_per_month} />
-            <UsageBar label="Vídeos (30 dias)" used={billing.usage.videos_month} ceiling={billing.limits.videos_per_month} />
-            <UsageBar label="Lives (30 dias)" used={billing.usage.lives_month} ceiling={billing.limits.lives_per_month} />
           </div>
+          <div className="mt-4 p-3 rounded-lg bg-muted/50 text-sm">
+            <strong>Tudo incluso na mensalidade:</strong> posts, stories, vídeos, lives, chat e grupos — sem limite mensal. Você paga apenas pela quantidade de membros do seu ecossistema.
+          </div>
+
 
           {billing.custom_subdomain && (
             <div className="mt-4 flex items-center gap-2 text-sm p-3 rounded-lg bg-primary/5 border border-primary/20">
