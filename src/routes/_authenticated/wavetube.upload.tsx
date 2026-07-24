@@ -50,6 +50,10 @@ function UploadPage() {
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
   const [isShort, setIsShort] = useState(forcedShort);
   const [progress, setProgress] = useState(0);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
