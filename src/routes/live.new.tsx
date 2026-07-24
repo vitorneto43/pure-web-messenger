@@ -12,6 +12,8 @@ import { scheduleLive } from "@/lib/schedule.functions";
 import { startLiveRecording, getRecordingConfig } from "@/lib/recordings.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/live/new")({
   head: () => ({
