@@ -75,6 +75,14 @@ function NewLive() {
       const live = Array.isArray(data) ? data[0] : data;
       if (!live?.id) throw new Error("Falha ao iniciar live");
 
+      if (target.kind !== "public") {
+        const { error: linkErr } = await supabase
+          .from("live_sessions")
+          .update({ ecosystem_id: target.ecosystemId } as any)
+          .eq("id", live.id);
+        if (linkErr) console.error("Não foi possível vincular live ao ecossistema", linkErr);
+      }
+
       notifyLiveStart({ data: { liveId: live.id } }).catch((e) =>
         console.error("notifyLiveStart failed", e),
       );
