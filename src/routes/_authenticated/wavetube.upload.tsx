@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/lib/wavetube";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
