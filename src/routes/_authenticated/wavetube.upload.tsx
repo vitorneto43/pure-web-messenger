@@ -175,7 +175,7 @@ function UploadPage() {
       if (isShort) {
         navigate({ to: "/waveshorts" });
       } else {
-        navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+        navigate({ to: "/v/$videoId", params: { videoId: newVideoId } });
       }
     } catch (e: any) {
       toast.error("Falha ao enviar", { description: e?.message ?? String(e) });
