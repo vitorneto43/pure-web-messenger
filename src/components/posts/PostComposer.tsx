@@ -201,18 +201,43 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         return;
       }
 
-      const { data, error } = await (supabase as any).from("posts").insert({
-        user_id: user.id,
-        ...payload,
-      }).select("id").single();
+      // Build inserts based on target: public / ecosystem-only / both (cross-post)
+      const ecosystemId = target.kind === "public" ? null : target.ecosystemId;
+      const rows: any[] = [];
+      if (target.kind === "both") {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "public" });
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: null, visibility: "public" });
+      } else if (target.kind === "ecosystem") {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "private" });
+      } else {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: null });
+      }
+
+      const { data, error } = await (supabase as any)
+        .from("posts")
+        .insert(rows)
+        .select("id");
       if (error) throw error;
-      toast.success("Post publicado!");
-      notifyFollowersOfContent({ data: { kind: "post", contentId: data.id } }).catch((e) =>
-        console.error("notifyFollowersOfContent (post) failed", e),
-      );
+      const firstId = data?.[0]?.id;
+
+      // Link cross-post via origin_post_id: the "public mirror" points to the ecosystem post
+      if (target.kind === "both" && data && data.length === 2) {
+        const [ecoRow, pubRow] = data;
+        await (supabase as any)
+          .from("posts")
+          .update({ origin_post_id: ecoRow.id })
+          .eq("id", pubRow.id);
+      }
+
+      toast.success(target.kind === "ecosystem" ? "Publicado no ecossistema!" : "Post publicado!");
+      if (firstId) {
+        notifyFollowersOfContent({ data: { kind: "post", contentId: firstId } }).catch((e) =>
+          console.error("notifyFollowersOfContent (post) failed", e),
+        );
+      }
       reset();
       onOpenChange(false);
-      onCreated?.(data.id);
+      onCreated?.(firstId);
     } catch (e: any) {
       toast.error("Falha ao publicar", { description: e.message });
     } finally { setSaving(false); }
