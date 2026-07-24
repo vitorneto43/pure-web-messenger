@@ -204,6 +204,45 @@ function EcosystemAdmin() {
     }
   }
 
+  async function handleCreateInvite() {
+    if (!eco) return;
+    setCreatingInvite(true);
+    try {
+      const maxUses = invMaxUses.trim() ? Math.max(1, parseInt(invMaxUses, 10) || 0) : null;
+      const days = invExpiresDays.trim() ? Math.max(1, parseInt(invExpiresDays, 10) || 0) : null;
+      const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
+      await createEcosystemInvite({
+        ecosystem_id: eco.id,
+        role_on_join: invRole,
+        max_uses: maxUses,
+        expires_at,
+        email: invEmail.trim() || null,
+      });
+      setInvMaxUses(""); setInvExpiresDays(""); setInvEmail(""); setInvRole("member");
+      await refreshInvites(eco.id);
+      toast.success("Convite criado.");
+    } catch (e: any) {
+      toast.error("Falha ao criar convite", { description: e?.message });
+    } finally {
+      setCreatingInvite(false);
+    }
+  }
+
+  async function handleRevokeInvite(id: string) {
+    if (!confirm("Revogar este convite? O link deixará de funcionar.")) return;
+    try {
+      await revokeEcosystemInvite(id);
+      if (eco) await refreshInvites(eco.id);
+      toast.success("Convite revogado.");
+    } catch (e: any) {
+      toast.error("Falha ao revogar", { description: e?.message });
+    }
+  }
+
+  function inviteLink(code: string) {
+    return `${typeof window !== "undefined" ? window.location.origin : ""}/join/${code}`;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur border-b border-border">
