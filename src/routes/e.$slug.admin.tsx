@@ -99,6 +99,7 @@ function EcosystemAdmin() {
         setContactEmail(e.contact_email ?? "");
         setPrimaryColor(e.primary_color ?? "");
         await refreshMembers(e.id);
+        await refreshInvites(e.id);
       } catch {
         setEco(null);
       }
