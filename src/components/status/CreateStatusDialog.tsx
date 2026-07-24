@@ -26,6 +26,8 @@ import { scheduleStatus } from "@/lib/schedule.functions";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
@@ -62,6 +64,10 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const aiRun = useServerFn(runAIAssistant);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
 
   const hashtags = Array.from(
     new Set(
@@ -151,21 +157,27 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           music_volume: music?.volume ?? 0.8,
         };
         if (isScheduled) {
+          if (target.kind !== "public") {
+            toast.error("Agendamento disponível apenas para o feed público por enquanto.");
+            setSubmitting(false);
+            return;
+          }
           await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
         } else {
+          const rows = buildStatusRows({
+            userId: user.id,
+            payload: { ...basePayload, is_official: isOfficialAccount && isOfficial },
+            target,
+          });
           const { data: inserted, error } = await supabase
             .from("statuses")
-            .insert({
-              user_id: user.id,
-              ...basePayload,
-              is_official: isOfficialAccount && isOfficial,
-            } as any)
-            .select("id")
-            .single();
+            .insert(rows as any)
+            .select("id");
           if (error) throw error;
-          if ((inserted as any)?.id) {
+          const firstId = (inserted as any[])?.[0]?.id;
+          if (firstId) {
             notifyFollowersOfContent({
-              data: { kind: "status", contentId: (inserted as any).id },
+              data: { kind: "status", contentId: firstId },
             }).catch((e) => console.error("notifyFollowersOfContent (status) failed", e));
           }
         }
@@ -217,21 +229,27 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           music_volume: music?.volume ?? 0.8,
         };
         if (isScheduled) {
+          if (target.kind !== "public") {
+            toast.error("Agendamento disponível apenas para o feed público por enquanto.");
+            setSubmitting(false);
+            return;
+          }
           await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
         } else {
+          const rows = buildStatusRows({
+            userId: user.id,
+            payload: { ...basePayload, is_official: isOfficialAccount && isOfficial },
+            target,
+          });
           const { data: inserted, error } = await supabase
             .from("statuses")
-            .insert({
-              user_id: user.id,
-              ...basePayload,
-              is_official: isOfficialAccount && isOfficial,
-            } as any)
-            .select("id")
-            .single();
+            .insert(rows as any)
+            .select("id");
           if (error) throw error;
-          if ((inserted as any)?.id) {
+          const firstId = (inserted as any[])?.[0]?.id;
+          if (firstId) {
             notifyFollowersOfContent({
-              data: { kind: "status", contentId: (inserted as any).id },
+              data: { kind: "status", contentId: firstId },
             }).catch((e) => console.error("notifyFollowersOfContent (status) failed", e));
           }
         }
@@ -459,6 +477,8 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           <SchedulePicker value={scheduledAt} onChange={setScheduledAt} />
         </div>
 
+        <PublishTargetPicker value={target} onChange={setTarget} />
+
         <PolicyHint
           text={`${text} ${caption} ${description} ${ctaLabel} ${ctaUrl}`}
           kind="status"
@@ -483,4 +503,23 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
       </DialogContent>
     </Dialog>
   );
+}
+
+function buildStatusRows(args: {
+  userId: string;
+  payload: Record<string, any>;
+  target: PublishTarget;
+}) {
+  const { userId, payload, target } = args;
+  if (target.kind === "public") {
+    return [{ user_id: userId, ...payload, ecosystem_id: null }];
+  }
+  if (target.kind === "ecosystem") {
+    return [{ user_id: userId, ...payload, ecosystem_id: target.ecosystemId }];
+  }
+  // "both" — cross-post: ecosystem copy + public copy
+  return [
+    { user_id: userId, ...payload, ecosystem_id: target.ecosystemId },
+    { user_id: userId, ...payload, ecosystem_id: null },
+  ];
 }

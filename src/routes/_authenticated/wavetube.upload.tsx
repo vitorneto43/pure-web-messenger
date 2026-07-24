@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { WAVETUBE_CATEGORIES, captureVideoThumbnail, getVideoDuration } from "@/lib/wavetube";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
@@ -48,6 +50,10 @@ function UploadPage() {
   const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">("public");
   const [isShort, setIsShort] = useState(forcedShort);
   const [progress, setProgress] = useState(0);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -127,32 +133,41 @@ function UploadPage() {
         .slice(0, 10);
 
       const nowIso = new Date().toISOString();
+      const baseRow = {
+        owner_id: uid,
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        hashtags: tags,
+        status: "ready",
+        duration_sec: duration,
+        file_url: videoPath,
+        thumbnail_url: thumbPath,
+        cta_label: ctaLabel.trim() || null,
+        cta_url: ctaUrl.trim() || null,
+        allow_pix: allowPix,
+        pix_key: allowPix ? pixKey.trim() || null : null,
+        is_short: isShort,
+        published_at: nowIso,
+      };
+      const rows: any[] =
+        target.kind === "public"
+          ? [{ ...baseRow, visibility, ecosystem_id: null }]
+          : target.kind === "ecosystem"
+            ? [{ ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId }]
+            : [
+                { ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId },
+                { ...baseRow, visibility, ecosystem_id: null },
+              ];
       const { data: inserted, error: insErr } = await supabase
         .from("videos")
-        .insert({
-          owner_id: uid,
-          title: title.trim(),
-          description: description.trim(),
-          category,
-          hashtags: tags,
-          visibility,
-          status: "ready",
-          duration_sec: duration,
-          file_url: videoPath,
-          thumbnail_url: thumbPath,
-          cta_label: ctaLabel.trim() || null,
-          cta_url: ctaUrl.trim() || null,
-          allow_pix: allowPix,
-          pix_key: allowPix ? pixKey.trim() || null : null,
-          is_short: isShort,
-          published_at: nowIso,
-        } as any)
-        .select("id")
-        .single();
+        .insert(rows as any)
+        .select("id");
       if (insErr) throw insErr;
 
       setProgress(100);
-      const newVideoId = (inserted as any).id as string;
+      const firstId = (inserted as any[])?.[0]?.id as string;
+      const newVideoId = firstId;
       notifyFollowersOfContent({
         data: { kind: isShort ? "short" : "video", contentId: newVideoId },
       }).catch((e) => console.error("notifyFollowersOfContent (video) failed", e));
@@ -160,7 +175,7 @@ function UploadPage() {
       if (isShort) {
         navigate({ to: "/waveshorts" });
       } else {
-        navigate({ to: "/v/$videoId", params: { videoId: (inserted as any).id } });
+        navigate({ to: "/v/$videoId", params: { videoId: newVideoId } });
       }
     } catch (e: any) {
       toast.error("Falha ao enviar", { description: e?.message ?? String(e) });
@@ -251,6 +266,8 @@ function UploadPage() {
             </Select>
           </div>
         </div>
+
+        <PublishTargetPicker value={target} onChange={setTarget} />
 
         <div className={`rounded-xl border p-4 flex items-center justify-between ${isShort ? "border-pink-500/50 bg-pink-500/5" : "border-border"}`}>
           <div>

@@ -12,6 +12,8 @@ import { scheduleLive } from "@/lib/schedule.functions";
 import { startLiveRecording, getRecordingConfig } from "@/lib/recordings.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/live/new")({
   head: () => ({
@@ -28,6 +30,10 @@ function NewLive() {
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const [willRecord, setWillRecord] = useState(false);
   const [recordingAvailable, setRecordingAvailable] = useState(true);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -51,6 +57,11 @@ function NewLive() {
     setBusy(true);
     try {
       if (isScheduled) {
+        if (target.kind !== "public") {
+          toast.error("Agendamento disponível apenas para lives públicas por enquanto.");
+          setBusy(false);
+          return;
+        }
         await scheduleLive({
           data: { title: title.trim() || "Live agendada", scheduled_at: scheduledAt!, will_record: willRecord },
         });
@@ -63,6 +74,14 @@ function NewLive() {
       if (error) throw error;
       const live = Array.isArray(data) ? data[0] : data;
       if (!live?.id) throw new Error("Falha ao iniciar live");
+
+      if (target.kind !== "public") {
+        const { error: linkErr } = await supabase
+          .from("live_sessions")
+          .update({ ecosystem_id: target.ecosystemId } as any)
+          .eq("id", live.id);
+        if (linkErr) console.error("Não foi possível vincular live ao ecossistema", linkErr);
+      }
 
       notifyLiveStart({ data: { liveId: live.id } }).catch((e) =>
         console.error("notifyLiveStart failed", e),
@@ -115,6 +134,8 @@ function NewLive() {
         <div className="rounded-lg border border-border bg-muted/30 p-3">
           <SchedulePicker value={scheduledAt} onChange={setScheduledAt} label="Programar para" />
         </div>
+
+        <PublishTargetPicker value={target} onChange={setTarget} />
 
         <div className="rounded-lg border border-border bg-muted/30 p-3 flex items-center justify-between gap-3">
           <div className="flex items-start gap-2">

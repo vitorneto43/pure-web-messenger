@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useEcosystems } from "@/hooks/use-ecosystem";
-import { getEcosystemBySlug, getMyRole, type Ecosystem, type EcosystemRole, CATEGORIES } from "@/lib/ecosystems";
+import { getEcosystemBySlug, getMyRole, listEcosystemPosts, type Ecosystem, type EcosystemRole, CATEGORIES } from "@/lib/ecosystems";
 
 export const Route = createFileRoute("/e/$slug")({
   component: EcosystemHome,
@@ -26,6 +26,8 @@ function EcosystemHome() {
   const navigate = useNavigate();
   const [eco, setEco] = useState<Ecosystem | null | undefined>(undefined);
   const [role, setRole] = useState<EcosystemRole | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -35,7 +37,16 @@ function EcosystemHome() {
         if (e && user) {
           const r = await getMyRole(e.id);
           setRole(r);
-          if (r) setCurrentEcosystemId(e.id);
+          if (r) {
+            setCurrentEcosystemId(e.id);
+            setLoadingPosts(true);
+            try {
+              const list = await listEcosystemPosts(e.id);
+              setPosts(list);
+            } finally {
+              setLoadingPosts(false);
+            }
+          }
         }
       } catch {
         setEco(null);
@@ -160,8 +171,53 @@ function EcosystemHome() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-          O feed interno deste ecossistema será exibido aqui. Enquanto isso, todos os posts, stories, lives e vídeos publicados com destino <strong>{eco.name}</strong> já ficam salvos com segurança e visíveis apenas para membros.
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground mb-2 px-1">Feed do ecossistema</div>
+          {loadingPosts && (
+            <div className="grid place-items-center py-10">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {!loadingPosts && posts.length === 0 && (
+            <div className="rounded-2xl border border-border bg-card p-6 text-center">
+              <Sparkles className="size-8 mx-auto text-primary mb-2" />
+              <p className="text-sm font-medium">Nenhuma publicação ainda</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Publique um post e escolha <strong>{eco.name}</strong> como destino para começar o feed interno.
+              </p>
+            </div>
+          )}
+          {!loadingPosts && posts.length > 0 && (
+            <ul className="space-y-2">
+              {posts.map((p: any) => (
+                <li key={p.id} className="rounded-2xl border border-border bg-card p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Avatar className="size-7">
+                      <AvatarImage src={p.author?.avatar_url ?? undefined} />
+                      <AvatarFallback>{(p.author?.display_name ?? p.author?.username ?? "?")[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold truncate">
+                        {p.author?.display_name ?? p.author?.username ?? "Membro"}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {new Date(p.created_at).toLocaleString("pt-BR")}
+                      </div>
+                    </div>
+                  </div>
+                  {p.content && (
+                    <p className="text-sm whitespace-pre-wrap break-words">{p.content}</p>
+                  )}
+                  {p.media_url && p.kind === "image" && (
+                    <img src={p.media_url} alt="" className="mt-2 rounded-lg w-full object-cover max-h-96" />
+                  )}
+                  {p.media_url && p.kind === "video" && (
+                    <video src={p.media_url} controls className="mt-2 rounded-lg w-full max-h-96" />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </main>
     </div>
