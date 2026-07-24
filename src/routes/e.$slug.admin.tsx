@@ -45,6 +45,13 @@ function EcosystemAdmin() {
   const [role, setRole] = useState<EcosystemRole | null>(null);
   const [members, setMembers] = useState<EcosystemMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
+  const [invites, setInvites] = useState<EcosystemInvite[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(true);
+  const [invRole, setInvRole] = useState<EcosystemRole>("member");
+  const [invMaxUses, setInvMaxUses] = useState<string>("");
+  const [invExpiresDays, setInvExpiresDays] = useState<string>("");
+  const [invEmail, setInvEmail] = useState("");
+  const [creatingInvite, setCreatingInvite] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
