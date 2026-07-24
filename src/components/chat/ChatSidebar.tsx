@@ -61,6 +61,7 @@ import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { EcosystemsShortcut } from "@/components/EcosystemsShortcut";
 import {
   requestBrowserNotificationPermission,
   playNotification,
