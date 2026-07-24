@@ -256,6 +256,11 @@ function EcosystemAdmin() {
               {members.length} {members.length === 1 ? "membro" : "membros"}
             </p>
           </div>
+          <Button asChild size="sm" variant="outline" className="gap-1.5">
+            <Link to="/e/$slug/metrics" params={{ slug }}>
+              <BarChart3 className="size-4" /> Métricas
+            </Link>
+          </Button>
         </div>
       </header>
 
