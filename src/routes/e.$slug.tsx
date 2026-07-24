@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useEcosystems } from "@/hooks/use-ecosystem";
-import { getEcosystemBySlug, getMyRole, type Ecosystem, type EcosystemRole, CATEGORIES } from "@/lib/ecosystems";
+import { getEcosystemBySlug, getMyRole, listEcosystemPosts, type Ecosystem, type EcosystemRole, CATEGORIES } from "@/lib/ecosystems";
 
 export const Route = createFileRoute("/e/$slug")({
   component: EcosystemHome,
