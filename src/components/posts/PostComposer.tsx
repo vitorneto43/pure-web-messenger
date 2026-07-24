@@ -101,7 +101,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
     setScheduledAt(null); setCtaLabel(""); setCtaUrl("");
+    setTarget(currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" });
   }
+  // Silence unused
+  void ecosystems;
 
   async function handleFile(file: File, expected: "image" | "video") {
     if (!user) return;
