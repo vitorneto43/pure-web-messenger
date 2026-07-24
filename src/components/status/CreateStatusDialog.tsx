@@ -26,6 +26,8 @@ import { scheduleStatus } from "@/lib/schedule.functions";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 const BG_OPTIONS = [
   "linear-gradient(135deg,#7c3aed,#ec4899)",
