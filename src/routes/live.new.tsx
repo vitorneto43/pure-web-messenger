@@ -30,6 +30,10 @@ function NewLive() {
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const [willRecord, setWillRecord] = useState(false);
   const [recordingAvailable, setRecordingAvailable] = useState(true);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
