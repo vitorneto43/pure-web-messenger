@@ -53,6 +53,7 @@ import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authent
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ESlugMetricsRouteImport } from './routes/e.$slug.metrics'
 import { Route as ESlugAdminRouteImport } from './routes/e.$slug.admin'
 import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
 import { Route as ApiPublicSupportRouteImport } from './routes/api/public/support'
@@ -295,6 +296,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ESlugMetricsRoute = ESlugMetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
+  getParentRoute: () => ESlugRoute,
+} as any)
 const ESlugAdminRoute = ESlugAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -534,6 +541,7 @@ export interface FileRoutesByTo {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -602,6 +610,7 @@ export interface FileRoutesById {
   '/api/public/support': typeof ApiPublicSupportRoute
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
+  '/e/$slug/metrics': typeof ESlugMetricsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -670,6 +679,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -736,6 +746,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -803,6 +814,7 @@ export interface FileRouteTypes {
     | '/api/public/support'
     | '/api/public/video-push'
     | '/e/$slug/admin'
+    | '/e/$slug/metrics'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -1183,6 +1195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e/$slug/metrics': {
+      id: '/e/$slug/metrics'
+      path: '/metrics'
+      fullPath: '/e/$slug/metrics'
+      preLoaderRoute: typeof ESlugMetricsRouteImport
+      parentRoute: typeof ESlugRoute
+    }
     '/e/$slug/admin': {
       id: '/e/$slug/admin'
       path: '/admin'
@@ -1374,10 +1393,12 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface ESlugRouteChildren {
   ESlugAdminRoute: typeof ESlugAdminRoute
+  ESlugMetricsRoute: typeof ESlugMetricsRoute
 }
 
 const ESlugRouteChildren: ESlugRouteChildren = {
   ESlugAdminRoute: ESlugAdminRoute,
+  ESlugMetricsRoute: ESlugMetricsRoute,
 }
 
 const ESlugRouteWithChildren = ESlugRoute._addFileChildren(ESlugRouteChildren)
