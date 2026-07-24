@@ -26,6 +26,8 @@ function EcosystemHome() {
   const navigate = useNavigate();
   const [eco, setEco] = useState<Ecosystem | null | undefined>(undefined);
   const [role, setRole] = useState<EcosystemRole | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -35,7 +37,16 @@ function EcosystemHome() {
         if (e && user) {
           const r = await getMyRole(e.id);
           setRole(r);
-          if (r) setCurrentEcosystemId(e.id);
+          if (r) {
+            setCurrentEcosystemId(e.id);
+            setLoadingPosts(true);
+            try {
+              const list = await listEcosystemPosts(e.id);
+              setPosts(list);
+            } finally {
+              setLoadingPosts(false);
+            }
+          }
         }
       } catch {
         setEco(null);
