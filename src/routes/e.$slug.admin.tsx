@@ -72,6 +72,18 @@ function EcosystemAdmin() {
     }
   }
 
+  async function refreshInvites(id: string) {
+    setLoadingInvites(true);
+    try {
+      const list = await listEcosystemInvites(id);
+      setInvites(list);
+    } catch (e: any) {
+      toast.error("Falha ao carregar convites", { description: e?.message });
+    } finally {
+      setLoadingInvites(false);
+    }
+  }
+
   useEffect(() => {
     (async () => {
       try {
