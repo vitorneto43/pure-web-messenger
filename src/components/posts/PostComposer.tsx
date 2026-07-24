@@ -17,6 +17,8 @@ import { schedulePost } from "@/lib/schedule.functions";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
+import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
+import { useEcosystems } from "@/hooks/use-ecosystem";
 
 interface Props {
   open: boolean;
@@ -68,9 +70,14 @@ async function createVideoThumbnail(file: File): Promise<Blob | null> {
 
 export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
+  const { currentEcosystemId, ecosystems } = useEcosystems();
   const ai = useServerFn(runAIAssistant);
   const [kind, setKind] = useState<Kind>("text");
   const [content, setContent] = useState("");
+  const initialTarget: PublishTarget = currentEcosystemId
+    ? { kind: "ecosystem", ecosystemId: currentEcosystemId }
+    : { kind: "public" };
+  const [target, setTarget] = useState<PublishTarget>(initialTarget);
   const [description, setDescription] = useState("");
   const [hashtagsRaw, setHashtagsRaw] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
@@ -94,7 +101,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
     setKind("text"); setContent(""); setDescription(""); setHashtagsRaw("");
     setMediaUrl(null); setThumbnailUrl(null); setMusicTrackId(null); setMusicTitle(null);
     setScheduledAt(null); setCtaLabel(""); setCtaUrl("");
+    setTarget(currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" });
   }
+  // Silence unused
+  void ecosystems;
 
   async function handleFile(file: File, expected: "image" | "video") {
     if (!user) return;
@@ -194,18 +204,43 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         return;
       }
 
-      const { data, error } = await (supabase as any).from("posts").insert({
-        user_id: user.id,
-        ...payload,
-      }).select("id").single();
+      // Build inserts based on target: public / ecosystem-only / both (cross-post)
+      const ecosystemId = target.kind === "public" ? null : target.ecosystemId;
+      const rows: any[] = [];
+      if (target.kind === "both") {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "public" });
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: null, visibility: "public" });
+      } else if (target.kind === "ecosystem") {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "private" });
+      } else {
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: null });
+      }
+
+      const { data, error } = await (supabase as any)
+        .from("posts")
+        .insert(rows)
+        .select("id");
       if (error) throw error;
-      toast.success("Post publicado!");
-      notifyFollowersOfContent({ data: { kind: "post", contentId: data.id } }).catch((e) =>
-        console.error("notifyFollowersOfContent (post) failed", e),
-      );
+      const firstId = data?.[0]?.id;
+
+      // Link cross-post via origin_post_id: the "public mirror" points to the ecosystem post
+      if (target.kind === "both" && data && data.length === 2) {
+        const [ecoRow, pubRow] = data;
+        await (supabase as any)
+          .from("posts")
+          .update({ origin_post_id: ecoRow.id })
+          .eq("id", pubRow.id);
+      }
+
+      toast.success(target.kind === "ecosystem" ? "Publicado no ecossistema!" : "Post publicado!");
+      if (firstId) {
+        notifyFollowersOfContent({ data: { kind: "post", contentId: firstId } }).catch((e) =>
+          console.error("notifyFollowersOfContent (post) failed", e),
+        );
+      }
       reset();
       onOpenChange(false);
-      onCreated?.(data.id);
+      onCreated?.(firstId);
     } catch (e: any) {
       toast.error("Falha ao publicar", { description: e.message });
     } finally { setSaving(false); }
@@ -281,6 +316,10 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
             />
             <p className="text-[11px] text-muted-foreground">Separe por espaço. Até 12 tags.</p>
           </div>
+
+          <PublishTargetPicker value={target} onChange={setTarget} className="mt-3" />
+
+
 
           <div className="mt-3 rounded-xl border border-border p-3 space-y-2 bg-muted/30">
             <div className="flex items-center justify-between">
