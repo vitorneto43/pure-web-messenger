@@ -40,9 +40,12 @@ import { Route as PPostIdRouteImport } from './routes/p.$postId'
 import { Route as MeetRoomIdRouteImport } from './routes/meet.$roomId'
 import { Route as LiveNewRouteImport } from './routes/live.new'
 import { Route as LiveLiveIdRouteImport } from './routes/live.$liveId'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as InviteInviterIdRouteImport } from './routes/invite.$inviterId'
 import { Route as GGroupIdRouteImport } from './routes/g.$groupId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as EcosystemsNewRouteImport } from './routes/ecosystems.new'
+import { Route as ESlugRouteImport } from './routes/e.$slug'
 import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
 import { Route as AuthenticatedRecordingsRouteImport } from './routes/_authenticated/recordings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -225,6 +228,11 @@ const LiveLiveIdRoute = LiveLiveIdRouteImport.update({
   path: '/live/$liveId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteInviterIdRoute = InviteInviterIdRouteImport.update({
   id: '/invite/$inviterId',
   path: '/invite/$inviterId',
@@ -238,6 +246,16 @@ const GGroupIdRoute = GGroupIdRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcosystemsNewRoute = EcosystemsNewRouteImport.update({
+  id: '/ecosystems/new',
+  path: '/ecosystems/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ESlugRoute = ESlugRouteImport.update({
+  id: '/e/$slug',
+  path: '/e/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedScheduledRoute = AuthenticatedScheduledRouteImport.update({
@@ -419,9 +437,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
+  '/e/$slug': typeof ESlugRoute
+  '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
+  '/join/$code': typeof JoinCodeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -481,9 +502,12 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/recordings': typeof AuthenticatedRecordingsRoute
   '/scheduled': typeof AuthenticatedScheduledRoute
+  '/e/$slug': typeof ESlugRoute
+  '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
+  '/join/$code': typeof JoinCodeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -545,9 +569,12 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recordings': typeof AuthenticatedRecordingsRoute
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
+  '/e/$slug': typeof ESlugRoute
+  '/ecosystems/new': typeof EcosystemsNewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
+  '/join/$code': typeof JoinCodeRoute
   '/live/$liveId': typeof LiveLiveIdRoute
   '/live/new': typeof LiveNewRoute
   '/meet/$roomId': typeof MeetRoomIdRoute
@@ -609,9 +636,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recordings'
     | '/scheduled'
+    | '/e/$slug'
+    | '/ecosystems/new'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
+    | '/join/$code'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -671,9 +701,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recordings'
     | '/scheduled'
+    | '/e/$slug'
+    | '/ecosystems/new'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
+    | '/join/$code'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -734,9 +767,12 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/recordings'
     | '/_authenticated/scheduled'
+    | '/e/$slug'
+    | '/ecosystems/new'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
+    | '/join/$code'
     | '/live/$liveId'
     | '/live/new'
     | '/meet/$roomId'
@@ -792,9 +828,12 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaveshortsRoute: typeof WaveshortsRoute
   WavetubeRoute: typeof WavetubeRoute
+  ESlugRoute: typeof ESlugRoute
+  EcosystemsNewRoute: typeof EcosystemsNewRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
   InviteInviterIdRoute: typeof InviteInviterIdRoute
+  JoinCodeRoute: typeof JoinCodeRoute
   LiveLiveIdRoute: typeof LiveLiveIdRoute
   LiveNewRoute: typeof LiveNewRoute
   MeetRoomIdRoute: typeof MeetRoomIdRoute
@@ -1041,6 +1080,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveLiveIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$inviterId': {
       id: '/invite/$inviterId'
       path: '/invite/$inviterId'
@@ -1060,6 +1106,20 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ecosystems/new': {
+      id: '/ecosystems/new'
+      path: '/ecosystems/new'
+      fullPath: '/ecosystems/new'
+      preLoaderRoute: typeof EcosystemsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e/$slug': {
+      id: '/e/$slug'
+      path: '/e/$slug'
+      fullPath: '/e/$slug'
+      preLoaderRoute: typeof ESlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/scheduled': {
@@ -1317,9 +1377,12 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   WaveshortsRoute: WaveshortsRoute,
   WavetubeRoute: WavetubeRoute,
+  ESlugRoute: ESlugRoute,
+  EcosystemsNewRoute: EcosystemsNewRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
   InviteInviterIdRoute: InviteInviterIdRoute,
+  JoinCodeRoute: JoinCodeRoute,
   LiveLiveIdRoute: LiveLiveIdRoute,
   LiveNewRoute: LiveNewRoute,
   MeetRoomIdRoute: MeetRoomIdRoute,
@@ -1350,13 +1413,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

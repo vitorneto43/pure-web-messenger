@@ -61,6 +61,7 @@ import { formatTime } from "@/lib/format-time";
 import { useTranslation } from "react-i18next";
 import { setAppBadge } from "@/lib/app-badge";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
+import { EcosystemsShortcut } from "@/components/EcosystemsShortcut";
 import {
   requestBrowserNotificationPermission,
   playNotification,
@@ -742,6 +743,7 @@ export function ChatSidebar({
               </div>
               <span className="text-primary text-lg group-hover:translate-x-0.5 transition shrink-0">→</span>
             </Link>
+            <EcosystemsShortcut />
             <PostsFeed />
           </>
         ) : (

@@ -711,6 +711,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          ecosystem_id: string | null
           id: string
           is_group: boolean
           join_policy: Database["public"]["Enums"]["group_join_policy"]
@@ -727,6 +728,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          ecosystem_id?: string | null
           id?: string
           is_group?: boolean
           join_policy?: Database["public"]["Enums"]["group_join_policy"]
@@ -743,6 +745,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          ecosystem_id?: string | null
           id?: string
           is_group?: boolean
           join_policy?: Database["public"]["Enums"]["group_join_policy"]
@@ -753,7 +756,15 @@ export type Database = {
           updated_at?: string
           visibility?: Database["public"]["Enums"]["group_visibility"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       device_fingerprints: {
         Row: {
@@ -828,6 +839,151 @@ export type Database = {
             referencedColumns: ["fingerprint_hash"]
           },
         ]
+      }
+      ecosystem_invites: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          ecosystem_id: string
+          email: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          role_on_join: Database["public"]["Enums"]["ecosystem_role"]
+          uses: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          ecosystem_id: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role_on_join?: Database["public"]["Enums"]["ecosystem_role"]
+          uses?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          ecosystem_id?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role_on_join?: Database["public"]["Enums"]["ecosystem_role"]
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecosystem_invites_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecosystem_members: {
+        Row: {
+          ecosystem_id: string
+          invited_by: string | null
+          joined_at: string
+          role: Database["public"]["Enums"]["ecosystem_role"]
+          status: Database["public"]["Enums"]["ecosystem_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ecosystem_id: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: Database["public"]["Enums"]["ecosystem_role"]
+          status?: Database["public"]["Enums"]["ecosystem_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ecosystem_id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: Database["public"]["Enums"]["ecosystem_role"]
+          status?: Database["public"]["Enums"]["ecosystem_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecosystem_members_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecosystems: {
+        Row: {
+          banner_url: string | null
+          category: Database["public"]["Enums"]["ecosystem_category"]
+          contact_email: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          join_code: string | null
+          join_policy: Database["public"]["Enums"]["ecosystem_join_policy"]
+          logo_url: string | null
+          name: string
+          primary_color: string | null
+          settings: Json
+          slug: string
+          updated_at: string
+          visibility: Database["public"]["Enums"]["ecosystem_visibility"]
+          website: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          category?: Database["public"]["Enums"]["ecosystem_category"]
+          contact_email?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          join_code?: string | null
+          join_policy?: Database["public"]["Enums"]["ecosystem_join_policy"]
+          logo_url?: string | null
+          name: string
+          primary_color?: string | null
+          settings?: Json
+          slug: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["ecosystem_visibility"]
+          website?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          category?: Database["public"]["Enums"]["ecosystem_category"]
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          join_code?: string | null
+          join_policy?: Database["public"]["Enums"]["ecosystem_join_policy"]
+          logo_url?: string | null
+          name?: string
+          primary_color?: string | null
+          settings?: Json
+          slug?: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["ecosystem_visibility"]
+          website?: string | null
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -1461,6 +1617,7 @@ export type Database = {
         Row: {
           cover_url: string | null
           created_at: string
+          ecosystem_id: string | null
           ended_at: string | null
           host_id: string
           host_last_seen: string
@@ -1480,6 +1637,7 @@ export type Database = {
         Insert: {
           cover_url?: string | null
           created_at?: string
+          ecosystem_id?: string | null
           ended_at?: string | null
           host_id: string
           host_last_seen?: string
@@ -1499,6 +1657,7 @@ export type Database = {
         Update: {
           cover_url?: string | null
           created_at?: string
+          ecosystem_id?: string | null
           ended_at?: string | null
           host_id?: string
           host_last_seen?: string
@@ -1516,6 +1675,13 @@ export type Database = {
           will_record?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "live_sessions_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "live_sessions_scheduled_live_id_fkey"
             columns: ["scheduled_live_id"]
@@ -1933,6 +2099,7 @@ export type Database = {
           body: string | null
           created_at: string
           data: Json
+          ecosystem_id: string | null
           id: string
           read_at: string | null
           title: string
@@ -1943,6 +2110,7 @@ export type Database = {
           body?: string | null
           created_at?: string
           data?: Json
+          ecosystem_id?: string | null
           id?: string
           read_at?: string | null
           title: string
@@ -1953,13 +2121,22 @@ export type Database = {
           body?: string | null
           created_at?: string
           data?: Json
+          ecosystem_id?: string | null
           id?: string
           read_at?: string | null
           title?: string
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_boost_clicks: {
         Row: {
@@ -2297,6 +2474,7 @@ export type Database = {
           created_at: string
           cta_label: string | null
           cta_url: string | null
+          ecosystem_id: string | null
           hashtags: string[]
           id: string
           is_official: boolean
@@ -2305,6 +2483,7 @@ export type Database = {
           music_start_sec: number | null
           music_track_id: string | null
           music_volume: number | null
+          origin_post_id: string | null
           pinned: boolean
           pinned_at: string | null
           thumbnail_url: string | null
@@ -2319,6 +2498,7 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          ecosystem_id?: string | null
           hashtags?: string[]
           id?: string
           is_official?: boolean
@@ -2327,6 +2507,7 @@ export type Database = {
           music_start_sec?: number | null
           music_track_id?: string | null
           music_volume?: number | null
+          origin_post_id?: string | null
           pinned?: boolean
           pinned_at?: string | null
           thumbnail_url?: string | null
@@ -2341,6 +2522,7 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          ecosystem_id?: string | null
           hashtags?: string[]
           id?: string
           is_official?: boolean
@@ -2349,6 +2531,7 @@ export type Database = {
           music_start_sec?: number | null
           music_track_id?: string | null
           music_volume?: number | null
+          origin_post_id?: string | null
           pinned?: boolean
           pinned_at?: string | null
           thumbnail_url?: string | null
@@ -2358,10 +2541,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "posts_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_music_track_id_fkey"
             columns: ["music_track_id"]
             isOneToOne: false
             referencedRelation: "story_music_tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_origin_post_id_fkey"
+            columns: ["origin_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
@@ -2691,6 +2888,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          ecosystem_id: string | null
           host_alert_sent_at: string | null
           host_id: string
           id: string
@@ -2706,6 +2904,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          ecosystem_id?: string | null
           host_alert_sent_at?: string | null
           host_id: string
           id?: string
@@ -2721,6 +2920,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          ecosystem_id?: string | null
           host_alert_sent_at?: string | null
           host_id?: string
           id?: string
@@ -2733,6 +2933,13 @@ export type Database = {
           will_record?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "scheduled_lives_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scheduled_lives_live_session_id_fkey"
             columns: ["live_session_id"]
@@ -3269,6 +3476,7 @@ export type Database = {
           cta_label: string | null
           cta_url: string | null
           description: string | null
+          ecosystem_id: string | null
           expires_at: string
           hashtags: string[]
           id: string
@@ -3279,6 +3487,7 @@ export type Database = {
           music_start_sec: number
           music_track_id: string | null
           music_volume: number
+          origin_status_id: string | null
           pinned: boolean
           pinned_at: string | null
           user_id: string
@@ -3291,6 +3500,7 @@ export type Database = {
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
+          ecosystem_id?: string | null
           expires_at?: string
           hashtags?: string[]
           id?: string
@@ -3301,6 +3511,7 @@ export type Database = {
           music_start_sec?: number
           music_track_id?: string | null
           music_volume?: number
+          origin_status_id?: string | null
           pinned?: boolean
           pinned_at?: string | null
           user_id: string
@@ -3313,6 +3524,7 @@ export type Database = {
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
+          ecosystem_id?: string | null
           expires_at?: string
           hashtags?: string[]
           id?: string
@@ -3323,16 +3535,31 @@ export type Database = {
           music_start_sec?: number
           music_track_id?: string | null
           music_volume?: number
+          origin_status_id?: string | null
           pinned?: boolean
           pinned_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "statuses_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "statuses_music_track_id_fkey"
             columns: ["music_track_id"]
             isOneToOne: false
             referencedRelation: "story_music_tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statuses_origin_status_id_fkey"
+            columns: ["origin_status_id"]
+            isOneToOne: false
+            referencedRelation: "statuses"
             referencedColumns: ["id"]
           },
           {
@@ -4012,6 +4239,7 @@ export type Database = {
           description: string | null
           dislikes_count: number
           duration_sec: number | null
+          ecosystem_id: string | null
           file_url: string | null
           hashtags: string[] | null
           hls_url: string | null
@@ -4019,6 +4247,7 @@ export type Database = {
           is_short: boolean
           likes_count: number
           live_session_id: string | null
+          origin_video_id: string | null
           owner_id: string
           pix_key: string | null
           published_at: string | null
@@ -4040,6 +4269,7 @@ export type Database = {
           description?: string | null
           dislikes_count?: number
           duration_sec?: number | null
+          ecosystem_id?: string | null
           file_url?: string | null
           hashtags?: string[] | null
           hls_url?: string | null
@@ -4047,6 +4277,7 @@ export type Database = {
           is_short?: boolean
           likes_count?: number
           live_session_id?: string | null
+          origin_video_id?: string | null
           owner_id: string
           pix_key?: string | null
           published_at?: string | null
@@ -4068,6 +4299,7 @@ export type Database = {
           description?: string | null
           dislikes_count?: number
           duration_sec?: number | null
+          ecosystem_id?: string | null
           file_url?: string | null
           hashtags?: string[] | null
           hls_url?: string | null
@@ -4075,6 +4307,7 @@ export type Database = {
           is_short?: boolean
           likes_count?: number
           live_session_id?: string | null
+          origin_video_id?: string | null
           owner_id?: string
           pix_key?: string | null
           published_at?: string | null
@@ -4086,7 +4319,22 @@ export type Database = {
           views_count?: number
           visibility?: Database["public"]["Enums"]["video_visibility"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "videos_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_origin_video_id_fkey"
+            columns: ["origin_video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -4333,6 +4581,10 @@ export type Database = {
       get_admin_invite_overview: { Args: never; Returns: Json }
       get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
+      get_ecosystem_role: {
+        Args: { _eco: string; _user: string }
+        Returns: Database["public"]["Enums"]["ecosystem_role"]
+      }
       get_hashtag_people: {
         Args: { _limit?: number; _tag: string }
         Returns: {
@@ -4529,6 +4781,14 @@ export type Database = {
       }
       is_conversation_member: {
         Args: { _conv_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_ecosystem_admin: {
+        Args: { _eco: string; _user: string }
+        Returns: boolean
+      }
+      is_ecosystem_member: {
+        Args: { _eco: string; _user: string }
         Returns: boolean
       }
       is_group_admin: {
@@ -4790,6 +5050,7 @@ export type Database = {
         Returns: {
           cover_url: string | null
           created_at: string
+          ecosystem_id: string | null
           ended_at: string | null
           host_id: string
           host_last_seen: string
@@ -4861,6 +5122,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "moderator" | "superadmin"
+      ecosystem_category:
+        | "business"
+        | "study"
+        | "sports"
+        | "community"
+        | "government"
+        | "other"
+      ecosystem_join_policy: "invite" | "link" | "code" | "request"
+      ecosystem_member_status: "active" | "pending" | "banned"
+      ecosystem_role: "owner" | "admin" | "moderator" | "member"
+      ecosystem_visibility: "private" | "unlisted"
       group_category:
         | "business"
         | "tech"
@@ -5050,6 +5322,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator", "superadmin"],
+      ecosystem_category: [
+        "business",
+        "study",
+        "sports",
+        "community",
+        "government",
+        "other",
+      ],
+      ecosystem_join_policy: ["invite", "link", "code", "request"],
+      ecosystem_member_status: ["active", "pending", "banned"],
+      ecosystem_role: ["owner", "admin", "moderator", "member"],
+      ecosystem_visibility: ["private", "unlisted"],
       group_category: [
         "business",
         "tech",

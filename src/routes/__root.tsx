@@ -21,6 +21,7 @@ import { applyHtmlLang, currentLocale, setLocale, I18N_STORAGE_KEY } from "@/i18
 import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
 import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
+import { EcosystemProvider } from "@/hooks/use-ecosystem";
 
 
 import appCss from "../styles.css?url";
@@ -253,16 +254,18 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LocaleBootstrap />
-        <AuthInvalidator />
-        <SplashScreenHider />
-        <UtmCapture />
-        <PageViewTracker />
-        <PlayStorePromoBanner />
-        <BirthDateGate />
-        <Outlet />
-        <NewsletterWidget />
-        <Toaster richColors position="top-right" />
+        <EcosystemProvider>
+          <LocaleBootstrap />
+          <AuthInvalidator />
+          <SplashScreenHider />
+          <UtmCapture />
+          <PageViewTracker />
+          <PlayStorePromoBanner />
+          <BirthDateGate />
+          <Outlet />
+          <NewsletterWidget />
+          <Toaster richColors position="top-right" />
+        </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
