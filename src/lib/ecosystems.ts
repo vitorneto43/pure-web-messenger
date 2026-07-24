@@ -160,3 +160,98 @@ export async function joinByCode(code: string): Promise<Ecosystem> {
   const { data: full } = await sb.from("ecosystems").select("*").eq("id", ecosystemId).single();
   return full as Ecosystem;
 }
+
+// ============================================================================
+// Members admin
+// ============================================================================
+
+export interface EcosystemMember {
+  ecosystem_id: string;
+  user_id: string;
+  role: EcosystemRole;
+  status: "active" | "pending" | "banned";
+  joined_at: string;
+  profile?: {
+    username: string | null;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+export async function listEcosystemMembers(ecosystemId: string): Promise<EcosystemMember[]> {
+  const { data, error } = await sb
+    .from("ecosystem_members")
+    .select("ecosystem_id, user_id, role, status, joined_at, profile:profiles!ecosystem_members_user_id_fkey(username,display_name,avatar_url)")
+    .eq("ecosystem_id", ecosystemId)
+    .order("joined_at", { ascending: true });
+  if (error) {
+    // fallback if FK alias fails
+    const { data: d2, error: e2 } = await sb
+      .from("ecosystem_members")
+      .select("ecosystem_id, user_id, role, status, joined_at")
+      .eq("ecosystem_id", ecosystemId)
+      .order("joined_at", { ascending: true });
+    if (e2) throw e2;
+    return (d2 ?? []) as EcosystemMember[];
+  }
+  return (data ?? []) as EcosystemMember[];
+}
+
+export async function updateMemberRole(ecosystemId: string, userId: string, role: EcosystemRole) {
+  const { error } = await sb
+    .from("ecosystem_members")
+    .update({ role })
+    .eq("ecosystem_id", ecosystemId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function setMemberStatus(ecosystemId: string, userId: string, status: "active" | "banned") {
+  const { error } = await sb
+    .from("ecosystem_members")
+    .update({ status })
+    .eq("ecosystem_id", ecosystemId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function removeMember(ecosystemId: string, userId: string) {
+  const { error } = await sb
+    .from("ecosystem_members")
+    .delete()
+    .eq("ecosystem_id", ecosystemId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function updateEcosystem(
+  ecosystemId: string,
+  patch: Partial<Pick<Ecosystem, "name" | "description" | "primary_color" | "website" | "contact_email" | "logo_url" | "banner_url" | "join_policy" | "visibility">>,
+): Promise<Ecosystem> {
+  const { data, error } = await sb
+    .from("ecosystems")
+    .update(patch)
+    .eq("id", ecosystemId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as Ecosystem;
+}
+
+export async function rotateJoinCode(ecosystemId: string): Promise<string> {
+  const code = randomCode(8);
+  const { error } = await sb.from("ecosystems").update({ join_code: code }).eq("id", ecosystemId);
+  if (error) throw error;
+  return code;
+}
+
+export async function listEcosystemPosts(ecosystemId: string, limit = 30) {
+  const { data, error } = await sb
+    .from("posts")
+    .select("*, author:profiles!posts_user_id_fkey(username,display_name,avatar_url)")
+    .eq("ecosystem_id", ecosystemId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
