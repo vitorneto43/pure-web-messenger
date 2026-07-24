@@ -57,6 +57,11 @@ function NewLive() {
     setBusy(true);
     try {
       if (isScheduled) {
+        if (target.kind !== "public") {
+          toast.error("Agendamento disponível apenas para lives públicas por enquanto.");
+          setBusy(false);
+          return;
+        }
         await scheduleLive({
           data: { title: title.trim() || "Live agendada", scheduled_at: scheduledAt!, will_record: willRecord },
         });
