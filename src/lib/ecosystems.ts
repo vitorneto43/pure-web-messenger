@@ -314,3 +314,92 @@ export async function listEcosystemPosts(ecosystemId: string, limit = 30) {
   if (error) throw error;
   return data ?? [];
 }
+
+// ============================================================================
+// Fase 5: Planos / Cotas / Faturamento
+// ============================================================================
+
+export type EcosystemPlanTier = "free" | "pro" | "business" | "enterprise";
+export type EcosystemPlanStatus = "active" | "past_due" | "canceled" | "trialing";
+
+export interface EcosystemBilling {
+  tier: EcosystemPlanTier;
+  status: EcosystemPlanStatus;
+  started_at: string;
+  expires_at: string | null;
+  custom_subdomain: string | null;
+  billing_contact_email: string | null;
+  limits: {
+    members: number;
+    posts_per_month: number;
+    videos_per_month: number;
+    lives_per_month: number;
+    custom_branding: boolean;
+    advanced_metrics: boolean;
+    custom_subdomain: boolean;
+    priority_support: boolean;
+    display_name: string;
+    price_brl_month: number;
+  };
+  usage: {
+    members: number;
+    posts_month: number;
+    videos_month: number;
+    lives_month: number;
+  };
+}
+
+export interface PlanLimitRow {
+  tier: EcosystemPlanTier;
+  display_name: string;
+  price_brl_month: number;
+  member_limit: number;
+  posts_per_month: number;
+  videos_per_month: number;
+  lives_per_month: number;
+  custom_branding: boolean;
+  advanced_metrics: boolean;
+  custom_subdomain: boolean;
+  priority_support: boolean;
+}
+
+export async function getEcosystemBilling(ecosystemId: string): Promise<EcosystemBilling | null> {
+  const { data, error } = await sb.rpc("get_ecosystem_billing", { _ecosystem_id: ecosystemId });
+  if (error) throw error;
+  return (data as EcosystemBilling) ?? null;
+}
+
+export async function listPlanCatalog(): Promise<PlanLimitRow[]> {
+  const { data, error } = await sb
+    .from("ecosystem_plan_limits")
+    .select("*")
+    .order("price_brl_month", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as PlanLimitRow[];
+}
+
+export async function requestEcosystemUpgrade(
+  ecosystemId: string,
+  tier: EcosystemPlanTier,
+  cycle: "monthly" | "yearly" = "monthly",
+  notes?: string,
+): Promise<string> {
+  const { data, error } = await sb.rpc("request_ecosystem_upgrade", {
+    _ecosystem_id: ecosystemId,
+    _tier: tier,
+    _cycle: cycle,
+    _notes: notes ?? null,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function listBillingRequests(ecosystemId: string) {
+  const { data, error } = await sb
+    .from("ecosystem_billing_requests")
+    .select("*")
+    .eq("ecosystem_id", ecosystemId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
