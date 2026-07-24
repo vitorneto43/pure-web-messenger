@@ -64,6 +64,10 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const aiRun = useServerFn(runAIAssistant);
+  const { currentEcosystemId } = useEcosystems();
+  const [target, setTarget] = useState<PublishTarget>(
+    currentEcosystemId ? { kind: "ecosystem", ecosystemId: currentEcosystemId } : { kind: "public" },
+  );
 
   const hashtags = Array.from(
     new Set(
