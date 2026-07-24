@@ -229,21 +229,27 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           music_volume: music?.volume ?? 0.8,
         };
         if (isScheduled) {
+          if (target.kind !== "public") {
+            toast.error("Agendamento disponível apenas para o feed público por enquanto.");
+            setSubmitting(false);
+            return;
+          }
           await scheduleStatus({ data: { ...basePayload, scheduled_at: scheduledAt! } });
         } else {
+          const rows = buildStatusRows({
+            userId: user.id,
+            payload: { ...basePayload, is_official: isOfficialAccount && isOfficial },
+            target,
+          });
           const { data: inserted, error } = await supabase
             .from("statuses")
-            .insert({
-              user_id: user.id,
-              ...basePayload,
-              is_official: isOfficialAccount && isOfficial,
-            } as any)
-            .select("id")
-            .single();
+            .insert(rows as any)
+            .select("id");
           if (error) throw error;
-          if ((inserted as any)?.id) {
+          const firstId = (inserted as any[])?.[0]?.id;
+          if (firstId) {
             notifyFollowersOfContent({
-              data: { kind: "status", contentId: (inserted as any).id },
+              data: { kind: "status", contentId: firstId },
             }).catch((e) => console.error("notifyFollowersOfContent (status) failed", e));
           }
         }
