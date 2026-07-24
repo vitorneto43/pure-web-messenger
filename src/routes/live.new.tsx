@@ -135,6 +135,8 @@ function NewLive() {
           <SchedulePicker value={scheduledAt} onChange={setScheduledAt} label="Programar para" />
         </div>
 
+        <PublishTargetPicker value={target} onChange={setTarget} />
+
         <div className="rounded-lg border border-border bg-muted/30 p-3 flex items-center justify-between gap-3">
           <div className="flex items-start gap-2">
             <Video className="size-4 mt-0.5 text-primary" />
