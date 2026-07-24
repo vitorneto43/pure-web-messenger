@@ -840,6 +840,53 @@ export type Database = {
           },
         ]
       }
+      ecosystem_billing_requests: {
+        Row: {
+          amount_brl: number
+          billing_cycle: string
+          created_at: string
+          ecosystem_id: string
+          id: string
+          notes: string | null
+          processed_at: string | null
+          requested_by: string
+          requested_tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          status: string
+        }
+        Insert: {
+          amount_brl: number
+          billing_cycle?: string
+          created_at?: string
+          ecosystem_id: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          requested_by: string
+          requested_tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          status?: string
+        }
+        Update: {
+          amount_brl?: number
+          billing_cycle?: string
+          created_at?: string
+          ecosystem_id?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          requested_by?: string
+          requested_tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecosystem_billing_requests_ecosystem_id_fkey"
+            columns: ["ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ecosystem_invites: {
         Row: {
           code: string
@@ -925,19 +972,72 @@ export type Database = {
           },
         ]
       }
+      ecosystem_plan_limits: {
+        Row: {
+          advanced_metrics: boolean
+          custom_branding: boolean
+          custom_subdomain: boolean
+          display_name: string
+          lives_per_month: number
+          member_limit: number
+          posts_per_month: number
+          price_brl_month: number
+          priority_support: boolean
+          tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          updated_at: string
+          videos_per_month: number
+        }
+        Insert: {
+          advanced_metrics?: boolean
+          custom_branding?: boolean
+          custom_subdomain?: boolean
+          display_name: string
+          lives_per_month: number
+          member_limit: number
+          posts_per_month: number
+          price_brl_month?: number
+          priority_support?: boolean
+          tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          updated_at?: string
+          videos_per_month: number
+        }
+        Update: {
+          advanced_metrics?: boolean
+          custom_branding?: boolean
+          custom_subdomain?: boolean
+          display_name?: string
+          lives_per_month?: number
+          member_limit?: number
+          posts_per_month?: number
+          price_brl_month?: number
+          priority_support?: boolean
+          tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          updated_at?: string
+          videos_per_month?: number
+        }
+        Relationships: []
+      }
       ecosystems: {
         Row: {
           banner_url: string | null
+          billing_contact_email: string | null
           category: Database["public"]["Enums"]["ecosystem_category"]
           contact_email: string | null
           created_at: string
           created_by: string
+          custom_subdomain: string | null
           description: string | null
           id: string
           join_code: string | null
           join_policy: Database["public"]["Enums"]["ecosystem_join_policy"]
           logo_url: string | null
+          member_limit_override: number | null
           name: string
+          plan_expires_at: string | null
+          plan_started_at: string
+          plan_status: Database["public"]["Enums"]["ecosystem_plan_status"]
+          plan_tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          post_limit_override: number | null
           primary_color: string | null
           settings: Json
           slug: string
@@ -947,16 +1047,24 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
+          billing_contact_email?: string | null
           category?: Database["public"]["Enums"]["ecosystem_category"]
           contact_email?: string | null
           created_at?: string
           created_by: string
+          custom_subdomain?: string | null
           description?: string | null
           id?: string
           join_code?: string | null
           join_policy?: Database["public"]["Enums"]["ecosystem_join_policy"]
           logo_url?: string | null
+          member_limit_override?: number | null
           name: string
+          plan_expires_at?: string | null
+          plan_started_at?: string
+          plan_status?: Database["public"]["Enums"]["ecosystem_plan_status"]
+          plan_tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          post_limit_override?: number | null
           primary_color?: string | null
           settings?: Json
           slug: string
@@ -966,16 +1074,24 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
+          billing_contact_email?: string | null
           category?: Database["public"]["Enums"]["ecosystem_category"]
           contact_email?: string | null
           created_at?: string
           created_by?: string
+          custom_subdomain?: string | null
           description?: string | null
           id?: string
           join_code?: string | null
           join_policy?: Database["public"]["Enums"]["ecosystem_join_policy"]
           logo_url?: string | null
+          member_limit_override?: number | null
           name?: string
+          plan_expires_at?: string | null
+          plan_started_at?: string
+          plan_status?: Database["public"]["Enums"]["ecosystem_plan_status"]
+          plan_tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
+          post_limit_override?: number | null
           primary_color?: string | null
           settings?: Json
           slug?: string
@@ -4581,6 +4697,7 @@ export type Database = {
       get_admin_invite_overview: { Args: never; Returns: Json }
       get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
+      get_ecosystem_billing: { Args: { _ecosystem_id: string }; Returns: Json }
       get_ecosystem_metrics: {
         Args: { _days?: number; _ecosystem_id: string }
         Returns: Json
@@ -4971,6 +5088,15 @@ export type Database = {
         Args: { _details?: string; _message_id: string; _reason: string }
         Returns: string
       }
+      request_ecosystem_upgrade: {
+        Args: {
+          _cycle?: string
+          _ecosystem_id: string
+          _notes?: string
+          _tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
+        }
+        Returns: string
+      }
       request_profile_view: { Args: { _owner: string }; Returns: Json }
       request_stage: {
         Args: { p_live_id: string }
@@ -5135,6 +5261,8 @@ export type Database = {
         | "other"
       ecosystem_join_policy: "invite" | "link" | "code" | "request"
       ecosystem_member_status: "active" | "pending" | "banned"
+      ecosystem_plan_status: "active" | "past_due" | "canceled" | "trialing"
+      ecosystem_plan_tier: "free" | "pro" | "business" | "enterprise"
       ecosystem_role: "owner" | "admin" | "moderator" | "member"
       ecosystem_visibility: "private" | "unlisted"
       group_category:
@@ -5336,6 +5464,8 @@ export const Constants = {
       ],
       ecosystem_join_policy: ["invite", "link", "code", "request"],
       ecosystem_member_status: ["active", "pending", "banned"],
+      ecosystem_plan_status: ["active", "past_due", "canceled", "trialing"],
+      ecosystem_plan_tier: ["free", "pro", "business", "enterprise"],
       ecosystem_role: ["owner", "admin", "moderator", "member"],
       ecosystem_visibility: ["private", "unlisted"],
       group_category: [
