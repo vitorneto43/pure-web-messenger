@@ -133,32 +133,41 @@ function UploadPage() {
         .slice(0, 10);
 
       const nowIso = new Date().toISOString();
+      const baseRow = {
+        owner_id: uid,
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        hashtags: tags,
+        status: "ready",
+        duration_sec: duration,
+        file_url: videoPath,
+        thumbnail_url: thumbPath,
+        cta_label: ctaLabel.trim() || null,
+        cta_url: ctaUrl.trim() || null,
+        allow_pix: allowPix,
+        pix_key: allowPix ? pixKey.trim() || null : null,
+        is_short: isShort,
+        published_at: nowIso,
+      };
+      const rows: any[] =
+        target.kind === "public"
+          ? [{ ...baseRow, visibility, ecosystem_id: null }]
+          : target.kind === "ecosystem"
+            ? [{ ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId }]
+            : [
+                { ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId },
+                { ...baseRow, visibility, ecosystem_id: null },
+              ];
       const { data: inserted, error: insErr } = await supabase
         .from("videos")
-        .insert({
-          owner_id: uid,
-          title: title.trim(),
-          description: description.trim(),
-          category,
-          hashtags: tags,
-          visibility,
-          status: "ready",
-          duration_sec: duration,
-          file_url: videoPath,
-          thumbnail_url: thumbPath,
-          cta_label: ctaLabel.trim() || null,
-          cta_url: ctaUrl.trim() || null,
-          allow_pix: allowPix,
-          pix_key: allowPix ? pixKey.trim() || null : null,
-          is_short: isShort,
-          published_at: nowIso,
-        } as any)
-        .select("id")
-        .single();
+        .insert(rows as any)
+        .select("id");
       if (insErr) throw insErr;
 
       setProgress(100);
-      const newVideoId = (inserted as any).id as string;
+      const firstId = (inserted as any[])?.[0]?.id as string;
+      const newVideoId = firstId;
       notifyFollowersOfContent({
         data: { kind: isShort ? "short" : "video", contentId: newVideoId },
       }).catch((e) => console.error("notifyFollowersOfContent (video) failed", e));
