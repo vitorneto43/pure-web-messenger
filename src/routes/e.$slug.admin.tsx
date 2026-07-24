@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save, Plus, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,13 @@ import {
   removeMember,
   updateEcosystem,
   rotateJoinCode,
+  listEcosystemInvites,
+  createEcosystemInvite,
+  revokeEcosystemInvite,
   type Ecosystem,
   type EcosystemMember,
   type EcosystemRole,
+  type EcosystemInvite,
 } from "@/lib/ecosystems";
 
 export const Route = createFileRoute("/e/$slug/admin")({
@@ -41,6 +45,13 @@ function EcosystemAdmin() {
   const [role, setRole] = useState<EcosystemRole | null>(null);
   const [members, setMembers] = useState<EcosystemMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
+  const [invites, setInvites] = useState<EcosystemInvite[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(true);
+  const [invRole, setInvRole] = useState<EcosystemRole>("member");
+  const [invMaxUses, setInvMaxUses] = useState<string>("");
+  const [invExpiresDays, setInvExpiresDays] = useState<string>("");
+  const [invEmail, setInvEmail] = useState("");
+  const [creatingInvite, setCreatingInvite] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -61,6 +72,18 @@ function EcosystemAdmin() {
     }
   }
 
+  async function refreshInvites(id: string) {
+    setLoadingInvites(true);
+    try {
+      const list = await listEcosystemInvites(id);
+      setInvites(list);
+    } catch (e: any) {
+      toast.error("Falha ao carregar convites", { description: e?.message });
+    } finally {
+      setLoadingInvites(false);
+    }
+  }
+
   useEffect(() => {
     (async () => {
       try {
@@ -76,6 +99,7 @@ function EcosystemAdmin() {
         setContactEmail(e.contact_email ?? "");
         setPrimaryColor(e.primary_color ?? "");
         await refreshMembers(e.id);
+        await refreshInvites(e.id);
       } catch {
         setEco(null);
       }
@@ -180,6 +204,45 @@ function EcosystemAdmin() {
     }
   }
 
+  async function handleCreateInvite() {
+    if (!eco) return;
+    setCreatingInvite(true);
+    try {
+      const maxUses = invMaxUses.trim() ? Math.max(1, parseInt(invMaxUses, 10) || 0) : null;
+      const days = invExpiresDays.trim() ? Math.max(1, parseInt(invExpiresDays, 10) || 0) : null;
+      const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
+      await createEcosystemInvite({
+        ecosystem_id: eco.id,
+        role_on_join: invRole,
+        max_uses: maxUses,
+        expires_at,
+        email: invEmail.trim() || null,
+      });
+      setInvMaxUses(""); setInvExpiresDays(""); setInvEmail(""); setInvRole("member");
+      await refreshInvites(eco.id);
+      toast.success("Convite criado.");
+    } catch (e: any) {
+      toast.error("Falha ao criar convite", { description: e?.message });
+    } finally {
+      setCreatingInvite(false);
+    }
+  }
+
+  async function handleRevokeInvite(id: string) {
+    if (!confirm("Revogar este convite? O link deixará de funcionar.")) return;
+    try {
+      await revokeEcosystemInvite(id);
+      if (eco) await refreshInvites(eco.id);
+      toast.success("Convite revogado.");
+    } catch (e: any) {
+      toast.error("Falha ao revogar", { description: e?.message });
+    }
+  }
+
+  function inviteLink(code: string) {
+    return `${typeof window !== "undefined" ? window.location.origin : ""}/join/${code}`;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur border-b border-border">
@@ -260,6 +323,126 @@ function EcosystemAdmin() {
             <RefreshCcw className="size-3.5 mr-1" /> Gerar novo código
           </Button>
         </section>
+
+        {/* Named invites */}
+        <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Ticket className="size-4 text-primary" />
+            <h2 className="text-sm font-bold">Convites personalizados</h2>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Crie links de convite com cargo, prazo de expiração e limite de usos.
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Cargo ao entrar</Label>
+              <select
+                value={invRole}
+                onChange={(e) => setInvRole(e.target.value as EcosystemRole)}
+                className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+              >
+                <option value="member">Membro</option>
+                <option value="moderator">Moderador</option>
+                {isOwner && <option value="admin">Admin</option>}
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs">Limite de usos</Label>
+              <Input
+                type="number"
+                min={1}
+                value={invMaxUses}
+                onChange={(e) => setInvMaxUses(e.target.value)}
+                placeholder="Ilimitado"
+                className="h-9"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Expira em (dias)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={invExpiresDays}
+                onChange={(e) => setInvExpiresDays(e.target.value)}
+                placeholder="Sem prazo"
+                className="h-9"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">E-mail (opcional)</Label>
+              <Input
+                type="email"
+                value={invEmail}
+                onChange={(e) => setInvEmail(e.target.value)}
+                placeholder="convidado@..."
+                className="h-9"
+              />
+            </div>
+          </div>
+          <Button onClick={handleCreateInvite} disabled={creatingInvite} size="sm" className="w-full">
+            {creatingInvite ? <Loader2 className="size-4 animate-spin mr-2" /> : <Plus className="size-4 mr-2" />}
+            Criar convite
+          </Button>
+
+          <div className="pt-2">
+            {loadingInvites ? (
+              <div className="py-4 grid place-items-center">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : invites.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhum convite personalizado ainda.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {invites.map((inv) => {
+                  const url = inviteLink(inv.code);
+                  const expired = inv.expires_at && new Date(inv.expires_at).getTime() < Date.now();
+                  const exhausted = inv.max_uses != null && inv.uses >= inv.max_uses;
+                  const inactive = expired || exhausted;
+                  return (
+                    <li key={inv.id} className="py-2 flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <code className="block text-[11px] truncate">{url}</code>
+                        <p className="text-[10px] text-muted-foreground">
+                          {inv.role_on_join === "admin" ? "Admin" : inv.role_on_join === "moderator" ? "Moderador" : "Membro"}
+                          {" · "}
+                          {inv.uses}{inv.max_uses ? `/${inv.max_uses}` : ""} usos
+                          {inv.expires_at ? ` · expira ${new Date(inv.expires_at).toLocaleDateString()}` : ""}
+                          {inv.email ? ` · ${inv.email}` : ""}
+                          {inactive ? " · inativo" : ""}
+                        </p>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Copiar"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(url);
+                            toast.success("Link copiado!");
+                          } catch {
+                            toast.error("Não foi possível copiar.");
+                          }
+                        }}
+                      >
+                        <Copy className="size-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Revogar"
+                        onClick={() => handleRevokeInvite(inv.id)}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+
 
         {/* Members */}
         <section className="rounded-2xl border border-border bg-card p-4">
