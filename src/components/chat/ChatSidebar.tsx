@@ -742,6 +742,7 @@ export function ChatSidebar({
               </div>
               <span className="text-primary text-lg group-hover:translate-x-0.5 transition shrink-0">→</span>
             </Link>
+            <EcosystemsShortcut />
             <PostsFeed />
           </>
         ) : (
