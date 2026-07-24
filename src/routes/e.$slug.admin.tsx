@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save, Plus, Trash2, Ticket, BarChart3 } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save, Plus, Trash2, Ticket, BarChart3, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -256,11 +256,18 @@ function EcosystemAdmin() {
               {members.length} {members.length === 1 ? "membro" : "membros"}
             </p>
           </div>
-          <Button asChild size="sm" variant="outline" className="gap-1.5">
-            <Link to="/e/$slug/metrics" params={{ slug }}>
-              <BarChart3 className="size-4" /> Métricas
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link to="/e/$slug/metrics" params={{ slug }}>
+                <BarChart3 className="size-4" /> Métricas
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link to="/e/$slug/billing" params={{ slug }}>
+                <Crown className="size-4" /> Plano
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
 
