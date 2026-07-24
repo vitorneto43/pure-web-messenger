@@ -31,11 +31,11 @@ export function PublishTargetPicker({ value, onChange, className }: Props) {
       <Label className="text-xs font-semibold">Publicar em</Label>
 
       {/* Ecosystem selector when user has multiple */}
-      {ecosystems.length > 1 && !isPublic && (
+      {ecosystems.length > 1 && value.kind !== "public" && (
         <select
           className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-          value={value.kind !== "public" ? value.ecosystemId : (activeEco?.id ?? "")}
-          onChange={(e) => onChange({ kind: value.kind as "ecosystem" | "both", ecosystemId: e.target.value })}
+          value={value.ecosystemId}
+          onChange={(e) => onChange({ kind: value.kind, ecosystemId: e.target.value })}
         >
           {ecosystems.map((eco) => (
             <option key={eco.id} value={eco.id}>{eco.name}</option>
