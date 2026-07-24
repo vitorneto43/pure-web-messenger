@@ -245,6 +245,65 @@ export async function rotateJoinCode(ecosystemId: string): Promise<string> {
   return code;
 }
 
+// ============================================================================
+// Named invites (ecosystem_invites)
+// ============================================================================
+
+export interface EcosystemInvite {
+  id: string;
+  ecosystem_id: string;
+  code: string;
+  email: string | null;
+  role_on_join: EcosystemRole;
+  expires_at: string | null;
+  max_uses: number | null;
+  uses: number;
+  created_by: string;
+  created_at: string;
+}
+
+export async function listEcosystemInvites(ecosystemId: string): Promise<EcosystemInvite[]> {
+  const { data, error } = await sb
+    .from("ecosystem_invites")
+    .select("*")
+    .eq("ecosystem_id", ecosystemId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as EcosystemInvite[];
+}
+
+export async function createEcosystemInvite(input: {
+  ecosystem_id: string;
+  role_on_join?: EcosystemRole;
+  max_uses?: number | null;
+  expires_at?: string | null;
+  email?: string | null;
+}): Promise<EcosystemInvite> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Faça login.");
+  const { data, error } = await sb
+    .from("ecosystem_invites")
+    .insert({
+      ecosystem_id: input.ecosystem_id,
+      code: randomCode(10),
+      role_on_join: input.role_on_join ?? "member",
+      max_uses: input.max_uses ?? null,
+      expires_at: input.expires_at ?? null,
+      email: input.email?.trim() || null,
+      uses: 0,
+      created_by: user.id,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as EcosystemInvite;
+}
+
+export async function revokeEcosystemInvite(inviteId: string) {
+  const { error } = await sb.from("ecosystem_invites").delete().eq("id", inviteId);
+  if (error) throw error;
+}
+
 export async function listEcosystemPosts(ecosystemId: string, limit = 30) {
   const { data, error } = await sb
     .from("posts")
