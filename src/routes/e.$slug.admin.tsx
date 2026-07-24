@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, RefreshCcw, ShieldCheck, UserMinus, Ban, CheckCircle2, Save, Plus, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,13 @@ import {
   removeMember,
   updateEcosystem,
   rotateJoinCode,
+  listEcosystemInvites,
+  createEcosystemInvite,
+  revokeEcosystemInvite,
   type Ecosystem,
   type EcosystemMember,
   type EcosystemRole,
+  type EcosystemInvite,
 } from "@/lib/ecosystems";
 
 export const Route = createFileRoute("/e/$slug/admin")({
