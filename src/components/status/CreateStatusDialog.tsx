@@ -504,3 +504,22 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
     </Dialog>
   );
 }
+
+function buildStatusRows(args: {
+  userId: string;
+  payload: Record<string, any>;
+  target: PublishTarget;
+}) {
+  const { userId, payload, target } = args;
+  if (target.kind === "public") {
+    return [{ user_id: userId, ...payload, ecosystem_id: null }];
+  }
+  if (target.kind === "ecosystem") {
+    return [{ user_id: userId, ...payload, ecosystem_id: target.ecosystemId }];
+  }
+  // "both" — cross-post: ecosystem copy + public copy
+  return [
+    { user_id: userId, ...payload, ecosystem_id: target.ecosystemId },
+    { user_id: userId, ...payload, ecosystem_id: null },
+  ];
+}
