@@ -4581,6 +4581,10 @@ export type Database = {
       get_admin_invite_overview: { Args: never; Returns: Json }
       get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
+      get_ecosystem_metrics: {
+        Args: { _days?: number; _ecosystem_id: string }
+        Returns: Json
+      }
       get_ecosystem_role: {
         Args: { _eco: string; _user: string }
         Returns: Database["public"]["Enums"]["ecosystem_role"]
