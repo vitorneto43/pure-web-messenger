@@ -70,9 +70,14 @@ async function createVideoThumbnail(file: File): Promise<Blob | null> {
 
 export function PostComposer({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
+  const { currentEcosystemId, ecosystems } = useEcosystems();
   const ai = useServerFn(runAIAssistant);
   const [kind, setKind] = useState<Kind>("text");
   const [content, setContent] = useState("");
+  const initialTarget: PublishTarget = currentEcosystemId
+    ? { kind: "ecosystem", ecosystemId: currentEcosystemId }
+    : { kind: "public" };
+  const [target, setTarget] = useState<PublishTarget>(initialTarget);
   const [description, setDescription] = useState("");
   const [hashtagsRaw, setHashtagsRaw] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
