@@ -266,6 +266,7 @@ function RootComponent() {
           <Outlet />
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
+          <VLibrasWidget />
         </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>
