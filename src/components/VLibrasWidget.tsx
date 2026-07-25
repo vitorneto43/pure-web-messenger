@@ -1,32 +1,116 @@
 import { useEffect, useRef, useState } from "react";
 import { Accessibility, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-/**
- * VLibras — plugin oficial do Governo Federal (gov.br) que traduz
- * automaticamente o conteúdo em texto do site para Libras (Língua
- * Brasileira de Sinais), promovendo inclusão de pessoas surdas.
- *
- * https://www.gov.br/governodigital/pt-br/vlibras
- *
- * Carrega o script sob demanda no client (evita SSR + peso inicial)
- * e monta o widget uma única vez.
- */
+const VLIBRAS_SCRIPT_ID = "vlibras-plugin-script";
+const VLIBRAS_STYLE_ID = "vlibras-visibility-style";
+
+declare global {
+  interface Window {
+    VLibras?: {
+      Widget?: new (root: string) => unknown;
+    };
+    plugin?: unknown;
+    wavechatOpenVLibras?: () => void;
+  }
+}
+
 export function VLibrasWidget() {
   const [loading, setLoading] = useState(false);
-  const openHandlerRef = useRef<(() => void) | null>(null);
-  const pendingButtonOpenRef = useRef(false);
+  const [open, setOpen] = useState(false);
+  const mountedRef = useRef(false);
+  const openRef = useRef(false);
+  const prewarmedRef = useRef(false);
+  const stabilizeTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    return () => {
+      if (stabilizeTimerRef.current) window.clearInterval(stabilizeTimerRef.current);
+    };
+  }, []);
 
-    let pendingOpen = false;
-    let disposed = false;
-    let retryTimer: number | undefined;
+  useEffect(() => {
+    const handler = () => {
+      void toggleVLibras();
+    };
+    window.wavechatOpenVLibras = handler;
+    window.addEventListener("wavechat:open-vlibras", handler);
+    return () => {
+      if (window.wavechatOpenVLibras === handler) window.wavechatOpenVLibras = undefined;
+      window.removeEventListener("wavechat:open-vlibras", handler);
+    };
+  }, []);
 
-    const ensureMarkup = () => {
-      if (document.querySelector("div[vw]")) return;
-      const root = document.createElement("div");
+  const ensureStyle = () => {
+    if (document.getElementById(VLIBRAS_STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = VLIBRAS_STYLE_ID;
+    style.textContent = `
+      div[vw] {
+        position: fixed !important;
+        right: 12px !important;
+        bottom: 76px !important;
+        left: auto !important;
+        top: auto !important;
+        z-index: 2147483000 !important;
+        display: block !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      div[vw].wavechat-vlibras-prewarm {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+      div[vw].active {
+        width: min(300px, calc(100vw - 24px)) !important;
+        height: min(450px, calc(100dvh - 120px)) !important;
+        min-height: 360px !important;
+      }
+      [vw-access-button] {
+        position: absolute !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: auto !important;
+        top: auto !important;
+        display: flex !important;
+        opacity: 0 !important;
+        visibility: visible !important;
+        pointer-events: none !important;
+      }
+      [vw-plugin-wrapper] {
+        position: absolute !important;
+        right: 0 !important;
+        bottom: 48px !important;
+        z-index: 2147483000 !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100dvh - 120px) !important;
+      }
+      [vw-plugin-wrapper].active {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: min(450px, calc(100dvh - 120px)) !important;
+        min-height: min(450px, calc(100dvh - 120px)) !important;
+      }
+      .wavechat-vlibras-button { z-index: 2147483646 !important; }
+      @media (min-width: 768px) {
+        div[vw] { right: 24px !important; bottom: 24px !important; }
+        div[vw].active { height: 450px !important; }
+        [vw-plugin-wrapper] { bottom: 48px !important; max-height: calc(100dvh - 96px) !important; }
+        [vw-plugin-wrapper].active { height: 450px !important; min-height: 450px !important; }
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  const ensureMarkup = () => {
+    let root = document.querySelector<HTMLElement>("div[vw]");
+    if (!root) {
+      root = document.createElement("div");
       root.setAttribute("vw", "");
       root.className = "enabled";
       root.innerHTML = `
@@ -36,227 +120,163 @@ export function VLibrasWidget() {
         </div>
       `;
       document.body.appendChild(root);
-    };
+    }
+    return root;
+  };
 
-    const ensureVisibilityStyle = () => {
-      if (document.getElementById("vlibras-visibility-style")) return;
-      const style = document.createElement("style");
-      style.id = "vlibras-visibility-style";
-      style.textContent = `
-        div[vw] {
-          position: fixed !important;
-          right: 12px !important;
-          bottom: 76px !important;
-          left: auto !important;
-          top: auto !important;
-          z-index: 2147483000 !important;
-          display: block !important;
-          width: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
-          margin: 0 !important;
-        }
-        div[vw].active {
-          width: min(300px, calc(100vw - 24px)) !important;
-          height: min(450px, calc(100dvh - 120px)) !important;
-          min-height: 360px !important;
-          transform: none !important;
-        }
-        [vw-access-button] {
-          position: absolute !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          left: auto !important;
-          top: auto !important;
-          z-index: 2147483001 !important;
-          pointer-events: auto !important;
-          visibility: visible !important;
-          opacity: 0 !important;
-        }
-        [vw-access-button].active,
-        [vw-access-button]:not(.active) {
-          display: flex !important;
-        }
-        [vw-access-button]::before {
-          content: "";
-          position: absolute;
-          inset: -8px;
-        }
-        .wavechat-vlibras-button {
-          z-index: 2147483646 !important;
-        }
-        [vw-plugin-wrapper] {
-          position: absolute !important;
-          right: 0 !important;
-          bottom: 48px !important;
-          z-index: 2147483000 !important;
-          max-width: calc(100vw - 24px) !important;
-          max-height: calc(100dvh - 120px) !important;
-        }
-        [vw-plugin-wrapper].active {
-          min-height: min(450px, calc(100dvh - 120px)) !important;
-        }
-        @media (min-width: 768px) {
-          div[vw] { bottom: 24px !important; right: 24px !important; }
-          div[vw].active { height: 450px !important; }
-          [vw-plugin-wrapper] { bottom: 48px !important; max-height: calc(100dvh - 96px) !important; }
-        }
-      `;
-      document.head.appendChild(style);
-    };
+  const isReady = () => Boolean(document.querySelector("[vw-plugin-wrapper] [vp]"));
 
-    const isWidgetReady = () => {
-      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      return Boolean(accessButton?.querySelector("img") && wrapper?.querySelector("[vp]"));
-    };
+  const waitForReady = async () => {
+    for (let i = 0; i < 40; i += 1) {
+      if (isReady()) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, i < 10 ? 200 : 400));
+    }
+    return false;
+  };
 
-    const isPanelOpen = () => {
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      return Boolean(wrapper?.classList.contains("active"));
-    };
-
-    const forceOpenPanel = () => {
-      const root = document.querySelector<HTMLElement>("div[vw]");
-      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      if (!root || !accessButton || !wrapper || !isWidgetReady()) return false;
-      root.classList.add("active");
-      accessButton.classList.add("active");
-      wrapper.classList.add("active");
-      setLoading(false);
-      return true;
-    };
-
-    const closePanel = () => {
-      const root = document.querySelector<HTMLElement>("div[vw]");
-      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      root?.classList.remove("active");
-      accessButton?.classList.remove("active");
-      wrapper?.classList.remove("active");
-      setLoading(false);
-    };
-
-    const initializeWidget = () => {
-      ensureMarkup();
-      ensureVisibilityStyle();
-      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      if (accessButton?.querySelector("img") && wrapper?.querySelector("[vp]")) return;
-      try {
-        // @ts-expect-error — global injetado pelo script do VLibras
-        if (!window.VLibras?.Widget) return;
-        const previousOnload = window.onload;
-        // @ts-expect-error — global injetado pelo script do VLibras
-        new window.VLibras.Widget("https://vlibras.gov.br/app");
-        // O plugin oficial amarra a montagem final ao window.onload. Como este
-        // componente carrega sob demanda depois da página já estar pronta,
-        // disparamos esse passo manualmente para o botão ganhar o handler real.
-        window.setTimeout(() => {
-          if (disposed) return;
-          if (typeof window.onload === "function" && window.onload !== previousOnload) {
-            window.onload(new Event("load"));
-          }
-        }, 0);
-      } catch (e) {
-        console.warn("VLibras: falha ao inicializar", e);
-      }
-    };
-
-    const clickAccessButton = () => {
-      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      if (!wrapper || !isWidgetReady()) return false;
-      if (isPanelOpen()) {
-        closePanel();
-        return true;
-      }
-      // O botão oficial às vezes demora a receber o listener interno.
-      // Abrimos o painel diretamente quando a estrutura do plugin já existe.
-      return forceOpenPanel();
-    };
-
-    const retryOpen = (attempt = 0) => {
-      if (disposed || !pendingOpen) return;
-      initializeWidget();
-      if (isWidgetReady()) {
-        forceOpenPanel();
-        // Reaplica por alguns instantes porque o script oficial pode resetar
-        // as classes logo após terminar a montagem interna.
-        if (attempt >= 10 && isPanelOpen()) {
-          pendingOpen = false;
-          setLoading(false);
-          return;
-        }
-      }
-      if (attempt >= 16) {
-        pendingOpen = false;
-        setLoading(false);
+  const loadScript = () =>
+    new Promise<void>((resolve, reject) => {
+      const existing = document.getElementById(VLIBRAS_SCRIPT_ID) as HTMLScriptElement | null;
+      if (window.VLibras?.Widget || isReady()) {
+        resolve();
         return;
       }
-      retryTimer = window.setTimeout(() => retryOpen(attempt + 1), attempt < 6 ? 350 : 650);
-    };
-
-    const handleOpenVLibras = () => {
-      setLoading(true);
-      initializeWidget();
-      if (isPanelOpen()) {
-        closePanel();
+      if (existing) {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener("error", () => reject(new Error("Falha ao carregar VLibras")), { once: true });
         return;
       }
-      pendingOpen = true;
-      retryOpen();
-    };
-    openHandlerRef.current = handleOpenVLibras;
-    if (pendingButtonOpenRef.current) {
-      pendingButtonOpenRef.current = false;
-      window.setTimeout(handleOpenVLibras, 0);
-    }
-    window.addEventListener("wavechat:open-vlibras", handleOpenVLibras);
+      const script = document.createElement("script");
+      script.id = VLIBRAS_SCRIPT_ID;
+      script.src = "https://vlibras.gov.br/app/vlibras-plugin.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Falha ao carregar VLibras"));
+      document.body.appendChild(script);
+    });
 
-    if (document.getElementById("vlibras-plugin-script")) {
-      return () => {
-        if (openHandlerRef.current === handleOpenVLibras) openHandlerRef.current = null;
-        window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
-      };
-    }
-
-    ensureVisibilityStyle();
+  const mountWidget = () => {
     ensureMarkup();
-
-    const script = document.createElement("script");
-    script.id = "vlibras-plugin-script";
-    script.src = "https://vlibras.gov.br/app/vlibras-plugin.js";
-    script.async = true;
-    script.onload = () => {
-      initializeWidget();
-      if (pendingOpen) {
-        retryOpen();
+    if (isReady() || mountedRef.current) return;
+    if (!window.VLibras?.Widget) return;
+    const previousOnload = window.onload;
+    new window.VLibras.Widget("https://vlibras.gov.br/app");
+    mountedRef.current = true;
+    window.setTimeout(() => {
+      const runOnload = window.onload;
+      if (typeof runOnload === "function" && runOnload !== previousOnload) {
+        runOnload.call(window, new Event("load"));
       }
-    };
-    script.onerror = () => {
-      pendingOpen = false;
-      setLoading(false);
-      console.warn("VLibras: falha ao carregar o script oficial");
-    };
-    document.body.appendChild(script);
-    return () => {
-      disposed = true;
-      if (retryTimer) window.clearTimeout(retryTimer);
-      if (openHandlerRef.current === handleOpenVLibras) openHandlerRef.current = null;
-      window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
-    };
-  }, []);
+    }, 0);
+  };
 
-  const openFromButton = () => {
-    const open = openHandlerRef.current;
-    if (open) {
-      open();
+  const showPanel = () => {
+    const root = ensureMarkup();
+    const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+    const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
+    const wrapperWasActive = Boolean(wrapper?.classList.contains("active"));
+    root.classList.remove("wavechat-vlibras-prewarm");
+    if (!wrapperWasActive) {
+      accessButton?.click();
+    }
+    root.classList.add("enabled", "active");
+    accessButton?.classList.add("active");
+    wrapper?.classList.add("active");
+    openRef.current = true;
+    setOpen(true);
+    setLoading(false);
+
+    if (stabilizeTimerRef.current) window.clearInterval(stabilizeTimerRef.current);
+    const startedAt = Date.now();
+    stabilizeTimerRef.current = window.setInterval(() => {
+      if (!openRef.current || Date.now() - startedAt > 10000) {
+        if (stabilizeTimerRef.current) window.clearInterval(stabilizeTimerRef.current);
+        stabilizeTimerRef.current = undefined;
+        return;
+      }
+      root.classList.add("enabled", "active");
+      accessButton?.classList.add("active");
+      wrapper?.classList.add("active");
+    }, 250);
+  };
+
+  const hidePanel = () => {
+    document.querySelector<HTMLElement>("div[vw]")?.classList.remove("active");
+    document.querySelector<HTMLElement>("[vw-access-button]")?.classList.remove("active");
+    document.querySelector<HTMLElement>("[vw-plugin-wrapper]")?.classList.remove("active");
+    openRef.current = false;
+    setOpen(false);
+    setLoading(false);
+  };
+
+  const toggleVLibras = async () => {
+    if (openRef.current || document.querySelector("[vw-plugin-wrapper].active")) {
+      hidePanel();
       return;
     }
-    pendingButtonOpenRef.current = true;
+
     setLoading(true);
+    ensureStyle();
+    ensureMarkup();
+    const slowTimer = window.setTimeout(() => {
+      if (loading || !openRef.current) {
+        toast.info("O avatar oficial do VLibras ainda está carregando. A primeira abertura pode demorar alguns segundos.");
+      }
+    }, 8000);
+
+    try {
+      await loadScript();
+      mountWidget();
+      const ready = await waitForReady();
+      window.clearTimeout(slowTimer);
+      if (!ready) {
+        setLoading(false);
+        toast.error("O VLibras está lento fora da WaveChat. Tente novamente em alguns segundos.");
+        return;
+      }
+      showPanel();
+    } catch {
+      window.clearTimeout(slowTimer);
+      setLoading(false);
+      toast.error("Não foi possível abrir o VLibras agora.");
+    }
   };
+
+  const warmVLibras = async () => {
+    if (prewarmedRef.current) return;
+    prewarmedRef.current = true;
+    try {
+      ensureStyle();
+      const root = ensureMarkup();
+      root.classList.add("wavechat-vlibras-prewarm");
+      await loadScript();
+      mountWidget();
+      const ready = await waitForReady();
+      if (!ready || openRef.current || window.plugin) return;
+      document.querySelector<HTMLElement>("[vw-access-button]")?.click();
+      window.setTimeout(() => {
+        if (openRef.current) return;
+        document.querySelector<HTMLElement>("div[vw]")?.classList.remove("active");
+        document.querySelector<HTMLElement>("[vw-access-button]")?.classList.remove("active");
+        document.querySelector<HTMLElement>("[vw-plugin-wrapper]")?.classList.remove("active");
+      }, 2000);
+    } catch {
+      prewarmedRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (win.requestIdleCallback) {
+      const idleId = win.requestIdleCallback(() => void warmVLibras(), { timeout: 5000 });
+      return () => win.cancelIdleCallback?.(idleId);
+    }
+    const timer = window.setTimeout(() => void warmVLibras(), 3500);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <Button
@@ -264,8 +284,8 @@ export function VLibrasWidget() {
       size="sm"
       variant="secondary"
       className="wavechat-vlibras-button fixed right-3 bottom-[76px] md:right-6 md:bottom-6 rounded-full shadow-lg"
-      onClick={openFromButton}
-      aria-label="Abrir tradução em Libras"
+      onClick={() => void toggleVLibras()}
+      aria-label={open ? "Fechar tradução em Libras" : "Abrir tradução em Libras"}
       title="Traduzir para Libras"
     >
       {loading ? <Loader2 className="size-4 mr-1.5 animate-spin" /> : <Accessibility className="size-4 mr-1.5" />}
