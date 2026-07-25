@@ -210,9 +210,7 @@ function EcosystemBillingPage() {
                   {isCurrent && <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">Atual</span>}
                 </div>
                 <div className="mb-3">
-                  {p.tier === "enterprise" ? (
-                    <div className="text-xl font-bold">Sob consulta</div>
-                  ) : p.price_brl_month === 0 ? (
+                  {p.price_brl_month === 0 ? (
                     <div className="text-xl font-bold">Grátis</div>
                   ) : (
                     <>
@@ -221,6 +219,7 @@ function EcosystemBillingPage() {
                     </>
                   )}
                 </div>
+
                 <ul className="space-y-1.5 text-sm mb-4 flex-1">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Até {p.member_limit >= 1000000 ? "membros ilimitados" : `${p.member_limit.toLocaleString("pt-BR")} membros`}</li>
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Posts, stories, vídeos e lives <strong>ilimitados</strong></li>
