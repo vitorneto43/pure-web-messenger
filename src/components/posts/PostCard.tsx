@@ -20,6 +20,7 @@ import { linkify } from "@/lib/linkify";
 import { TranslateButton } from "@/components/TranslateButton";
 import { StatusLinkPreview, extractFirstUrl } from "@/components/status/StatusLinkPreview";
 import { AutoplayVideo } from "@/components/AutoplayVideo";
+import { AccessibilityBar } from "@/components/AccessibilityBar";
 
 
 export interface PostItem {
@@ -257,8 +258,18 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       })()}
 
 
+
+      {/* Accessibility — leitura em voz alta + descrição de imagem por IA + comando de voz */}
+      <div className="px-3 pt-2">
+        <AccessibilityBar
+          readText={[post.content, post.caption].filter(Boolean).join(". ")}
+          imageUrl={post.kind === "image" ? post.media_url : null}
+        />
+      </div>
+
       {/* Actions */}
       <div className="flex items-center gap-1 px-2 py-2">
+
         <Button variant="ghost" size="sm" onClick={toggleLike}>
           <Heart className={cn("size-5 mr-1", post.viewer_already_liked && "fill-rose-500 text-rose-500")} />
           {post.reactions_count}
