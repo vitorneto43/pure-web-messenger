@@ -9,6 +9,7 @@ import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { formatViews, signWavetubeUrl } from "@/lib/wavetube";
 import { FollowButton } from "@/components/FollowButton";
 
