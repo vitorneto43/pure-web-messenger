@@ -394,13 +394,8 @@ export function ChatSidebar({
   }
 
   function openVLibras() {
-    const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
-    if (accessButton) {
-      accessButton.click();
-      return;
-    }
     window.dispatchEvent(new Event("wavechat:open-vlibras"));
-    toast.message("Abrindo VLibras...");
+    if (!document.querySelector("[vw-plugin-wrapper] [vp]")) toast.message("Carregando VLibras...");
   }
 
   const filtered = useMemo(() => {
