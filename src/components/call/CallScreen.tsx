@@ -308,7 +308,7 @@ function CallControls() {
         <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-zinc-900 to-black">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
             <Avatar className="size-40 border-4 border-white/20">
-              <AvatarImage src={peer?.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(peer?.avatar_url, 160)} fetchPriority="high" />
               <AvatarFallback className="text-6xl bg-gradient-to-br from-blue-500 to-purple-600">
                 {peer?.display_name?.[0]?.toUpperCase() ?? "?"}
               </AvatarFallback>
