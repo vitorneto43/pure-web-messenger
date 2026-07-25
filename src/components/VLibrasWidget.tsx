@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Accessibility, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
  */
 export function VLibrasWidget() {
   const [loading, setLoading] = useState(false);
+  const openHandlerRef = useRef<(() => void) | null>(null);
+  const pendingButtonOpenRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -195,10 +197,18 @@ export function VLibrasWidget() {
       pendingOpen = true;
       retryOpen();
     };
+    openHandlerRef.current = handleOpenVLibras;
+    if (pendingButtonOpenRef.current) {
+      pendingButtonOpenRef.current = false;
+      window.setTimeout(handleOpenVLibras, 0);
+    }
     window.addEventListener("wavechat:open-vlibras", handleOpenVLibras);
 
     if (document.getElementById("vlibras-plugin-script")) {
-      return () => window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
+      return () => {
+        if (openHandlerRef.current === handleOpenVLibras) openHandlerRef.current = null;
+        window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
+      };
     }
 
     ensureVisibilityStyle();
@@ -223,9 +233,20 @@ export function VLibrasWidget() {
     return () => {
       disposed = true;
       if (retryTimer) window.clearTimeout(retryTimer);
+      if (openHandlerRef.current === handleOpenVLibras) openHandlerRef.current = null;
       window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
     };
   }, []);
+
+  const openFromButton = () => {
+    const open = openHandlerRef.current;
+    if (open) {
+      open();
+      return;
+    }
+    pendingButtonOpenRef.current = true;
+    setLoading(true);
+  };
 
   return (
     <Button
@@ -233,7 +254,7 @@ export function VLibrasWidget() {
       size="sm"
       variant="secondary"
       className="wavechat-vlibras-button fixed right-3 bottom-[76px] md:right-6 md:bottom-6 rounded-full shadow-lg"
-      onClick={() => window.dispatchEvent(new Event("wavechat:open-vlibras"))}
+      onClick={openFromButton}
       aria-label="Abrir tradução em Libras"
       title="Traduzir para Libras"
     >
