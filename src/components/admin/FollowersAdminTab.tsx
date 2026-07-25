@@ -60,7 +60,7 @@ export function FollowersAdminTab() {
               <div key={p.id} className="flex items-center gap-3 py-1.5 border-b border-border/50 last:border-0">
                 <span className="text-xs text-muted-foreground w-6 text-right">#{i + 1}</span>
                 <Avatar className="size-8">
-                  <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 16)} />
+                  <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 64)} />
                   <AvatarFallback>{(p.display_name || p.username || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

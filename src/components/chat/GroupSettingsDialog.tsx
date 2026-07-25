@@ -322,7 +322,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                   {pendingReqs.map((r) => (
                     <div key={r.id} className="flex items-center gap-2 p-1.5">
                       <Avatar className="size-8">
-                        <AvatarImage src={optimizeAvatarUrl(r.profile?.avatar_url ?? undefined, 16)} />
+                        <AvatarImage src={optimizeAvatarUrl(r.profile?.avatar_url ?? undefined, 64)} />
                         <AvatarFallback>{r.profile?.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -362,7 +362,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30"
                     >
                       <Avatar className="size-9">
-                        <AvatarImage src={optimizeAvatarUrl(m.profile?.avatar_url ?? undefined, 18)} />
+                        <AvatarImage src={optimizeAvatarUrl(m.profile?.avatar_url ?? undefined, 72)} />
                         <AvatarFallback>
                           {m.profile?.display_name?.[0]?.toUpperCase() ?? "?"}
                         </AvatarFallback>
@@ -470,7 +470,7 @@ export function GroupSettingsDialog({ conversationId, open, onOpenChange, groupN
                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30 disabled:opacity-50"
               >
                 <Avatar className="size-9">
-                  <AvatarImage src={optimizeAvatarUrl(r.avatar_url ?? undefined, 18)} />
+                  <AvatarImage src={optimizeAvatarUrl(r.avatar_url ?? undefined, 72)} />
                   <AvatarFallback>{r.display_name[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="text-left min-w-0 flex-1">

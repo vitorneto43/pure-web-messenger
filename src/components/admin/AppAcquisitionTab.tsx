@@ -265,7 +265,7 @@ export function AppAcquisitionTab() {
               {data.recent_app_signups.map((u: any) => (
                 <div key={`${u.id}-${u.created_at}`} className="flex items-center gap-3 py-1.5 border-b border-border/40 last:border-0">
                   <Avatar className="size-8">
-                    <AvatarImage src={optimizeAvatarUrl(u.avatar_url ?? undefined, 16)} />
+                    <AvatarImage src={optimizeAvatarUrl(u.avatar_url ?? undefined, 64)} />
                     <AvatarFallback>{(u.display_name || u.username || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -388,7 +388,7 @@ function Row({ rank, p, value, unit }: { rank: number; p: any; value: string | n
     <div className="flex items-center gap-3 py-1.5 border-b border-border/40 last:border-0">
       <span className="text-xs text-muted-foreground w-5 text-right">#{rank}</span>
       <Avatar className="size-8">
-        <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 16)} />
+        <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 64)} />
         <AvatarFallback>{(p.display_name || p.username || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">

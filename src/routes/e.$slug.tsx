@@ -104,7 +104,7 @@ function EcosystemHome() {
             <ArrowLeft className="size-5" />
           </Button>
           <Avatar className="size-9 shrink-0">
-            <AvatarImage src={optimizeAvatarUrl(eco.logo_url ?? undefined, 18)} />
+            <AvatarImage src={optimizeAvatarUrl(eco.logo_url ?? undefined, 72)} />
             <AvatarFallback>{eco.name[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
@@ -211,7 +211,7 @@ function EcosystemHome() {
                 <li key={p.id} className="rounded-2xl border border-border bg-card p-3">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Avatar className="size-7">
-                      <AvatarImage src={optimizeAvatarUrl(p.author?.avatar_url ?? undefined, 14)} />
+                      <AvatarImage src={optimizeAvatarUrl(p.author?.avatar_url ?? undefined, 56)} />
                       <AvatarFallback>{(p.author?.display_name ?? p.author?.username ?? "?")[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">

@@ -146,7 +146,7 @@ function HashtagFeedPage() {
               >
                 <div className="flex items-center gap-1.5">
                   <Avatar className="size-5">
-                    <AvatarImage src={optimizeAvatarUrl(s.profiles?.avatar_url ?? undefined, 10)} />
+                    <AvatarImage src={optimizeAvatarUrl(s.profiles?.avatar_url ?? undefined, 40)} />
                     <AvatarFallback className="text-[8px]">
                       {s.profiles?.display_name?.[0]?.toUpperCase() ?? "?"}
                     </AvatarFallback>

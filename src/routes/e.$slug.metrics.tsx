@@ -204,7 +204,7 @@ function EcosystemMetrics() {
                       <li key={a.user_id} className="flex items-center gap-3 py-2">
                         <span className="text-xs font-bold w-5 text-muted-foreground">#{idx + 1}</span>
                         <Avatar className="size-8">
-                          <AvatarImage src={optimizeAvatarUrl(a.avatar_url ?? undefined, 16)} />
+                          <AvatarImage src={optimizeAvatarUrl(a.avatar_url ?? undefined, 64)} />
                           <AvatarFallback>{name[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
