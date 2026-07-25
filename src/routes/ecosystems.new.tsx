@@ -96,7 +96,14 @@ function NewEcosystemPage() {
       </header>
 
       <main className="mx-auto max-w-[640px] px-3 py-4">
+        <Link
+          to="/ecosystems/pricing"
+          className="block mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm hover:bg-primary/10 transition"
+        >
+          💎 <strong>Ver todos os planos e preços</strong> — Free (100 membros) · Pro R$60 · Business R$100 · Enterprise R$250. Tudo incluso.
+        </Link>
         <form onSubmit={submit} className="space-y-4">
+
           <div>
             <Label htmlFor="name">Nome</Label>
             <Input
