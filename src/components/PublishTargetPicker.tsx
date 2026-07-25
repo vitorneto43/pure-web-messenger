@@ -1,4 +1,4 @@
-import { Globe2, Building2, Check } from "lucide-react";
+import { Globe2, Building2, Check, Lock } from "lucide-react";
 import { useEcosystems } from "@/hooks/use-ecosystem";
 import { Label } from "@/components/ui/label";
 
@@ -26,6 +26,19 @@ export function PublishTargetPicker({ value, onChange, className }: Props) {
   const isEco = value.kind === "ecosystem";
   const isBoth = value.kind === "both";
 
+  // Institution policy for the currently selected ecosystem.
+  const allowsCrosspost = activeEco?.allow_public_crosspost ?? true;
+  const requiresAdmin = activeEco?.public_crosspost_requires_admin ?? false;
+
+  // When the eco disallows public crossposting, force selection to "ecosystem".
+  if (!allowsCrosspost && (isPublic || isBoth) && activeEco) {
+    // Only auto-correct if user is currently authoring inside that ecosystem.
+    // Otherwise (kind=public with no eco context), leave as-is.
+    if (currentEcosystemId === activeEco.id) {
+      queueMicrotask(() => onChange({ kind: "ecosystem", ecosystemId: activeEco.id }));
+    }
+  }
+
   return (
     <div className={`rounded-xl border border-border bg-muted/30 p-3 space-y-2 ${className ?? ""}`}>
       <Label className="text-xs font-semibold">Publicar em</Label>
@@ -50,6 +63,7 @@ export function PublishTargetPicker({ value, onChange, className }: Props) {
           icon={<Globe2 className="size-4" />}
           label="Público"
           hint="Toda a Wavechat"
+          disabled={!allowsCrosspost && !!activeEco && currentEcosystemId === activeEco.id}
         />
         <TargetChip
           active={isEco}
@@ -62,10 +76,10 @@ export function PublishTargetPicker({ value, onChange, className }: Props) {
         <TargetChip
           active={isBoth}
           onClick={() => activeEco && onChange({ kind: "both", ecosystemId: activeEco.id })}
-          icon={<Check className="size-4" />}
+          icon={allowsCrosspost ? <Check className="size-4" /> : <Lock className="size-4" />}
           label="Ambos"
-          hint="Público + eco"
-          disabled={!activeEco}
+          hint={allowsCrosspost ? "Público + eco" : "Bloqueado"}
+          disabled={!activeEco || !allowsCrosspost}
         />
       </div>
 
@@ -74,6 +88,18 @@ export function PublishTargetPicker({ value, onChange, className }: Props) {
         {isEco && activeEco && `Só membros de ${activeEco.name} verão.`}
         {isBoth && activeEco && `Aparece na Wavechat e no ecossistema ${activeEco.name}.`}
       </p>
+
+      {activeEco && !allowsCrosspost && (
+        <p className="text-[11px] text-muted-foreground leading-snug flex items-start gap-1.5">
+          <Lock className="size-3 mt-0.5 flex-shrink-0" />
+          <span>Este ecossistema não permite publicar no feed público da Wavechat.</span>
+        </p>
+      )}
+      {activeEco && allowsCrosspost && requiresAdmin && (isBoth || isPublic) && (
+        <p className="text-[11px] text-amber-600 dark:text-amber-500 leading-snug">
+          Apenas administradores deste ecossistema podem publicar no feed público. Se você não for admin, a publicação será bloqueada.
+        </p>
+      )}
     </div>
   );
 }
@@ -93,7 +119,7 @@ function TargetChip({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex flex-col items-start gap-0.5 rounded-lg border p-2 text-left transition-colors disabled:opacity-40 ${
+      className={`flex flex-col items-start gap-0.5 rounded-lg border p-2 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
         active
           ? "border-primary bg-primary/10 text-foreground"
           : "border-border bg-background hover:bg-muted/60"
