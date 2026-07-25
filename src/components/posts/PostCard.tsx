@@ -14,6 +14,7 @@ import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { blockUser } from "@/lib/moderation.functions";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { track } from "@/lib/track";
 import { formatTime } from "@/lib/format-time";
 import { linkify } from "@/lib/linkify";
