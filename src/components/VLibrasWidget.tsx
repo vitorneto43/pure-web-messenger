@@ -142,14 +142,18 @@ export function VLibrasWidget() {
 
     const clickAccessButton = () => {
       const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
       if (!accessButton || !isWidgetReady()) return false;
       if (isPanelOpen()) {
+        wrapper?.classList.remove("active");
         setLoading(false);
         return true;
       }
-      accessButton.click();
+      // O botão oficial às vezes demora a receber o listener interno.
+      // Abrimos o painel diretamente quando a estrutura do plugin já existe.
+      wrapper?.classList.add("active");
       window.setTimeout(() => {
-        if (!disposed && isPanelOpen()) setLoading(false);
+        if (!disposed) setLoading(false);
       }, 250);
       return true;
     };
