@@ -266,7 +266,7 @@ function ProfilePage() {
 
         <div className="mt-6 flex items-center gap-5">
           <Avatar className="size-20 ring-2 ring-border">
-            <AvatarImage src={profile.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(profile.avatar_url, 160)} fetchPriority="high" />
             <AvatarFallback className="text-xl">
               {profile.display_name?.[0]?.toUpperCase() ?? "?"}
             </AvatarFallback>
