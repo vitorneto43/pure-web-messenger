@@ -91,6 +91,7 @@ function StatusPublicPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<StatusRow | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
+  useImagePreload(optimizeAvatarUrl(author?.avatar_url, 88));
   const [comments, setComments] = useState<Comment[]>([]);
   const [reactionsByComment, setReactionsByComment] = useState<Record<string, CommentReaction[]>>({});
 
