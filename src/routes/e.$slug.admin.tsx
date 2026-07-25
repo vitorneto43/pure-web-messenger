@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getEcosystemBySlug,
@@ -309,6 +310,45 @@ function EcosystemAdmin() {
               Salvar
             </Button>
           </div>
+        </section>
+
+        {/* Cross-post policy — decide if members can also publish to public Wavechat */}
+        <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <div>
+            <h2 className="text-sm font-bold">Estratégia de publicação</h2>
+            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+              Decida como o conteúdo dos membros aparece: só neste ecossistema, também no feed público da Wavechat, ou ambos.
+            </p>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-tight">Permitir publicação no feed público</p>
+              <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                Quando ativado, os membros podem escolher "Ambos" ou "Público" ao publicar posts, stories, vídeos e lives. Desligue para manter tudo restrito ao ecossistema.
+              </p>
+            </div>
+            <Switch checked={allowCrosspost} onCheckedChange={setAllowCrosspost} />
+          </div>
+
+          <div className={`flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3 ${!allowCrosspost ? "opacity-50 pointer-events-none" : ""}`}>
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-tight">Restringir a admins e moderadores</p>
+              <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                Só admins e moderadores podem cross-postar publicamente. Útil para instituições que querem controlar a comunicação externa.
+              </p>
+            </div>
+            <Switch
+              checked={crosspostAdminOnly}
+              onCheckedChange={setCrosspostAdminOnly}
+              disabled={!allowCrosspost}
+            />
+          </div>
+
+          <Button onClick={saveSettings} disabled={saving} variant="outline" className="w-full">
+            {saving ? <Loader2 className="size-4 animate-spin mr-2" /> : <Save className="size-4 mr-2" />}
+            Salvar estratégia
+          </Button>
         </section>
 
         {/* Invite link */}
