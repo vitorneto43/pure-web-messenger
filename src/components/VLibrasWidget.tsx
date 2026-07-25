@@ -118,7 +118,7 @@ export function VLibrasWidget() {
       const root = document.querySelector<HTMLElement>("div[vw]");
       const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
       const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      if (!root || !accessButton || !wrapper) return false;
+      if (!root || !accessButton || !wrapper || !isWidgetReady()) return false;
       root.classList.add("active");
       accessButton.classList.add("active");
       wrapper.classList.add("active");
