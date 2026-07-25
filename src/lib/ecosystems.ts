@@ -22,6 +22,8 @@ export interface Ecosystem {
   created_by: string;
   created_at: string;
   updated_at: string;
+  allow_public_crosspost: boolean;
+  public_crosspost_requires_admin: boolean;
 }
 
 export interface EcosystemMembership {
@@ -226,7 +228,11 @@ export async function removeMember(ecosystemId: string, userId: string) {
 
 export async function updateEcosystem(
   ecosystemId: string,
-  patch: Partial<Pick<Ecosystem, "name" | "description" | "primary_color" | "website" | "contact_email" | "logo_url" | "banner_url" | "join_policy" | "visibility">>,
+  patch: Partial<Pick<Ecosystem,
+    | "name" | "description" | "primary_color" | "website" | "contact_email"
+    | "logo_url" | "banner_url" | "join_policy" | "visibility"
+    | "allow_public_crosspost" | "public_crosspost_requires_admin"
+  >>,
 ): Promise<Ecosystem> {
   const { data, error } = await sb
     .from("ecosystems")

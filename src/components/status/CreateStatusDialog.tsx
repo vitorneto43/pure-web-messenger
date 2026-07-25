@@ -517,9 +517,9 @@ function buildStatusRows(args: {
   if (target.kind === "ecosystem") {
     return [{ user_id: userId, ...payload, ecosystem_id: target.ecosystemId }];
   }
-  // "both" — cross-post: ecosystem copy + public copy
+  // "both" — cross-post: ecosystem copy + public copy (marked as crossposted)
   return [
     { user_id: userId, ...payload, ecosystem_id: target.ecosystemId },
-    { user_id: userId, ...payload, ecosystem_id: null },
+    { user_id: userId, ...payload, ecosystem_id: null, crossposted_from_ecosystem_id: target.ecosystemId },
   ];
 }

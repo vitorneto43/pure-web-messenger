@@ -1019,6 +1019,7 @@ export type Database = {
       }
       ecosystems: {
         Row: {
+          allow_public_crosspost: boolean
           banner_url: string | null
           billing_contact_email: string | null
           category: Database["public"]["Enums"]["ecosystem_category"]
@@ -1039,6 +1040,7 @@ export type Database = {
           plan_tier: Database["public"]["Enums"]["ecosystem_plan_tier"]
           post_limit_override: number | null
           primary_color: string | null
+          public_crosspost_requires_admin: boolean
           settings: Json
           slug: string
           updated_at: string
@@ -1046,6 +1048,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          allow_public_crosspost?: boolean
           banner_url?: string | null
           billing_contact_email?: string | null
           category?: Database["public"]["Enums"]["ecosystem_category"]
@@ -1066,6 +1069,7 @@ export type Database = {
           plan_tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
           post_limit_override?: number | null
           primary_color?: string | null
+          public_crosspost_requires_admin?: boolean
           settings?: Json
           slug: string
           updated_at?: string
@@ -1073,6 +1077,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          allow_public_crosspost?: boolean
           banner_url?: string | null
           billing_contact_email?: string | null
           category?: Database["public"]["Enums"]["ecosystem_category"]
@@ -1093,6 +1098,7 @@ export type Database = {
           plan_tier?: Database["public"]["Enums"]["ecosystem_plan_tier"]
           post_limit_override?: number | null
           primary_color?: string | null
+          public_crosspost_requires_admin?: boolean
           settings?: Json
           slug?: string
           updated_at?: string
@@ -1733,6 +1739,7 @@ export type Database = {
         Row: {
           cover_url: string | null
           created_at: string
+          crossposted_from_ecosystem_id: string | null
           ecosystem_id: string | null
           ended_at: string | null
           host_id: string
@@ -1741,6 +1748,7 @@ export type Database = {
           livekit_room: string
           orientation: string
           peak_viewers: number
+          public_crosspost: boolean
           scheduled_live_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["live_status"]
@@ -1753,6 +1761,7 @@ export type Database = {
         Insert: {
           cover_url?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           ecosystem_id?: string | null
           ended_at?: string | null
           host_id: string
@@ -1761,6 +1770,7 @@ export type Database = {
           livekit_room: string
           orientation?: string
           peak_viewers?: number
+          public_crosspost?: boolean
           scheduled_live_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["live_status"]
@@ -1773,6 +1783,7 @@ export type Database = {
         Update: {
           cover_url?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           ecosystem_id?: string | null
           ended_at?: string | null
           host_id?: string
@@ -1781,6 +1792,7 @@ export type Database = {
           livekit_room?: string
           orientation?: string
           peak_viewers?: number
+          public_crosspost?: boolean
           scheduled_live_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["live_status"]
@@ -1791,6 +1803,13 @@ export type Database = {
           will_record?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "live_sessions_crossposted_from_ecosystem_id_fkey"
+            columns: ["crossposted_from_ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "live_sessions_ecosystem_id_fkey"
             columns: ["ecosystem_id"]
@@ -2588,6 +2607,7 @@ export type Database = {
           caption: string | null
           content: string | null
           created_at: string
+          crossposted_from_ecosystem_id: string | null
           cta_label: string | null
           cta_url: string | null
           ecosystem_id: string | null
@@ -2612,6 +2632,7 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           ecosystem_id?: string | null
@@ -2636,6 +2657,7 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           ecosystem_id?: string | null
@@ -2656,6 +2678,13 @@ export type Database = {
           visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_crossposted_from_ecosystem_id_fkey"
+            columns: ["crossposted_from_ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_ecosystem_id_fkey"
             columns: ["ecosystem_id"]
@@ -3589,6 +3618,7 @@ export type Database = {
           caption: string | null
           content: string | null
           created_at: string
+          crossposted_from_ecosystem_id: string | null
           cta_label: string | null
           cta_url: string | null
           description: string | null
@@ -3613,6 +3643,7 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
@@ -3637,6 +3668,7 @@ export type Database = {
           caption?: string | null
           content?: string | null
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
@@ -3657,6 +3689,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "statuses_crossposted_from_ecosystem_id_fkey"
+            columns: ["crossposted_from_ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "statuses_ecosystem_id_fkey"
             columns: ["ecosystem_id"]
@@ -4350,6 +4389,7 @@ export type Database = {
           category: string | null
           comments_count: number
           created_at: string
+          crossposted_from_ecosystem_id: string | null
           cta_label: string | null
           cta_url: string | null
           description: string | null
@@ -4380,6 +4420,7 @@ export type Database = {
           category?: string | null
           comments_count?: number
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
@@ -4410,6 +4451,7 @@ export type Database = {
           category?: string | null
           comments_count?: number
           created_at?: string
+          crossposted_from_ecosystem_id?: string | null
           cta_label?: string | null
           cta_url?: string | null
           description?: string | null
@@ -4436,6 +4478,13 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["video_visibility"]
         }
         Relationships: [
+          {
+            foreignKeyName: "videos_crossposted_from_ecosystem_id_fkey"
+            columns: ["crossposted_from_ecosystem_id"]
+            isOneToOne: false
+            referencedRelation: "ecosystems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "videos_ecosystem_id_fkey"
             columns: ["ecosystem_id"]
@@ -5252,6 +5301,7 @@ export type Database = {
             Returns: {
               cover_url: string | null
               created_at: string
+              crossposted_from_ecosystem_id: string | null
               ecosystem_id: string | null
               ended_at: string | null
               host_id: string
@@ -5260,6 +5310,7 @@ export type Database = {
               livekit_room: string
               orientation: string
               peak_viewers: number
+              public_crosspost: boolean
               scheduled_live_id: string | null
               started_at: string
               status: Database["public"]["Enums"]["live_status"]
@@ -5285,6 +5336,7 @@ export type Database = {
             Returns: {
               cover_url: string | null
               created_at: string
+              crossposted_from_ecosystem_id: string | null
               ecosystem_id: string | null
               ended_at: string | null
               host_id: string
@@ -5293,6 +5345,43 @@ export type Database = {
               livekit_room: string
               orientation: string
               peak_viewers: number
+              public_crosspost: boolean
+              scheduled_live_id: string | null
+              started_at: string
+              status: Database["public"]["Enums"]["live_status"]
+              title: string
+              total_gift_coins: number
+              total_reactions: number
+              viewer_count: number
+              will_record: boolean
+            }
+            SetofOptions: {
+              from: "*"
+              to: "live_sessions"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_cover_url?: string
+              p_ecosystem_id?: string
+              p_public_crosspost?: boolean
+              p_title: string
+            }
+            Returns: {
+              cover_url: string | null
+              created_at: string
+              crossposted_from_ecosystem_id: string | null
+              ecosystem_id: string | null
+              ended_at: string | null
+              host_id: string
+              host_last_seen: string
+              id: string
+              livekit_room: string
+              orientation: string
+              peak_viewers: number
+              public_crosspost: boolean
               scheduled_live_id: string | null
               started_at: string
               status: Database["public"]["Enums"]["live_status"]

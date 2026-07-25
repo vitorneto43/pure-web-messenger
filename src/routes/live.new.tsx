@@ -73,7 +73,8 @@ function NewLive() {
       const { data, error } = await supabase.rpc("start_live", {
         p_title: title,
         p_ecosystem_id: target.kind !== "public" ? target.ecosystemId : undefined,
-      });
+        p_public_crosspost: target.kind === "both",
+      } as any);
       if (error) throw error;
       const live = Array.isArray(data) ? data[0] : data;
       if (!live?.id) throw new Error("Falha ao iniciar live");

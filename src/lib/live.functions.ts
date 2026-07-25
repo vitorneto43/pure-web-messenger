@@ -72,10 +72,12 @@ export const getActiveLives = createServerFn({ method: "GET" })
       })) as LiveListItem[];
     }
 
+    // Public feed: native public lives + ecosystem lives explicitly cross-posted.
     const { data: lives, error } = await sb
       .from("live_sessions")
-      .select("id,title,cover_url,viewer_count,host_id,started_at,total_gift_coins")
+      .select("id,title,cover_url,viewer_count,host_id,started_at,total_gift_coins,ecosystem_id,public_crosspost")
       .eq("status", "live")
+      .or("ecosystem_id.is.null,public_crosspost.eq.true")
       .order("viewer_count", { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message);
