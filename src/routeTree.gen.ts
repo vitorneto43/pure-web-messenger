@@ -44,6 +44,7 @@ import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as InviteInviterIdRouteImport } from './routes/invite.$inviterId'
 import { Route as GGroupIdRouteImport } from './routes/g.$groupId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as EcosystemsPricingRouteImport } from './routes/ecosystems.pricing'
 import { Route as EcosystemsNewRouteImport } from './routes/ecosystems.new'
 import { Route as ESlugRouteImport } from './routes/e.$slug'
 import { Route as AuthenticatedScheduledRouteImport } from './routes/_authenticated/scheduled'
@@ -249,6 +250,11 @@ const GGroupIdRoute = GGroupIdRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcosystemsPricingRoute = EcosystemsPricingRouteImport.update({
+  id: '/ecosystems/pricing',
+  path: '/ecosystems/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EcosystemsNewRoute = EcosystemsNewRouteImport.update({
@@ -457,6 +463,7 @@ export interface FileRoutesByFullPath {
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
+  '/ecosystems/pricing': typeof EcosystemsPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
@@ -525,6 +532,7 @@ export interface FileRoutesByTo {
   '/scheduled': typeof AuthenticatedScheduledRoute
   '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
+  '/ecosystems/pricing': typeof EcosystemsPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
@@ -595,6 +603,7 @@ export interface FileRoutesById {
   '/_authenticated/scheduled': typeof AuthenticatedScheduledRoute
   '/e/$slug': typeof ESlugRouteWithChildren
   '/ecosystems/new': typeof EcosystemsNewRoute
+  '/ecosystems/pricing': typeof EcosystemsPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/g/$groupId': typeof GGroupIdRoute
   '/invite/$inviterId': typeof InviteInviterIdRoute
@@ -665,6 +674,7 @@ export interface FileRouteTypes {
     | '/scheduled'
     | '/e/$slug'
     | '/ecosystems/new'
+    | '/ecosystems/pricing'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
@@ -733,6 +743,7 @@ export interface FileRouteTypes {
     | '/scheduled'
     | '/e/$slug'
     | '/ecosystems/new'
+    | '/ecosystems/pricing'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
@@ -802,6 +813,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scheduled'
     | '/e/$slug'
     | '/ecosystems/new'
+    | '/ecosystems/pricing'
     | '/email/unsubscribe'
     | '/g/$groupId'
     | '/invite/$inviterId'
@@ -866,6 +878,7 @@ export interface RootRouteChildren {
   WavetubeRoute: typeof WavetubeRoute
   ESlugRoute: typeof ESlugRouteWithChildren
   EcosystemsNewRoute: typeof EcosystemsNewRoute
+  EcosystemsPricingRoute: typeof EcosystemsPricingRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   GGroupIdRoute: typeof GGroupIdRoute
   InviteInviterIdRoute: typeof InviteInviterIdRoute
@@ -1142,6 +1155,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ecosystems/pricing': {
+      id: '/ecosystems/pricing'
+      path: '/ecosystems/pricing'
+      fullPath: '/ecosystems/pricing'
+      preLoaderRoute: typeof EcosystemsPricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ecosystems/new': {
@@ -1450,6 +1470,7 @@ const rootRouteChildren: RootRouteChildren = {
   WavetubeRoute: WavetubeRoute,
   ESlugRoute: ESlugRouteWithChildren,
   EcosystemsNewRoute: EcosystemsNewRoute,
+  EcosystemsPricingRoute: EcosystemsPricingRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   GGroupIdRoute: GGroupIdRoute,
   InviteInviterIdRoute: InviteInviterIdRoute,
