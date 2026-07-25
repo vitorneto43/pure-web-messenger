@@ -168,7 +168,10 @@ export function VLibrasWidget() {
     const retryOpen = (attempt = 0) => {
       if (disposed || !pendingOpen) return;
       initializeWidget();
-      if (!isPanelOpen()) forceOpenPanel();
+      if (!isPanelOpen() && forceOpenPanel()) {
+        pendingOpen = false;
+        return;
+      }
       if (clickAccessButton()) {
         if (isPanelOpen()) {
           pendingOpen = false;
