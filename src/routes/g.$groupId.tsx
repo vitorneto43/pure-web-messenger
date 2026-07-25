@@ -81,6 +81,8 @@ function GroupPage() {
   const [busy, setBusy] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
+  useImagePreload(optimizeAvatarUrl(group.avatar_url, 192));
+
   useEffect(() => {
     if (!group || !user) return;
     getGroupMembershipStatus({ data: { id: group.id } }).then(setStatus).catch(() => {});
