@@ -4,6 +4,7 @@ import { ArrowLeft, Globe, Loader2, MoreVertical, Share2, ShieldAlert, Users } f
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
