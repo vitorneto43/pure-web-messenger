@@ -289,7 +289,7 @@ export function StatusBar() {
               >
                 <LiveAvatarRing hostId={l.host_id} showPill clickable={false}>
                   <Avatar className="size-14">
-                    <AvatarImage src={l.host?.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(l.host?.avatar_url, 144)} fetchPriority="high" />
                     <AvatarFallback className="bg-secondary text-sm">
                       {name[0]?.toUpperCase()}
                     </AvatarFallback>
