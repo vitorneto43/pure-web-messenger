@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
 import { ProfilePostsArchive } from "@/components/profile/ProfilePostsArchive";
