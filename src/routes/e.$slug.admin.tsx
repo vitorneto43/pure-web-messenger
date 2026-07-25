@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -521,7 +522,7 @@ function EcosystemAdmin() {
                 return (
                   <li key={m.user_id} className="flex items-center gap-3 py-2.5">
                     <Avatar className="size-9 shrink-0">
-                      <AvatarImage src={m.profile?.avatar_url ?? undefined} />
+                      <AvatarImage src={optimizeAvatarUrl(m.profile?.avatar_url, 72)} />
                       <AvatarFallback>{name[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
