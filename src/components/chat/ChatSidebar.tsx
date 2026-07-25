@@ -25,6 +25,7 @@ import {
   Activity,
   PlaySquare,
   Flame,
+  Accessibility,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -392,6 +393,16 @@ export function ChatSidebar({
     navigate({ to: "/" });
   }
 
+  function openVLibras() {
+    const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+    if (accessButton) {
+      accessButton.click();
+      return;
+    }
+    window.dispatchEvent(new Event("wavechat:open-vlibras"));
+    toast.message("Abrindo VLibras...");
+  }
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = conversations;
@@ -643,6 +654,15 @@ export function ChatSidebar({
               className="shrink-0 sm:flex-1 rounded-full"
             >
               <MessageSquarePlus className="size-4 mr-1.5" /> {t("chat.new")}
+            </Button>
+            <Button
+              onClick={openVLibras}
+              size="sm"
+              variant="secondary"
+              className="shrink-0 rounded-full"
+              title="Traduzir para Libras"
+            >
+              <Accessibility className="size-4 mr-1.5" /> Libras
             </Button>
             <Button asChild size="sm" variant="secondary" className="shrink-0 rounded-full">
               <Link to="/live">
