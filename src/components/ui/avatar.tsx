@@ -5,7 +5,7 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
 
-type AvatarStatus = "loading" | "loaded" | "error";
+type AvatarStatus = "idle" | "loading" | "loaded" | "error";
 
 const AvatarContext = React.createContext<{
   status: AvatarStatus;
@@ -24,7 +24,7 @@ const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
 >(({ className, children, ...props }, ref) => {
-  const [status, setStatus] = React.useState<AvatarStatus>("loading");
+  const [status, setStatus] = React.useState<AvatarStatus>("idle");
   return (
     <AvatarContext.Provider value={{ status, setStatus }}>
       <AvatarPrimitive.Root
@@ -40,30 +40,71 @@ const Avatar = React.forwardRef<
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
 export interface AvatarImageProps
-  extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> {
+  extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "loading"> {
   /** Prioridade de download. Use "high" para avatares acima da dobra. */
   fetchPriority?: "high" | "low" | "auto";
   /** Se true, carrega a imagem imediatamente (padrão para avatares). */
   loading?: "eager" | "lazy";
+  onLoadingStatusChange?: (status: AvatarStatus) => void;
+}
+
+function getOriginalStorageUrl(src: string) {
+  if (!src.includes("/storage/v1/render/image/public/")) return null;
+  try {
+    const parsed = new URL(src);
+    parsed.pathname = parsed.pathname.replace(
+      "/storage/v1/render/image/public/",
+      "/storage/v1/object/public/",
+    );
+    parsed.search = "";
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
 
 const AvatarImage = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Image>,
+  HTMLImageElement,
   AvatarImageProps
 >(({ className, fetchPriority, loading = "eager", onLoadingStatusChange, ...props }, ref) => {
   const { setStatus } = useAvatarContext();
+  const [currentSrc, setCurrentSrc] = React.useState(props.src);
+
+  React.useEffect(() => {
+    setCurrentSrc(props.src);
+    const nextStatus: AvatarStatus = props.src ? "loading" : "idle";
+    setStatus(nextStatus);
+    onLoadingStatusChange?.(nextStatus);
+  }, [props.src, setStatus, onLoadingStatusChange]);
+
+  if (!currentSrc) return null;
+
   return (
-    <AvatarPrimitive.Image
+    <img
       ref={ref}
+      {...props}
       loading={loading}
       decoding="async"
       fetchPriority={fetchPriority}
-      onLoadingStatusChange={(status) => {
-        setStatus(status as AvatarStatus);
-        onLoadingStatusChange?.(status);
+      onLoad={(event) => {
+        setStatus("loaded");
+        onLoadingStatusChange?.("loaded");
+        props.onLoad?.(event);
+      }}
+      onError={(event) => {
+        const originalUrl = getOriginalStorageUrl(currentSrc);
+        if (originalUrl && originalUrl !== currentSrc) {
+          setCurrentSrc(originalUrl);
+          setStatus("loading");
+          onLoadingStatusChange?.("loading");
+          return;
+        }
+        setStatus("error");
+        onLoadingStatusChange?.("error");
+        props.onError?.(event);
       }}
       className={cn("aspect-square h-full w-full object-cover", className)}
-      {...props}
+      src={currentSrc}
     />
   );
 });
@@ -74,11 +115,12 @@ const AvatarFallback = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
 >(({ className, children, ...props }, ref) => {
   const { status } = useAvatarContext();
+  if (status === "loaded") return null;
   return (
-    <AvatarPrimitive.Fallback
+    <span
       ref={ref}
       className={cn(
-        "flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
+        "absolute inset-0 flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
         className,
       )}
       {...props}
@@ -88,7 +130,7 @@ const AvatarFallback = React.forwardRef<
       ) : (
         children
       )}
-    </AvatarPrimitive.Fallback>
+    </span>
   );
 });
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
