@@ -85,6 +85,9 @@ function PublicProfile() {
     load();
   }, [username]);
 
+  // Preload avatar as soon as profile data loads
+  useImagePreload(optimizeAvatarUrl(data?.avatar_url, 192));
+
   // Register a view once the profile loads (if not own profile)
   useEffect(() => {
     if (!data || !user || user.id === data.id) return;
