@@ -157,7 +157,7 @@ function UploadPage() {
             ? [{ ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId }]
             : [
                 { ...baseRow, visibility: "private", ecosystem_id: target.ecosystemId },
-                { ...baseRow, visibility, ecosystem_id: null },
+                { ...baseRow, visibility, ecosystem_id: null, crossposted_from_ecosystem_id: target.ecosystemId },
               ];
       const { data: inserted, error: insErr } = await supabase
         .from("videos")
