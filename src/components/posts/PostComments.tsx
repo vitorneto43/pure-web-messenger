@@ -177,7 +177,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
     <div>
       <div className="flex gap-2">
         <Avatar className={cn(compact ? "size-7" : "size-9")}>
-          <AvatarImage src={c.avatar_url ?? undefined} />
+          <AvatarImage src={optimizeAvatarUrl(c.avatar_url, compact ? 56 : 72)} />
           <AvatarFallback>{c.display_name[0]?.toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
