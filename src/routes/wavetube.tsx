@@ -204,7 +204,7 @@ function WaveTubePage() {
                 </div>
                 <div className="mt-2 flex gap-2">
                   <Avatar className="size-8 shrink-0">
-                    <AvatarImage src={r.owner_avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(r.owner_avatar_url, 64)} />
                     <AvatarFallback>{(r.owner_display_name || r.owner_username || "?").charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
