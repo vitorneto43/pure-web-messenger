@@ -597,7 +597,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         </button>
         <div className="flex items-center gap-3 flex-1 min-w-0 -mx-1 px-1">
           <Avatar className="size-10">
-            <AvatarImage src={headerAvatar ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(headerAvatar, 96)} fetchPriority="high" />
             <AvatarFallback>{headerTitle?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
