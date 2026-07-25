@@ -757,7 +757,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 <div className="w-8 shrink-0">
                   {showAvatar && (
                     <Avatar className="size-8">
-                      <AvatarImage src={sender?.avatar_url ?? undefined} />
+                      <AvatarImage src={optimizeAvatarUrl(sender?.avatar_url, 64)} />
                       <AvatarFallback className="text-xs">
                         {sender?.display_name?.[0]?.toUpperCase()}
                       </AvatarFallback>
