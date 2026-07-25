@@ -13,7 +13,26 @@ import { useEffect } from "react";
 export function VLibrasWidget() {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (document.getElementById("vlibras-plugin-script")) return;
+
+    let pendingOpen = false;
+    const clickAccessButton = () => {
+      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+      if (!accessButton) return false;
+      accessButton.click();
+      return true;
+    };
+    const handleOpenVLibras = () => {
+      if (clickAccessButton()) return;
+      pendingOpen = true;
+      window.setTimeout(() => {
+        if (pendingOpen && clickAccessButton()) pendingOpen = false;
+      }, 800);
+    };
+    window.addEventListener("wavechat:open-vlibras", handleOpenVLibras);
+
+    if (document.getElementById("vlibras-plugin-script")) {
+      return () => window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
+    }
 
     // CSS para garantir que o botão flutuante fique visível acima da
     // navegação inferior (em mobile a lib posiciona `absolute` no fim
@@ -61,11 +80,17 @@ export function VLibrasWidget() {
       try {
         // @ts-expect-error — global injetado pelo script do VLibras
         new window.VLibras.Widget("https://vlibras.gov.br/app");
+        if (pendingOpen) {
+          window.setTimeout(() => {
+            if (clickAccessButton()) pendingOpen = false;
+          }, 300);
+        }
       } catch (e) {
         console.warn("VLibras: falha ao inicializar", e);
       }
     };
     document.body.appendChild(script);
+    return () => window.removeEventListener("wavechat:open-vlibras", handleOpenVLibras);
   }, []);
 
   return null;
