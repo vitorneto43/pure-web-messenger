@@ -114,6 +114,18 @@ export function VLibrasWidget() {
       return Boolean(wrapper?.classList.contains("active"));
     };
 
+    const forceOpenPanel = () => {
+      const root = document.querySelector<HTMLElement>("div[vw]");
+      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
+      if (!root || !accessButton || !wrapper) return false;
+      root.classList.add("active");
+      accessButton.classList.add("active");
+      wrapper.classList.add("active");
+      setLoading(false);
+      return true;
+    };
+
     const initializeWidget = () => {
       ensureMarkup();
       ensureVisibilityStyle();
@@ -141,9 +153,8 @@ export function VLibrasWidget() {
     };
 
     const clickAccessButton = () => {
-      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
       const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-      if (!accessButton || !isWidgetReady()) return false;
+      if (!wrapper || !isWidgetReady()) return false;
       if (isPanelOpen()) {
         wrapper?.classList.remove("active");
         setLoading(false);
@@ -151,19 +162,18 @@ export function VLibrasWidget() {
       }
       // O botão oficial às vezes demora a receber o listener interno.
       // Abrimos o painel diretamente quando a estrutura do plugin já existe.
-      wrapper?.classList.add("active");
-      window.setTimeout(() => {
-        if (!disposed) setLoading(false);
-      }, 250);
-      return true;
+      return forceOpenPanel();
     };
 
     const retryOpen = (attempt = 0) => {
       if (disposed || !pendingOpen) return;
       initializeWidget();
+      if (!isPanelOpen()) forceOpenPanel();
       if (clickAccessButton()) {
-        pendingOpen = false;
-        return;
+        if (isPanelOpen()) {
+          pendingOpen = false;
+          return;
+        }
       }
       if (attempt >= 12) {
         setLoading(false);
