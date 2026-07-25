@@ -82,6 +82,7 @@ const AvatarImage = React.forwardRef<
   return (
     <img
       ref={ref}
+      {...props}
       loading={loading}
       decoding="async"
       fetchPriority={fetchPriority}
@@ -103,7 +104,6 @@ const AvatarImage = React.forwardRef<
         props.onError?.(event);
       }}
       className={cn("aspect-square h-full w-full object-cover", className)}
-      {...props}
       src={currentSrc}
     />
   );
@@ -120,7 +120,7 @@ const AvatarFallback = React.forwardRef<
     <span
       ref={ref}
       className={cn(
-        "flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
+        "absolute inset-0 flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
         className,
       )}
       {...props}
