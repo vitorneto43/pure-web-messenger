@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useCall } from "@/hooks/use-call";
 import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import {
   LiveKitRoom,

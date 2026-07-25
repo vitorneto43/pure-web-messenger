@@ -17,6 +17,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { blockUser } from "@/lib/moderation.functions";
 import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { formatTime } from "@/lib/format-time";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { downloadFile } from "@/lib/download";
 import { shareMessageExternally } from "@/lib/share-message";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
