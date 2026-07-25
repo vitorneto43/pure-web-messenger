@@ -238,7 +238,7 @@ export function StatusBar() {
             <Avatar
               className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}
             >
-              <AvatarImage src={(user?.user_metadata as any)?.avatar_url} />
+              <AvatarImage src={optimizeAvatarUrl((user?.user_metadata as any)?.avatar_url, 144)} fetchPriority="high" />
               <AvatarFallback className="bg-secondary text-sm">
                 {(user?.email?.[0] ?? "V").toUpperCase()}
               </AvatarFallback>
