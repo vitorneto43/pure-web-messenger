@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Loader2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { UserBadges } from "@/components/badges/UserBadges";
