@@ -57,7 +57,6 @@ const AvatarImage = React.forwardRef<
       ref={ref}
       loading={loading}
       decoding="async"
-      // @ts-expect-error — React 19 / JSX ainda normaliza para fetchpriority lowercase
       fetchPriority={fetchPriority}
       onLoadingStatusChange={(status) => {
         setStatus(status as AvatarStatus);
