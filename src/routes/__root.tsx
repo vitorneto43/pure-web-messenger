@@ -77,9 +77,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         httpEquiv: "Content-Security-Policy",
         content: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br https://cdn.jsdelivr.net",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://cdn.jsdelivr.net",
-          "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br https://cdn.jsdelivr.net",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net",
+          "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net",
           "img-src 'self' data: blob: https:",
           "media-src 'self' blob: data: https:",
           "connect-src 'self' https: wss: blob:",
