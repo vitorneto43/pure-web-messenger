@@ -420,7 +420,7 @@ function StatusPublicPage() {
     return (
       <div className="flex items-start gap-2.5 w-full min-w-0">
         <Avatar className={isReply ? "size-7 shrink-0" : "size-8 shrink-0"}>
-          <AvatarImage src={c.author?.avatar_url ?? undefined} />
+          <AvatarImage src={optimizeAvatarUrl(c.author?.avatar_url, isReply ? 56 : 64)} />
           <AvatarFallback>{c.author?.display_name?.[0] ?? "?"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
@@ -621,7 +621,7 @@ function StatusPublicPage() {
         {/* Author header */}
         <div className="flex items-center gap-3">
           <Avatar className="size-11">
-            <AvatarImage src={author?.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(author?.avatar_url, 88)} fetchPriority="high" />
             <AvatarFallback>{author?.display_name?.[0] ?? "?"}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
