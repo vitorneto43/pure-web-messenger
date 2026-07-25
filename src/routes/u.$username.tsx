@@ -166,7 +166,7 @@ function PublicProfile() {
       <div className="glass border border-border rounded-2xl p-6 sm:p-8">
         <div className="flex items-center gap-5">
           <Avatar className="size-24 ring-2 ring-border">
-            <AvatarImage src={data.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(data.avatar_url, 192)} fetchPriority="high" />
             <AvatarFallback className="text-2xl">
               {data.display_name?.[0]?.toUpperCase() ?? "?"}
             </AvatarFallback>
