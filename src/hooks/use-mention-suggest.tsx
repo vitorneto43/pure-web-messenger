@@ -143,7 +143,7 @@ export function useMentionSuggest({
             )}
           >
             <Avatar className="size-7 shrink-0">
-              <AvatarImage src={p.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 56)} />
               <AvatarFallback>
                 {(p.display_name || p.username)?.[0]?.toUpperCase()}
               </AvatarFallback>

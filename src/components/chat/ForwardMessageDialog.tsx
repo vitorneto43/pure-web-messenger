@@ -242,7 +242,7 @@ export function ForwardMessageDialog({
                   }`}
                 >
                   <Avatar className="size-10">
-                    <AvatarImage src={c.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(c.avatar_url, 80)} />
                     <AvatarFallback>
                       {c.title?.[0]?.toUpperCase() ?? "?"}
                     </AvatarFallback>
