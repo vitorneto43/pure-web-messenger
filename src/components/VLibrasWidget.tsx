@@ -21,6 +21,7 @@ export function VLibrasWidget() {
   const [open, setOpen] = useState(false);
   const mountedRef = useRef(false);
   const openRef = useRef(false);
+  const prewarmedRef = useRef(false);
   const stabilizeTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -59,6 +60,10 @@ export function VLibrasWidget() {
         min-height: 40px !important;
         margin: 0 !important;
         transform: none !important;
+      }
+      div[vw].wavechat-vlibras-prewarm {
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
       div[vw].active {
         width: min(300px, calc(100vw - 24px)) !important;
@@ -169,7 +174,9 @@ export function VLibrasWidget() {
     const root = ensureMarkup();
     const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
     const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
-    if (!window.plugin) {
+    const wrapperWasActive = Boolean(wrapper?.classList.contains("active"));
+    root.classList.remove("wavechat-vlibras-prewarm");
+    if (!wrapperWasActive) {
       accessButton?.click();
     }
     root.classList.add("enabled", "active");
@@ -211,11 +218,17 @@ export function VLibrasWidget() {
     setLoading(true);
     ensureStyle();
     ensureMarkup();
+    const slowTimer = window.setTimeout(() => {
+      if (loading || !openRef.current) {
+        toast.info("O avatar oficial do VLibras ainda está carregando. A primeira abertura pode demorar alguns segundos.");
+      }
+    }, 8000);
 
     try {
       await loadScript();
       mountWidget();
       const ready = await waitForReady();
+      window.clearTimeout(slowTimer);
       if (!ready) {
         setLoading(false);
         toast.error("O VLibras está lento fora da WaveChat. Tente novamente em alguns segundos.");
@@ -223,10 +236,47 @@ export function VLibrasWidget() {
       }
       showPanel();
     } catch {
+      window.clearTimeout(slowTimer);
       setLoading(false);
       toast.error("Não foi possível abrir o VLibras agora.");
     }
   };
+
+  const warmVLibras = async () => {
+    if (prewarmedRef.current) return;
+    prewarmedRef.current = true;
+    try {
+      ensureStyle();
+      const root = ensureMarkup();
+      root.classList.add("wavechat-vlibras-prewarm");
+      await loadScript();
+      mountWidget();
+      const ready = await waitForReady();
+      if (!ready || openRef.current || window.plugin) return;
+      document.querySelector<HTMLElement>("[vw-access-button]")?.click();
+      window.setTimeout(() => {
+        if (openRef.current) return;
+        document.querySelector<HTMLElement>("div[vw]")?.classList.remove("active");
+        document.querySelector<HTMLElement>("[vw-access-button]")?.classList.remove("active");
+        document.querySelector<HTMLElement>("[vw-plugin-wrapper]")?.classList.remove("active");
+      }, 2000);
+    } catch {
+      prewarmedRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (win.requestIdleCallback) {
+      const idleId = win.requestIdleCallback(() => void warmVLibras(), { timeout: 5000 });
+      return () => win.cancelIdleCallback?.(idleId);
+    }
+    const timer = window.setTimeout(() => void warmVLibras(), 3500);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <Button
