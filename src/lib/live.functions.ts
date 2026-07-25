@@ -24,33 +24,72 @@ export const getTopHostsWeekly = createServerFn({ method: "GET" })
   });
 
 
-export const getActiveLives = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
-  // Best-effort: end any live whose host hasn't pinged in 2 minutes so the
-  // feed/stories don't keep showing ghost broadcasts after a tab close/crash.
-  try {
-    await sb.rpc("cleanup_stale_lives", { p_minutes: 2 });
-  } catch (e) {
-    console.warn("cleanup_stale_lives failed", e);
-  }
-  const { data, error } = await sb
-    .from("live_sessions")
-    .select("id,title,cover_url,viewer_count,host_id,started_at,total_gift_coins")
-    .eq("status", "live")
-    .order("viewer_count", { ascending: false })
-    .limit(50);
-  if (error) throw new Error(error.message);
-  const hostIds = Array.from(new Set((data ?? []).map((l) => l.host_id)));
-  let hostsById = new Map<string, { id: string; username: string | null; display_name: string | null; avatar_url: string | null }>();
-  if (hostIds.length) {
-    const { data: hosts } = await sb
-      .from("profiles")
-      .select("id,username,display_name,avatar_url")
-      .in("id", hostIds);
-    hostsById = new Map((hosts ?? []).map((h) => [h.id, h]));
-  }
-  return (data ?? []).map((l) => ({ ...l, host: hostsById.get(l.host_id) ?? null }));
-});
+type LiveListItem = {
+  id: string;
+  title: string | null;
+  cover_url: string | null;
+  viewer_count: number | null;
+  host_id: string;
+  started_at: string | null;
+  total_gift_coins: number | null;
+  host: { id: string; username: string | null; display_name: string | null; avatar_url: string | null } | null;
+};
+
+export const getActiveLives = createServerFn({ method: "GET" })
+  .inputValidator((d: { ecosystemId?: string } | undefined) =>
+    z.object({ ecosystemId: z.string().uuid().optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data: input }) => {
+    const sb = publicClient();
+    // Best-effort: end any live whose host hasn't pinged in 2 minutes so the
+    // feed/stories don't keep showing ghost broadcasts after a tab close/crash.
+    try {
+      await sb.rpc("cleanup_stale_lives", { p_minutes: 2 });
+    } catch (e) {
+      console.warn("cleanup_stale_lives failed", e);
+    }
+
+    if (input.ecosystemId) {
+      const { data: rows, error } = await sb.rpc("get_ecosystem_active_lives", {
+        _ecosystem_id: input.ecosystemId,
+        _limit: 50,
+      });
+      if (error) throw new Error(error.message);
+      return ((rows ?? []) as any[]).map((l) => ({
+        id: l.id,
+        title: l.title,
+        cover_url: l.cover_url,
+        viewer_count: l.viewer_count,
+        host_id: l.host_id,
+        started_at: l.started_at,
+        total_gift_coins: l.total_gift_coins,
+        host: {
+          id: l.host_id,
+          username: l.host_username,
+          display_name: l.host_display_name,
+          avatar_url: l.host_avatar_url,
+        },
+      })) as LiveListItem[];
+    }
+
+    const { data: lives, error } = await sb
+      .from("live_sessions")
+      .select("id,title,cover_url,viewer_count,host_id,started_at,total_gift_coins")
+      .eq("status", "live")
+      .order("viewer_count", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    const hostIds = Array.from(new Set((lives ?? []).map((l) => l.host_id)));
+    let hostsById = new Map<string, { id: string; username: string | null; display_name: string | null; avatar_url: string | null }>();
+    if (hostIds.length) {
+      const { data: hosts } = await sb
+        .from("profiles")
+        .select("id,username,display_name,avatar_url")
+        .in("id", hostIds);
+      hostsById = new Map((hosts ?? []).map((h) => [h.id, h]));
+    }
+    return (lives ?? []).map((l) => ({ ...l, host: hostsById.get(l.host_id) ?? null })) as LiveListItem[];
+  });
 
 export const getLive = createServerFn({ method: "GET" })
   .inputValidator((d: { liveId: string }) => z.object({ liveId: z.string().uuid() }).parse(d))

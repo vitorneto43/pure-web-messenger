@@ -57,10 +57,12 @@ export const Route = createFileRoute("/api/public/follower-content-push")({
         let body = "";
         let url = "";
 
+        let ecosystemId: string | null = null;
+
         if (kind === "post") {
           const { data: p } = await supabaseAdmin
             .from("posts")
-            .select("user_id, content, caption, visibility")
+            .select("user_id, content, caption, visibility, ecosystem_id")
             .eq("id", content_id)
             .maybeSingle();
           if (!p || (p as any).user_id !== author_id) {
@@ -70,23 +72,25 @@ export const Route = createFileRoute("/api/public/follower-content-push")({
           if (vis && vis !== "public" && vis !== "followers") {
             return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
           }
+          ecosystemId = (p as any).ecosystem_id ?? null;
           body = String((p as any).caption ?? (p as any).content ?? "").slice(0, 140);
           url = `/p/${content_id}`;
         } else if (kind === "status") {
           const { data: s } = await supabaseAdmin
             .from("statuses")
-            .select("user_id, content, caption")
+            .select("user_id, content, caption, ecosystem_id")
             .eq("id", content_id)
             .maybeSingle();
           if (!s || (s as any).user_id !== author_id) {
             return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
           }
+          ecosystemId = (s as any).ecosystem_id ?? null;
           body = String((s as any).caption ?? (s as any).content ?? "").slice(0, 140);
           url = `/s/${content_id}`;
         } else {
           const { data: v } = await supabaseAdmin
             .from("videos")
-            .select("owner_id, title, is_short, visibility")
+            .select("owner_id, title, is_short, visibility, ecosystem_id")
             .eq("id", content_id)
             .maybeSingle();
           if (!v || (v as any).owner_id !== author_id) {
@@ -96,6 +100,7 @@ export const Route = createFileRoute("/api/public/follower-content-push")({
           if (!["public", "followers"].includes(vis)) {
             return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
           }
+          ecosystemId = (v as any).ecosystem_id ?? null;
           body = String((v as any).title ?? "").slice(0, 140);
           url = (v as any).is_short ? `/waveshorts` : `/v/${content_id}`;
         }
@@ -124,11 +129,23 @@ export const Route = createFileRoute("/api/public/follower-content-push")({
         }
         if (!body) body = title;
 
-        const { data: followers } = await supabaseAdmin
-          .from("profile_follows")
-          .select("follower_id")
-          .eq("following_id", author_id);
-        const recipientIds = (followers ?? []).map((f: any) => f.follower_id as string);
+        let recipientIds: string[] = [];
+        if (ecosystemId) {
+          const { data: members } = await supabaseAdmin
+            .from("ecosystem_members")
+            .select("user_id")
+            .eq("ecosystem_id", ecosystemId)
+            .in("role", ["owner", "admin", "moderator", "member"]);
+          recipientIds = ((members ?? []) as any[])
+            .map((m) => m.user_id as string)
+            .filter((id) => id !== author_id);
+        } else {
+          const { data: followers } = await supabaseAdmin
+            .from("profile_follows")
+            .select("follower_id")
+            .eq("following_id", author_id);
+          recipientIds = (followers ?? []).map((f: any) => f.follower_id as string);
+        }
         if (recipientIds.length === 0) {
           return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
         }

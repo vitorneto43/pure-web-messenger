@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail, Sparkles, MessageCircle, Radio, PlaySquare, Flame, Video, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -171,6 +171,23 @@ function EcosystemHome() {
           </div>
         )}
 
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="px-3 py-2 border-b border-border bg-muted/40">
+            <div className="text-xs font-semibold">Ecossistema Wavechat</div>
+            <div className="text-[10px] text-muted-foreground">Tudo da Wavechat, só para membros.</div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 p-2">
+            <EcoAction icon={<MessageCircle className="size-4" />} label="Chat" hint="Conversas em grupo" to="/e/$slug/chat" params={{ slug }} />
+            <EcoAction icon={<Radio className="size-4" />} label="Lives" hint="Transmissões ao vivo" to="/e/$slug/live" params={{ slug }} />
+            <EcoAction icon={<PlaySquare className="size-4" />} label="WaveTube" hint="Vídeos 16:9" to="/e/$slug/wavetube" params={{ slug }} />
+            <EcoAction icon={<Flame className="size-4" />} label="WaveShorts" hint="Vídeos curtos" to="/e/$slug/waveshorts" params={{ slug }} />
+            <EcoAction icon={<Video className="size-4" />} label="Meet" hint="Reuniões por vídeo" to="/e/$slug/meet" params={{ slug }} />
+            {isAdmin && (
+              <EcoAction icon={<Settings2 className="size-4" />} label="Admin" hint="Gerenciar ecossistema" to="/e/$slug/admin" params={{ slug }} />
+            )}
+          </div>
+        </div>
+
         <div>
           <div className="text-xs font-semibold text-muted-foreground mb-2 px-1">Feed do ecossistema</div>
           {loadingPosts && (
@@ -221,5 +238,34 @@ function EcosystemHome() {
         </div>
       </main>
     </div>
+  );
+}
+
+function EcoAction({
+  icon, label, hint, to, params,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  hint: string;
+  to: string;
+  params: Record<string, string>;
+}) {
+  return (
+    <Link
+      to={to as any}
+      params={params as any}
+      className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-muted/60 transition-colors"
+    >
+      <div className="size-9 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold flex items-center gap-1">
+          <span className="truncate">{label}</span>
+          <ArrowRight className="size-3.5 text-muted-foreground shrink-0" />
+        </div>
+        <div className="text-[11px] text-muted-foreground truncate">{hint}</div>
+      </div>
+    </Link>
   );
 }

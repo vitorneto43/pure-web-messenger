@@ -4597,55 +4597,107 @@ export type Database = {
           views_count: number
         }[]
       }
-      discover_waveshorts: {
-        Args: { _cursor?: string; _limit?: number }
-        Returns: {
-          allow_pix: boolean
-          category: string
-          comments_count: number
-          cta_label: string
-          cta_url: string
-          description: string
-          duration_sec: number
-          file_url: string
-          id: string
-          likes_count: number
-          owner_avatar_url: string
-          owner_display_name: string
-          owner_id: string
-          owner_username: string
-          pix_key: string
-          published_at: string
-          saves_count: number
-          thumbnail_url: string
-          title: string
-          views_count: number
-        }[]
-      }
-      discover_wavetube_videos: {
-        Args: {
-          _category?: string
-          _limit?: number
-          _offset?: number
-          _search?: string
-          _sort?: string
-        }
-        Returns: {
-          category: string
-          description: string
-          duration_sec: number
-          id: string
-          likes_count: number
-          owner_avatar_url: string
-          owner_display_name: string
-          owner_id: string
-          owner_username: string
-          published_at: string
-          thumbnail_url: string
-          title: string
-          views_count: number
-        }[]
-      }
+      discover_waveshorts:
+        | {
+            Args: { _cursor?: string; _limit?: number }
+            Returns: {
+              allow_pix: boolean
+              category: string
+              comments_count: number
+              cta_label: string
+              cta_url: string
+              description: string
+              duration_sec: number
+              file_url: string
+              id: string
+              likes_count: number
+              owner_avatar_url: string
+              owner_display_name: string
+              owner_id: string
+              owner_username: string
+              pix_key: string
+              published_at: string
+              saves_count: number
+              thumbnail_url: string
+              title: string
+              views_count: number
+            }[]
+          }
+        | {
+            Args: { _cursor?: string; _ecosystem_id?: string; _limit?: number }
+            Returns: {
+              allow_pix: boolean
+              category: string
+              comments_count: number
+              cta_label: string
+              cta_url: string
+              description: string
+              duration_sec: number
+              file_url: string
+              id: string
+              likes_count: number
+              owner_avatar_url: string
+              owner_display_name: string
+              owner_id: string
+              owner_username: string
+              pix_key: string
+              published_at: string
+              saves_count: number
+              thumbnail_url: string
+              title: string
+              views_count: number
+            }[]
+          }
+      discover_wavetube_videos:
+        | {
+            Args: {
+              _category?: string
+              _limit?: number
+              _offset?: number
+              _search?: string
+              _sort?: string
+            }
+            Returns: {
+              category: string
+              description: string
+              duration_sec: number
+              id: string
+              likes_count: number
+              owner_avatar_url: string
+              owner_display_name: string
+              owner_id: string
+              owner_username: string
+              published_at: string
+              thumbnail_url: string
+              title: string
+              views_count: number
+            }[]
+          }
+        | {
+            Args: {
+              _category?: string
+              _ecosystem_id?: string
+              _limit?: number
+              _offset?: number
+              _search?: string
+              _sort?: string
+            }
+            Returns: {
+              category: string
+              description: string
+              duration_sec: number
+              id: string
+              likes_count: number
+              owner_avatar_url: string
+              owner_display_name: string
+              owner_id: string
+              owner_username: string
+              published_at: string
+              thumbnail_url: string
+              title: string
+              views_count: number
+            }[]
+          }
       dispatch_follower_content_push: {
         Args: { _author_id: string; _content_id: string; _kind: string }
         Returns: undefined
@@ -4697,6 +4749,21 @@ export type Database = {
       get_admin_invite_overview: { Args: never; Returns: Json }
       get_ambassador_level: { Args: { _user_id: string }; Returns: Json }
       get_boost_report: { Args: { _boost_id: string }; Returns: Json }
+      get_ecosystem_active_lives: {
+        Args: { _ecosystem_id: string; _limit?: number }
+        Returns: {
+          cover_url: string
+          host_avatar_url: string
+          host_display_name: string
+          host_id: string
+          host_username: string
+          id: string
+          started_at: string
+          title: string
+          total_gift_coins: number
+          viewer_count: number
+        }[]
+      }
       get_ecosystem_billing: { Args: { _ecosystem_id: string }; Returns: Json }
       get_ecosystem_metrics: {
         Args: { _days?: number; _ecosystem_id: string }
@@ -4735,6 +4802,10 @@ export type Database = {
       get_my_invite_stats: { Args: never; Returns: Json }
       get_my_restrictions: { Args: never; Returns: Json }
       get_my_sponsored_status_ids: { Args: never; Returns: string[] }
+      get_or_create_ecosystem_conversation: {
+        Args: { _ecosystem_id: string }
+        Returns: string
+      }
       get_people_you_may_know: {
         Args: { _limit?: number }
         Returns: {
@@ -5175,35 +5246,69 @@ export type Database = {
         Returns: undefined
       }
       set_birth_date: { Args: { _birth_date: string }; Returns: undefined }
-      start_live: {
-        Args: { p_cover_url?: string; p_title: string }
-        Returns: {
-          cover_url: string | null
-          created_at: string
-          ecosystem_id: string | null
-          ended_at: string | null
-          host_id: string
-          host_last_seen: string
-          id: string
-          livekit_room: string
-          orientation: string
-          peak_viewers: number
-          scheduled_live_id: string | null
-          started_at: string
-          status: Database["public"]["Enums"]["live_status"]
-          title: string
-          total_gift_coins: number
-          total_reactions: number
-          viewer_count: number
-          will_record: boolean
-        }
-        SetofOptions: {
-          from: "*"
-          to: "live_sessions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      start_live:
+        | {
+            Args: { p_cover_url?: string; p_title: string }
+            Returns: {
+              cover_url: string | null
+              created_at: string
+              ecosystem_id: string | null
+              ended_at: string | null
+              host_id: string
+              host_last_seen: string
+              id: string
+              livekit_room: string
+              orientation: string
+              peak_viewers: number
+              scheduled_live_id: string | null
+              started_at: string
+              status: Database["public"]["Enums"]["live_status"]
+              title: string
+              total_gift_coins: number
+              total_reactions: number
+              viewer_count: number
+              will_record: boolean
+            }
+            SetofOptions: {
+              from: "*"
+              to: "live_sessions"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_cover_url?: string
+              p_ecosystem_id?: string
+              p_title: string
+            }
+            Returns: {
+              cover_url: string | null
+              created_at: string
+              ecosystem_id: string | null
+              ended_at: string | null
+              host_id: string
+              host_last_seen: string
+              id: string
+              livekit_room: string
+              orientation: string
+              peak_viewers: number
+              scheduled_live_id: string | null
+              started_at: string
+              status: Database["public"]["Enums"]["live_status"]
+              title: string
+              total_gift_coins: number
+              total_reactions: number
+              viewer_count: number
+              will_record: boolean
+            }
+            SetofOptions: {
+              from: "*"
+              to: "live_sessions"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       survey_interest_tags: { Args: { _user_id: string }; Returns: string[] }
       sweep_activity_streaks: { Args: never; Returns: number }
       sync_activity_rewards: { Args: { _user_id: string }; Returns: undefined }
