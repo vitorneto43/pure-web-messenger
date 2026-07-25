@@ -269,6 +269,7 @@ function CallControls() {
 
   if (!active) return null;
   const peer = active.peerProfile;
+  useImagePreload(optimizeAvatarUrl(peer?.avatar_url, 160));
   const isVideo = active.kind === "video";
   const statusLabel =
     active.status === "ringing"
