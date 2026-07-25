@@ -839,7 +839,7 @@ export function ChatSidebar({
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 text-left"
                       >
                         <Avatar className="size-10">
-                          <AvatarImage src={g.avatar_url ?? undefined} />
+                          <AvatarImage src={optimizeAvatarUrl(g.avatar_url, 96)} fetchPriority="high" />
                           <AvatarFallback className="bg-secondary text-sm">
                             {g.name?.slice(0, 2).toUpperCase() ?? "GR"}
                           </AvatarFallback>
