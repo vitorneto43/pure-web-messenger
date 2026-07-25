@@ -58,6 +58,8 @@ function EcosystemAdmin() {
   const [website, setWebsite] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
+  const [allowCrosspost, setAllowCrosspost] = useState(true);
+  const [crosspostAdminOnly, setCrosspostAdminOnly] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function refreshMembers(id: string) {
@@ -98,6 +100,8 @@ function EcosystemAdmin() {
         setWebsite(e.website ?? "");
         setContactEmail(e.contact_email ?? "");
         setPrimaryColor(e.primary_color ?? "");
+        setAllowCrosspost(e.allow_public_crosspost ?? true);
+        setCrosspostAdminOnly(e.public_crosspost_requires_admin ?? false);
         await refreshMembers(e.id);
         await refreshInvites(e.id);
       } catch {
@@ -151,6 +155,8 @@ function EcosystemAdmin() {
         website: website.trim() || null,
         contact_email: contactEmail.trim() || null,
         primary_color: primaryColor.trim() || null,
+        allow_public_crosspost: allowCrosspost,
+        public_crosspost_requires_admin: crosspostAdminOnly,
       };
       const updated = await updateEcosystem(eco.id, patch);
       setEco(updated);
