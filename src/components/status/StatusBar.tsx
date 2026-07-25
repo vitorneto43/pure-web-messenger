@@ -322,7 +322,7 @@ export function StatusBar() {
                           : "ring-muted"
                   }`}
                 >
-                  <AvatarImage src={g.user.avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(g.user.avatar_url, 144)} fetchPriority="high" />
                   <AvatarFallback className="bg-secondary text-sm">
                     {g.user.display_name[0]?.toUpperCase()}
                   </AvatarFallback>
