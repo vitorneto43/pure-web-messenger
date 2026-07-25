@@ -40,7 +40,7 @@ export function IncomingCallDialog() {
           <div className="relative mb-6 flex justify-center">
             <div className="relative">
               <Avatar className="size-32 border-4 border-white/20 shadow-xl">
-                <AvatarImage src={peer?.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(peer?.avatar_url, 128)} fetchPriority="high" />
                 <AvatarFallback className="text-5xl bg-gradient-to-br from-blue-500 to-purple-600">
                   {peer?.display_name?.[0]?.toUpperCase() ?? "?"}
                 </AvatarFallback>

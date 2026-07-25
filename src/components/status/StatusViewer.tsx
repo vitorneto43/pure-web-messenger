@@ -345,7 +345,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       {/* header */}
       <div className="flex items-center gap-2.5 px-4 py-3 text-white">
         <Avatar className="size-9">
-          <AvatarImage src={author?.avatar_url ?? undefined} />
+          <AvatarImage src={optimizeAvatarUrl(author?.avatar_url, 72)} fetchPriority="high" />
           <AvatarFallback>{author?.display_name?.[0] ?? "?"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
