@@ -246,7 +246,7 @@ export function NotificationsBell() {
                     {profile || displayName ? (
                       <Avatar className="size-9 shrink-0">
                         {profile?.avatar_url && (
-                          <AvatarImage src={profile.avatar_url} alt={displayName ?? ""} />
+                          <AvatarImage src={optimizeAvatarUrl(profile.avatar_url, 72)} alt={displayName ?? ""} />
                         )}
                         <AvatarFallback className="text-[11px]">
                           {initials(displayName ?? "?")}
