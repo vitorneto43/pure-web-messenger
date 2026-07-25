@@ -22,6 +22,8 @@ export interface Ecosystem {
   created_by: string;
   created_at: string;
   updated_at: string;
+  allow_public_crosspost: boolean;
+  public_crosspost_requires_admin: boolean;
 }
 
 export interface EcosystemMembership {
