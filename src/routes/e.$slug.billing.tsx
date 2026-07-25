@@ -167,10 +167,11 @@ function EcosystemBillingPage() {
 
           <div className="space-y-3">
             <UsageBar label="Membros ativos" used={billing.usage.members} ceiling={billing.limits.members} />
-            <UsageBar label="Posts (30 dias)" used={billing.usage.posts_month} ceiling={billing.limits.posts_per_month} />
-            <UsageBar label="Vídeos (30 dias)" used={billing.usage.videos_month} ceiling={billing.limits.videos_per_month} />
-            <UsageBar label="Lives (30 dias)" used={billing.usage.lives_month} ceiling={billing.limits.lives_per_month} />
           </div>
+          <div className="mt-4 p-3 rounded-lg bg-muted/50 text-sm">
+            <strong>Tudo incluso na mensalidade:</strong> posts, stories, vídeos, lives, chat e grupos — sem limite mensal. Você paga apenas pela quantidade de membros do seu ecossistema.
+          </div>
+
 
           {billing.custom_subdomain && (
             <div className="mt-4 flex items-center gap-2 text-sm p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -209,9 +210,7 @@ function EcosystemBillingPage() {
                   {isCurrent && <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">Atual</span>}
                 </div>
                 <div className="mb-3">
-                  {p.tier === "enterprise" ? (
-                    <div className="text-xl font-bold">Sob consulta</div>
-                  ) : p.price_brl_month === 0 ? (
+                  {p.price_brl_month === 0 ? (
                     <div className="text-xl font-bold">Grátis</div>
                   ) : (
                     <>
@@ -220,22 +219,23 @@ function EcosystemBillingPage() {
                     </>
                   )}
                 </div>
+
                 <ul className="space-y-1.5 text-sm mb-4 flex-1">
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.member_limit.toLocaleString("pt-BR")} membros</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.posts_per_month.toLocaleString("pt-BR")} posts/mês</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.videos_per_month.toLocaleString("pt-BR")} vídeos/mês</li>
-                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> {p.lives_per_month.toLocaleString("pt-BR")} lives/mês</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Até {p.member_limit >= 1000000 ? "membros ilimitados" : `${p.member_limit.toLocaleString("pt-BR")} membros`}</li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Posts, stories, vídeos e lives <strong>ilimitados</strong></li>
+                  <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Chat e grupos internos ilimitados</li>
                   {p.custom_branding && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Marca personalizada</li>}
                   {p.advanced_metrics && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Métricas avançadas</li>}
                   {p.custom_subdomain && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Subdomínio próprio em <strong>webconnectchat.com</strong></li>}
                   {p.priority_support && <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Suporte prioritário</li>}
                 </ul>
+
                 <Button
                   disabled={isCurrent || pendingTier === p.tier}
                   variant={isCurrent ? "outline" : isDowngrade ? "secondary" : "default"}
                   onClick={() => handleUpgrade(p.tier)}
                 >
-                  {pendingTier === p.tier ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? "Plano atual" : isDowngrade ? "Solicitar downgrade" : p.tier === "enterprise" ? "Falar com vendas" : "Solicitar upgrade"}
+                  {pendingTier === p.tier ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? "Plano atual" : isDowngrade ? "Solicitar downgrade" : "Solicitar upgrade"}
                 </Button>
               </div>
             );
