@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
@@ -233,7 +234,7 @@ function MeetPeoplePage() {
                   >
                     <Link to="/u/$username" params={{ username: p.username }} className="shrink-0">
                       <Avatar className="size-12 ring-2 ring-primary/10">
-                        <AvatarImage src={p.avatar_url ?? undefined} />
+                        <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 96)} fetchPriority="high" />
                         <AvatarFallback>{p.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
                       </Avatar>
                     </Link>
@@ -309,7 +310,7 @@ function MeetPeoplePage() {
                       >
                         <Link to="/u/$username" params={{ username: p.username }} className="flex flex-col items-center">
                           <Avatar className="size-16 mb-2 ring-2 ring-primary/10">
-                            <AvatarImage src={p.avatar_url ?? undefined} />
+                            <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 128)} fetchPriority="high" />
                             <AvatarFallback className="text-base">
                               {p.display_name?.[0]?.toUpperCase() ?? "?"}
                             </AvatarFallback>

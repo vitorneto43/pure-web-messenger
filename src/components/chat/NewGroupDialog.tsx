@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -282,7 +283,7 @@ export function NewGroupDialog({ open, onOpenChange, onCreated }: Props) {
                       className={`w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30 ${checked ? "bg-accent/20" : ""}`}
                     >
                       <Avatar className="size-9">
-                        <AvatarImage src={r.avatar_url ?? undefined} />
+                        <AvatarImage src={optimizeAvatarUrl(r.avatar_url, 72)} />
                         <AvatarFallback>{r.display_name[0]?.toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="text-left flex-1">

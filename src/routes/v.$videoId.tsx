@@ -9,6 +9,7 @@ import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { formatViews, signWavetubeUrl } from "@/lib/wavetube";
 import { FollowButton } from "@/components/FollowButton";
 
@@ -218,7 +219,7 @@ function VideoPage() {
               className="flex items-center gap-2 min-w-0"
             >
               <Avatar className="size-10">
-                <AvatarImage src={owner?.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(owner?.avatar_url, 80)} fetchPriority="high" />
                 <AvatarFallback>{(owner?.display_name || owner?.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
@@ -343,7 +344,7 @@ function CommentRow({ c, onReply }: { c: Comment; onReply?: () => void }) {
   return (
     <div className="flex gap-2">
       <Avatar className="size-8 shrink-0">
-        <AvatarImage src={c.profile?.avatar_url ?? undefined} />
+        <AvatarImage src={optimizeAvatarUrl(c.profile?.avatar_url, 64)} />
         <AvatarFallback>{(c.profile?.display_name || c.profile?.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">

@@ -4,6 +4,8 @@ import { ArrowLeft, Globe, Loader2, MoreVertical, Share2, ShieldAlert, Users } f
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useImagePreload } from "@/hooks/use-image-preload";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -79,6 +81,8 @@ function GroupPage() {
   const [busy, setBusy] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
+  useImagePreload(optimizeAvatarUrl(group.avatar_url, 192));
+
   useEffect(() => {
     if (!group || !user) return;
     getGroupMembershipStatus({ data: { id: group.id } }).then(setStatus).catch(() => {});
@@ -128,7 +132,7 @@ function GroupPage() {
       <main className="mx-auto max-w-2xl px-4 py-6">
         <div className="flex flex-col items-center text-center mb-6">
           <Avatar className="size-24 mb-3">
-            <AvatarImage src={group.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(group.avatar_url, 192)} fetchPriority="high" />
             <AvatarFallback className="text-2xl">{group.name?.slice(0, 2).toUpperCase() ?? "GR"}</AvatarFallback>
           </Avatar>
           <h1 className="text-xl font-bold">{group.name}</h1>
@@ -206,7 +210,7 @@ function GroupPage() {
                   className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-accent/30"
                 >
                   <Avatar className="size-8">
-                    <AvatarImage src={a.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(a.avatar_url, 64)} />
                     <AvatarFallback>{a.display_name.slice(0,2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="text-left">

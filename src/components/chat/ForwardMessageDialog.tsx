@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendMessagePush } from "@/lib/push.functions";
@@ -241,7 +242,7 @@ export function ForwardMessageDialog({
                   }`}
                 >
                   <Avatar className="size-10">
-                    <AvatarImage src={c.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(c.avatar_url, 80)} />
                     <AvatarFallback>
                       {c.title?.[0]?.toUpperCase() ?? "?"}
                     </AvatarFallback>

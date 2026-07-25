@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useImagePreload } from "@/hooks/use-image-preload";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { SocialLinksDisplay } from "@/components/profile/SocialLinks";
 import { ProfileStatusArchive } from "@/components/profile/ProfileStatusArchive";
 import { ProfilePostsArchive } from "@/components/profile/ProfilePostsArchive";
@@ -82,6 +84,9 @@ function PublicProfile() {
     void track("public_profile_view", { username });
     load();
   }, [username]);
+
+  // Preload avatar as soon as profile data loads
+  useImagePreload(optimizeAvatarUrl(data?.avatar_url, 192));
 
   // Register a view once the profile loads (if not own profile)
   useEffect(() => {
@@ -165,7 +170,7 @@ function PublicProfile() {
       <div className="glass border border-border rounded-2xl p-6 sm:p-8">
         <div className="flex items-center gap-5">
           <Avatar className="size-24 ring-2 ring-border">
-            <AvatarImage src={data.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(data.avatar_url, 192)} fetchPriority="high" />
             <AvatarFallback className="text-2xl">
               {data.display_name?.[0]?.toUpperCase() ?? "?"}
             </AvatarFallback>
@@ -387,7 +392,7 @@ function PendingRequestsCard({ ownerId }: { ownerId: string }) {
         {items.map((it) => (
           <li key={it.requester_id} className="py-3 flex items-center gap-3">
             <Avatar className="size-10">
-              <AvatarImage src={it.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(it.avatar_url, 80)} />
               <AvatarFallback>{(it.display_name ?? "?")[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

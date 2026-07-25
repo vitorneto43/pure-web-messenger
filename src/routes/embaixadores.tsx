@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getTopAmbassadors } from "@/lib/invites.functions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { ArrowLeft, Trophy, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/embaixadores")({
@@ -46,7 +47,7 @@ function Page() {
               >
                 <div className="w-7 text-center text-sm font-bold text-muted-foreground">{idx + 1}</div>
                 <Avatar className="size-10">
-                  <AvatarImage src={r.avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(r.avatar_url ?? undefined, 20)} />
                   <AvatarFallback>{r.display_name?.[0] ?? "?"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

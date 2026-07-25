@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { MentionText } from "@/components/mentions/MentionText";
 import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 import { TranslateButton } from "@/components/TranslateButton";
@@ -176,7 +177,7 @@ function CommentBlock({ c, onReply, onChat, onReact, compact, replyToUsername, c
     <div>
       <div className="flex gap-2">
         <Avatar className={cn(compact ? "size-7" : "size-9")}>
-          <AvatarImage src={c.avatar_url ?? undefined} />
+          <AvatarImage src={optimizeAvatarUrl(c.avatar_url, compact ? 56 : 72)} />
           <AvatarFallback>{c.display_name[0]?.toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 
@@ -86,7 +87,7 @@ export function MeetPeopleCard() {
               className="shrink-0 w-32 rounded-xl border border-border bg-card/60 backdrop-blur p-2.5 flex flex-col items-center text-center"
             >
               <Avatar className="size-12 mb-1.5">
-                <AvatarImage src={p.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 96)} fetchPriority="high" />
                 <AvatarFallback className="text-sm">
                   {p.display_name[0]?.toUpperCase()}
                 </AvatarFallback>

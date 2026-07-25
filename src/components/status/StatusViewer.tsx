@@ -17,6 +17,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { blockUser } from "@/lib/moderation.functions";
 import { ReportContentDialog } from "@/components/ReportContentDialog";
 import { formatTime } from "@/lib/format-time";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { downloadFile } from "@/lib/download";
 import { shareMessageExternally } from "@/lib/share-message";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
@@ -344,7 +345,7 @@ export function StatusViewer({ groups, startGroupIndex, startStatusIndex, onClos
       {/* header */}
       <div className="flex items-center gap-2.5 px-4 py-3 text-white">
         <Avatar className="size-9">
-          <AvatarImage src={author?.avatar_url ?? undefined} />
+          <AvatarImage src={optimizeAvatarUrl(author?.avatar_url, 72)} fetchPriority="high" />
           <AvatarFallback>{author?.display_name?.[0] ?? "?"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">

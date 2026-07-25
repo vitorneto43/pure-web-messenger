@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { cn } from "@/lib/utils";
@@ -365,7 +366,7 @@ function HashtagPeopleList({ tag, meId }: { tag: string; meId: string }) {
               className="shrink-0"
             >
               <Avatar className="size-10">
-                <AvatarImage src={p.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 20)} />
                 <AvatarFallback>{p.display_name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
               </Avatar>
             </button>

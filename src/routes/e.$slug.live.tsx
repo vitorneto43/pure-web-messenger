@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { getEcosystemBySlug, getMyRole, type Ecosystem, type EcosystemRole } from "@/lib/ecosystems";
 import { getActiveLives } from "@/lib/live.functions";
 import { useAuth } from "@/hooks/use-auth";
@@ -137,7 +138,7 @@ function LiveGrid({ ecosystemId }: { ecosystemId: string }) {
             <div className="absolute bottom-2 left-2 right-2 text-white">
               <div className="flex items-center gap-2 mb-1">
                 <Avatar className="size-6 border border-white/30">
-                  <AvatarImage src={l.host?.avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(l.host?.avatar_url ?? undefined, 48)} />
                   <AvatarFallback className="bg-secondary text-[10px]">{name[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <p className="text-xs font-semibold truncate">{name}</p>

@@ -33,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { LiveAvatarRing } from "@/components/live/LiveAvatarRing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -809,7 +810,7 @@ export function ChatSidebar({
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
                       >
                         <Avatar className="size-10">
-                          <AvatarImage src={u.avatar_url ?? undefined} />
+                          <AvatarImage src={optimizeAvatarUrl(u.avatar_url, 96)} fetchPriority="high" />
                           <AvatarFallback className="bg-secondary text-sm">
                             {u.display_name?.[0]?.toUpperCase() ?? "?"}
                           </AvatarFallback>
@@ -838,7 +839,7 @@ export function ChatSidebar({
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 text-left"
                       >
                         <Avatar className="size-10">
-                          <AvatarImage src={g.avatar_url ?? undefined} />
+                          <AvatarImage src={optimizeAvatarUrl(g.avatar_url, 96)} fetchPriority="high" />
                           <AvatarFallback className="bg-secondary text-sm">
                             {g.name?.slice(0, 2).toUpperCase() ?? "GR"}
                           </AvatarFallback>
@@ -928,7 +929,7 @@ function ConversationRow({
       <div className="relative">
         <LiveAvatarRing hostId={conv.is_group ? null : conv.other_user?.id} showPill={false}>
           <Avatar className="size-11">
-            <AvatarImage src={avatar ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(avatar, 96)} fetchPriority="high" />
             <AvatarFallback className="bg-secondary text-sm">
               {name[0]?.toUpperCase()}
             </AvatarFallback>

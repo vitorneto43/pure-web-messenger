@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { cn } from "@/lib/utils";
 
 interface Profile {
@@ -142,7 +143,7 @@ export function useMentionSuggest({
             )}
           >
             <Avatar className="size-7 shrink-0">
-              <AvatarImage src={p.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 56)} />
               <AvatarFallback>
                 {(p.display_name || p.username)?.[0]?.toUpperCase()}
               </AvatarFallback>

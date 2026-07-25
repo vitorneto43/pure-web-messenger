@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullTime } from "@/lib/format-time";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { useTranslation } from "react-i18next";
 
 interface ProfileMini {
@@ -245,7 +246,7 @@ export function NotificationsBell() {
                     {profile || displayName ? (
                       <Avatar className="size-9 shrink-0">
                         {profile?.avatar_url && (
-                          <AvatarImage src={profile.avatar_url} alt={displayName ?? ""} />
+                          <AvatarImage src={optimizeAvatarUrl(profile.avatar_url, 72)} alt={displayName ?? ""} />
                         )}
                         <AvatarFallback className="text-[11px]">
                           {initials(displayName ?? "?")}

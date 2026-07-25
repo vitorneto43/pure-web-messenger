@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { signWavetubeUrl, formatViews } from "@/lib/wavetube";
 import { getEcosystemBySlug, getMyRole, type Ecosystem, type EcosystemRole } from "@/lib/ecosystems";
 import { FollowButton } from "@/components/FollowButton";
@@ -179,7 +180,7 @@ function ShortGrid({ ecosystemId }: { ecosystemId: string }) {
             <div className="flex items-center justify-between mt-1">
               <div className="flex items-center gap-1.5">
                 <Avatar className="size-5 border border-white/30">
-                  <AvatarImage src={s.owner_avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(s.owner_avatar_url ?? undefined, 40)} />
                   <AvatarFallback className="text-[8px] bg-black/50">{(s.owner_display_name || s.owner_username || "?").charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <span className="text-[10px] truncate">{s.owner_display_name || s.owner_username || "Criador"}</span>

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { UserBadges } from "@/components/badges/UserBadges";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
@@ -269,7 +270,7 @@ function DiscoverCard({
       <div className="absolute inset-x-0 bottom-0 z-[2] p-4 pr-20 space-y-2">
         <button onClick={onProfile} className="flex items-center gap-2 group">
           <Avatar className="size-10 ring-2 ring-white/40">
-            <AvatarImage src={s.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(s.avatar_url, 80)} fetchPriority="high" />
             <AvatarFallback>{s.display_name[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="text-left">

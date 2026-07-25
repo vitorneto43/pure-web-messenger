@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useImagePreload } from "@/hooks/use-image-preload";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -364,6 +366,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
   const headerTitle = conv?.is_group ? conv.name : otherUser?.display_name ?? "...";
   const headerAvatar = conv?.is_group ? conv.avatar_url : otherUser?.avatar_url;
+  useImagePreload(optimizeAvatarUrl(headerAvatar, 96));
   const headerSub = useMemo(() => {
     if (typingUsers.length) {
       if (!conv?.is_group) return t("chat.typing");
@@ -596,7 +599,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         </button>
         <div className="flex items-center gap-3 flex-1 min-w-0 -mx-1 px-1">
           <Avatar className="size-10">
-            <AvatarImage src={headerAvatar ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(headerAvatar, 96)} fetchPriority="high" />
             <AvatarFallback>{headerTitle?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -756,7 +759,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
                 <div className="w-8 shrink-0">
                   {showAvatar && (
                     <Avatar className="size-8">
-                      <AvatarImage src={sender?.avatar_url ?? undefined} />
+                      <AvatarImage src={optimizeAvatarUrl(sender?.avatar_url, 64)} />
                       <AvatarFallback className="text-xs">
                         {sender?.display_name?.[0]?.toUpperCase()}
                       </AvatarFallback>

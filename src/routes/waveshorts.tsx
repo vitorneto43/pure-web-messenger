@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { signWavetubeUrl, formatViews } from "@/lib/wavetube";
 import { FollowButton } from "@/components/FollowButton";
@@ -407,7 +408,7 @@ function ShortCard({
               className="flex items-center gap-2 min-w-0 flex-1"
             >
               <Avatar className="size-9 ring-2 ring-white/70">
-                <AvatarImage src={short.owner_avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(short.owner_avatar_url, 72)} />
                 <AvatarFallback>{authorLabel.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Loader2, UserPlus, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { UserBadges } from "@/components/badges/UserBadges";
@@ -61,7 +62,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
               className="shrink-0 w-20 flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-accent/30"
             >
               <Avatar className="size-12">
-                <AvatarImage src={s.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(s.avatar_url, 96)} fetchPriority="high" />
                 <AvatarFallback>{s.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="text-[11px] truncate w-full text-center">{s.display_name}</span>
@@ -76,7 +77,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30"
             >
               <Avatar className="size-9">
-                <AvatarImage src={s.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(s.avatar_url, 72)} />
                 <AvatarFallback>{s.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-left min-w-0 flex-1">

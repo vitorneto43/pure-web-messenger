@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Users, Copy, Settings2, Building2, Globe2, Mail, Sp
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { useAuth } from "@/hooks/use-auth";
 import { useEcosystems } from "@/hooks/use-ecosystem";
 import { getEcosystemBySlug, getMyRole, listEcosystemPosts, type Ecosystem, type EcosystemRole, CATEGORIES } from "@/lib/ecosystems";
@@ -103,7 +104,7 @@ function EcosystemHome() {
             <ArrowLeft className="size-5" />
           </Button>
           <Avatar className="size-9 shrink-0">
-            <AvatarImage src={eco.logo_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(eco.logo_url ?? undefined, 72)} />
             <AvatarFallback>{eco.name[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
@@ -210,7 +211,7 @@ function EcosystemHome() {
                 <li key={p.id} className="rounded-2xl border border-border bg-card p-3">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Avatar className="size-7">
-                      <AvatarImage src={p.author?.avatar_url ?? undefined} />
+                      <AvatarImage src={optimizeAvatarUrl(p.author?.avatar_url ?? undefined, 56)} />
                       <AvatarFallback>{(p.author?.display_name ?? p.author?.username ?? "?")[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">

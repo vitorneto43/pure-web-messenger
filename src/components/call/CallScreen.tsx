@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useCall } from "@/hooks/use-call";
 import { setNativeSpeakerphone } from "@/integrations/native-call";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useImagePreload } from "@/hooks/use-image-preload";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import {
   LiveKitRoom,
@@ -267,6 +269,7 @@ function CallControls() {
 
   if (!active) return null;
   const peer = active.peerProfile;
+  useImagePreload(optimizeAvatarUrl(peer?.avatar_url, 160));
   const isVideo = active.kind === "video";
   const statusLabel =
     active.status === "ringing"
@@ -307,7 +310,7 @@ function CallControls() {
         <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-zinc-900 to-black">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
             <Avatar className="size-40 border-4 border-white/20">
-              <AvatarImage src={peer?.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(peer?.avatar_url, 160)} fetchPriority="high" />
               <AvatarFallback className="text-6xl bg-gradient-to-br from-blue-500 to-purple-600">
                 {peer?.display_name?.[0]?.toUpperCase() ?? "?"}
               </AvatarFallback>

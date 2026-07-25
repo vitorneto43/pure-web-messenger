@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { PeopleYouMayKnow } from "@/components/PeopleYouMayKnow";
@@ -140,7 +141,7 @@ export function NewChatDialog({ open, onOpenChange, onCreated }: Props) {
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30 disabled:opacity-50"
             >
               <Avatar className="size-9">
-                <AvatarImage src={r.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(r.avatar_url, 72)} />
                 <AvatarFallback>{r.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-left min-w-0 flex-1">

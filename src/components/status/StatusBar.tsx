@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { LiveAvatarRing } from "@/components/live/LiveAvatarRing";
 import { Button } from "@/components/ui/button";
 import { CreateStatusDialog } from "./CreateStatusDialog";
@@ -237,7 +238,7 @@ export function StatusBar() {
             <Avatar
               className={`size-14 ring-2 ring-offset-2 ring-offset-sidebar ${mine.length ? "ring-primary" : "ring-border"}`}
             >
-              <AvatarImage src={(user?.user_metadata as any)?.avatar_url} />
+              <AvatarImage src={optimizeAvatarUrl((user?.user_metadata as any)?.avatar_url, 144)} fetchPriority="high" />
               <AvatarFallback className="bg-secondary text-sm">
                 {(user?.email?.[0] ?? "V").toUpperCase()}
               </AvatarFallback>
@@ -288,7 +289,7 @@ export function StatusBar() {
               >
                 <LiveAvatarRing hostId={l.host_id} showPill clickable={false}>
                   <Avatar className="size-14">
-                    <AvatarImage src={l.host?.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(l.host?.avatar_url, 144)} fetchPriority="high" />
                     <AvatarFallback className="bg-secondary text-sm">
                       {name[0]?.toUpperCase()}
                     </AvatarFallback>
@@ -321,7 +322,7 @@ export function StatusBar() {
                           : "ring-muted"
                   }`}
                 >
-                  <AvatarImage src={g.user.avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(g.user.avatar_url, 144)} fetchPriority="high" />
                   <AvatarFallback className="bg-secondary text-sm">
                     {g.user.display_name[0]?.toUpperCase()}
                   </AvatarFallback>
