@@ -226,6 +226,8 @@ function CallControls() {
     toggleCamRequest,
   } = useCall();
 
+  useImagePreload(optimizeAvatarUrl(peer?.avatar_url, 160));
+
   const [callDuration, setCallDuration] = useState(0);
   const [speakerOn, setSpeakerOn] = useState(false);
   const [recording, setRecording] = useState(false);
