@@ -181,7 +181,7 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
       <header className="flex items-center gap-3 p-3">
         <button onClick={() => navigate({ to: "/u/$username", params: { username: post.username } })}>
           <Avatar className="size-10">
-            <AvatarImage src={post.avatar_url ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(post.avatar_url, 96)} fetchPriority="high" />
             <AvatarFallback>{post.display_name[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
         </button>
