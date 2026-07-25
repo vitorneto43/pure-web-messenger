@@ -45,7 +45,7 @@ export function OnlineUsersStrip() {
                 <div className="relative">
                   <LiveAvatarRing hostId={u.user_id} showPill={false}>
                     <Avatar className="size-12 ring-2 ring-emerald-500/60">
-                      <AvatarImage src={u.avatar_url ?? undefined} />
+                      <AvatarImage src={optimizeAvatarUrl(u.avatar_url, 96)} fetchPriority="high" />
                       <AvatarFallback>{initial}</AvatarFallback>
                     </Avatar>
                   </LiveAvatarRing>
