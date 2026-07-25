@@ -25,7 +25,7 @@ export const notifyLiveStart = createServerFn({ method: "POST" })
 
     const { data: live } = await supabaseAdmin
       .from("live_sessions")
-      .select("id,host_id,title,status")
+      .select("id,host_id,title,status,ecosystem_id")
       .eq("id", data.liveId)
       .maybeSingle();
     if (!live || live.host_id !== userId) throw new Error("Forbidden");
@@ -38,22 +38,34 @@ export const notifyLiveStart = createServerFn({ method: "POST" })
       .maybeSingle();
     const hostName = host?.display_name || host?.username || "Alguém";
 
-    const { data: followers } = await supabaseAdmin
-      .from("profile_follows")
-      .select("follower_id")
-      .eq("following_id", userId);
-    const followerIds = (followers ?? []).map((f) => f.follower_id);
-    if (followerIds.length === 0) return { sent: 0 };
+    let recipientIds: string[] = [];
+
+    if (live.ecosystem_id) {
+      const { data: members } = await supabaseAdmin
+        .from("ecosystem_members")
+        .select("user_id")
+        .eq("ecosystem_id", live.ecosystem_id)
+        .in("role", ["owner", "admin", "moderator", "member"]);
+      recipientIds = (members ?? []).map((m) => m.user_id).filter((id) => id !== userId);
+    } else {
+      const { data: followers } = await supabaseAdmin
+        .from("profile_follows")
+        .select("follower_id")
+        .eq("following_id", userId);
+      recipientIds = (followers ?? []).map((f) => f.follower_id);
+    }
+
+    if (recipientIds.length === 0) return { sent: 0 };
 
     const title = `🔴 ${hostName} está ao vivo`;
     const body = live.title?.trim() || "Entre agora e participe da live!";
-    const url = `/live/${live.id}`;
+    const url = live.ecosystem_id ? `/live/${live.id}` : `/live/${live.id}`;
 
     // ---- Web Push ----
     const { data: subs } = await supabaseAdmin
       .from("push_subscriptions")
       .select("id,endpoint,p256dh,auth,user_id")
-      .in("user_id", followerIds);
+      .in("user_id", recipientIds);
 
     let webSent = 0;
     const toRemove: string[] = [];
@@ -85,7 +97,7 @@ export const notifyLiveStart = createServerFn({ method: "POST" })
     try {
       const { sendNativeLiveStart } = await import("./native-push.functions");
       const r = await sendNativeLiveStart({
-        recipientIds: followerIds,
+        recipientIds: recipientIds,
         liveId: live.id,
         title,
         body,

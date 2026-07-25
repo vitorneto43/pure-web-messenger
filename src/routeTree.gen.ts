@@ -54,7 +54,12 @@ import { Route as AuthenticatedMeusConvitesRouteImport } from './routes/_authent
 import { Route as AuthenticatedHashtagsRouteImport } from './routes/_authenticated/hashtags'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ESlugWavetubeRouteImport } from './routes/e.$slug.wavetube'
+import { Route as ESlugWaveshortsRouteImport } from './routes/e.$slug.waveshorts'
 import { Route as ESlugMetricsRouteImport } from './routes/e.$slug.metrics'
+import { Route as ESlugMeetRouteImport } from './routes/e.$slug.meet'
+import { Route as ESlugLiveRouteImport } from './routes/e.$slug.live'
+import { Route as ESlugChatRouteImport } from './routes/e.$slug.chat'
 import { Route as ESlugBillingRouteImport } from './routes/e.$slug.billing'
 import { Route as ESlugAdminRouteImport } from './routes/e.$slug.admin'
 import { Route as ApiPublicVideoPushRouteImport } from './routes/api/public/video-push'
@@ -303,9 +308,34 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ESlugWavetubeRoute = ESlugWavetubeRouteImport.update({
+  id: '/wavetube',
+  path: '/wavetube',
+  getParentRoute: () => ESlugRoute,
+} as any)
+const ESlugWaveshortsRoute = ESlugWaveshortsRouteImport.update({
+  id: '/waveshorts',
+  path: '/waveshorts',
+  getParentRoute: () => ESlugRoute,
+} as any)
 const ESlugMetricsRoute = ESlugMetricsRouteImport.update({
   id: '/metrics',
   path: '/metrics',
+  getParentRoute: () => ESlugRoute,
+} as any)
+const ESlugMeetRoute = ESlugMeetRouteImport.update({
+  id: '/meet',
+  path: '/meet',
+  getParentRoute: () => ESlugRoute,
+} as any)
+const ESlugLiveRoute = ESlugLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => ESlugRoute,
+} as any)
+const ESlugChatRoute = ESlugChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => ESlugRoute,
 } as any)
 const ESlugBillingRoute = ESlugBillingRouteImport.update({
@@ -488,7 +518,12 @@ export interface FileRoutesByFullPath {
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
   '/e/$slug/billing': typeof ESlugBillingRoute
+  '/e/$slug/chat': typeof ESlugChatRoute
+  '/e/$slug/live': typeof ESlugLiveRoute
+  '/e/$slug/meet': typeof ESlugMeetRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
+  '/e/$slug/waveshorts': typeof ESlugWaveshortsRoute
+  '/e/$slug/wavetube': typeof ESlugWavetubeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -557,7 +592,12 @@ export interface FileRoutesByTo {
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
   '/e/$slug/billing': typeof ESlugBillingRoute
+  '/e/$slug/chat': typeof ESlugChatRoute
+  '/e/$slug/live': typeof ESlugLiveRoute
+  '/e/$slug/meet': typeof ESlugMeetRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
+  '/e/$slug/waveshorts': typeof ESlugWaveshortsRoute
+  '/e/$slug/wavetube': typeof ESlugWavetubeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -628,7 +668,12 @@ export interface FileRoutesById {
   '/api/public/video-push': typeof ApiPublicVideoPushRoute
   '/e/$slug/admin': typeof ESlugAdminRoute
   '/e/$slug/billing': typeof ESlugBillingRoute
+  '/e/$slug/chat': typeof ESlugChatRoute
+  '/e/$slug/live': typeof ESlugLiveRoute
+  '/e/$slug/meet': typeof ESlugMeetRoute
   '/e/$slug/metrics': typeof ESlugMetricsRoute
+  '/e/$slug/waveshorts': typeof ESlugWaveshortsRoute
+  '/e/$slug/wavetube': typeof ESlugWavetubeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/auth/check-signup-ip': typeof ApiPublicAuthCheckSignupIpRoute
   '/api/public/calls/status': typeof ApiPublicCallsStatusRoute
@@ -699,7 +744,12 @@ export interface FileRouteTypes {
     | '/api/public/video-push'
     | '/e/$slug/admin'
     | '/e/$slug/billing'
+    | '/e/$slug/chat'
+    | '/e/$slug/live'
+    | '/e/$slug/meet'
     | '/e/$slug/metrics'
+    | '/e/$slug/waveshorts'
+    | '/e/$slug/wavetube'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -768,7 +818,12 @@ export interface FileRouteTypes {
     | '/api/public/video-push'
     | '/e/$slug/admin'
     | '/e/$slug/billing'
+    | '/e/$slug/chat'
+    | '/e/$slug/live'
+    | '/e/$slug/meet'
     | '/e/$slug/metrics'
+    | '/e/$slug/waveshorts'
+    | '/e/$slug/wavetube'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -838,7 +893,12 @@ export interface FileRouteTypes {
     | '/api/public/video-push'
     | '/e/$slug/admin'
     | '/e/$slug/billing'
+    | '/e/$slug/chat'
+    | '/e/$slug/live'
+    | '/e/$slug/meet'
     | '/e/$slug/metrics'
+    | '/e/$slug/waveshorts'
+    | '/e/$slug/wavetube'
     | '/lovable/email/suppression'
     | '/api/public/auth/check-signup-ip'
     | '/api/public/calls/status'
@@ -1227,11 +1287,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e/$slug/wavetube': {
+      id: '/e/$slug/wavetube'
+      path: '/wavetube'
+      fullPath: '/e/$slug/wavetube'
+      preLoaderRoute: typeof ESlugWavetubeRouteImport
+      parentRoute: typeof ESlugRoute
+    }
+    '/e/$slug/waveshorts': {
+      id: '/e/$slug/waveshorts'
+      path: '/waveshorts'
+      fullPath: '/e/$slug/waveshorts'
+      preLoaderRoute: typeof ESlugWaveshortsRouteImport
+      parentRoute: typeof ESlugRoute
+    }
     '/e/$slug/metrics': {
       id: '/e/$slug/metrics'
       path: '/metrics'
       fullPath: '/e/$slug/metrics'
       preLoaderRoute: typeof ESlugMetricsRouteImport
+      parentRoute: typeof ESlugRoute
+    }
+    '/e/$slug/meet': {
+      id: '/e/$slug/meet'
+      path: '/meet'
+      fullPath: '/e/$slug/meet'
+      preLoaderRoute: typeof ESlugMeetRouteImport
+      parentRoute: typeof ESlugRoute
+    }
+    '/e/$slug/live': {
+      id: '/e/$slug/live'
+      path: '/live'
+      fullPath: '/e/$slug/live'
+      preLoaderRoute: typeof ESlugLiveRouteImport
+      parentRoute: typeof ESlugRoute
+    }
+    '/e/$slug/chat': {
+      id: '/e/$slug/chat'
+      path: '/chat'
+      fullPath: '/e/$slug/chat'
+      preLoaderRoute: typeof ESlugChatRouteImport
       parentRoute: typeof ESlugRoute
     }
     '/e/$slug/billing': {
@@ -1433,13 +1528,23 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 interface ESlugRouteChildren {
   ESlugAdminRoute: typeof ESlugAdminRoute
   ESlugBillingRoute: typeof ESlugBillingRoute
+  ESlugChatRoute: typeof ESlugChatRoute
+  ESlugLiveRoute: typeof ESlugLiveRoute
+  ESlugMeetRoute: typeof ESlugMeetRoute
   ESlugMetricsRoute: typeof ESlugMetricsRoute
+  ESlugWaveshortsRoute: typeof ESlugWaveshortsRoute
+  ESlugWavetubeRoute: typeof ESlugWavetubeRoute
 }
 
 const ESlugRouteChildren: ESlugRouteChildren = {
   ESlugAdminRoute: ESlugAdminRoute,
   ESlugBillingRoute: ESlugBillingRoute,
+  ESlugChatRoute: ESlugChatRoute,
+  ESlugLiveRoute: ESlugLiveRoute,
+  ESlugMeetRoute: ESlugMeetRoute,
   ESlugMetricsRoute: ESlugMetricsRoute,
+  ESlugWaveshortsRoute: ESlugWaveshortsRoute,
+  ESlugWavetubeRoute: ESlugWavetubeRoute,
 }
 
 const ESlugRouteWithChildren = ESlugRoute._addFileChildren(ESlugRouteChildren)

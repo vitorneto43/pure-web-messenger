@@ -169,10 +169,10 @@ function LiveFeed() {
               params={{ liveId: l.id }}
               className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted group"
             >
-              {l.cover_url || l.host?.avatar_url ? (
+              {(l.cover_url || l.host?.avatar_url) ? (
                 <img
-                  src={l.cover_url || l.host?.avatar_url || ""}
-                  alt={l.title}
+                  src={l.cover_url || l.host?.avatar_url || undefined}
+                  alt={l.title ?? "Ao vivo"}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition"
                 />
               ) : (
@@ -183,14 +183,14 @@ function LiveFeed() {
                 AO VIVO
               </span>
               <span className="absolute top-2 right-2 flex items-center gap-1 text-white text-xs bg-black/50 backdrop-blur px-1.5 py-0.5 rounded-full">
-                <Eye className="w-3 h-3" /> {l.viewer_count}
+                <Eye className="w-3 h-3" /> {l.viewer_count ?? 0}
               </span>
               <div className="absolute bottom-2 left-2 right-2 text-white">
                 <p className="text-xs font-semibold truncate">{l.host?.display_name || l.host?.username || "Host"}</p>
                 <p className="text-[11px] opacity-90 truncate">{l.title || "Ao vivo"}</p>
-                {l.total_gift_coins > 0 && (
+                {(l.total_gift_coins ?? 0) > 0 && (
                   <p className="text-[10px] flex items-center gap-0.5 opacity-90 mt-0.5">
-                    <Coins className="w-3 h-3 text-yellow-400" /> {l.total_gift_coins}
+                    <Coins className="w-3 h-3 text-yellow-400" /> {l.total_gift_coins ?? 0}
                   </p>
                 )}
               </div>
