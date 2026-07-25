@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { useAuth } from "@/hooks/use-auth";
 import { getRecommendedProfilesPublic, type PublicProfile } from "@/lib/public-discover.functions";
 import { discoverGroupsPublic, type PublicGroup, type GroupCategory } from "@/lib/groups.functions";
