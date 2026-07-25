@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useOnlinePresence } from "@/hooks/use-online-presence";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { LiveAvatarRing } from "@/components/live/LiveAvatarRing";
 
 /**
