@@ -366,6 +366,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
 
   const headerTitle = conv?.is_group ? conv.name : otherUser?.display_name ?? "...";
   const headerAvatar = conv?.is_group ? conv.avatar_url : otherUser?.avatar_url;
+  useImagePreload(optimizeAvatarUrl(headerAvatar, 96));
   const headerSub = useMemo(() => {
     if (typingUsers.length) {
       if (!conv?.is_group) return t("chat.typing");
