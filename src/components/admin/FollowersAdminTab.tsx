@@ -4,6 +4,7 @@ import { Loader2, UserPlus, Users, TrendingUp, Heart } from "lucide-react";
 import { getAdminFollowersStats } from "@/lib/admin-stats.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -59,7 +60,7 @@ export function FollowersAdminTab() {
               <div key={p.id} className="flex items-center gap-3 py-1.5 border-b border-border/50 last:border-0">
                 <span className="text-xs text-muted-foreground w-6 text-right">#{i + 1}</span>
                 <Avatar className="size-8">
-                  <AvatarImage src={p.avatar_url ?? undefined} />
+                  <AvatarImage src={optimizeAvatarUrl(p.avatar_url ?? undefined, 16)} />
                   <AvatarFallback>{(p.display_name || p.username || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

@@ -5,6 +5,7 @@ import { getInviterProfile, recordInviteClick } from "@/lib/invites.functions";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { Button } from "@/components/ui/button";
 import { INVITER_KEY, CHANNEL_KEY, CLICK_KEY } from "@/lib/share-invite";
 import { track } from "@/lib/track";
@@ -68,7 +69,7 @@ function InvitePage() {
         ) : profile.data ? (
           <>
             <Avatar className="size-20 mx-auto">
-              <AvatarImage src={profile.data.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(profile.data.avatar_url ?? undefined, 40)} />
               <AvatarFallback>{profile.data.display_name?.[0] ?? "?"}</AvatarFallback>
             </Avatar>
             <div>

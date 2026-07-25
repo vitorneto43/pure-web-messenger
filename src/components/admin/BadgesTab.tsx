@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { toast } from "sonner";
 import { Loader2, Award, X } from "lucide-react";
 
@@ -148,7 +149,7 @@ export function BadgesTab() {
                 <div className="mt-2 space-y-1 max-h-56 overflow-y-auto">
                   {searchResults.map((u) => (
                     <div key={u.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent/30">
-                      <Avatar className="size-8"><AvatarImage src={u.avatar_url ?? undefined} /><AvatarFallback>{u.display_name?.[0]}</AvatarFallback></Avatar>
+                      <Avatar className="size-8"><AvatarImage src={optimizeAvatarUrl(u.avatar_url ?? undefined, 80)} /><AvatarFallback>{u.display_name?.[0]}</AvatarFallback></Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{u.display_name}</p>
                         <p className="text-xs text-muted-foreground truncate">@{u.username}</p>
@@ -170,7 +171,7 @@ export function BadgesTab() {
                 <div className="space-y-1 max-h-96 overflow-y-auto">
                   {owners.map((a) => (
                     <div key={a.user_id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent/30">
-                      <Avatar className="size-8"><AvatarImage src={a.profiles?.avatar_url ?? undefined} /><AvatarFallback>{a.profiles?.display_name?.[0] ?? "?"}</AvatarFallback></Avatar>
+                      <Avatar className="size-8"><AvatarImage src={optimizeAvatarUrl(a.profiles?.avatar_url ?? undefined, 80)} /><AvatarFallback>{a.profiles?.display_name?.[0] ?? "?"}</AvatarFallback></Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{a.profiles?.display_name ?? "—"}</p>
                         <p className="text-xs text-muted-foreground truncate">@{a.profiles?.username ?? "—"} · {new Date(a.awarded_at).toLocaleDateString()}</p>

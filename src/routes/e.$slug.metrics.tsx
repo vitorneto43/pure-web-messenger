@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Users, FileText, Image as ImageIcon, Video, Radio, 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getEcosystemBySlug, getMyRole, type Ecosystem, type EcosystemRole } from "@/lib/ecosystems";
@@ -203,7 +204,7 @@ function EcosystemMetrics() {
                       <li key={a.user_id} className="flex items-center gap-3 py-2">
                         <span className="text-xs font-bold w-5 text-muted-foreground">#{idx + 1}</span>
                         <Avatar className="size-8">
-                          <AvatarImage src={a.avatar_url ?? undefined} />
+                          <AvatarImage src={optimizeAvatarUrl(a.avatar_url ?? undefined, 16)} />
                           <AvatarFallback>{name[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">

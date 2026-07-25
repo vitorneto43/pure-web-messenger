@@ -8,6 +8,7 @@ import { getAdminLives } from "@/lib/admin-lives.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 
 function fmtDuration(s: number | null) {
   if (s == null) return "—";
@@ -73,7 +74,7 @@ export function LivesAdminTab() {
                       className="flex items-center gap-3 min-w-0 md:w-64"
                     >
                       <Avatar className="size-10 shrink-0">
-                        {l.host_avatar_url && <AvatarImage src={l.host_avatar_url} />}
+                        {l.host_avatar_url && <AvatarImage src={optimizeAvatarUrl(l.host_avatar_url, 20)} />}
                         <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">

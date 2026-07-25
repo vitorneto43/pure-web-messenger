@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Hash, Loader2, Image as ImageIcon, Video, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/hashtag/$tag")({
@@ -145,7 +146,7 @@ function HashtagFeedPage() {
               >
                 <div className="flex items-center gap-1.5">
                   <Avatar className="size-5">
-                    <AvatarImage src={s.profiles?.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(s.profiles?.avatar_url ?? undefined, 10)} />
                     <AvatarFallback className="text-[8px]">
                       {s.profiles?.display_name?.[0]?.toUpperCase() ?? "?"}
                     </AvatarFallback>
