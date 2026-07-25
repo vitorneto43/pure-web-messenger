@@ -209,7 +209,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
       const rows: any[] = [];
       if (target.kind === "both") {
         rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "public" });
-        rows.push({ user_id: user.id, ...payload, ecosystem_id: null, visibility: "public" });
+        rows.push({ user_id: user.id, ...payload, ecosystem_id: null, visibility: "public", crossposted_from_ecosystem_id: ecosystemId });
       } else if (target.kind === "ecosystem") {
         rows.push({ user_id: user.id, ...payload, ecosystem_id: ecosystemId, visibility: "private" });
       } else {
