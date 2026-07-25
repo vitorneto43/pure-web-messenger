@@ -22,6 +22,7 @@ import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
 import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
+import { VLibrasWidget } from "@/components/VLibrasWidget";
 
 
 import appCss from "../styles.css?url";
