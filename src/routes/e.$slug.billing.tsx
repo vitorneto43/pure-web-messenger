@@ -235,7 +235,7 @@ function EcosystemBillingPage() {
                   variant={isCurrent ? "outline" : isDowngrade ? "secondary" : "default"}
                   onClick={() => handleUpgrade(p.tier)}
                 >
-                  {pendingTier === p.tier ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? "Plano atual" : isDowngrade ? "Solicitar downgrade" : p.tier === "enterprise" ? "Falar com vendas" : "Solicitar upgrade"}
+                  {pendingTier === p.tier ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? "Plano atual" : isDowngrade ? "Solicitar downgrade" : "Solicitar upgrade"}
                 </Button>
               </div>
             );
