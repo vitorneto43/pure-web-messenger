@@ -929,7 +929,7 @@ function ConversationRow({
       <div className="relative">
         <LiveAvatarRing hostId={conv.is_group ? null : conv.other_user?.id} showPill={false}>
           <Avatar className="size-11">
-            <AvatarImage src={avatar ?? undefined} />
+            <AvatarImage src={optimizeAvatarUrl(avatar, 96)} fetchPriority="high" />
             <AvatarFallback className="bg-secondary text-sm">
               {name[0]?.toUpperCase()}
             </AvatarFallback>
