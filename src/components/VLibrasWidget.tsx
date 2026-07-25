@@ -128,6 +128,16 @@ export function VLibrasWidget() {
       return true;
     };
 
+    const closePanel = () => {
+      const root = document.querySelector<HTMLElement>("div[vw]");
+      const accessButton = document.querySelector<HTMLElement>("[vw-access-button]");
+      const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
+      root?.classList.remove("active");
+      accessButton?.classList.remove("active");
+      wrapper?.classList.remove("active");
+      setLoading(false);
+    };
+
     const initializeWidget = () => {
       ensureMarkup();
       ensureVisibilityStyle();
@@ -158,8 +168,7 @@ export function VLibrasWidget() {
       const wrapper = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
       if (!wrapper || !isWidgetReady()) return false;
       if (isPanelOpen()) {
-        wrapper?.classList.remove("active");
-        setLoading(false);
+        closePanel();
         return true;
       }
       // O botão oficial às vezes demora a receber o listener interno.
@@ -170,28 +179,29 @@ export function VLibrasWidget() {
     const retryOpen = (attempt = 0) => {
       if (disposed || !pendingOpen) return;
       initializeWidget();
-      if (!isPanelOpen() && forceOpenPanel()) {
-        pendingOpen = false;
-        return;
-      }
-      if (clickAccessButton()) {
-        if (isPanelOpen()) {
+      if (isWidgetReady()) {
+        forceOpenPanel();
+        // Reaplica por alguns instantes porque o script oficial pode resetar
+        // as classes logo após terminar a montagem interna.
+        if (attempt >= 10 && isPanelOpen()) {
           pendingOpen = false;
+          setLoading(false);
           return;
         }
       }
-      if (attempt >= 12) {
+      if (attempt >= 16) {
+        pendingOpen = false;
         setLoading(false);
         return;
       }
-      retryTimer = window.setTimeout(() => retryOpen(attempt + 1), attempt < 4 ? 350 : 750);
+      retryTimer = window.setTimeout(() => retryOpen(attempt + 1), attempt < 6 ? 350 : 650);
     };
 
     const handleOpenVLibras = () => {
       setLoading(true);
       initializeWidget();
-      if (clickAccessButton()) {
-        pendingOpen = false;
+      if (isPanelOpen()) {
+        closePanel();
         return;
       }
       pendingOpen = true;
