@@ -388,7 +388,7 @@ function PendingRequestsCard({ ownerId }: { ownerId: string }) {
         {items.map((it) => (
           <li key={it.requester_id} className="py-3 flex items-center gap-3">
             <Avatar className="size-10">
-              <AvatarImage src={it.avatar_url ?? undefined} />
+              <AvatarImage src={optimizeAvatarUrl(it.avatar_url, 80)} />
               <AvatarFallback>{(it.display_name ?? "?")[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
