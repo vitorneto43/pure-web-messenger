@@ -810,7 +810,7 @@ export function ChatSidebar({
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sidebar-hover/60 disabled:opacity-50 text-left"
                       >
                         <Avatar className="size-10">
-                          <AvatarImage src={u.avatar_url ?? undefined} />
+                          <AvatarImage src={optimizeAvatarUrl(u.avatar_url, 96)} fetchPriority="high" />
                           <AvatarFallback className="bg-secondary text-sm">
                             {u.display_name?.[0]?.toUpperCase() ?? "?"}
                           </AvatarFallback>
