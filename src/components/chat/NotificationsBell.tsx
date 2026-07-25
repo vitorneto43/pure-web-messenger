@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullTime } from "@/lib/format-time";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { useTranslation } from "react-i18next";
 
 interface ProfileMini {
