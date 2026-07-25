@@ -22,6 +22,7 @@ import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
 import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
+import { VLibrasWidget } from "@/components/VLibrasWidget";
 
 
 import appCss from "../styles.css?url";
@@ -76,9 +77,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         httpEquiv: "Content-Security-Policy",
         content: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-          "font-src 'self' data: https://fonts.gstatic.com",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br",
+          "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br",
           "img-src 'self' data: blob: https:",
           "media-src 'self' blob: data: https:",
           "connect-src 'self' https: wss: blob:",
@@ -265,6 +266,7 @@ function RootComponent() {
           <Outlet />
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
+          <VLibrasWidget />
         </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>
