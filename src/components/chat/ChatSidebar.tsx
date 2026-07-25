@@ -395,6 +395,11 @@ export function ChatSidebar({
   }
 
   function openVLibras() {
+    if (window.wavechatOpenVLibras) {
+      window.wavechatOpenVLibras();
+      if (!document.querySelector("[vw-plugin-wrapper] [vp]")) toast.message("Carregando VLibras...");
+      return;
+    }
     window.dispatchEvent(new Event("wavechat:open-vlibras"));
     if (!document.querySelector("[vw-plugin-wrapper] [vp]")) toast.message("Carregando VLibras...");
   }
