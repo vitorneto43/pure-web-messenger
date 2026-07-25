@@ -77,7 +77,7 @@ export function PeopleYouMayKnow({ onPick, variant = "default" }: Props) {
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/30"
             >
               <Avatar className="size-9">
-                <AvatarImage src={s.avatar_url ?? undefined} />
+                <AvatarImage src={optimizeAvatarUrl(s.avatar_url, 72)} />
                 <AvatarFallback>{s.display_name[0]?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-left min-w-0 flex-1">
