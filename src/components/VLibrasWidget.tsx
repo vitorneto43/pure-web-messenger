@@ -15,6 +15,30 @@ export function VLibrasWidget() {
     if (typeof window === "undefined") return;
     if (document.getElementById("vlibras-plugin-script")) return;
 
+    // CSS para garantir que o botão flutuante fique visível acima da
+    // navegação inferior (em mobile a lib posiciona `absolute` no fim
+    // do <body>, o que pode deixar o botão fora da viewport).
+    if (!document.getElementById("vlibras-visibility-style")) {
+      const style = document.createElement("style");
+      style.id = "vlibras-visibility-style";
+      style.textContent = `
+        div[vw] { position: fixed !important; z-index: 2147483000 !important; }
+        [vw-access-button] {
+          position: fixed !important;
+          right: 12px !important;
+          bottom: 88px !important;
+          left: auto !important;
+          top: auto !important;
+          z-index: 2147483000 !important;
+        }
+        [vw-plugin-wrapper] { z-index: 2147483000 !important; }
+        @media (min-width: 768px) {
+          [vw-access-button] { bottom: 24px !important; right: 24px !important; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     // Marcação exigida pelo widget.
     if (!document.querySelector("div[vw]")) {
       const root = document.createElement("div");
