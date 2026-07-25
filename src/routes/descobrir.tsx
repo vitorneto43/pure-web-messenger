@@ -135,7 +135,7 @@ function DiscoverPage() {
                   className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition"
                 >
                   <Avatar className="size-16">
-                    <AvatarImage src={p.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(p.avatar_url, 128)} fetchPriority="high" />
                     <AvatarFallback>{(p.display_name ?? p.username).slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="text-center min-w-0 w-full">
@@ -174,7 +174,7 @@ function DiscoverPage() {
                   className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-accent/30 transition"
                 >
                   <Avatar className="size-14">
-                    <AvatarImage src={g.avatar_url ?? undefined} />
+                    <AvatarImage src={optimizeAvatarUrl(g.avatar_url, 112)} fetchPriority="high" />
                     <AvatarFallback>{g.name?.slice(0, 2).toUpperCase() ?? "GR"}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
