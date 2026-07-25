@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { getOrCreateDirectConversation } from "@/lib/direct-conversation";
 import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
+import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import { MentionText } from "@/components/mentions/MentionText";
 import { useMentionSuggest } from "@/hooks/use-mention-suggest";
 import { TranslateButton } from "@/components/TranslateButton";
