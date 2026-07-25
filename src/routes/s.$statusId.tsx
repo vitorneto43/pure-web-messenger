@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useImagePreload } from "@/hooks/use-image-preload";
 import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
 import {
   DropdownMenu,
