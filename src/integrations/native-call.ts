@@ -176,11 +176,11 @@ export async function registerNativePush(
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      handleNativePushPayload(notification.data);
+      handleNativePushPayload(notification.data, false);
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-      handleNativePushPayload(action.notification.data);
+      handleNativePushPayload(action.notification.data, true);
     });
   } catch (e) {
     registered = false;
