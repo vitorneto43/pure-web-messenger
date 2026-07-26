@@ -22,6 +22,7 @@ import { SUPPORTED_LOCALES, HTML_LANG, type Locale } from "@/i18n/locales";
 import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
+import { usePushDeepLink } from "@/hooks/use-push-deeplink";
 import { VLibrasWidget } from "@/components/VLibrasWidget";
 
 
@@ -258,6 +259,7 @@ function RootComponent() {
         <EcosystemProvider>
           <LocaleBootstrap />
           <AuthInvalidator />
+          <PushDeepLinkBridge />
           <SplashScreenHider />
           <UtmCapture />
           <PageViewTracker />

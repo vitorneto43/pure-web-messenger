@@ -98,6 +98,11 @@ export function usePushDeepLink() {
       /* ignore */
     }
 
-    return () => window.removeEventListener("wavechat-push-deeplink", listener);
+    return () => {
+      window.removeEventListener("wavechat-push-deeplink", listener);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", swListener);
+      }
+    };
   }, [navigate, currentPath]);
 }
