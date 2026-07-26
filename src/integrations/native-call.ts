@@ -188,7 +188,7 @@ export async function registerNativePush(
   }
 }
 
-function handleNativePushPayload(data?: Record<string, unknown>): void {
+function handleNativePushPayload(data?: Record<string, unknown>, tapped?: boolean): void {
   if (!data) return;
   const type = data.type as string | undefined;
 
@@ -204,6 +204,21 @@ function handleNativePushPayload(data?: Record<string, unknown>): void {
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         navigator.vibrate?.([0, 250, 120, 250]);
       }
+    } catch { /* ignore */ }
+    return;
+  }
+
+  if (type === 'post_interaction' || type === 'status_interaction') {
+    if (!tapped) return; // ignore silent delivery — only navigate on tap
+    const url = (data.url as string | undefined) ||
+      (data.postId ? `/p/${data.postId}` : data.statusId ? `/s/${data.statusId}` : undefined);
+    if (!url) return;
+    try {
+      // Persist for cold start (hook may not be mounted yet)
+      localStorage.setItem('wavechat_pending_push_deeplink', JSON.stringify({ url }));
+    } catch { /* ignore */ }
+    try {
+      window.dispatchEvent(new CustomEvent('wavechat-push-deeplink', { detail: { url } }));
     } catch { /* ignore */ }
     return;
   }
