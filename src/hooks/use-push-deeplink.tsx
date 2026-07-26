@@ -77,6 +77,16 @@ export function usePushDeepLink() {
     const listener = (e: Event) => handle((e as CustomEvent<unknown>).detail);
     window.addEventListener("wavechat-push-deeplink", listener);
 
+    // Service worker forwards notification taps via postMessage.
+    const swListener = (e: MessageEvent) => {
+      if (e.data && e.data.type === "push-deeplink" && e.data.url) {
+        handle({ url: e.data.url });
+      }
+    };
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", swListener);
+    }
+
     // Cold-start pending intent
     try {
       const pending = localStorage.getItem(STORAGE_KEY);
