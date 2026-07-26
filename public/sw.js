@@ -180,23 +180,28 @@ self.addEventListener("notificationclick", (event) => {
       for (const client of allClients) {
         if ("focus" in client) {
           await client.focus();
-          if ("navigate" in client) {
-            try {
-              await client.navigate(targetUrl);
-            } catch {}
-          }
           if (isCall) {
+            if ("navigate" in client) {
+              try { await client.navigate(targetUrl); } catch {}
+            }
             client.postMessage({
               type: "call-action",
               action: action || "accept",
               callId: data.callId,
             });
+          } else {
+            // For non-call notifications, let the app handle in-app
+            // navigation so it can preserve history / back-button behavior.
+            client.postMessage({ type: "push-deeplink", url: targetUrl });
           }
           return;
         }
       }
       if (self.clients.openWindow) {
-        await self.clients.openWindow(targetUrl);
+        // Cold open — append a marker so the target route knows to fall
+        // back to Home when the user hits back.
+        const sep = targetUrl.includes("?") ? "&" : "?";
+        await self.clients.openWindow(isCall ? targetUrl : `${targetUrl}${sep}fromPush=1`);
       }
     })(),
   );

@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -67,8 +68,21 @@ function PublicPostPage() {
   const { post: initialPost } = Route.useLoaderData();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
+
+  const goBack = () => {
+    try {
+      // Prefer real history when available (physical Android back button
+      // uses the same browser history under Capacitor).
+      if (router.history.canGoBack?.()) {
+        router.history.back();
+        return;
+      }
+    } catch { /* ignore */ }
+    navigate({ to: "/" });
+  };
 
   const q = useQuery({
     queryKey: ["public-post", postId],
@@ -81,10 +95,19 @@ function PublicPostPage() {
     },
   });
 
+  // Post deleted / not public: show a friendly message and redirect Home.
+  useEffect(() => {
+    if (!q.isLoading && !q.data) {
+      toast.info("Este post foi removido ou não está disponível.");
+      const t = setTimeout(() => navigate({ to: "/" }), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [q.isLoading, q.data, navigate]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 h-12 border-b bg-background/80 backdrop-blur">
-        <button onClick={() => navigate({ to: user ? "/posts" : "/chat" })} className="size-9 grid place-items-center rounded-full hover:bg-muted"><ArrowLeft className="size-5" /></button>
+        <button onClick={goBack} aria-label="Voltar" className="size-9 grid place-items-center rounded-full hover:bg-muted"><ArrowLeft className="size-5" /></button>
         <h1 className="font-bold">Post</h1>
         {!user && <Button size="sm" onClick={() => navigate({ to: "/auth", search: { mode: "login" } })}>Entrar</Button>}
         {user && <div className="size-9" />}
@@ -95,7 +118,7 @@ function PublicPostPage() {
         {!q.isLoading && !q.data && (
           <div className="text-center py-20 px-6 space-y-3">
             <p className="text-muted-foreground">Post não encontrado ou não está público.</p>
-            <Button onClick={() => navigate({ to: "/posts" })}>Ver outros posts</Button>
+            <Button onClick={() => navigate({ to: "/" })}>Voltar ao início</Button>
           </div>
         )}
         {q.data && (
