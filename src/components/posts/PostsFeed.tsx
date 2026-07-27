@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Loader2, Sparkles, PlusCircle } from "lucide-react";
+import { Loader2, Sparkles, PlusCircle, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
+import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { isPromoPost } from "@/lib/feed-filters";
 
@@ -18,6 +19,7 @@ export function PostsFeed() {
   const { gate, GateDialog } = useAuthGate();
   const qc = useQueryClient();
   const [composerOpen, setComposerOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
 
@@ -49,13 +51,25 @@ export function PostsFeed() {
       {GateDialog}
       <div className="sticky top-0 z-10 bg-sidebar/95 backdrop-blur-sm border-b border-border px-3 py-2 flex items-center justify-between">
         <span className="text-sm font-semibold">Posts</span>
-        <Button
-          size="sm"
-          className="rounded-full"
-          onClick={() => gate("create_status", () => setComposerOpen(true))}
-        >
-          <PlusCircle className="size-4 mr-1.5" /> Novo post
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setVoiceOpen(true))}
+            aria-label="Postar por voz — acessibilidade"
+            title="Postar por voz"
+          >
+            <Mic className="size-4 mr-1 text-pink-500" /> Voz
+          </Button>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setComposerOpen(true))}
+          >
+            <PlusCircle className="size-4 mr-1.5" /> Novo post
+          </Button>
+        </div>
       </div>
       {query.isLoading && (
         <div className="grid place-items-center py-20"><Loader2 className="size-6 animate-spin opacity-60" /></div>
@@ -85,6 +99,7 @@ export function PostsFeed() {
         </div>
       )}
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => query.refetch()} />
+      <VoicePostComposer open={voiceOpen} onOpenChange={setVoiceOpen} onCreated={() => query.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
     </div>
