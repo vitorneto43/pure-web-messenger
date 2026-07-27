@@ -63,6 +63,15 @@ function PostsPage() {
           <button onClick={() => navigate({ to: "/live" })} className="size-9 grid place-items-center rounded-full hover:bg-muted relative" title="Lives">
             <Radio className="size-5 text-red-500" />
           </button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => gate("create_status", () => setVoiceOpen(true))}
+            aria-label="Postar por voz — acessibilidade"
+            title="Postar por voz"
+          >
+            <Mic className="size-4 mr-1 text-pink-500" />Voz
+          </Button>
           <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
             <Plus className="size-4 mr-1" />Novo
           </Button>
