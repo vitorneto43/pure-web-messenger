@@ -70,10 +70,41 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   const [hidden, setHidden] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const blockFn = useServerFn(blockUser);
+  const runAI = useServerFn(runAIAssistant);
 
   useEffect(() => {
     void (supabase as any).rpc("register_post_view", { _post_id: post.post_id, _session_hash: null });
   }, [post.post_id]);
+
+  // Fase 2 — Traduzir feed inteiro: escuta evento global e traduz content+caption automaticamente.
+  useEffect(() => {
+    const onTranslate = async (e: Event) => {
+      const detail = (e as CustomEvent).detail as { language?: string } | undefined;
+      const target = detail?.language || "português do Brasil";
+      try {
+        if (post.content?.trim()) {
+          const r = await runAI({ data: { action: "translate", text: post.content, targetLanguage: target } });
+          if (r.ok) setContentTranslated(r.content);
+        }
+        if (post.caption?.trim()) {
+          const r = await runAI({ data: { action: "translate", text: post.caption, targetLanguage: target } });
+          if (r.ok) setCaptionTranslated(r.content);
+        }
+      } catch {
+        /* ignora falhas individuais */
+      }
+    };
+    const onOriginal = () => {
+      setContentTranslated(null);
+      setCaptionTranslated(null);
+    };
+    window.addEventListener("wavechat:translate-feed", onTranslate as EventListener);
+    window.addEventListener("wavechat:translate-feed-off", onOriginal);
+    return () => {
+      window.removeEventListener("wavechat:translate-feed", onTranslate as EventListener);
+      window.removeEventListener("wavechat:translate-feed-off", onOriginal);
+    };
+  }, [post.content, post.caption, runAI]);
 
   useEffect(() => {
     if (!user || isOwner) return;
