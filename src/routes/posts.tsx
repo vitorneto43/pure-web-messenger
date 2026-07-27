@@ -107,6 +107,7 @@ function PostsPage() {
       </div>
 
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => query.refetch()} />
+      <VoicePostComposer open={voiceOpen} onOpenChange={setVoiceOpen} onCreated={() => query.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
     </div>
