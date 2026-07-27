@@ -68,6 +68,16 @@ export function PostsFeed() {
           </Button>
           <Button
             size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setLibrasOpen(true))}
+            aria-label="Postar em LIBRAS — acessibilidade"
+            title="Postar em LIBRAS"
+          >
+            <Hand className="size-4 mr-1 text-emerald-500" /> Libras
+          </Button>
+          <Button
+            size="sm"
             className="rounded-full"
             onClick={() => gate("create_status", () => setComposerOpen(true))}
           >
