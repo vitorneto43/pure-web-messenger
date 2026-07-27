@@ -19,6 +19,7 @@ export function PostsFeed() {
   const { gate, GateDialog } = useAuthGate();
   const qc = useQueryClient();
   const [composerOpen, setComposerOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
 
