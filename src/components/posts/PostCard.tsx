@@ -22,6 +22,7 @@ import { TranslateButton } from "@/components/TranslateButton";
 import { StatusLinkPreview, extractFirstUrl } from "@/components/status/StatusLinkPreview";
 import { AutoplayVideo } from "@/components/AutoplayVideo";
 import { AccessibilityBar } from "@/components/AccessibilityBar";
+import { PostLibrasButton } from "@/components/posts/PostLibrasButton";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
 
 
@@ -292,13 +293,15 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
 
 
 
-      {/* Accessibility — leitura em voz alta + descrição de imagem por IA + comando de voz */}
-      <div className="px-3 pt-2">
+      {/* Accessibility — leitura em voz alta + descrição de imagem por IA + comando de voz + Libras */}
+      <div className="px-3 pt-2 flex items-center gap-3 flex-wrap">
         <AccessibilityBar
           readText={[post.content, post.caption].filter(Boolean).join(". ")}
           imageUrl={post.kind === "image" ? post.media_url : null}
         />
+        <PostLibrasButton text={[post.content, post.caption].filter(Boolean).join(". ")} />
       </div>
+
 
       {/* Actions */}
       <div className="flex items-center gap-1 px-2 py-2">
