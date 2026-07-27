@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Loader2, Sparkles, PlusCircle } from "lucide-react";
+import { Loader2, Sparkles, PlusCircle, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
+import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { isPromoPost } from "@/lib/feed-filters";
 
