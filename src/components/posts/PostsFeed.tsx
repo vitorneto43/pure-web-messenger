@@ -9,6 +9,8 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
+import { LibrasPostComposer } from "@/components/posts/LibrasPostComposer";
+import { Hand } from "lucide-react";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { FeedAccessibilityBar } from "@/components/posts/FeedAccessibilityBar";
 import { isPromoPost } from "@/lib/feed-filters";
