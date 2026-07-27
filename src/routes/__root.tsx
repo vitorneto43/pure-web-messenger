@@ -23,7 +23,7 @@ import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
 import { usePushDeepLink } from "@/hooks/use-push-deeplink";
-import { VLibrasWidget } from "@/components/VLibrasWidget";
+import { SignLanguageProvider } from "@/components/SignLanguageProvider";
 
 
 import appCss from "../styles.css?url";
@@ -83,9 +83,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         httpEquiv: "Content-Security-Policy",
         content: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://js.stripe.com",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net",
-          "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://js.stripe.com https://plugin.handtalk.me https://handtalk.me",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://plugin.handtalk.me",
+          "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://plugin.handtalk.me",
           "img-src 'self' data: blob: https:",
           "media-src 'self' blob: data: https:",
           "connect-src 'self' https: wss: blob:",
@@ -273,7 +273,7 @@ function RootComponent() {
           <Outlet />
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
-          <VLibrasWidget />
+          <SignLanguageProvider />
         </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>
