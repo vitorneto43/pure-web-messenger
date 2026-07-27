@@ -74,6 +74,15 @@ function PostsPage() {
           >
             <Mic className="size-4 mr-1 text-pink-500" />Voz
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => gate("create_status", () => setLibrasOpen(true))}
+            aria-label="Postar em LIBRAS — acessibilidade"
+            title="Postar em LIBRAS"
+          >
+            <Hand className="size-4 mr-1 text-emerald-500" />Libras
+          </Button>
           <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
             <Plus className="size-4 mr-1" />Novo
           </Button>
