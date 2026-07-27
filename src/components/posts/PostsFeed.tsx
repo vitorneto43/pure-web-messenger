@@ -10,6 +10,7 @@ import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { FeedAccessibilityBar } from "@/components/posts/FeedAccessibilityBar";
 import { isPromoPost } from "@/lib/feed-filters";
 
 const PAGE_SIZE = 12;
@@ -71,6 +72,8 @@ export function PostsFeed() {
           </Button>
         </div>
       </div>
+      <FeedAccessibilityBar items={items} />
+
       {query.isLoading && (
         <div className="grid place-items-center py-20"><Loader2 className="size-6 animate-spin opacity-60" /></div>
       )}
