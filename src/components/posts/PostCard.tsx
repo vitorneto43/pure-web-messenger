@@ -22,6 +22,7 @@ import { TranslateButton } from "@/components/TranslateButton";
 import { StatusLinkPreview, extractFirstUrl } from "@/components/status/StatusLinkPreview";
 import { AutoplayVideo } from "@/components/AutoplayVideo";
 import { AccessibilityBar } from "@/components/AccessibilityBar";
+import { PostLibrasButton } from "@/components/posts/PostLibrasButton";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
 
 
