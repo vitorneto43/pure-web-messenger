@@ -23,7 +23,7 @@ import { detectLocaleFromIp } from "@/lib/geo.functions";
 import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
 import { usePushDeepLink } from "@/hooks/use-push-deeplink";
-import { VLibrasWidget } from "@/components/VLibrasWidget";
+import { SignLanguageProvider } from "@/components/SignLanguageProvider";
 
 
 import appCss from "../styles.css?url";
