@@ -51,13 +51,25 @@ export function PostsFeed() {
       {GateDialog}
       <div className="sticky top-0 z-10 bg-sidebar/95 backdrop-blur-sm border-b border-border px-3 py-2 flex items-center justify-between">
         <span className="text-sm font-semibold">Posts</span>
-        <Button
-          size="sm"
-          className="rounded-full"
-          onClick={() => gate("create_status", () => setComposerOpen(true))}
-        >
-          <PlusCircle className="size-4 mr-1.5" /> Novo post
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setVoiceOpen(true))}
+            aria-label="Postar por voz — acessibilidade"
+            title="Postar por voz"
+          >
+            <Mic className="size-4 mr-1 text-pink-500" /> Voz
+          </Button>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setComposerOpen(true))}
+          >
+            <PlusCircle className="size-4 mr-1.5" /> Novo post
+          </Button>
+        </div>
       </div>
       {query.isLoading && (
         <div className="grid place-items-center py-20"><Loader2 className="size-6 animate-spin opacity-60" /></div>
