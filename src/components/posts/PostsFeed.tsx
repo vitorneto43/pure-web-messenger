@@ -72,6 +72,8 @@ export function PostsFeed() {
           </Button>
         </div>
       </div>
+      <FeedAccessibilityBar items={items} />
+
       {query.isLoading && (
         <div className="grid place-items-center py-20"><Loader2 className="size-6 animate-spin opacity-60" /></div>
       )}
