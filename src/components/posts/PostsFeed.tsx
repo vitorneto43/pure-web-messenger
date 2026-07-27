@@ -10,6 +10,7 @@ import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
+import { FeedAccessibilityBar } from "@/components/posts/FeedAccessibilityBar";
 import { isPromoPost } from "@/lib/feed-filters";
 
 const PAGE_SIZE = 12;
