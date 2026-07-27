@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Loader2, Plus, Sparkles, Radio, Mic } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Sparkles, Radio, Mic, Hand } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
@@ -10,6 +10,7 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
+import { LibrasPostComposer } from "@/components/posts/LibrasPostComposer";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { isPromoPost } from "@/lib/feed-filters";
 
@@ -30,6 +31,7 @@ function PostsPage() {
   const qc = useQueryClient();
   const [composerOpen, setComposerOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [librasOpen, setLibrasOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
 
@@ -72,6 +74,15 @@ function PostsPage() {
           >
             <Mic className="size-4 mr-1 text-pink-500" />Voz
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => gate("create_status", () => setLibrasOpen(true))}
+            aria-label="Postar em LIBRAS — acessibilidade"
+            title="Postar em LIBRAS"
+          >
+            <Hand className="size-4 mr-1 text-emerald-500" />Libras
+          </Button>
           <Button size="sm" onClick={() => gate("create_status", () => setComposerOpen(true))}>
             <Plus className="size-4 mr-1" />Novo
           </Button>
@@ -108,6 +119,7 @@ function PostsPage() {
 
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => query.refetch()} />
       <VoicePostComposer open={voiceOpen} onOpenChange={setVoiceOpen} onCreated={() => query.refetch()} />
+      <LibrasPostComposer open={librasOpen} onOpenChange={setLibrasOpen} onCreated={() => query.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
     </div>

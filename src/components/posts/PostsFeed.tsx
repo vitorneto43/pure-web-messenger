@@ -9,6 +9,8 @@ import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
 import { PostComposer } from "@/components/posts/PostComposer";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
+import { LibrasPostComposer } from "@/components/posts/LibrasPostComposer";
+import { Hand } from "lucide-react";
 import { PostBoostDialog } from "@/components/posts/PostBoostDialog";
 import { FeedAccessibilityBar } from "@/components/posts/FeedAccessibilityBar";
 import { isPromoPost } from "@/lib/feed-filters";
@@ -21,6 +23,7 @@ export function PostsFeed() {
   const qc = useQueryClient();
   const [composerOpen, setComposerOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [librasOpen, setLibrasOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
 
@@ -65,6 +68,16 @@ export function PostsFeed() {
           </Button>
           <Button
             size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => gate("create_status", () => setLibrasOpen(true))}
+            aria-label="Postar em LIBRAS — acessibilidade"
+            title="Postar em LIBRAS"
+          >
+            <Hand className="size-4 mr-1 text-emerald-500" /> Libras
+          </Button>
+          <Button
+            size="sm"
             className="rounded-full"
             onClick={() => gate("create_status", () => setComposerOpen(true))}
           >
@@ -103,6 +116,7 @@ export function PostsFeed() {
       )}
       <PostComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={() => query.refetch()} />
       <VoicePostComposer open={voiceOpen} onOpenChange={setVoiceOpen} onCreated={() => query.refetch()} />
+      <LibrasPostComposer open={librasOpen} onOpenChange={setLibrasOpen} onCreated={() => query.refetch()} />
       {commentsFor && <PostComments open={!!commentsFor} onOpenChange={(v) => !v && setCommentsFor(null)} postId={commentsFor} onCountChange={(n) => patch(commentsFor, { comments_count: n })} />}
       {boostFor && <PostBoostDialog open={!!boostFor} onOpenChange={(v) => !v && setBoostFor(null)} postId={boostFor} />}
     </div>
