@@ -302,10 +302,17 @@ export function VoiceAssistant() {
       toast.error("Assistente por voz requer Chrome, Edge ou Android.");
       return;
     }
+    // Encerra o listener de palavra-chave para liberar o microfone
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+      setTimeout(() => { wakeStoppingRef.current = false; }, 200);
+    } catch {}
     setActive(true);
     activeRef.current = true;
     speak(
-      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat.",
+      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat. Para me desligar, diga desativar assistente.",
     );
     setTimeout(() => startRecognition(), 300);
   }, [speak, srSupported, startRecognition]);
@@ -315,7 +322,96 @@ export function VoiceAssistant() {
     activeRef.current = false;
     stopReading();
     stopRecognition();
+    // Retoma o listener de palavra-chave, se habilitado
+    setTimeout(() => {
+      if (wakeOnRef.current) startWakeListener();
+    }, 400);
   }, [stopReading, stopRecognition]);
+
+  // ---------- Listener de palavra-chave ("ativar assistente") ----------
+  const startWakeListener = useCallback(() => {
+    if (!srSupported || activeRef.current || !wakeOnRef.current) return;
+    try { wakeRecRef.current?.stop?.(); } catch {}
+    const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const rec = new Ctor();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (e: any) => {
+      let text = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        text += e.results[i][0].transcript + " ";
+      }
+      const t = text.toLowerCase();
+      // Aceita variações comuns e pequenas confusões do reconhecedor
+      if (/\b(ativar|ativa|ligar|liga|acordar|iniciar)\s+(o\s+)?(assistente|wavechat)\b/.test(t)) {
+        activate();
+      } else if (
+        /\b(desativar|desativa|desligar|desliga|encerrar|parar|dormir)\s+(o\s+)?(assistente|wavechat)\b/.test(t)
+      ) {
+        // Já está inativo — só confirma para o usuário
+        speak("Assistente já está em espera. Diga ativar assistente para começar.");
+      }
+    };
+    rec.onerror = (e: any) => {
+      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+        // Sem permissão de microfone — não insiste; usuário pode ligar pelo botão
+        setWakeOn(false);
+        wakeOnRef.current = false;
+        localStorage.setItem("wavechat.wakeword", "off");
+      }
+    };
+    rec.onend = () => {
+      if (!activeRef.current && wakeOnRef.current && !wakeStoppingRef.current) {
+        try { rec.start(); } catch {}
+      }
+    };
+    wakeRecRef.current = rec;
+    try { rec.start(); } catch {}
+  }, [activate, speak, srSupported]);
+
+  const toggleWake = useCallback(() => {
+    const next = !wakeOnRef.current;
+    setWakeOn(next);
+    wakeOnRef.current = next;
+    localStorage.setItem("wavechat.wakeword", next ? "on" : "off");
+    if (next) {
+      speak("Escuta de ativação ligada. Diga: ativar assistente.");
+      startWakeListener();
+    } else {
+      try {
+        wakeStoppingRef.current = true;
+        wakeRecRef.current?.stop?.();
+        wakeRecRef.current = null;
+      } catch {}
+      speak("Escuta de ativação desligada.");
+    }
+  }, [speak, startWakeListener]);
+
+  // Inicia a escuta passiva após o primeiro gesto do usuário (política do navegador)
+  useEffect(() => {
+    if (!srSupported) return;
+    let started = false;
+    const boot = () => {
+      if (started || activeRef.current || !wakeOnRef.current) return;
+      started = true;
+      startWakeListener();
+    };
+    // Tenta iniciar já (funciona em Android/Chrome se o mic estiver permitido)
+    const t = setTimeout(boot, 800);
+    const onGesture = () => boot();
+    window.addEventListener("pointerdown", onGesture, { once: true });
+    window.addEventListener("keydown", onGesture, { once: true });
+    window.addEventListener("touchstart", onGesture, { once: true });
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("keydown", onGesture);
+      window.removeEventListener("touchstart", onGesture);
+    };
+  }, [srSupported, startWakeListener]);
 
   // Atalho global: Alt+A
   useEffect(() => {
