@@ -6,6 +6,15 @@ import { toast } from "sonner";
 import { describeImage } from "@/lib/accessibility.functions";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  findProfileByName,
+  listVoiceConversations,
+  matchConversation,
+  readConversationMessages,
+  sendVoiceMessage,
+  setFollowState,
+  type VoiceConversation,
+} from "@/lib/voice-chat";
 
 /**
  * Assistente de voz global da WaveChat — acessibilidade total para cegos.
