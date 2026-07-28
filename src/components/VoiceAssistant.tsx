@@ -298,6 +298,22 @@ export function VoiceAssistant() {
     [speak, user],
   );
 
+  // Pede à página /live/new para iniciar a transmissão. Se ainda não montou
+  // (navegação em curso), tenta novamente por alguns instantes.
+  const requestStartLive = useCallback(() => {
+    if (typeof window === "undefined") return;
+    let tries = 0;
+    const fire = () => {
+      tries++;
+      if (window.location.pathname.startsWith("/live/new")) {
+        window.dispatchEvent(new CustomEvent("wavechat:start-live"));
+        return;
+      }
+      if (tries < 12) setTimeout(fire, 400);
+      else navigate({ to: "/live/new" });
+    };
+    fire();
+  }, [navigate]);
 
 
   // ---------- Roteador de comandos ----------
