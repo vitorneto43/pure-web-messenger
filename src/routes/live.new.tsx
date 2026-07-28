@@ -104,11 +104,13 @@ function NewLive() {
   // Voice assistant: "começar transmissão" while on this page starts the live.
   useEffect(() => {
     const onVoiceStart = () => {
-      if (!busy) void start();
+      if (busy) return;
+      void start();
     };
     window.addEventListener("wavechat:start-live", onVoiceStart);
     return () => window.removeEventListener("wavechat:start-live", onVoiceStart);
   });
+
 
 
 
