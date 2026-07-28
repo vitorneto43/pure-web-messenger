@@ -217,6 +217,7 @@ function LiveView() {
     router.invalidate();
   }
 
+
   if (!live) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-center p-6">
