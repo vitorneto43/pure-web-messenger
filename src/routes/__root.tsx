@@ -24,6 +24,8 @@ import { BirthDateGate } from "@/components/BirthDateGate";
 import { EcosystemProvider } from "@/hooks/use-ecosystem";
 import { usePushDeepLink } from "@/hooks/use-push-deeplink";
 import { SignLanguageProvider } from "@/components/SignLanguageProvider";
+import { VoiceAssistant } from "@/components/VoiceAssistant";
+
 
 
 import appCss from "../styles.css?url";
@@ -274,6 +276,8 @@ function RootComponent() {
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
           <SignLanguageProvider />
+          <VoiceAssistant />
+
         </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -1,0 +1,381 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Mic, MicOff, HelpCircle, X } from "lucide-react";
+import { toast } from "sonner";
+import { describeImage } from "@/lib/accessibility.functions";
+import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
+import { useAuth } from "@/hooks/use-auth";
+
+/**
+ * Assistente de voz global da WaveChat — acessibilidade total para cegos.
+ *
+ * Ativação:
+ *  - Botão flutuante (canto inferior direito) com aria-label descritivo.
+ *  - Atalho global: Alt+A (Windows/Linux) ou Ctrl+Option+A (macOS).
+ *
+ * Ao ativar, faz um "greeting" e entra em escuta contínua em pt-BR.
+ * Comandos suportados (todos em português, sem precisar apertar nada):
+ *   "ajuda", "o que posso falar"        → lista comandos
+ *   "ir para início" / "home" / "feed"
+ *   "abrir chat" / "conversas"
+ *   "abrir lives" / "ao vivo"
+ *   "fazer live" / "começar transmissão"
+ *   "postar por voz" / "novo post"
+ *   "abrir perfil"
+ *   "abrir descobrir" / "descobrir"
+ *   "abrir comunidades" / "ecossistemas"
+ *   "abrir configurações"
+ *   "ler feed" / "ler posts"            → lê cada post do feed atual
+ *   "descrever imagem" / "descrever foto" → descreve imagem do post atual
+ *   "próximo" / "próximo post"          → avança na leitura
+ *   "anterior"                          → volta um post
+ *   "parar" / "cancelar" / "silêncio"   → para tudo
+ *   "voltar"                            → history.back
+ *   "sair" / "encerrar assistente"
+ */
+export function VoiceAssistant() {
+  const navigate = useNavigate();
+  const router = useRouter();
+  const { user } = useAuth();
+  const describe = useServerFn(describeImage);
+
+  const [active, setActive] = useState(false);
+  const [heard, setHeard] = useState("");
+  const [voicePostOpen, setVoicePostOpen] = useState(false);
+
+  const recRef = useRef<any>(null);
+  const stoppingRef = useRef(false);
+  const readingRef = useRef(false);
+  const readIndexRef = useRef(0);
+  const activeRef = useRef(false);
+  useEffect(() => { activeRef.current = active; }, [active]);
+
+  const srSupported =
+    typeof window !== "undefined" &&
+    !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  const ttsSupported = typeof window !== "undefined" && !!window.speechSynthesis;
+
+  // ---------- TTS helpers ----------
+  const speak = useCallback((text: string, opts?: { onEnd?: () => void }) => {
+    if (!ttsSupported || !text) { opts?.onEnd?.(); return; }
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "pt-BR";
+      u.rate = 1.02;
+      u.onend = () => opts?.onEnd?.();
+      u.onerror = () => opts?.onEnd?.();
+      window.speechSynthesis.speak(u);
+    } catch { opts?.onEnd?.(); }
+  }, [ttsSupported]);
+
+  const stopSpeak = useCallback(() => {
+    try { window.speechSynthesis?.cancel(); } catch {}
+  }, []);
+
+  // ---------- Reconhecimento contínuo ----------
+  const startRecognition = useCallback(() => {
+    if (!srSupported) return;
+    try { recRef.current?.stop?.(); } catch {}
+    const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const rec = new Ctor();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (e: any) => {
+      let finalText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript + " ";
+        else setHeard(r[0].transcript);
+      }
+      finalText = finalText.trim().toLowerCase();
+      if (finalText) {
+        setHeard(finalText);
+        handleCommand(finalText);
+      }
+    };
+    rec.onerror = (e: any) => {
+      if (e?.error === "not-allowed") {
+        toast.error("Permita o microfone para usar o assistente por voz.");
+        setActive(false);
+      }
+    };
+    rec.onend = () => {
+      // Reinicia enquanto o assistente estiver ativo (para ser realmente contínuo)
+      if (activeRef.current && !stoppingRef.current) {
+        try { rec.start(); } catch {}
+      }
+    };
+    recRef.current = rec;
+    try { rec.start(); } catch {}
+  }, [srSupported]);
+
+  const stopRecognition = useCallback(() => {
+    stoppingRef.current = true;
+    try { recRef.current?.stop?.(); } catch {}
+    recRef.current = null;
+    setTimeout(() => { stoppingRef.current = false; }, 200);
+  }, []);
+
+  // ---------- Leitura do feed ----------
+  const readFeed = useCallback(async (fromIndex = 0) => {
+    const articles = Array.from(
+      document.querySelectorAll<HTMLElement>('article[data-voice-post="1"]'),
+    );
+    if (!articles.length) {
+      speak("Não encontrei posts nesta página. Diga: ir para início, para abrir o feed.");
+      return;
+    }
+    readingRef.current = true;
+    for (let i = fromIndex; i < articles.length; i++) {
+      if (!readingRef.current) return;
+      readIndexRef.current = i;
+      const el = articles[i];
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const author = el.getAttribute("data-voice-author") ?? "Alguém";
+      const kind = el.getAttribute("data-voice-kind") ?? "text";
+      const text = (el.getAttribute("data-voice-text") ?? "").trim();
+      const image = el.getAttribute("data-voice-image") ?? "";
+
+      let msg = `Post ${i + 1} de ${articles.length}, de ${author}. `;
+      if (text) msg += text + ". ";
+      else if (kind === "image") msg += "Publicou uma imagem sem legenda. ";
+      else if (kind === "video") msg += "Publicou um vídeo. ";
+
+      await new Promise<void>((resolve) => speak(msg, { onEnd: () => resolve() }));
+      if (!readingRef.current) return;
+
+      // Descreve imagem se houver
+      if (image) {
+        try {
+          const r = await describe({ data: { imageUrl: image } });
+          if (r?.ok && r.content) {
+            await new Promise<void>((resolve) =>
+              speak("Descrição da foto: " + r.content, { onEnd: () => resolve() }),
+            );
+          }
+        } catch {}
+      }
+      if (!readingRef.current) return;
+    }
+    readingRef.current = false;
+    speak("Fim do feed. Diga: próximo, para continuar rolando, ou postar por voz, para publicar.");
+  }, [describe, speak]);
+
+  const stopReading = useCallback(() => {
+    readingRef.current = false;
+    stopSpeak();
+  }, [stopSpeak]);
+
+  // ---------- Roteador de comandos ----------
+  const handleCommand = useCallback(
+    (raw: string) => {
+      const t = raw.toLowerCase();
+      const match = (re: RegExp) => re.test(t);
+
+      // Parar / cancelar
+      if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/)) {
+        stopReading();
+        speak("Ok, parei.");
+        return;
+      }
+
+      // Ajuda
+      if (match(/\b(ajuda|comandos|o que posso (falar|dizer)|socorro)\b/)) {
+        speak(
+          "Comandos disponíveis: ir para início, abrir chat, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
+        );
+        return;
+      }
+
+      // Encerrar assistente
+      if (match(/\b(sair|encerrar|desligar|fechar assistente)\b/)) {
+        speak("Assistente encerrado.");
+        setTimeout(() => deactivate(), 800);
+        return;
+      }
+
+      // Voltar
+      if (match(/\bvoltar\b/)) {
+        speak("Voltando.");
+        try { router.history.back(); } catch {}
+        return;
+      }
+
+      // Navegação
+      if (match(/\b(início|inicio|home|feed principal|página inicial)\b/) || match(/^ir para (início|inicio|home)/)) {
+        speak("Abrindo o início.");
+        navigate({ to: "/" });
+        return;
+      }
+      if (match(/\b(abrir )?(chat|conversas|mensagens)\b/)) {
+        speak("Abrindo o chat.");
+        navigate({ to: "/chat" });
+        return;
+      }
+      if (match(/\bfazer live\b|\b(começar|iniciar) (transmissão|live)\b/)) {
+        speak("Vamos criar sua live.");
+        navigate({ to: "/live/new" });
+        return;
+      }
+      if (match(/\b(abrir )?(lives?|ao vivo|transmiss(ão|oes))\b/)) {
+        speak("Abrindo as lives.");
+        navigate({ to: "/live" });
+        return;
+      }
+      if (match(/\b(abrir )?(descobrir|explorar)\b/)) {
+        speak("Abrindo descobrir.");
+        navigate({ to: "/descobrir" });
+        return;
+      }
+      if (match(/\b(comunidades?|ecossistemas?|movimento)\b/)) {
+        speak("Abrindo comunidades.");
+        navigate({ to: "/movimento" });
+        return;
+      }
+      if (match(/\b(abrir )?perfil\b/)) {
+        if (!user) {
+          speak("Você precisa entrar primeiro. Abrindo a página de login.");
+          navigate({ to: "/auth" });
+        } else {
+          speak("Abrindo seu perfil.");
+          navigate({ to: "/profile" });
+        }
+        return;
+      }
+      if (match(/\bpostar por voz\b|\bnovo post\b|\bcriar post\b|\bpublicar por voz\b/)) {
+        speak("Abrindo o postador por voz. Toque em gravar, ou pressione a letra G.");
+        setVoicePostOpen(true);
+        return;
+      }
+
+      // Leitura
+      if (match(/\b(ler|leia|leiam) (o )?(feed|posts|timeline|linha do tempo)\b/) || match(/\bler tudo\b/)) {
+        readFeed(0);
+        return;
+      }
+      if (match(/\b(próximo|proximo|avançar|avancar)\b/)) {
+        readFeed(readIndexRef.current + 1);
+        return;
+      }
+      if (match(/\banterior\b|\bvoltar (post|um post)\b/)) {
+        readFeed(Math.max(0, readIndexRef.current - 1));
+        return;
+      }
+      if (match(/\b(descrever|descreva|descreve) (a )?(imagem|foto|figura)\b/)) {
+        const articles = Array.from(
+          document.querySelectorAll<HTMLElement>('article[data-voice-post="1"]'),
+        );
+        const el = articles[readIndexRef.current] || articles[0];
+        const image = el?.getAttribute("data-voice-image");
+        if (!image) { speak("Este post não tem imagem."); return; }
+        speak("Descrevendo a imagem, um momento.");
+        describe({ data: { imageUrl: image } })
+          .then((r) => {
+            if (r?.ok && r.content) speak("Descrição: " + r.content);
+            else speak("Não consegui descrever agora.");
+          })
+          .catch(() => speak("Não consegui descrever agora."));
+        return;
+      }
+
+      // Silencioso quando não reconhece — evita interromper
+    },
+    [describe, navigate, readFeed, router, speak, stopReading, user],
+  );
+
+  // ---------- Ativação / desativação ----------
+  const activate = useCallback(() => {
+    if (!srSupported) {
+      toast.error("Assistente por voz requer Chrome, Edge ou Android.");
+      return;
+    }
+    setActive(true);
+    activeRef.current = true;
+    speak(
+      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat.",
+    );
+    setTimeout(() => startRecognition(), 300);
+  }, [speak, srSupported, startRecognition]);
+
+  const deactivate = useCallback(() => {
+    setActive(false);
+    activeRef.current = false;
+    stopReading();
+    stopRecognition();
+  }, [stopReading, stopRecognition]);
+
+  // Atalho global: Alt+A
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        if (activeRef.current) deactivate();
+        else activate();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activate, deactivate]);
+
+  useEffect(() => () => { stopReading(); stopRecognition(); }, [stopReading, stopRecognition]);
+
+  return (
+    <>
+      {/* Botão flutuante */}
+      <button
+        type="button"
+        onClick={() => (active ? deactivate() : activate())}
+        aria-label={
+          active
+            ? "Desligar assistente de voz WaveChat. Atalho: Alt mais A."
+            : "Ligar assistente de voz WaveChat. Fala por voz para navegar, ler posts e publicar. Atalho: Alt mais A."
+        }
+        aria-pressed={active}
+        className={
+          "fixed z-[70] bottom-24 right-4 md:bottom-6 md:right-6 size-14 rounded-full grid place-items-center shadow-lg transition-transform focus:outline-none focus:ring-4 focus:ring-pink-500/40 " +
+          (active
+            ? "bg-rose-600 hover:bg-rose-700 text-white animate-pulse"
+            : "bg-gradient-to-br from-pink-500 to-purple-600 text-white hover:scale-105")
+        }
+      >
+        {active ? <MicOff className="size-6" aria-hidden /> : <Mic className="size-6" aria-hidden />}
+      </button>
+
+      {/* Painel de status quando ativo (para quem enxerga) */}
+      {active && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed z-[70] bottom-40 right-4 md:bottom-24 md:right-6 max-w-[min(90vw,340px)] rounded-xl bg-background/95 backdrop-blur border border-rose-500/40 shadow-2xl p-3 text-sm"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+            <span className="font-semibold">Assistente WaveChat ouvindo…</span>
+            <button
+              onClick={deactivate}
+              aria-label="Fechar assistente"
+              className="ml-auto size-6 grid place-items-center rounded hover:bg-muted"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Diga <b>"ajuda"</b>, <b>"ler feed"</b>, <b>"postar por voz"</b>, <b>"fazer live"</b>, <b>"abrir chat"</b>, <b>"parar"</b>.
+          </p>
+          {heard && (
+            <p className="mt-1.5 text-xs">
+              <HelpCircle className="inline size-3 mr-1" aria-hidden /> Você disse: <i>{heard}</i>
+            </p>
+          )}
+        </div>
+      )}
+
+      <VoicePostComposer open={voicePostOpen} onOpenChange={setVoicePostOpen} />
+    </>
+  );
+}
