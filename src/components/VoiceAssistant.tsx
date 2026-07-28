@@ -81,6 +81,8 @@ export function VoiceAssistant() {
   >(null);
   // Referência sempre atualizada do roteador de comandos (evita closures obsoletas)
   const commandRef = useRef<((t: string) => void) | null>(null);
+  const wakeStartRef = useRef<(() => void) | null>(null);
+
   // Estado do fluxo de chat por voz
 
   const draftRef = useRef("");
