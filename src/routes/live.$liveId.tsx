@@ -295,7 +295,7 @@ function LiveView() {
                       {recording ? <VideoOff className="size-4 mr-1" /> : <Video className="size-4 mr-1" />}
                       {recording ? "Parar" : "Gravar"}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={endLive}>
+                    <Button ref={endBtnRef} size="sm" variant="destructive" onClick={endLive}>
                       Encerrar
                     </Button>
                   </>
