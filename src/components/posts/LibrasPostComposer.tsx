@@ -29,7 +29,10 @@ import { useSpeech } from "@/hooks/use-accessibility";
 import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { scanLocally } from "@/lib/content-policy";
-import { classifyLibras, type LandmarkPoint, type Handedness } from "@/lib/libras-classifier";
+import { type LandmarkPoint, type Handedness } from "@/lib/libras-classifier";
+import { recognizeSign } from "@/lib/sign-model";
+import { SignTrainerDialog } from "@/components/libras/SignTrainerDialog";
+import { GraduationCap } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -126,8 +129,11 @@ export function LibrasPostComposer({ open, onOpenChange, onCreated }: Props) {
         submittedRef.current = true;
         speak("Enviando para revisão", "pt-BR");
         finishCapture();
-      } else {
+      } else if (label.length === 1) {
         setText((t) => t + label);
+        speak(label, "pt-BR");
+      } else {
+        setText((t) => `${t.trim()} ${label}`.trim());
         speak(label, "pt-BR");
       }
       if (navigator.vibrate) navigator.vibrate(60);
@@ -196,14 +202,17 @@ export function LibrasPostComposer({ open, onOpenChange, onCreated }: Props) {
         const lm: LandmarkPoint[] | undefined = results.multiHandLandmarks?.[0];
         const hd: Handedness =
           (results.multiHandedness?.[0]?.label as Handedness) || "Right";
-        const r = classifyLibras(lm, hd);
+        const r = recognizeSign(lm, hd);
 
         let key = "";
         let label = "—";
-        if (r.kind === "letter") { key = `L:${r.value}`; label = r.value; }
-        else if (r.kind === "space") { key = "SPACE"; label = "␣ espaço"; }
-        else if (r.kind === "backspace") { key = "BACK"; label = "⌫ apagar"; }
-        else if (r.kind === "submit") { key = "SUBMIT"; label = "✓ enviar"; }
+        if (r) {
+          const v = r.label;
+          if (/^(espaço|espaco)$/i.test(v)) { key = "SPACE"; label = "␣ espaço"; }
+          else if (/^apagar$/i.test(v)) { key = "BACK"; label = "⌫ apagar"; }
+          else if (/^enviar$/i.test(v)) { key = "SUBMIT"; label = "✓ enviar"; }
+          else { key = `L:${v}`; label = v; }
+        }
 
         setDetected(label);
 
