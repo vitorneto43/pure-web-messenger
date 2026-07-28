@@ -56,6 +56,9 @@ export function VoiceAssistant() {
   const readIndexRef = useRef(0);
   const activeRef = useRef(false);
   const wakeOnRef = useRef(wakeOn);
+  // Contexto conversacional: quando o assistente faz uma pergunta,
+  // a próxima frase é interpretada como resposta a ela.
+  const pendingRef = useRef<null | "lives" | "posts" | "wavetube" | "waveshorts">(null);
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
@@ -184,12 +187,55 @@ export function VoiceAssistant() {
     (raw: string) => {
       const t = raw.toLowerCase();
       const match = (re: RegExp) => re.test(t);
+      const isYes = /\b(sim|quero|claro|vamos|pode ser|com certeza|bora|manda|ok|okay)\b/.test(t);
+      const isNo = /\b(não|nao|agora não|depois|negativo)\b/.test(t);
 
       // Parar / cancelar
       if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/)) {
+        pendingRef.current = null;
         stopReading();
         speak("Ok, parei.");
         return;
+      }
+
+      // Respostas a perguntas anteriores
+      if (pendingRef.current) {
+        const ctx = pendingRef.current;
+        pendingRef.current = null;
+        if (ctx === "lives") {
+          if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
+            speak("Ótimo, vamos criar sua live.");
+            navigate({ to: "/live/new" });
+            return;
+          }
+          if (isNo) { speak("Sem problema, continue explorando as lives."); return; }
+        }
+        if (ctx === "posts") {
+          if (/\b(imagem|foto|figura|desenho)\b/.test(t)) {
+            speak("Abrindo o postador. Descreva sua imagem por voz.");
+            setVoicePostOpen(true);
+            return;
+          }
+          if (/\b(escrit|texto|palavra|falar|voz)\b/.test(t) || isYes) {
+            speak("Abrindo o postador por voz. Fale sua mensagem.");
+            setVoicePostOpen(true);
+            return;
+          }
+          if (isNo) { speak("Sem problema."); return; }
+        }
+        if (ctx === "wavetube" || ctx === "waveshorts") {
+          if (/\b(vídeo|video)\b/.test(t) || isYes) {
+            speak("Role o feed e diga: ler feed, para eu narrar. Ou diga um autor.");
+            return;
+          }
+          if (/\b(autor|criador|canal|pessoa|usuário|usuario)\b/.test(t)) {
+            speak("Diga: abrir perfil, seguido do arroba, ou navegue por descobrir.");
+            navigate({ to: "/descobrir" });
+            return;
+          }
+          if (isNo) { speak("Certo, ficamos por aqui."); return; }
+        }
+        // Se não bateu com nada, cai para o roteador normal
       }
 
       // Ajuda
@@ -231,8 +277,26 @@ export function VoiceAssistant() {
         return;
       }
       if (match(/\b(abrir )?(lives?|ao vivo|transmiss(ão|oes))\b/)) {
-        speak("Abrindo as lives.");
         navigate({ to: "/live" });
+        pendingRef.current = "lives";
+        speak("Estamos nas lives. Quer começar uma?");
+        return;
+      }
+      if (match(/\bwave\s*tube\b|\bwavetube\b/)) {
+        navigate({ to: "/wavetube" });
+        pendingRef.current = "wavetube";
+        speak("Estamos no WaveTube. Você quer ver um vídeo específico ou um autor específico?");
+        return;
+      }
+      if (match(/\bwave\s*shorts?\b|\bwaveshorts?\b|\bshorts?\b/)) {
+        navigate({ to: "/waveshorts" });
+        pendingRef.current = "waveshorts";
+        speak("Estamos no WaveShorts. Você quer ver um vídeo específico ou um autor específico?");
+        return;
+      }
+      if (match(/\bwave\s*chat\s*for\b|\bwavechat\s*for\b|\b(planos?|assinatura|ecossistemas? privad)/)) {
+        speak("Abrindo o WaveChat For.");
+        navigate({ to: "/ecosystems/pricing" });
         return;
       }
       if (match(/\b(abrir )?(descobrir|explorar)\b/)) {
@@ -255,9 +319,14 @@ export function VoiceAssistant() {
         }
         return;
       }
-      if (match(/\bpostar por voz\b|\bnovo post\b|\bcriar post\b|\bpublicar por voz\b/)) {
+      if (match(/\bpostar por voz\b|\bpublicar por voz\b/)) {
         speak("Abrindo o postador por voz. Toque em gravar, ou pressione a letra G.");
         setVoicePostOpen(true);
+        return;
+      }
+      if (match(/\b(criar|novo|fazer|publicar) (um )?posts?\b|\bcriar posts?\b/)) {
+        pendingRef.current = "posts";
+        speak("Estamos na criação de posts. Você quer criar um post escrito ou criar uma imagem?");
         return;
       }
 
