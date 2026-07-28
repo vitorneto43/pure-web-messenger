@@ -339,7 +339,7 @@ export function GestureCommandCenter() {
       )}
 
       <SignTrainerDialog open={trainerOpen} onOpenChange={setTrainerOpen} />
-      <CreateStatusDialog open={storyOpen} onOpenChange={setStoryOpen} />
+      <CreateStatusDialog open={storyOpen} onOpenChange={setStoryOpen} onCreated={() => setStoryOpen(false)} />
       <LibrasPostComposer open={postOpen} onOpenChange={setPostOpen} />
     </>
   );
