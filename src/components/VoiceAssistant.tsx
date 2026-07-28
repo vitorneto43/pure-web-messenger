@@ -187,12 +187,55 @@ export function VoiceAssistant() {
     (raw: string) => {
       const t = raw.toLowerCase();
       const match = (re: RegExp) => re.test(t);
+      const isYes = /\b(sim|quero|claro|vamos|pode ser|com certeza|bora|manda|ok|okay)\b/.test(t);
+      const isNo = /\b(não|nao|agora não|depois|negativo)\b/.test(t);
 
       // Parar / cancelar
       if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/)) {
+        pendingRef.current = null;
         stopReading();
         speak("Ok, parei.");
         return;
+      }
+
+      // Respostas a perguntas anteriores
+      if (pendingRef.current) {
+        const ctx = pendingRef.current;
+        pendingRef.current = null;
+        if (ctx === "lives") {
+          if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
+            speak("Ótimo, vamos criar sua live.");
+            navigate({ to: "/live/new" });
+            return;
+          }
+          if (isNo) { speak("Sem problema, continue explorando as lives."); return; }
+        }
+        if (ctx === "posts") {
+          if (/\b(imagem|foto|figura|desenho)\b/.test(t)) {
+            speak("Abrindo o postador. Descreva sua imagem por voz.");
+            setVoicePostOpen(true);
+            return;
+          }
+          if (/\b(escrit|texto|palavra|falar|voz)\b/.test(t) || isYes) {
+            speak("Abrindo o postador por voz. Fale sua mensagem.");
+            setVoicePostOpen(true);
+            return;
+          }
+          if (isNo) { speak("Sem problema."); return; }
+        }
+        if (ctx === "wavetube" || ctx === "waveshorts") {
+          if (/\b(vídeo|video)\b/.test(t) || isYes) {
+            speak("Role o feed e diga: ler feed, para eu narrar. Ou diga um autor.");
+            return;
+          }
+          if (/\b(autor|criador|canal|pessoa|usuário|usuario)\b/.test(t)) {
+            speak("Diga: abrir perfil, seguido do arroba, ou navegue por descobrir.");
+            navigate({ to: "/descobrir" });
+            return;
+          }
+          if (isNo) { speak("Certo, ficamos por aqui."); return; }
+        }
+        // Se não bateu com nada, cai para o roteador normal
       }
 
       // Ajuda
