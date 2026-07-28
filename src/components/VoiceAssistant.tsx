@@ -79,7 +79,10 @@ export function VoiceAssistant() {
     | "follow"
     | "unfollow"
   >(null);
+  // Referência sempre atualizada do roteador de comandos (evita closures obsoletas)
+  const commandRef = useRef<((t: string) => void) | null>(null);
   // Estado do fluxo de chat por voz
+
   const draftRef = useRef("");
   const convListRef = useRef<VoiceConversation[]>([]);
   useEffect(() => { activeRef.current = active; }, [active]);
