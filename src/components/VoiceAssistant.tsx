@@ -672,7 +672,7 @@ export function VoiceAssistant() {
     setActive(true);
     activeRef.current = true;
     speak(
-      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat. Para me desligar, diga desativar assistente.",
+      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat. Para me desligar, diga encerrar assistente.",
     );
     setTimeout(() => startRecognition(), 300);
   }, [speak, srSupported, startRecognition]);
@@ -688,7 +688,7 @@ export function VoiceAssistant() {
     }, 400);
   }, [stopReading, stopRecognition]);
 
-  // ---------- Listener de palavra-chave ("ativar assistente") ----------
+  // ---------- Listener de palavra-chave ("iniciar assistente") ----------
   const startWakeListener = useCallback(() => {
     if (!srSupported || activeRef.current || !wakeOnRef.current) return;
     try { wakeRecRef.current?.stop?.(); } catch {}
@@ -744,7 +744,7 @@ export function VoiceAssistant() {
     wakeOnRef.current = next;
     localStorage.setItem("wavechat.wakeword", next ? "on" : "off");
     if (next) {
-      speak("Escuta de ativação ligada. Diga: ativar assistente.");
+      speak("Escuta de ativação ligada. Diga: iniciar assistente.");
       startWakeListener();
     } else {
       try {
@@ -810,9 +810,9 @@ export function VoiceAssistant() {
         onClick={() => (active ? deactivate() : activate())}
         aria-label={
           active
-            ? "Desligar assistente de voz WaveChat. Ou diga: desativar assistente. Atalho: Alt mais A."
+            ? "Desligar assistente de voz WaveChat. Ou diga: encerrar assistente. Atalho: Alt mais A."
             : (wakeOn
-                ? "Ligar assistente de voz WaveChat. Você também pode dizer: ativar assistente. Atalho: Alt mais A."
+                ? "Ligar assistente de voz WaveChat. Você também pode dizer: iniciar assistente. Atalho: Alt mais A."
                 : "Ligar assistente de voz WaveChat. Atalho: Alt mais A.")
         }
         aria-pressed={active}
@@ -840,8 +840,8 @@ export function VoiceAssistant() {
           onClick={toggleWake}
           aria-label={
             wakeOn
-              ? 'Escuta de ativação ligada. Diga "ativar assistente". Toque para desligar a escuta passiva.'
-              : 'Ativar escuta passiva por palavra-chave "ativar assistente".'
+              ? 'Escuta de ativação ligada. Diga "iniciar assistente". Toque para desligar a escuta passiva.'
+              : 'Ativar escuta passiva por palavra-chave "iniciar assistente".'
           }
           className={
             "fixed z-[69] bottom-40 right-4 md:bottom-24 md:right-6 max-w-[min(80vw,240px)] text-left rounded-full backdrop-blur shadow px-3 py-1.5 text-[11px] hover:bg-background " +
@@ -850,7 +850,7 @@ export function VoiceAssistant() {
               : "bg-background/90 border border-border text-muted-foreground")
           }
         >
-          {wakeOn ? (<>🎙️ Diga <b className="text-foreground">"ativar assistente"</b></>) : "Ativar escuta por voz"}
+          {wakeOn ? (<>🎙️ Diga <b className="text-foreground">"iniciar assistente"</b></>) : "Ativar escuta por voz"}
         </button>
       )}
 
