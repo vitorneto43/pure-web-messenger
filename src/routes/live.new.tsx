@@ -96,16 +96,20 @@ function NewLive() {
       navigate({ to: "/live/$liveId", params: { liveId: live.id } });
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Falha ao iniciar");
+    } finally {
+      setBusy(false);
+    }
   }
 
   // Voice assistant: "começar transmissão" while on this page starts the live.
   useEffect(() => {
     const onVoiceStart = () => {
-      if (!busyRef.current) void start();
+      if (!busy) void start();
     };
     window.addEventListener("wavechat:start-live", onVoiceStart);
     return () => window.removeEventListener("wavechat:start-live", onVoiceStart);
   });
+
 
 
   return (
