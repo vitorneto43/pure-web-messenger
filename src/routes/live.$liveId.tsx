@@ -14,6 +14,7 @@ import { LiveHeader } from "@/components/live/LiveHeader";
 import { LivePixSheet } from "@/components/live/LivePixSheet";
 import { startLiveRecording, stopLiveRecording } from "@/lib/recordings.functions";
 import { Video, VideoOff } from "lucide-react";
+import { LiveSignCaptions } from "@/components/live/LiveSignCaptions";
 
 export const Route = createFileRoute("/live/$liveId")({
   loader: async ({ params }) => getLive({ data: { liveId: params.liveId } }),
