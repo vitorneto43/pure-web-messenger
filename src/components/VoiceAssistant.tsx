@@ -377,7 +377,7 @@ export function VoiceAssistant() {
       // Ajuda
       if (match(/\b(ajuda|comandos|o que posso (falar|dizer)|socorro)\b/)) {
         speak(
-          "Comandos disponíveis: ir para início, abrir chat, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
+          "Comandos disponíveis: ir para início, abrir chat, abrir conversa com o nome da pessoa, ler conversa, escrever mensagem, seguir um perfil, deixar de seguir um perfil, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
         );
         return;
       }
