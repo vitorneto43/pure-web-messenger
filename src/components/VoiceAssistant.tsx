@@ -602,6 +602,7 @@ export function VoiceAssistant() {
       openConversationByName,
       readCurrentConversation,
       readFeed,
+      requestStartLive,
       router,
       sendDraft,
       speak,
