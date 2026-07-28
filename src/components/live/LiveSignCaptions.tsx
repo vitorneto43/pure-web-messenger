@@ -16,7 +16,6 @@ import type { Handedness, LandmarkPoint } from "@/lib/libras-classifier";
 
 const HOLD_MS = 700; // tempo segurando o sinal para confirmar
 const CLEAR_MS = 7000; // limpa a legenda depois de parado
-const CONTROL_LABELS = /^(espaço|espaco|apagar|enviar)$/i;
 
 type CaptionPayload = { text: string };
 
