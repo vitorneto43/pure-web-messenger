@@ -276,6 +276,8 @@ function RootComponent() {
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
           <SignLanguageProvider />
+          <VoiceAssistant />
+
         </EcosystemProvider>
       </AuthProvider>
     </QueryClientProvider>
