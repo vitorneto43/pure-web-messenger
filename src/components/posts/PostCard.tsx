@@ -202,7 +202,15 @@ export function PostCard({ post, onChange, onOpenComments, onBoost, onDeleted }:
   if (hidden) return null;
 
   return (
-    <article className="border-b border-border bg-background">
+    <article
+      className="border-b border-border bg-background"
+      data-voice-post="1"
+      data-voice-author={post.display_name}
+      data-voice-kind={post.kind}
+      data-voice-text={(post.content || post.caption || "").slice(0, 500)}
+      data-voice-image={isMedia && post.kind === "image" ? (post.media_url ?? "") : ""}
+    >
+
       {GateDialog}
       <ReportContentDialog
         open={reportOpen}
