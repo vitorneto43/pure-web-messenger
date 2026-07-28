@@ -381,12 +381,13 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
         <div className="grid grid-cols-2 gap-2">
           {!listening ? (
             <Button
+              ref={recordButtonRef}
               type="button"
               size="lg"
               onClick={startDictation}
               disabled={!srSupported || publishing}
               className="h-14 text-base"
-              aria-label={transcript ? "Regravar" : "Gravar áudio do post"}
+              aria-label={transcript ? "Regravar áudio do post. Atalho: tecla G." : "Gravar áudio do post. Atalho: tecla G."}
             >
               {transcript ? <RotateCcw className="size-5 mr-2" /> : <Mic className="size-5 mr-2" />}
               {transcript ? "Regravar" : "Gravar"}
