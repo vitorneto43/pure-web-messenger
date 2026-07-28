@@ -302,8 +302,13 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
           <DialogDescription>
             Acessibilidade: fale seu post, adicione uma foto (opcional) e publique.
             A IA descreve a imagem automaticamente para você.
+            Atalhos: G grava, Ctrl+Enter publica, Escape fecha.
           </DialogDescription>
         </DialogHeader>
+
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {announcement}
+        </div>
 
         {!srSupported && (
           <div className="text-sm text-destructive p-3 rounded-md bg-destructive/10">
