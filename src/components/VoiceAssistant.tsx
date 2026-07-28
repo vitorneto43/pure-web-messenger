@@ -129,9 +129,11 @@ export function VoiceAssistant() {
       finalText = finalText.trim().toLowerCase();
       if (finalText) {
         setHeard(finalText);
-        handleCommand(finalText);
+        // Sempre usa a versão mais recente do roteador de comandos
+        commandRef.current?.(finalText);
       }
     };
+
     rec.onerror = (e: any) => {
       if (e?.error === "not-allowed") {
         toast.error("Permita o microfone para usar o assistente por voz.");
