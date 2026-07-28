@@ -79,7 +79,12 @@ export function VoiceAssistant() {
     | "follow"
     | "unfollow"
   >(null);
+  // Referência sempre atualizada do roteador de comandos (evita closures obsoletas)
+  const commandRef = useRef<((t: string) => void) | null>(null);
+  const wakeStartRef = useRef<(() => void) | null>(null);
+
   // Estado do fluxo de chat por voz
+
   const draftRef = useRef("");
   const convListRef = useRef<VoiceConversation[]>([]);
   useEffect(() => { activeRef.current = active; }, [active]);
@@ -129,9 +134,11 @@ export function VoiceAssistant() {
       finalText = finalText.trim().toLowerCase();
       if (finalText) {
         setHeard(finalText);
-        handleCommand(finalText);
+        // Sempre usa a versão mais recente do roteador de comandos
+        commandRef.current?.(finalText);
       }
     };
+
     rec.onerror = (e: any) => {
       if (e?.error === "not-allowed") {
         toast.error("Permita o microfone para usar o assistente por voz.");
@@ -571,6 +578,32 @@ export function VoiceAssistant() {
     ],
   );
 
+  useEffect(() => { commandRef.current = handleCommand; }, [handleCommand]);
+
+  // Enquanto o compositor por voz estiver aberto, libera o microfone
+  // (dois reconhecedores ao mesmo tempo cancelam um ao outro e nada é gravado).
+  useEffect(() => {
+    if (!voicePostOpen) return;
+    stopReading();
+    stoppingRef.current = true;
+    try { recRef.current?.stop?.(); } catch {}
+    recRef.current = null;
+    wakeStoppingRef.current = true;
+    try { wakeRecRef.current?.stop?.(); } catch {}
+    wakeRecRef.current = null;
+    return () => {
+      stoppingRef.current = false;
+      wakeStoppingRef.current = false;
+      // Retoma a escuta do assistente (ou da palavra-chave) após fechar
+      setTimeout(() => {
+        if (activeRef.current) startRecognition();
+        else if (wakeOnRef.current) wakeStartRef.current?.();
+      }, 600);
+    };
+  }, [voicePostOpen, startRecognition, stopReading]);
+
+
+
   // ---------- Ativação / desativação ----------
   const activate = useCallback(() => {
     if (!srSupported) {
@@ -646,6 +679,10 @@ export function VoiceAssistant() {
     wakeRecRef.current = rec;
     try { rec.start(); } catch {}
   }, [activate, speak, srSupported]);
+
+  useEffect(() => { wakeStartRef.current = startWakeListener; }, [startWakeListener]);
+
+
 
   const toggleWake = useCallback(() => {
     const next = !wakeOnRef.current;

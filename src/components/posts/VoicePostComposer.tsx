@@ -51,7 +51,9 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const recRef = useRef<any>(null);
+  const listeningRef = useRef(false);
   const transcriptRef = useRef("");
+
   const captionRef = useRef("");
   const imageUrlRef = useRef<string | null>(null);
   const recordButtonRef = useRef<HTMLButtonElement>(null);
@@ -66,8 +68,10 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
     !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   const reset = useCallback(() => {
+    listeningRef.current = false;
     try { recRef.current?.stop?.(); } catch {}
     recRef.current = null;
+
     stopSpeak();
     setStep("idle");
     setTranscript("");
@@ -101,9 +105,14 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
       toast.error("Seu navegador não suporta ditado por voz. Use o Chrome.");
       return;
     }
+    // Libera o microfone: TTS e qualquer reconhecimento anterior
+    stopSpeak();
+    try { recRef.current?.stop?.(); } catch {}
+    recRef.current = null;
     setTranscript("");
     setInterim("");
     setStep("listening");
+    listeningRef.current = true;
 
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const rec = new Ctor();
@@ -126,12 +135,18 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
       setInterim(interimText);
     };
     rec.onerror = (e: any) => {
-      if (e?.error === "no-speech") return;
+      if (e?.error === "no-speech" || e?.error === "aborted") return;
+      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+        listeningRef.current = false;
+        setStep("idle");
+        toast.error("Permita o acesso ao microfone para gravar por voz.");
+        return;
+      }
       toast.error("Erro no reconhecimento", { description: String(e?.error ?? "") });
     };
     rec.onend = () => {
-      // If user hasn't manually stopped, and we're still listening, restart to keep continuous
-      if (recRef.current === rec && step !== "idle") {
+      // Mantém a gravação contínua enquanto o usuário não tocar em "Concluir"
+      if (recRef.current === rec && listeningRef.current) {
         try { rec.start(); } catch {}
       }
     };
@@ -139,17 +154,20 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
     recRef.current = rec;
     try {
       rec.start();
-      speak("Pode falar. Toque em concluir quando terminar.", "pt-BR");
     } catch {
       toast.error("Não foi possível iniciar o microfone");
+      listeningRef.current = false;
       setStep("idle");
     }
-  }, [srSupported, speak, step]);
+  }, [srSupported, stopSpeak]);
+
 
   const finishDictation = useCallback(() => {
+    listeningRef.current = false;
     recRef.current && (recRef.current.onend = null);
     try { recRef.current?.stop?.(); } catch {}
     recRef.current = null;
+
     setInterim("");
     setStep("review");
 
@@ -271,12 +289,16 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "g" || e.key === "G") {
+      const el = e.target as HTMLElement | null;
+      const typing =
+        !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (!typing && (e.key === "g" || e.key === "G")) {
         e.preventDefault();
         if (listening) finishDictation();
         else startDictation();
         return;
       }
+
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         publish();
