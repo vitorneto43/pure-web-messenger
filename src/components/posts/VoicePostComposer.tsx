@@ -267,6 +267,30 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const listening = step === "listening";
   const shownText = transcript + (interim ? ` ${interim}` : "");
 
+  // Atalhos de teclado dentro do compositor: G = gravar/parar, Ctrl+Enter = publicar, Escape = fechar
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        if (listening) finishDictation();
+        else startDictation();
+        return;
+      }
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        publish();
+        return;
+      }
+      if (e.key === "Escape" && step !== "publishing") {
+        e.preventDefault();
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, listening, step, startDictation, finishDictation, publish, onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
