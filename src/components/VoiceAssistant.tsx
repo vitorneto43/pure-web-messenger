@@ -6,6 +6,15 @@ import { toast } from "sonner";
 import { describeImage } from "@/lib/accessibility.functions";
 import { VoicePostComposer } from "@/components/posts/VoicePostComposer";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  findProfileByName,
+  listVoiceConversations,
+  matchConversation,
+  readConversationMessages,
+  sendVoiceMessage,
+  setFollowState,
+  type VoiceConversation,
+} from "@/lib/voice-chat";
 
 /**
  * Assistente de voz global da WaveChat — acessibilidade total para cegos.
@@ -58,7 +67,21 @@ export function VoiceAssistant() {
   const wakeOnRef = useRef(wakeOn);
   // Contexto conversacional: quando o assistente faz uma pergunta,
   // a próxima frase é interpretada como resposta a ela.
-  const pendingRef = useRef<null | "lives" | "posts" | "wavetube" | "waveshorts">(null);
+  const pendingRef = useRef<
+    | null
+    | "lives"
+    | "posts"
+    | "wavetube"
+    | "waveshorts"
+    | "open-conv"
+    | "dictate"
+    | "confirm-send"
+    | "follow"
+    | "unfollow"
+  >(null);
+  // Estado do fluxo de chat por voz
+  const draftRef = useRef("");
+  const convListRef = useRef<VoiceConversation[]>([]);
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
@@ -182,6 +205,93 @@ export function VoiceAssistant() {
     stopSpeak();
   }, [stopSpeak]);
 
+  // ---------- Chat por voz ----------
+  const currentConversationId = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const m = window.location.pathname.match(/\/chat\/([^/?#]+)/);
+    return m?.[1] ?? null;
+  }, []);
+
+  const openConversationByName = useCallback(
+    async (name: string) => {
+      if (!user) { speak("Você precisa entrar primeiro."); return; }
+      speak("Procurando a conversa.");
+      try {
+        if (!convListRef.current.length) {
+          convListRef.current = await listVoiceConversations(user.id);
+        }
+        const conv = matchConversation(convListRef.current, name);
+        if (!conv) {
+          speak(`Não encontrei uma conversa com ${name}. Diga: abrir conversa, e o nome novamente.`);
+          pendingRef.current = "open-conv";
+          return;
+        }
+        navigate({ to: "/chat/$conversationId", params: { conversationId: conv.id } });
+        speak(`Abrindo a conversa com ${conv.title}. Diga: ler conversa, para eu ler as mensagens, ou escrever mensagem, para responder.`);
+      } catch {
+        speak("Não consegui abrir a conversa agora.");
+      }
+    },
+    [navigate, speak, user],
+  );
+
+  const readCurrentConversation = useCallback(async () => {
+    const convId = currentConversationId();
+    if (!user) { speak("Você precisa entrar primeiro."); return; }
+    if (!convId) {
+      speak("Você não está em uma conversa. Diga: abrir conversa, e o nome da pessoa.");
+      pendingRef.current = "open-conv";
+      return;
+    }
+    try {
+      const msgs = await readConversationMessages(convId, user.id, 10);
+      if (!msgs.length) { speak("Esta conversa está vazia. Diga: escrever mensagem, para começar."); return; }
+      readingRef.current = true;
+      for (const m of msgs) {
+        if (!readingRef.current) return;
+        const line = `${m.author} disse: ${m.text || "mensagem sem texto"}.`;
+        await new Promise<void>((resolve) => speak(line, { onEnd: () => resolve() }));
+      }
+      readingRef.current = false;
+      speak("Fim das mensagens. Diga: escrever mensagem, para responder.");
+    } catch {
+      speak("Não consegui ler a conversa agora.");
+    }
+  }, [currentConversationId, speak, user]);
+
+  const sendDraft = useCallback(async () => {
+    const convId = currentConversationId();
+    if (!user || !convId) { speak("Não estou em uma conversa aberta."); return; }
+    const r = await sendVoiceMessage(convId, user.id, draftRef.current);
+    draftRef.current = "";
+    if (r.ok) speak("Mensagem enviada.");
+    else speak("Não consegui enviar a mensagem.");
+  }, [currentConversationId, speak, user]);
+
+  const doFollow = useCallback(
+    async (name: string, follow: boolean) => {
+      if (!user) { speak("Você precisa entrar primeiro."); return; }
+      try {
+        const profile = await findProfileByName(name);
+        if (!profile) { speak(`Não encontrei o perfil ${name}.`); return; }
+        if (profile.id === user.id) { speak("Esse perfil é o seu."); return; }
+        const label = profile.display_name || profile.username;
+        const r = await setFollowState(profile.id, user.id, follow);
+        if (!r.ok) { speak("Não consegui concluir agora."); return; }
+        if (!r.changed) {
+          speak(follow ? `Você já está seguindo ${label}.` : `Você já não seguia ${label}.`);
+          return;
+        }
+        speak(r.following ? `Seguindo ${label}.` : `Deixado de seguir ${label}.`);
+      } catch {
+        speak("Não consegui concluir agora.");
+      }
+    },
+    [speak, user],
+  );
+
+
+
   // ---------- Roteador de comandos ----------
   const handleCommand = useCallback(
     (raw: string) => {
@@ -202,6 +312,32 @@ export function VoiceAssistant() {
       if (pendingRef.current) {
         const ctx = pendingRef.current;
         pendingRef.current = null;
+        if (ctx === "open-conv") {
+          void openConversationByName(raw);
+          return;
+        }
+        if (ctx === "follow" || ctx === "unfollow") {
+          void doFollow(raw, ctx === "follow");
+          return;
+        }
+        if (ctx === "dictate") {
+          draftRef.current = raw.trim();
+          pendingRef.current = "confirm-send";
+          speak(`Você disse: ${draftRef.current}. Envio agora? Diga sim ou não.`);
+          return;
+        }
+        if (ctx === "confirm-send") {
+          if (isYes || /\b(envia|enviar|manda|mandar)\b/.test(t)) { void sendDraft(); return; }
+          if (isNo || /\b(regravar|de novo|repetir|corrigir)\b/.test(t)) {
+            draftRef.current = "";
+            pendingRef.current = "dictate";
+            speak("Certo. Fale a mensagem novamente.");
+            return;
+          }
+          draftRef.current = "";
+          speak("Mensagem descartada.");
+          return;
+        }
         if (ctx === "lives") {
           if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
             speak("Ótimo, vamos criar sua live.");
@@ -241,7 +377,7 @@ export function VoiceAssistant() {
       // Ajuda
       if (match(/\b(ajuda|comandos|o que posso (falar|dizer)|socorro)\b/)) {
         speak(
-          "Comandos disponíveis: ir para início, abrir chat, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
+          "Comandos disponíveis: ir para início, abrir chat, abrir conversa com o nome da pessoa, ler conversa, escrever mensagem, seguir um perfil, deixar de seguir um perfil, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
         );
         return;
       }
@@ -260,7 +396,64 @@ export function VoiceAssistant() {
         return;
       }
 
+      // ----- Chat por voz -----
+      {
+        const openConv = t.match(
+          /\b(?:abrir|abra|abre|iniciar|ir para)\s+(?:a\s+)?(?:conversa|chat)\s+(?:com\s+)?(.+)$/,
+        ) || t.match(/\b(?:falar|conversar|escrever)\s+com\s+(.+)$/);
+        if (openConv?.[1]) { void openConversationByName(openConv[1]); return; }
+      }
+      if (match(/\b(abrir|abre|abra)\s+(uma\s+)?(conversa|chat)\b/) && match(/\bconversa\b/)) {
+        pendingRef.current = "open-conv";
+        speak("Com quem você quer conversar? Diga o nome da pessoa.");
+        return;
+      }
+      if (match(/\b(ler|leia|leiam)\s+(a\s+)?(conversa|mensagens|chat)\b/)) {
+        void readCurrentConversation();
+        return;
+      }
+      {
+        const dictate = t.match(
+          /\b(?:escrever|escreva|responder|responda|enviar|envie|mandar|manda)\s+(?:uma\s+)?(?:mensagem|resposta)\s*(?:dizendo|falando|:)?\s*(.+)$/,
+        );
+        if (dictate?.[1] && dictate[1].trim().length > 1) {
+          draftRef.current = dictate[1].trim();
+          pendingRef.current = "confirm-send";
+          speak(`Você disse: ${draftRef.current}. Envio agora? Diga sim ou não.`);
+          return;
+        }
+      }
+      if (match(/\b(escrever|escreva|responder|responda|enviar|envie|ditar)\s+(uma\s+)?(mensagem|resposta)\b/)) {
+        if (!currentConversationId()) {
+          pendingRef.current = "open-conv";
+          speak("Você não está em uma conversa. Com quem você quer falar?");
+          return;
+        }
+        pendingRef.current = "dictate";
+        speak("Fale sua mensagem depois do aviso.");
+        return;
+      }
+
+      // ----- Seguir / deixar de seguir -----
+      {
+        const unf = t.match(/\b(?:deixar de seguir|parar de seguir|desseguir|dessegue)\s+(?:o\s+|a\s+|perfil\s+)?(.+)$/);
+        if (unf?.[1]) { void doFollow(unf[1], false); return; }
+        const fol = t.match(/\b(?:seguir|segue|siga)\s+(?:o\s+|a\s+|perfil\s+)?(.+)$/);
+        if (fol?.[1]) { void doFollow(fol[1], true); return; }
+      }
+      if (match(/\b(deixar de seguir|parar de seguir)\b/)) {
+        pendingRef.current = "unfollow";
+        speak("Qual perfil você quer deixar de seguir?");
+        return;
+      }
+      if (match(/\bseguir\b/)) {
+        pendingRef.current = "follow";
+        speak("Qual perfil você quer seguir?");
+        return;
+      }
+
       // Navegação
+
       if (match(/\b(início|inicio|home|feed principal|página inicial)\b/) || match(/^ir para (início|inicio|home)/)) {
         speak("Abrindo o início.");
         navigate({ to: "/" });
@@ -362,7 +555,20 @@ export function VoiceAssistant() {
 
       // Silencioso quando não reconhece — evita interromper
     },
-    [describe, navigate, readFeed, router, speak, stopReading, user],
+    [
+      currentConversationId,
+      describe,
+      doFollow,
+      navigate,
+      openConversationByName,
+      readCurrentConversation,
+      readFeed,
+      router,
+      sendDraft,
+      speak,
+      stopReading,
+      user,
+    ],
   );
 
   // ---------- Ativação / desativação ----------
