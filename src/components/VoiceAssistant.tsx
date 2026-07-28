@@ -70,6 +70,7 @@ export function VoiceAssistant() {
   const pendingRef = useRef<
     | null
     | "lives"
+    | "start-live"
     | "posts"
     | "wavetube"
     | "waveshorts"
