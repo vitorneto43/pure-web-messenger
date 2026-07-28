@@ -576,6 +576,32 @@ export function VoiceAssistant() {
     ],
   );
 
+  useEffect(() => { commandRef.current = handleCommand; }, [handleCommand]);
+
+  // Enquanto o compositor por voz estiver aberto, libera o microfone
+  // (dois reconhecedores ao mesmo tempo cancelam um ao outro e nada é gravado).
+  useEffect(() => {
+    if (!voicePostOpen) return;
+    stopReading();
+    stoppingRef.current = true;
+    try { recRef.current?.stop?.(); } catch {}
+    recRef.current = null;
+    wakeStoppingRef.current = true;
+    try { wakeRecRef.current?.stop?.(); } catch {}
+    wakeRecRef.current = null;
+    return () => {
+      stoppingRef.current = false;
+      wakeStoppingRef.current = false;
+      // Retoma a escuta do assistente (ou da palavra-chave) após fechar
+      setTimeout(() => {
+        if (activeRef.current) startRecognition();
+        else if (wakeOnRef.current) wakeStartRef.current?.();
+      }, 600);
+    };
+  }, [voicePostOpen, startRecognition, stopReading]);
+
+
+
   // ---------- Ativação / desativação ----------
   const activate = useCallback(() => {
     if (!srSupported) {
