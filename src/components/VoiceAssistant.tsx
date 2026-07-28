@@ -680,6 +680,10 @@ export function VoiceAssistant() {
     try { rec.start(); } catch {}
   }, [activate, speak, srSupported]);
 
+  useEffect(() => { wakeStartRef.current = startWakeListener; }, [startWakeListener]);
+
+
+
   const toggleWake = useCallback(() => {
     const next = !wakeOnRef.current;
     setWakeOn(next);
