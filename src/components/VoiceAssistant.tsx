@@ -302,6 +302,7 @@ export function VoiceAssistant() {
   // (navegação em curso), tenta novamente por alguns instantes.
   const requestStartLive = useCallback(() => {
     if (typeof window === "undefined") return;
+    window.sessionStorage.setItem("wavechat:auto-start-live", "1");
     let tries = 0;
     const fire = () => {
       tries++;
