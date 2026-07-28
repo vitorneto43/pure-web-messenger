@@ -68,8 +68,10 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
     !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   const reset = useCallback(() => {
+    listeningRef.current = false;
     try { recRef.current?.stop?.(); } catch {}
     recRef.current = null;
+
     stopSpeak();
     setStep("idle");
     setTranscript("");
