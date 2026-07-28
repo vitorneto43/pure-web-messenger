@@ -70,6 +70,7 @@ export function VoiceAssistant() {
   const pendingRef = useRef<
     | null
     | "lives"
+    | "start-live"
     | "posts"
     | "wavetube"
     | "waveshorts"
@@ -297,6 +298,22 @@ export function VoiceAssistant() {
     [speak, user],
   );
 
+  // Pede à página /live/new para iniciar a transmissão. Se ainda não montou
+  // (navegação em curso), tenta novamente por alguns instantes.
+  const requestStartLive = useCallback(() => {
+    if (typeof window === "undefined") return;
+    let tries = 0;
+    const fire = () => {
+      tries++;
+      if (window.location.pathname.startsWith("/live/new")) {
+        window.dispatchEvent(new CustomEvent("wavechat:start-live"));
+        return;
+      }
+      if (tries < 12) setTimeout(fire, 400);
+      else navigate({ to: "/live/new" });
+    };
+    fire();
+  }, [navigate]);
 
 
   // ---------- Roteador de comandos ----------
@@ -346,14 +363,25 @@ export function VoiceAssistant() {
           return;
         }
         if (ctx === "lives") {
-          if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
-            speak("Ótimo, vamos criar sua live.");
+          if (isYes || /\b(começar|comecar|iniciar|criar|fazer|nova)\b/.test(t)) {
+            speak("Ótimo. Abrindo a criação da live. Diga: começar, quando quiser transmitir.");
             navigate({ to: "/live/new" });
+            pendingRef.current = "start-live";
             return;
           }
           if (isNo) { speak("Sem problema, continue explorando as lives."); return; }
         }
+        if (ctx === "start-live") {
+          if (isYes || /\b(começar|comecar|iniciar|transmitir|transmissão|transmissao|vai|agora)\b/.test(t)) {
+            speak("Iniciando sua transmissão agora.");
+            requestStartLive();
+            return;
+          }
+          if (isNo) { speak("Ok, avise quando quiser começar."); return; }
+          pendingRef.current = "start-live";
+        }
         if (ctx === "posts") {
+
           if (/\b(imagem|foto|figura|desenho)\b/.test(t)) {
             speak("Abrindo o postador. Descreva sua imagem por voz.");
             setVoicePostOpen(true);
@@ -471,14 +499,12 @@ export function VoiceAssistant() {
         navigate({ to: "/chat" });
         return;
       }
-      if (match(/\bfazer live\b|\b(começar|comecar|iniciar) (a )?(transmissão|transmissao|live)\b/)) {
-        if (typeof window !== "undefined" && window.location.pathname.startsWith("/live/new")) {
-          speak("Iniciando sua transmissão agora.");
-          window.dispatchEvent(new CustomEvent("wavechat:start-live"));
-          return;
+      if (match(/\bfazer live\b|\b(começar|comecar|iniciar|inicia|começa|comeca) (a )?(transmissão|transmissao|live)\b|\btransmitir agora\b/)) {
+        speak("Iniciando sua transmissão agora.");
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/live/new")) {
+          navigate({ to: "/live/new" });
         }
-        speak("Estamos na criação da live. Diga começar transmissão quando estiver pronto.");
-        navigate({ to: "/live/new" });
+        requestStartLive();
         return;
       }
 
@@ -576,6 +602,7 @@ export function VoiceAssistant() {
       openConversationByName,
       readCurrentConversation,
       readFeed,
+      requestStartLive,
       router,
       sendDraft,
       speak,
