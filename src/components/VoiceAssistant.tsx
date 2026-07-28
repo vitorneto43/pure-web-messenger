@@ -43,13 +43,21 @@ export function VoiceAssistant() {
   const [active, setActive] = useState(false);
   const [heard, setHeard] = useState("");
   const [voicePostOpen, setVoicePostOpen] = useState(false);
+  const [wakeOn, setWakeOn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("wavechat.wakeword") !== "off";
+  });
 
   const recRef = useRef<any>(null);
+  const wakeRecRef = useRef<any>(null);
   const stoppingRef = useRef(false);
+  const wakeStoppingRef = useRef(false);
   const readingRef = useRef(false);
   const readIndexRef = useRef(0);
   const activeRef = useRef(false);
+  const wakeOnRef = useRef(wakeOn);
   useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
   const srSupported =
     typeof window !== "undefined" &&
