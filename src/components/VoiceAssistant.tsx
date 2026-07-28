@@ -426,7 +426,15 @@ export function VoiceAssistant() {
     return () => window.removeEventListener("keydown", onKey);
   }, [activate, deactivate]);
 
-  useEffect(() => () => { stopReading(); stopRecognition(); }, [stopReading, stopRecognition]);
+  useEffect(() => () => {
+    stopReading();
+    stopRecognition();
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+    } catch {}
+  }, [stopReading, stopRecognition]);
 
   return (
     <>
@@ -436,8 +444,10 @@ export function VoiceAssistant() {
         onClick={() => (active ? deactivate() : activate())}
         aria-label={
           active
-            ? "Desligar assistente de voz WaveChat. Atalho: Alt mais A."
-            : "Ligar assistente de voz WaveChat. Fala por voz para navegar, ler posts e publicar. Atalho: Alt mais A."
+            ? "Desligar assistente de voz WaveChat. Ou diga: desativar assistente. Atalho: Alt mais A."
+            : (wakeOn
+                ? "Ligar assistente de voz WaveChat. Você também pode dizer: ativar assistente. Atalho: Alt mais A."
+                : "Ligar assistente de voz WaveChat. Atalho: Alt mais A.")
         }
         aria-pressed={active}
         className={
@@ -448,7 +458,35 @@ export function VoiceAssistant() {
         }
       >
         {active ? <MicOff className="size-6" aria-hidden /> : <Mic className="size-6" aria-hidden />}
+        {!active && wakeOn && (
+          <span
+            aria-hidden
+            className="absolute -top-1 -right-1 size-3 rounded-full bg-emerald-400 ring-2 ring-background animate-pulse"
+            title="Escutando palavra de ativação"
+          />
+        )}
       </button>
+
+      {/* Chip discreto: escuta passiva ligada / desligada */}
+      {!active && srSupported && (
+        <button
+          type="button"
+          onClick={toggleWake}
+          aria-label={
+            wakeOn
+              ? 'Escuta de ativação ligada. Diga "ativar assistente". Toque para desligar a escuta passiva.'
+              : 'Ativar escuta passiva por palavra-chave "ativar assistente".'
+          }
+          className={
+            "fixed z-[69] bottom-40 right-4 md:bottom-24 md:right-6 max-w-[min(80vw,240px)] text-left rounded-full backdrop-blur shadow px-3 py-1.5 text-[11px] hover:bg-background " +
+            (wakeOn
+              ? "bg-background/90 border border-emerald-500/40 text-muted-foreground"
+              : "bg-background/90 border border-border text-muted-foreground")
+          }
+        >
+          {wakeOn ? (<>🎙️ Diga <b className="text-foreground">"ativar assistente"</b></>) : "Ativar escuta por voz"}
+        </button>
+      )}
 
       {/* Painel de status quando ativo (para quem enxerga) */}
       {active && (
