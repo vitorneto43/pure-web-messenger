@@ -706,13 +706,15 @@ export function VoiceAssistant() {
       }
       const t = text.toLowerCase();
       // Aceita variações comuns e pequenas confusões do reconhecedor
-      if (/\b(ativar|ativa|ligar|liga|acordar|iniciar)\s+(o\s+)?(assistente|wavechat)\b/.test(t)) {
+      const WAKE =
+        /\b(ativar|ativa|ligar|liga|acordar|acorda|iniciar|inicia|comecar|começar|comeca|começa|abrir|abre|chamar|chama)\s+((o|a)\s+)?(assistente|assistenti|wavechat|wave chat)\b/;
+      const SLEEP =
+        /\b(desativar|desativa|desligar|desliga|encerrar|encerra|finalizar|finaliza|fechar|fecha|parar|para|dormir)\s+((o|a)\s+)?(assistente|assistenti|wavechat|wave chat)\b/;
+      if (WAKE.test(t)) {
         activate();
-      } else if (
-        /\b(desativar|desativa|desligar|desliga|encerrar|parar|dormir)\s+(o\s+)?(assistente|wavechat)\b/.test(t)
-      ) {
+      } else if (SLEEP.test(t)) {
         // Já está inativo — só confirma para o usuário
-        speak("Assistente já está em espera. Diga ativar assistente para começar.");
+        speak("Assistente já está em espera. Diga iniciar assistente para começar.");
       }
     };
     rec.onerror = (e: any) => {
