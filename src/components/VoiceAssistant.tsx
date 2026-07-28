@@ -326,7 +326,7 @@ export function VoiceAssistant() {
       const isNo = /\b(não|nao|agora não|depois|negativo)\b/.test(t);
 
       // Parar / cancelar
-      if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/)) {
+      if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/) && !/\b(live|transmiss)/.test(t)) {
         pendingRef.current = null;
         stopReading();
         speak("Ok, parei.");
@@ -413,7 +413,7 @@ export function VoiceAssistant() {
       // Ajuda
       if (match(/\b(ajuda|comandos|o que posso (falar|dizer)|socorro)\b/)) {
         speak(
-          "Comandos disponíveis: ir para início, abrir chat, abrir conversa com o nome da pessoa, ler conversa, escrever mensagem, seguir um perfil, deixar de seguir um perfil, abrir lives, fazer live, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
+          "Comandos disponíveis: ir para início, abrir chat, abrir conversa com o nome da pessoa, ler conversa, escrever mensagem, seguir um perfil, deixar de seguir um perfil, abrir lives, fazer live, encerrar transmissão, postar por voz, abrir perfil, abrir descobrir, abrir comunidades, ler feed, descrever imagem, próximo, anterior, voltar, parar, ou sair.",
         );
         return;
       }
@@ -500,7 +500,17 @@ export function VoiceAssistant() {
         navigate({ to: "/chat" });
         return;
       }
+      if (match(/\b(encerrar|encerra|finalizar|finaliza|terminar|termina|parar|para|desligar) (a |minha )?(live|transmissão|transmissao)\b|\bsair da live\b/)) {
+        if (typeof window !== "undefined" && /^\/live\/[^/]+$/.test(window.location.pathname) && !window.location.pathname.startsWith("/live/new")) {
+          speak("Encerrando sua transmissão.");
+          window.dispatchEvent(new CustomEvent("wavechat:end-live"));
+        } else {
+          speak("Você não está em uma transmissão ativa.");
+        }
+        return;
+      }
       if (match(/\bfazer live\b|\b(começar|comecar|iniciar|inicia|começa|comeca) (a )?(transmissão|transmissao|live)\b|\btransmitir agora\b/)) {
+
         speak("Iniciando sua transmissão agora.");
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/live/new")) {
           navigate({ to: "/live/new" });

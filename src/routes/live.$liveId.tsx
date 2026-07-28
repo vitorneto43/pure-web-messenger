@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getLive, mintViewerToken, mintHostToken, mintGuestToken } from "@/lib/live.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -217,6 +217,19 @@ function LiveView() {
     router.invalidate();
   }
 
+  // Assistente de voz: "encerrar transmissão" aciona o botão Encerrar.
+  const endBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const onVoiceEnd = () => {
+      if (!isHost || ended) return;
+      if (endBtnRef.current) endBtnRef.current.click();
+      else void endLive();
+    };
+    window.addEventListener("wavechat:end-live", onVoiceEnd);
+    return () => window.removeEventListener("wavechat:end-live", onVoiceEnd);
+  });
+
+
   if (!live) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-center p-6">
@@ -282,7 +295,7 @@ function LiveView() {
                       {recording ? <VideoOff className="size-4 mr-1" /> : <Video className="size-4 mr-1" />}
                       {recording ? "Parar" : "Gravar"}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={endLive}>
+                    <Button ref={endBtnRef} size="sm" variant="destructive" onClick={endLive}>
                       Encerrar
                     </Button>
                   </>
