@@ -277,8 +277,26 @@ export function VoiceAssistant() {
         return;
       }
       if (match(/\b(abrir )?(lives?|ao vivo|transmiss(ão|oes))\b/)) {
-        speak("Abrindo as lives.");
         navigate({ to: "/live" });
+        pendingRef.current = "lives";
+        speak("Estamos nas lives. Quer começar uma?");
+        return;
+      }
+      if (match(/\bwave\s*tube\b|\bwavetube\b/)) {
+        navigate({ to: "/wavetube" });
+        pendingRef.current = "wavetube";
+        speak("Estamos no WaveTube. Você quer ver um vídeo específico ou um autor específico?");
+        return;
+      }
+      if (match(/\bwave\s*shorts?\b|\bwaveshorts?\b|\bshorts?\b/)) {
+        navigate({ to: "/waveshorts" });
+        pendingRef.current = "waveshorts";
+        speak("Estamos no WaveShorts. Você quer ver um vídeo específico ou um autor específico?");
+        return;
+      }
+      if (match(/\bwave\s*chat\s*for\b|\bwavechat\s*for\b|\b(planos?|assinatura|ecossistemas? privad)/)) {
+        speak("Abrindo o WaveChat For.");
+        navigate({ to: "/ecosystems/pricing" });
         return;
       }
       if (match(/\b(abrir )?(descobrir|explorar)\b/)) {
@@ -301,9 +319,14 @@ export function VoiceAssistant() {
         }
         return;
       }
-      if (match(/\bpostar por voz\b|\bnovo post\b|\bcriar post\b|\bpublicar por voz\b/)) {
+      if (match(/\bpostar por voz\b|\bpublicar por voz\b/)) {
         speak("Abrindo o postador por voz. Toque em gravar, ou pressione a letra G.");
         setVoicePostOpen(true);
+        return;
+      }
+      if (match(/\b(criar|novo|fazer|publicar) (um )?posts?\b|\bcriar posts?\b/)) {
+        pendingRef.current = "posts";
+        speak("Estamos na criação de posts. Você quer criar um post escrito ou criar uma imagem?");
         return;
       }
 
