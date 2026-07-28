@@ -186,7 +186,7 @@ export function LiveSignCaptions({ liveId, isHost }: { liveId: string; isHost: b
   return (
     <>
       {caption && (
-        <div className="pointer-events-none absolute left-0 right-0 bottom-[58%] z-20 flex justify-center px-4">
+        <div className="pointer-events-none fixed left-0 right-0 bottom-[58%] z-20 flex justify-center px-4">
           <p className="max-w-[90%] rounded-xl bg-black/75 px-3 py-2 text-center text-base font-semibold leading-snug text-white shadow-lg">
             {caption}
           </p>

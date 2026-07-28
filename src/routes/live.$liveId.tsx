@@ -278,7 +278,6 @@ function LiveView() {
             onToggleFollow={toggleLiveFollow}
           />
           <LiveReactionsLayer liveId={live.id} userId={userId} />
-          <LiveSignCaptions liveId={live.id} isHost={isHost} />
           <div className="absolute left-0 right-0 bottom-0 z-10 max-h-[55%] flex flex-col">
             <div className="flex-1 max-h-[40vh]">
               <LiveChat liveId={live.id} userId={userId} />
@@ -289,6 +288,7 @@ function LiveView() {
                 {isHost && <LiveStagePanel liveId={live.id} isHost={isHost} />}
               </div>
               <div className="flex items-center gap-2">
+                <LiveSignCaptions liveId={live.id} isHost={isHost} />
                 {!isHost && <LivePixSheet liveId={live.id} />}
                 {!isHost && <LiveGiftSheet liveId={live.id} userId={userId} />}
                 {isHost && (
