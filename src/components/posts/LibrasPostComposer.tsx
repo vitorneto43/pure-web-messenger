@@ -87,6 +87,7 @@ export function LibrasPostComposer({ open, onOpenChange, onCreated }: Props) {
   const [detected, setDetected] = useState<string>("—");
   const [progress, setProgress] = useState(0); // 0..1 hold progress
   const [improving, setImproving] = useState(false);
+  const [trainerOpen, setTrainerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textRef = useRef(text);
   useEffect(() => { textRef.current = text; }, [text]);
