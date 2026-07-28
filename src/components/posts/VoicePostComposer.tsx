@@ -289,12 +289,16 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "g" || e.key === "G") {
+      const el = e.target as HTMLElement | null;
+      const typing =
+        !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (!typing && (e.key === "g" || e.key === "G")) {
         e.preventDefault();
         if (listening) finishDictation();
         else startDictation();
         return;
       }
+
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         publish();
