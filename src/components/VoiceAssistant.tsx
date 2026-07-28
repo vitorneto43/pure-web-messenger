@@ -499,14 +499,12 @@ export function VoiceAssistant() {
         navigate({ to: "/chat" });
         return;
       }
-      if (match(/\bfazer live\b|\b(começar|comecar|iniciar) (a )?(transmissão|transmissao|live)\b/)) {
-        if (typeof window !== "undefined" && window.location.pathname.startsWith("/live/new")) {
-          speak("Iniciando sua transmissão agora.");
-          window.dispatchEvent(new CustomEvent("wavechat:start-live"));
-          return;
+      if (match(/\bfazer live\b|\b(começar|comecar|iniciar|inicia|começa|comeca) (a )?(transmissão|transmissao|live)\b|\btransmitir agora\b/)) {
+        speak("Iniciando sua transmissão agora.");
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/live/new")) {
+          navigate({ to: "/live/new" });
         }
-        speak("Estamos na criação da live. Diga começar transmissão quando estiver pronto.");
-        navigate({ to: "/live/new" });
+        requestStartLive();
         return;
       }
 
