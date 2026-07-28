@@ -555,7 +555,20 @@ export function VoiceAssistant() {
 
       // Silencioso quando não reconhece — evita interromper
     },
-    [describe, navigate, readFeed, router, speak, stopReading, user],
+    [
+      currentConversationId,
+      describe,
+      doFollow,
+      navigate,
+      openConversationByName,
+      readCurrentConversation,
+      readFeed,
+      router,
+      sendDraft,
+      speak,
+      stopReading,
+      user,
+    ],
   );
 
   // ---------- Ativação / desativação ----------
