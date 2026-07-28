@@ -67,7 +67,21 @@ export function VoiceAssistant() {
   const wakeOnRef = useRef(wakeOn);
   // Contexto conversacional: quando o assistente faz uma pergunta,
   // a próxima frase é interpretada como resposta a ela.
-  const pendingRef = useRef<null | "lives" | "posts" | "wavetube" | "waveshorts">(null);
+  const pendingRef = useRef<
+    | null
+    | "lives"
+    | "posts"
+    | "wavetube"
+    | "waveshorts"
+    | "open-conv"
+    | "dictate"
+    | "confirm-send"
+    | "follow"
+    | "unfollow"
+  >(null);
+  // Estado do fluxo de chat por voz
+  const draftRef = useRef("");
+  const convListRef = useRef<VoiceConversation[]>([]);
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
