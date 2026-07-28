@@ -312,6 +312,32 @@ export function VoiceAssistant() {
       if (pendingRef.current) {
         const ctx = pendingRef.current;
         pendingRef.current = null;
+        if (ctx === "open-conv") {
+          void openConversationByName(raw);
+          return;
+        }
+        if (ctx === "follow" || ctx === "unfollow") {
+          void doFollow(raw, ctx === "follow");
+          return;
+        }
+        if (ctx === "dictate") {
+          draftRef.current = raw.trim();
+          pendingRef.current = "confirm-send";
+          speak(`Você disse: ${draftRef.current}. Envio agora? Diga sim ou não.`);
+          return;
+        }
+        if (ctx === "confirm-send") {
+          if (isYes || /\b(envia|enviar|manda|mandar)\b/.test(t)) { void sendDraft(); return; }
+          if (isNo || /\b(regravar|de novo|repetir|corrigir)\b/.test(t)) {
+            draftRef.current = "";
+            pendingRef.current = "dictate";
+            speak("Certo. Fale a mensagem novamente.");
+            return;
+          }
+          draftRef.current = "";
+          speak("Mensagem descartada.");
+          return;
+        }
         if (ctx === "lives") {
           if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
             speak("Ótimo, vamos criar sua live.");
