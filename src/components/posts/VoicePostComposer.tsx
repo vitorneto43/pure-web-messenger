@@ -163,9 +163,11 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
 
 
   const finishDictation = useCallback(() => {
+    listeningRef.current = false;
     recRef.current && (recRef.current.onend = null);
     try { recRef.current?.stop?.(); } catch {}
     recRef.current = null;
+
     setInterim("");
     setStep("review");
 
