@@ -51,7 +51,9 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const recRef = useRef<any>(null);
+  const listeningRef = useRef(false);
   const transcriptRef = useRef("");
+
   const captionRef = useRef("");
   const imageUrlRef = useRef<string | null>(null);
   const recordButtonRef = useRef<HTMLButtonElement>(null);
