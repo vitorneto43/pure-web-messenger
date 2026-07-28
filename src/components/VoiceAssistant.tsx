@@ -205,6 +205,93 @@ export function VoiceAssistant() {
     stopSpeak();
   }, [stopSpeak]);
 
+  // ---------- Chat por voz ----------
+  const currentConversationId = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const m = window.location.pathname.match(/\/chat\/([^/?#]+)/);
+    return m?.[1] ?? null;
+  }, []);
+
+  const openConversationByName = useCallback(
+    async (name: string) => {
+      if (!user) { speak("Você precisa entrar primeiro."); return; }
+      speak("Procurando a conversa.");
+      try {
+        if (!convListRef.current.length) {
+          convListRef.current = await listVoiceConversations(user.id);
+        }
+        const conv = matchConversation(convListRef.current, name);
+        if (!conv) {
+          speak(`Não encontrei uma conversa com ${name}. Diga: abrir conversa, e o nome novamente.`);
+          pendingRef.current = "open-conv";
+          return;
+        }
+        navigate({ to: "/chat/$conversationId", params: { conversationId: conv.id } });
+        speak(`Abrindo a conversa com ${conv.title}. Diga: ler conversa, para eu ler as mensagens, ou escrever mensagem, para responder.`);
+      } catch {
+        speak("Não consegui abrir a conversa agora.");
+      }
+    },
+    [navigate, speak, user],
+  );
+
+  const readCurrentConversation = useCallback(async () => {
+    const convId = currentConversationId();
+    if (!user) { speak("Você precisa entrar primeiro."); return; }
+    if (!convId) {
+      speak("Você não está em uma conversa. Diga: abrir conversa, e o nome da pessoa.");
+      pendingRef.current = "open-conv";
+      return;
+    }
+    try {
+      const msgs = await readConversationMessages(convId, user.id, 10);
+      if (!msgs.length) { speak("Esta conversa está vazia. Diga: escrever mensagem, para começar."); return; }
+      readingRef.current = true;
+      for (const m of msgs) {
+        if (!readingRef.current) return;
+        const line = `${m.author} disse: ${m.text || "mensagem sem texto"}.`;
+        await new Promise<void>((resolve) => speak(line, { onEnd: () => resolve() }));
+      }
+      readingRef.current = false;
+      speak("Fim das mensagens. Diga: escrever mensagem, para responder.");
+    } catch {
+      speak("Não consegui ler a conversa agora.");
+    }
+  }, [currentConversationId, speak, user]);
+
+  const sendDraft = useCallback(async () => {
+    const convId = currentConversationId();
+    if (!user || !convId) { speak("Não estou em uma conversa aberta."); return; }
+    const r = await sendVoiceMessage(convId, user.id, draftRef.current);
+    draftRef.current = "";
+    if (r.ok) speak("Mensagem enviada.");
+    else speak("Não consegui enviar a mensagem.");
+  }, [currentConversationId, speak, user]);
+
+  const doFollow = useCallback(
+    async (name: string, follow: boolean) => {
+      if (!user) { speak("Você precisa entrar primeiro."); return; }
+      try {
+        const profile = await findProfileByName(name);
+        if (!profile) { speak(`Não encontrei o perfil ${name}.`); return; }
+        if (profile.id === user.id) { speak("Esse perfil é o seu."); return; }
+        const label = profile.display_name || profile.username;
+        const r = await setFollowState(profile.id, user.id, follow);
+        if (!r.ok) { speak("Não consegui concluir agora."); return; }
+        if (!r.changed) {
+          speak(follow ? `Você já está seguindo ${label}.` : `Você já não seguia ${label}.`);
+          return;
+        }
+        speak(r.following ? `Seguindo ${label}.` : `Deixado de seguir ${label}.`);
+      } catch {
+        speak("Não consegui concluir agora.");
+      }
+    },
+    [speak, user],
+  );
+
+
+
   // ---------- Roteador de comandos ----------
   const handleCommand = useCallback(
     (raw: string) => {
