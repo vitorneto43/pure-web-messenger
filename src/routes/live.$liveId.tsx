@@ -278,6 +278,7 @@ function LiveView() {
             onToggleFollow={toggleLiveFollow}
           />
           <LiveReactionsLayer liveId={live.id} userId={userId} />
+          <LiveSignCaptions liveId={live.id} isHost={isHost} />
           <div className="absolute left-0 right-0 bottom-0 z-10 max-h-[55%] flex flex-col">
             <div className="flex-1 max-h-[40vh]">
               <LiveChat liveId={live.id} userId={userId} />
