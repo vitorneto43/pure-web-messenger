@@ -56,6 +56,9 @@ export function VoiceAssistant() {
   const readIndexRef = useRef(0);
   const activeRef = useRef(false);
   const wakeOnRef = useRef(wakeOn);
+  // Contexto conversacional: quando o assistente faz uma pergunta,
+  // a próxima frase é interpretada como resposta a ela.
+  const pendingRef = useRef<null | "lives" | "posts" | "wavetube" | "waveshorts">(null);
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
