@@ -43,13 +43,21 @@ export function VoiceAssistant() {
   const [active, setActive] = useState(false);
   const [heard, setHeard] = useState("");
   const [voicePostOpen, setVoicePostOpen] = useState(false);
+  const [wakeOn, setWakeOn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("wavechat.wakeword") !== "off";
+  });
 
   const recRef = useRef<any>(null);
+  const wakeRecRef = useRef<any>(null);
   const stoppingRef = useRef(false);
+  const wakeStoppingRef = useRef(false);
   const readingRef = useRef(false);
   const readIndexRef = useRef(0);
   const activeRef = useRef(false);
+  const wakeOnRef = useRef(wakeOn);
   useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
   const srSupported =
     typeof window !== "undefined" &&
@@ -193,7 +201,7 @@ export function VoiceAssistant() {
       }
 
       // Encerrar assistente
-      if (match(/\b(sair|encerrar|desligar|fechar assistente)\b/)) {
+      if (match(/\b(desativar|desativa|desliga(r)?|encerrar|sair|fechar)\s+(o\s+)?assistente\b/) || match(/\b(sair|encerrar|desligar|fechar assistente)\b/)) {
         speak("Assistente encerrado.");
         setTimeout(() => deactivate(), 800);
         return;
@@ -294,10 +302,17 @@ export function VoiceAssistant() {
       toast.error("Assistente por voz requer Chrome, Edge ou Android.");
       return;
     }
+    // Encerra o listener de palavra-chave para liberar o microfone
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+      setTimeout(() => { wakeStoppingRef.current = false; }, 200);
+    } catch {}
     setActive(true);
     activeRef.current = true;
     speak(
-      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat.",
+      "Assistente WaveChat ativo. Diga ajuda para ouvir os comandos, ou fale, por exemplo: ler feed, postar por voz, fazer live, abrir chat. Para me desligar, diga desativar assistente.",
     );
     setTimeout(() => startRecognition(), 300);
   }, [speak, srSupported, startRecognition]);
@@ -307,7 +322,96 @@ export function VoiceAssistant() {
     activeRef.current = false;
     stopReading();
     stopRecognition();
+    // Retoma o listener de palavra-chave, se habilitado
+    setTimeout(() => {
+      if (wakeOnRef.current) startWakeListener();
+    }, 400);
   }, [stopReading, stopRecognition]);
+
+  // ---------- Listener de palavra-chave ("ativar assistente") ----------
+  const startWakeListener = useCallback(() => {
+    if (!srSupported || activeRef.current || !wakeOnRef.current) return;
+    try { wakeRecRef.current?.stop?.(); } catch {}
+    const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const rec = new Ctor();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (e: any) => {
+      let text = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        text += e.results[i][0].transcript + " ";
+      }
+      const t = text.toLowerCase();
+      // Aceita variações comuns e pequenas confusões do reconhecedor
+      if (/\b(ativar|ativa|ligar|liga|acordar|iniciar)\s+(o\s+)?(assistente|wavechat)\b/.test(t)) {
+        activate();
+      } else if (
+        /\b(desativar|desativa|desligar|desliga|encerrar|parar|dormir)\s+(o\s+)?(assistente|wavechat)\b/.test(t)
+      ) {
+        // Já está inativo — só confirma para o usuário
+        speak("Assistente já está em espera. Diga ativar assistente para começar.");
+      }
+    };
+    rec.onerror = (e: any) => {
+      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+        // Sem permissão de microfone — não insiste; usuário pode ligar pelo botão
+        setWakeOn(false);
+        wakeOnRef.current = false;
+        localStorage.setItem("wavechat.wakeword", "off");
+      }
+    };
+    rec.onend = () => {
+      if (!activeRef.current && wakeOnRef.current && !wakeStoppingRef.current) {
+        try { rec.start(); } catch {}
+      }
+    };
+    wakeRecRef.current = rec;
+    try { rec.start(); } catch {}
+  }, [activate, speak, srSupported]);
+
+  const toggleWake = useCallback(() => {
+    const next = !wakeOnRef.current;
+    setWakeOn(next);
+    wakeOnRef.current = next;
+    localStorage.setItem("wavechat.wakeword", next ? "on" : "off");
+    if (next) {
+      speak("Escuta de ativação ligada. Diga: ativar assistente.");
+      startWakeListener();
+    } else {
+      try {
+        wakeStoppingRef.current = true;
+        wakeRecRef.current?.stop?.();
+        wakeRecRef.current = null;
+      } catch {}
+      speak("Escuta de ativação desligada.");
+    }
+  }, [speak, startWakeListener]);
+
+  // Inicia a escuta passiva após o primeiro gesto do usuário (política do navegador)
+  useEffect(() => {
+    if (!srSupported) return;
+    let started = false;
+    const boot = () => {
+      if (started || activeRef.current || !wakeOnRef.current) return;
+      started = true;
+      startWakeListener();
+    };
+    // Tenta iniciar já (funciona em Android/Chrome se o mic estiver permitido)
+    const t = setTimeout(boot, 800);
+    const onGesture = () => boot();
+    window.addEventListener("pointerdown", onGesture, { once: true });
+    window.addEventListener("keydown", onGesture, { once: true });
+    window.addEventListener("touchstart", onGesture, { once: true });
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("keydown", onGesture);
+      window.removeEventListener("touchstart", onGesture);
+    };
+  }, [srSupported, startWakeListener]);
 
   // Atalho global: Alt+A
   useEffect(() => {
@@ -322,7 +426,15 @@ export function VoiceAssistant() {
     return () => window.removeEventListener("keydown", onKey);
   }, [activate, deactivate]);
 
-  useEffect(() => () => { stopReading(); stopRecognition(); }, [stopReading, stopRecognition]);
+  useEffect(() => () => {
+    stopReading();
+    stopRecognition();
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+    } catch {}
+  }, [stopReading, stopRecognition]);
 
   return (
     <>
@@ -332,8 +444,10 @@ export function VoiceAssistant() {
         onClick={() => (active ? deactivate() : activate())}
         aria-label={
           active
-            ? "Desligar assistente de voz WaveChat. Atalho: Alt mais A."
-            : "Ligar assistente de voz WaveChat. Fala por voz para navegar, ler posts e publicar. Atalho: Alt mais A."
+            ? "Desligar assistente de voz WaveChat. Ou diga: desativar assistente. Atalho: Alt mais A."
+            : (wakeOn
+                ? "Ligar assistente de voz WaveChat. Você também pode dizer: ativar assistente. Atalho: Alt mais A."
+                : "Ligar assistente de voz WaveChat. Atalho: Alt mais A.")
         }
         aria-pressed={active}
         className={
@@ -344,7 +458,35 @@ export function VoiceAssistant() {
         }
       >
         {active ? <MicOff className="size-6" aria-hidden /> : <Mic className="size-6" aria-hidden />}
+        {!active && wakeOn && (
+          <span
+            aria-hidden
+            className="absolute -top-1 -right-1 size-3 rounded-full bg-emerald-400 ring-2 ring-background animate-pulse"
+            title="Escutando palavra de ativação"
+          />
+        )}
       </button>
+
+      {/* Chip discreto: escuta passiva ligada / desligada */}
+      {!active && srSupported && (
+        <button
+          type="button"
+          onClick={toggleWake}
+          aria-label={
+            wakeOn
+              ? 'Escuta de ativação ligada. Diga "ativar assistente". Toque para desligar a escuta passiva.'
+              : 'Ativar escuta passiva por palavra-chave "ativar assistente".'
+          }
+          className={
+            "fixed z-[69] bottom-40 right-4 md:bottom-24 md:right-6 max-w-[min(80vw,240px)] text-left rounded-full backdrop-blur shadow px-3 py-1.5 text-[11px] hover:bg-background " +
+            (wakeOn
+              ? "bg-background/90 border border-emerald-500/40 text-muted-foreground"
+              : "bg-background/90 border border-border text-muted-foreground")
+          }
+        >
+          {wakeOn ? (<>🎙️ Diga <b className="text-foreground">"ativar assistente"</b></>) : "Ativar escuta por voz"}
+        </button>
+      )}
 
       {/* Painel de status quando ativo (para quem enxerga) */}
       {active && (
