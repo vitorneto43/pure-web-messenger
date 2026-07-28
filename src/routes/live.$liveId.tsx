@@ -217,6 +217,18 @@ function LiveView() {
     router.invalidate();
   }
 
+  // Assistente de voz: "encerrar transmissão" aciona o botão Encerrar.
+  const endBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const onVoiceEnd = () => {
+      if (!isHost || ended) return;
+      if (endBtnRef.current) endBtnRef.current.click();
+      else void endLive();
+    };
+    window.addEventListener("wavechat:end-live", onVoiceEnd);
+    return () => window.removeEventListener("wavechat:end-live", onVoiceEnd);
+  });
+
 
   if (!live) {
     return (
