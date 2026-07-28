@@ -25,6 +25,7 @@ import { EcosystemProvider } from "@/hooks/use-ecosystem";
 import { usePushDeepLink } from "@/hooks/use-push-deeplink";
 import { SignLanguageProvider } from "@/components/SignLanguageProvider";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
+import { GestureCommandCenter } from "@/components/libras/GestureCommandCenter";
 
 
 
@@ -277,6 +278,7 @@ function RootComponent() {
           <Toaster richColors position="top-right" />
           <SignLanguageProvider />
           <VoiceAssistant />
+          <GestureCommandCenter />
 
         </EcosystemProvider>
       </AuthProvider>
