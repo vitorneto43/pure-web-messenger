@@ -4,6 +4,7 @@ import { Loader2, Sparkles, PlusCircle, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGate } from "@/hooks/use-auth-gate";
+import { useVoicePostShortcut } from "@/hooks/use-voice-post-shortcut";
 import { Button } from "@/components/ui/button";
 import { PostCard, type PostItem } from "@/components/posts/PostCard";
 import { PostComments } from "@/components/posts/PostComments";
@@ -26,6 +27,10 @@ export function PostsFeed() {
   const [librasOpen, setLibrasOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const [boostFor, setBoostFor] = useState<string | null>(null);
+
+  useVoicePostShortcut({
+    onOpen: () => gate("create_status", () => setVoiceOpen(true)),
+  });
 
   const query = useInfiniteQuery({
     queryKey: ["posts-feed", user?.id ?? "guest"],
@@ -61,8 +66,8 @@ export function PostsFeed() {
             variant="outline"
             className="rounded-full"
             onClick={() => gate("create_status", () => setVoiceOpen(true))}
-            aria-label="Postar por voz — acessibilidade"
-            title="Postar por voz"
+            aria-label="Postar por voz. Atalhos: Control Shift V, ou segure a barra de espaço e diga postar por voz."
+            title="Postar por voz (atalho: Ctrl+Shift+V)"
           >
             <Mic className="size-4 mr-1 text-pink-500" /> Voz
           </Button>

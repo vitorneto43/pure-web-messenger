@@ -13,6 +13,10 @@ import { useSpeech } from "@/hooks/use-accessibility";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { scanLocally } from "@/lib/content-policy";
 
+const WELCOME_TEXT =
+  "Postar por voz aberto. Toque em gravar, ou pressione a letra G, para começar a falar seu post.";
+const GRAVAR_HINT = "Pressione G para gravar, Enter para publicar, Escape para fechar.";
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -50,6 +54,9 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const transcriptRef = useRef("");
   const captionRef = useRef("");
   const imageUrlRef = useRef<string | null>(null);
+  const recordButtonRef = useRef<HTMLButtonElement>(null);
+  const welcomeSpoken = useRef(false);
+  const [announcement, setAnnouncement] = useState("");
   useEffect(() => { transcriptRef.current = transcript; }, [transcript]);
   useEffect(() => { captionRef.current = caption; }, [caption]);
   useEffect(() => { imageUrlRef.current = imageUrl; }, [imageUrl]);
@@ -73,8 +80,21 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   }, [stopSpeak]);
 
   useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+    if (!open) {
+      reset();
+      welcomeSpoken.current = false;
+      return;
+    }
+    // Foca no botão gravar e anuncia para leitores de tela
+    setTimeout(() => {
+      recordButtonRef.current?.focus();
+      setAnnouncement(WELCOME_TEXT);
+      if (!welcomeSpoken.current) {
+        welcomeSpoken.current = true;
+        speak(WELCOME_TEXT, "pt-BR");
+      }
+    }, 200);
+  }, [open, reset, speak]);
 
   const startDictation = useCallback(() => {
     if (!srSupported) {
