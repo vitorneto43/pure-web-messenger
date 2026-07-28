@@ -347,14 +347,25 @@ export function VoiceAssistant() {
           return;
         }
         if (ctx === "lives") {
-          if (isYes || /\b(começar|iniciar|criar|fazer|nova)\b/.test(t)) {
-            speak("Ótimo, vamos criar sua live.");
+          if (isYes || /\b(começar|comecar|iniciar|criar|fazer|nova)\b/.test(t)) {
+            speak("Ótimo. Abrindo a criação da live. Diga: começar, quando quiser transmitir.");
             navigate({ to: "/live/new" });
+            pendingRef.current = "start-live";
             return;
           }
           if (isNo) { speak("Sem problema, continue explorando as lives."); return; }
         }
+        if (ctx === "start-live") {
+          if (isYes || /\b(começar|comecar|iniciar|transmitir|transmissão|transmissao|vai|agora)\b/.test(t)) {
+            speak("Iniciando sua transmissão agora.");
+            requestStartLive();
+            return;
+          }
+          if (isNo) { speak("Ok, avise quando quiser começar."); return; }
+          pendingRef.current = "start-live";
+        }
         if (ctx === "posts") {
+
           if (/\b(imagem|foto|figura|desenho)\b/.test(t)) {
             speak("Abrindo o postador. Descreva sua imagem por voz.");
             setVoicePostOpen(true);
