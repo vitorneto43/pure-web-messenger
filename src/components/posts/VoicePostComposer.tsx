@@ -13,6 +13,10 @@ import { useSpeech } from "@/hooks/use-accessibility";
 import { notifyFollowersOfContent } from "@/lib/follower-push.functions";
 import { scanLocally } from "@/lib/content-policy";
 
+const WELCOME_TEXT =
+  "Postar por voz aberto. Toque em gravar, ou pressione a letra G, para começar a falar seu post.";
+const GRAVAR_HINT = "Pressione G para gravar, Enter para publicar, Escape para fechar.";
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -50,6 +54,9 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const transcriptRef = useRef("");
   const captionRef = useRef("");
   const imageUrlRef = useRef<string | null>(null);
+  const recordButtonRef = useRef<HTMLButtonElement>(null);
+  const welcomeSpoken = useRef(false);
+  const [announcement, setAnnouncement] = useState("");
   useEffect(() => { transcriptRef.current = transcript; }, [transcript]);
   useEffect(() => { captionRef.current = caption; }, [caption]);
   useEffect(() => { imageUrlRef.current = imageUrl; }, [imageUrl]);
@@ -73,8 +80,21 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   }, [stopSpeak]);
 
   useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+    if (!open) {
+      reset();
+      welcomeSpoken.current = false;
+      return;
+    }
+    // Foca no botão gravar e anuncia para leitores de tela
+    setTimeout(() => {
+      recordButtonRef.current?.focus();
+      setAnnouncement(WELCOME_TEXT);
+      if (!welcomeSpoken.current) {
+        welcomeSpoken.current = true;
+        speak(WELCOME_TEXT, "pt-BR");
+      }
+    }, 200);
+  }, [open, reset, speak]);
 
   const startDictation = useCallback(() => {
     if (!srSupported) {
@@ -247,6 +267,30 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
   const listening = step === "listening";
   const shownText = transcript + (interim ? ` ${interim}` : "");
 
+  // Atalhos de teclado dentro do compositor: G = gravar/parar, Ctrl+Enter = publicar, Escape = fechar
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        if (listening) finishDictation();
+        else startDictation();
+        return;
+      }
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        publish();
+        return;
+      }
+      if (e.key === "Escape" && step !== "publishing") {
+        e.preventDefault();
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, listening, step, startDictation, finishDictation, publish, onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -258,8 +302,13 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
           <DialogDescription>
             Acessibilidade: fale seu post, adicione uma foto (opcional) e publique.
             A IA descreve a imagem automaticamente para você.
+            Atalhos: G grava, Ctrl+Enter publica, Escape fecha.
           </DialogDescription>
         </DialogHeader>
+
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {announcement}
+        </div>
 
         {!srSupported && (
           <div className="text-sm text-destructive p-3 rounded-md bg-destructive/10">
@@ -337,12 +386,13 @@ export function VoicePostComposer({ open, onOpenChange, onCreated }: Props) {
         <div className="grid grid-cols-2 gap-2">
           {!listening ? (
             <Button
+              ref={recordButtonRef}
               type="button"
               size="lg"
               onClick={startDictation}
               disabled={!srSupported || publishing}
               className="h-14 text-base"
-              aria-label={transcript ? "Regravar" : "Gravar áudio do post"}
+              aria-label={transcript ? "Regravar áudio do post. Atalho: tecla G." : "Gravar áudio do post. Atalho: tecla G."}
             >
               {transcript ? <RotateCcw className="size-5 mr-2" /> : <Mic className="size-5 mr-2" />}
               {transcript ? "Regravar" : "Gravar"}
