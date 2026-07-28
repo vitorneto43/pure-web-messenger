@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ export const Route = createFileRoute("/live/new")({
 
 function NewLive() {
   const navigate = useNavigate();
+  const startButtonRef = useRef<HTMLButtonElement | null>(null);
+  const pendingVoiceStartRef = useRef(false);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -43,6 +45,13 @@ function NewLive() {
   }, []);
 
   const isScheduled = !!scheduledAt && new Date(scheduledAt).getTime() > Date.now() + 30_000;
+
+  const clickStartButton = useCallback(() => {
+    pendingVoiceStartRef.current = true;
+    if (!userId || busy) return;
+    pendingVoiceStartRef.current = false;
+    startButtonRef.current?.click();
+  }, [busy, userId]);
 
   async function start() {
     if (!userId) {
@@ -101,15 +110,24 @@ function NewLive() {
     }
   }
 
-  // Voice assistant: "começar transmissão" while on this page starts the live.
+  // Voice assistant: "começar transmissão" clicks the same button once the page is ready.
   useEffect(() => {
-    const onVoiceStart = () => {
-      if (busy) return;
-      void start();
-    };
+    const onVoiceStart = () => clickStartButton();
     window.addEventListener("wavechat:start-live", onVoiceStart);
     return () => window.removeEventListener("wavechat:start-live", onVoiceStart);
-  });
+  }, [clickStartButton]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.sessionStorage.getItem("wavechat:auto-start-live") === "1") {
+      window.sessionStorage.removeItem("wavechat:auto-start-live");
+      pendingVoiceStartRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (pendingVoiceStartRef.current) clickStartButton();
+  }, [clickStartButton]);
 
 
 
@@ -162,6 +180,7 @@ function NewLive() {
         </div>
 
         <Button
+          ref={startButtonRef}
           onClick={start}
           disabled={busy}
           size="lg"
