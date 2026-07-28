@@ -329,14 +329,22 @@ export function LibrasPostComposer({ open, onOpenChange, onCreated }: Props) {
             Postar em LIBRAS
           </DialogTitle>
           <DialogDescription>
-            Use a câmera para soletrar seu post em LIBRAS (dactilologia). MVP com
-            letras estáticas — os campos abaixo aceitam edição manual.
+            Use a câmera para escrever seu post em LIBRAS. Reconhece o alfabeto e também
+            os gestos que você mesmo treinar (letras, palavras ou frases).
           </DialogDescription>
         </DialogHeader>
+
+        <div>
+          <Button size="sm" variant="outline" onClick={() => setTrainerOpen(true)}>
+            <GraduationCap className="size-4 mr-1" /> Treinar meus gestos
+          </Button>
+        </div>
+        <SignTrainerDialog open={trainerOpen} onOpenChange={setTrainerOpen} />
 
         {error && (
           <div className="text-sm text-destructive p-3 rounded-md bg-destructive/10">{error}</div>
         )}
+
 
         <div className="grid md:grid-cols-2 gap-3">
           <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3]">
