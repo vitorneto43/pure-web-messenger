@@ -101,6 +101,17 @@ function NewLive() {
     }
   }
 
+  // Voice assistant: "começar transmissão" while on this page starts the live.
+  useEffect(() => {
+    const onVoiceStart = () => {
+      if (!busy) void start();
+    };
+    window.addEventListener("wavechat:start-live", onVoiceStart);
+    return () => window.removeEventListener("wavechat:start-live", onVoiceStart);
+  });
+
+
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-md space-y-6">
