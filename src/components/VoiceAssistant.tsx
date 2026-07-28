@@ -419,7 +419,12 @@ export function VoiceAssistant() {
       }
 
       // Encerrar assistente
-      if (match(/\b(desativar|desativa|desliga(r)?|encerrar|sair|fechar)\s+(o\s+)?assistente\b/) || match(/\b(sair|encerrar|desligar|fechar assistente)\b/)) {
+      if (
+        match(
+          /\b(desativar|desativa|desliga(r)?|encerrar|encerra|finalizar|finaliza|fechar|fecha|parar|para|sair)\s+((o|a)\s+)?(assistente|assistenti|wavechat|wave chat)\b/,
+        ) ||
+        match(/\b(sair|tchau)\b/)
+      ) {
         speak("Assistente encerrado.");
         setTimeout(() => deactivate(), 800);
         return;
