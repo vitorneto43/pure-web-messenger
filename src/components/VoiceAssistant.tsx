@@ -326,7 +326,7 @@ export function VoiceAssistant() {
       const isNo = /\b(não|nao|agora não|depois|negativo)\b/.test(t);
 
       // Parar / cancelar
-      if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/)) {
+      if (match(/\b(parar|pare|silêncio|silencio|cancelar|cala a boca)\b/) && !/\b(live|transmiss)/.test(t)) {
         pendingRef.current = null;
         stopReading();
         speak("Ok, parei.");
