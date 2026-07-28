@@ -396,7 +396,64 @@ export function VoiceAssistant() {
         return;
       }
 
+      // ----- Chat por voz -----
+      {
+        const openConv = t.match(
+          /\b(?:abrir|abra|abre|iniciar|ir para)\s+(?:a\s+)?(?:conversa|chat)\s+(?:com\s+)?(.+)$/,
+        ) || t.match(/\b(?:falar|conversar|escrever)\s+com\s+(.+)$/);
+        if (openConv?.[1]) { void openConversationByName(openConv[1]); return; }
+      }
+      if (match(/\b(abrir|abre|abra)\s+(uma\s+)?(conversa|chat)\b/) && match(/\bconversa\b/)) {
+        pendingRef.current = "open-conv";
+        speak("Com quem você quer conversar? Diga o nome da pessoa.");
+        return;
+      }
+      if (match(/\b(ler|leia|leiam)\s+(a\s+)?(conversa|mensagens|chat)\b/)) {
+        void readCurrentConversation();
+        return;
+      }
+      {
+        const dictate = t.match(
+          /\b(?:escrever|escreva|responder|responda|enviar|envie|mandar|manda)\s+(?:uma\s+)?(?:mensagem|resposta)\s*(?:dizendo|falando|:)?\s*(.+)$/,
+        );
+        if (dictate?.[1] && dictate[1].trim().length > 1) {
+          draftRef.current = dictate[1].trim();
+          pendingRef.current = "confirm-send";
+          speak(`Você disse: ${draftRef.current}. Envio agora? Diga sim ou não.`);
+          return;
+        }
+      }
+      if (match(/\b(escrever|escreva|responder|responda|enviar|envie|ditar)\s+(uma\s+)?(mensagem|resposta)\b/)) {
+        if (!currentConversationId()) {
+          pendingRef.current = "open-conv";
+          speak("Você não está em uma conversa. Com quem você quer falar?");
+          return;
+        }
+        pendingRef.current = "dictate";
+        speak("Fale sua mensagem depois do aviso.");
+        return;
+      }
+
+      // ----- Seguir / deixar de seguir -----
+      {
+        const unf = t.match(/\b(?:deixar de seguir|parar de seguir|desseguir|dessegue)\s+(?:o\s+|a\s+|perfil\s+)?(.+)$/);
+        if (unf?.[1]) { void doFollow(unf[1], false); return; }
+        const fol = t.match(/\b(?:seguir|segue|siga)\s+(?:o\s+|a\s+|perfil\s+)?(.+)$/);
+        if (fol?.[1]) { void doFollow(fol[1], true); return; }
+      }
+      if (match(/\b(deixar de seguir|parar de seguir)\b/)) {
+        pendingRef.current = "unfollow";
+        speak("Qual perfil você quer deixar de seguir?");
+        return;
+      }
+      if (match(/\bseguir\b/)) {
+        pendingRef.current = "follow";
+        speak("Qual perfil você quer seguir?");
+        return;
+      }
+
       // Navegação
+
       if (match(/\b(início|inicio|home|feed principal|página inicial)\b/) || match(/^ir para (início|inicio|home)/)) {
         speak("Abrindo o início.");
         navigate({ to: "/" });
