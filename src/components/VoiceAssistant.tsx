@@ -500,7 +500,17 @@ export function VoiceAssistant() {
         navigate({ to: "/chat" });
         return;
       }
+      if (match(/\b(encerrar|encerra|finalizar|finaliza|terminar|termina|parar|para|desligar) (a |minha )?(live|transmissão|transmissao)\b|\bsair da live\b/)) {
+        if (typeof window !== "undefined" && /^\/live\/[^/]+$/.test(window.location.pathname) && !window.location.pathname.startsWith("/live/new")) {
+          speak("Encerrando sua transmissão.");
+          window.dispatchEvent(new CustomEvent("wavechat:end-live"));
+        } else {
+          speak("Você não está em uma transmissão ativa.");
+        }
+        return;
+      }
       if (match(/\bfazer live\b|\b(começar|comecar|iniciar|inicia|começa|comeca) (a )?(transmissão|transmissao|live)\b|\btransmitir agora\b/)) {
+
         speak("Iniciando sua transmissão agora.");
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/live/new")) {
           navigate({ to: "/live/new" });
