@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { recordDeviceInfo } from "@/lib/device-tracking";
 import { installNativeOAuthListener } from "@/lib/native-google-auth";
 import { recordAppInstallOnce, recordAppFirstOpenOnce, recordAppLogin } from "@/lib/app-events";
+import { logAppEvent, identifyUser } from "@/lib/analytics-events";
 
 interface AuthContextValue {
   session: Session | null;
