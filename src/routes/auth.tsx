@@ -118,7 +118,12 @@ function AuthPage() {
 
   // Etapa 3 do funil: tela de cadastro realmente aberta
   useEffect(() => {
-    if (mode === "signup") void track("auth_signup_view");
+    if (mode === "signup") {
+      void track("auth_signup_view");
+      logAppEvent("start_signup", { method: "email", screen: "auth" });
+    } else if (mode === "login") {
+      logAppEvent("view_login", { screen: "auth" });
+    }
   }, [mode]);
 
   const onFieldFocus = () => {
