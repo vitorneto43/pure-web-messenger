@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { logAppEvent } from "@/lib/analytics-events";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -222,6 +223,7 @@ export function PostComposer({ open, onOpenChange, onCreated }: Props) {
         .select("id");
       if (error) throw error;
       const firstId = data?.[0]?.id;
+      logAppEvent("create_post", { post_kind: kind, target: target.kind, has_media: kind !== "text", has_cta: Boolean(cta_url), post_id: firstId });
 
       // Link cross-post via origin_post_id: the "public mirror" points to the ecosystem post
       if (target.kind === "both" && data && data.length === 2) {

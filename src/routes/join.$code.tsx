@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { joinByCode } from "@/lib/ecosystems";
+import { logAppEvent } from "@/lib/analytics-events";
 import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/join/$code")({
@@ -35,6 +36,7 @@ function JoinPage() {
       setStatus("working");
       try {
         const eco = await joinByCode(code);
+        logAppEvent("join_group", { group_type: "ecosystem", group_id: eco.id, method: "invite_code" });
         await refresh();
         toast.success(`Você entrou em ${eco.name}!`);
         navigate({ to: "/e/$slug", params: { slug: eco.slug } });
