@@ -755,6 +755,10 @@ export function VoiceAssistant() {
 
 
   const toggleWake = useCallback(() => {
+    if (localStorage.getItem("wavechat.mic-consent") !== "granted") {
+      setAskMic(true);
+      return;
+    }
     const next = !wakeOnRef.current;
     setWakeOn(next);
     wakeOnRef.current = next;
@@ -772,16 +776,48 @@ export function VoiceAssistant() {
     }
   }, [speak, startWakeListener]);
 
-  // Inicia a escuta passiva após o primeiro gesto do usuário (política do navegador)
+  // Consentimento do microfone: nada é ligado antes de o usuário aceitar.
+  const acceptMic = useCallback(() => {
+    localStorage.setItem("wavechat.mic-consent", "granted");
+    localStorage.setItem("wavechat.wakeword", "on");
+    setMicConsent("granted");
+    setAskMic(false);
+    setWakeOn(true);
+    wakeOnRef.current = true;
+    startWakeListener();
+    speak("Microfone liberado. Diga: iniciar assistente.");
+  }, [speak, startWakeListener]);
+
+  const declineMic = useCallback(() => {
+    localStorage.setItem("wavechat.mic-consent", "denied");
+    localStorage.setItem("wavechat.wakeword", "off");
+    setMicConsent("denied");
+    setAskMic(false);
+    setWakeOn(false);
+    wakeOnRef.current = false;
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+    } catch {}
+  }, []);
+
+  // Pergunta uma única vez, sem abrir o microfone.
   useEffect(() => {
-    if (!srSupported) return;
+    if (!srSupported || micConsent !== null) return;
+    const t = setTimeout(() => setAskMic(true), 4000);
+    return () => clearTimeout(t);
+  }, [srSupported, micConsent]);
+
+  // Escuta passiva só depois do consentimento explícito
+  useEffect(() => {
+    if (!srSupported || micConsent !== "granted") return;
     let started = false;
     const boot = () => {
       if (started || activeRef.current || !wakeOnRef.current) return;
       started = true;
       startWakeListener();
     };
-    // Tenta iniciar já (funciona em Android/Chrome se o mic estiver permitido)
     const t = setTimeout(boot, 800);
     const onGesture = () => boot();
     window.addEventListener("pointerdown", onGesture, { once: true });
@@ -793,7 +829,8 @@ export function VoiceAssistant() {
       window.removeEventListener("keydown", onGesture);
       window.removeEventListener("touchstart", onGesture);
     };
-  }, [srSupported, startWakeListener]);
+  }, [srSupported, micConsent, startWakeListener]);
+
 
   // Atalho global: Alt+A
   useEffect(() => {
