@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { logAppEvent } from "@/lib/analytics-events";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 
 
