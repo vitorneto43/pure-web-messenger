@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
 import { getSignupAttributionForSignup, snapshotAttributionForOAuth, readAttribution } from "@/lib/utm-capture";
 import { track } from "@/lib/track";
+import { logAppEvent } from "@/lib/analytics-events";
 import { recordAppSignup } from "@/lib/app-events";
 
 
