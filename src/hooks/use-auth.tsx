@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { recordDeviceInfo } from "@/lib/device-tracking";
 import { installNativeOAuthListener } from "@/lib/native-google-auth";
 import { recordAppInstallOnce, recordAppFirstOpenOnce, recordAppLogin } from "@/lib/app-events";
+import { logAppEvent, identifyUser } from "@/lib/analytics-events";
 
 interface AuthContextValue {
   session: Session | null;
@@ -24,12 +25,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // app_install: dispara uma vez por dispositivo nativo (independe de login)
     recordAppInstallOnce();
+    logAppEvent("app_open");
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setLoading(false);
+      identifyUser(s?.user?.id ?? null);
       if (event === "SIGNED_IN" && s?.user) {
         recordAppFirstOpenOnce(s.user.id);
         recordAppLogin(s.user.id);
+        const provider = (s.user.app_metadata as any)?.provider ?? "email";
+        if (provider !== "email") {
+          logAppEvent("login_success", { method: provider, user_id: s.user.id });
+        }
         // Link inviter (if any) — best effort
         void (async () => {
           try {

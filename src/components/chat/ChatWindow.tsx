@@ -32,6 +32,7 @@ import { useCall } from "@/hooks/use-call";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { logAppEvent } from "@/lib/analytics-events";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useImagePreload } from "@/hooks/use-image-preload";
 import { optimizeAvatarUrl } from "@/lib/avatar-optimize";
@@ -420,6 +421,11 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         attachment_name: attachment?.name ?? null,
       }).select("id").single();
       if (error) throw error;
+      logAppEvent("send_message", {
+        conversation_id: conversationId,
+        has_attachment: Boolean(attachment?.url),
+        attachment_type: attachment?.type ?? "none",
+      });
       // PRIVACIDADE: conversas privadas NÃO são analisadas automaticamente
       // pelo servidor. Mensagens só vão para moderação quando um participante
       // denunciar explicitamente (ver report_message_with_snapshot).

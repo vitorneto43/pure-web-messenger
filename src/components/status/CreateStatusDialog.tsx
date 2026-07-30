@@ -5,6 +5,7 @@ import { runAIAssistant } from "@/lib/ai-assistant.functions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { logAppEvent } from "@/lib/analytics-events";
 import {
   Dialog,
   DialogContent,
@@ -254,6 +255,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           }
         }
       }
+      if (!isScheduled) logAppEvent("create_story", { story_kind: tab });
       toast.success(isScheduled ? "Stories agendado!" : t("status.published"));
       reset();
       onOpenChange(false);

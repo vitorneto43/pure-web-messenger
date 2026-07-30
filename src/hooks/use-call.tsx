@@ -9,6 +9,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logAppEvent } from "@/lib/analytics-events";
 import { useAuth } from "@/hooks/use-auth";
 import { startRingtone, stopRingtone, startRingback, stopRingback } from "@/lib/ringtone";
 import { sendCallPush } from "@/lib/push.functions";
@@ -327,6 +328,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       // Trigger permission prompt synchronously with the call button click.
       const ok = await ensureMediaPermission(kind);
       if (!ok) return;
+      logAppEvent("start_call", { call_kind: kind, conversation_id: conversationId });
       setConnecting(true);
       try {
 

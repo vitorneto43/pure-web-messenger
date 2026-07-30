@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { PublicFooter } from "@/components/public/PublicLayout";
 import { getSignupAttributionForSignup, snapshotAttributionForOAuth, readAttribution } from "@/lib/utm-capture";
 import { track } from "@/lib/track";
+import { logAppEvent } from "@/lib/analytics-events";
 import { recordAppSignup } from "@/lib/app-events";
 
 
@@ -117,7 +118,12 @@ function AuthPage() {
 
   // Etapa 3 do funil: tela de cadastro realmente aberta
   useEffect(() => {
-    if (mode === "signup") void track("auth_signup_view");
+    if (mode === "signup") {
+      void track("auth_signup_view");
+      logAppEvent("start_signup", { method: "email", screen: "auth" });
+    } else if (mode === "login") {
+      logAppEvent("view_login", { screen: "auth" });
+    }
   }, [mode]);
 
   const onFieldFocus = () => {
@@ -251,6 +257,7 @@ function AuthPage() {
         });
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email, user_id: signUpData.user?.id });
+        logAppEvent("signup_success", { method: "email", user_id: signUpData.user?.id });
         recordAppSignup(signUpData.user?.id);
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success(t("auth.toast.signupOk"));
@@ -268,6 +275,7 @@ function AuthPage() {
           password: parsed.data.password,
         });
         if (error) throw error;
+        logAppEvent("login_success", { method: "email" });
         toast.success(t("auth.toast.welcome"));
       } else {
         const email = form.email.trim();

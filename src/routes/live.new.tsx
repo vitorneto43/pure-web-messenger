@@ -10,6 +10,7 @@ import { notifyLiveStart } from "@/lib/live-push.functions";
 import { SchedulePicker } from "@/components/SchedulePicker";
 import { scheduleLive } from "@/lib/schedule.functions";
 import { startLiveRecording, getRecordingConfig } from "@/lib/recordings.functions";
+import { logAppEvent } from "@/lib/analytics-events";
 import { PolicyHint } from "@/components/PolicyHint";
 import { scanLocally } from "@/lib/content-policy";
 import { PublishTargetPicker, type PublishTarget } from "@/components/PublishTargetPicker";
@@ -87,6 +88,7 @@ function NewLive() {
       if (error) throw error;
       const live = Array.isArray(data) ? data[0] : data;
       if (!live?.id) throw new Error("Falha ao iniciar live");
+      logAppEvent("start_live", { live_id: live.id, target: target.kind, will_record: Boolean(willRecord) });
 
       notifyLiveStart({ data: { liveId: live.id } }).catch((e) =>
         console.error("notifyLiveStart failed", e),
