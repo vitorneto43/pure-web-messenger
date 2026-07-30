@@ -255,7 +255,7 @@ export function CreateStatusDialog({ open, onOpenChange, onCreated }: Props) {
           }
         }
       }
-      if (!isScheduled) logAppEvent("create_story", { story_kind: kind });
+      if (!isScheduled) logAppEvent("create_story", { story_kind: tab });
       toast.success(isScheduled ? "Stories agendado!" : t("status.published"));
       reset();
       onOpenChange(false);
