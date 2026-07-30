@@ -35,6 +35,10 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  useEffect(() => {
+    logAppEvent("view_feed", { feed: "home" });
+  }, []);
+
   return (
     <div className="h-screen flex justify-center overflow-hidden text-sidebar-foreground bg-background">
       <div className="w-full max-w-[560px] flex flex-col overflow-hidden bg-sidebar border-x border-border/60 shadow-2xl">
