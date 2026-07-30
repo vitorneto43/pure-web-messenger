@@ -257,6 +257,7 @@ function AuthPage() {
         });
         if (error) throw error;
         void track("signup_completed", { email: parsed.data.email, user_id: signUpData.user?.id });
+        logAppEvent("signup_success", { method: "email", user_id: signUpData.user?.id });
         recordAppSignup(signUpData.user?.id);
         try { localStorage.removeItem("wavechat:pending_invite"); } catch {}
         toast.success(t("auth.toast.signupOk"));
