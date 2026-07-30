@@ -52,10 +52,21 @@ export function VoiceAssistant() {
   const [active, setActive] = useState(false);
   const [heard, setHeard] = useState("");
   const [voicePostOpen, setVoicePostOpen] = useState(false);
-  const [wakeOn, setWakeOn] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("wavechat.wakeword") !== "off";
+  // Microfone só liga após consentimento explícito do usuário.
+  const [micConsent, setMicConsent] = useState<"granted" | "denied" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const v = localStorage.getItem("wavechat.mic-consent");
+    return v === "granted" || v === "denied" ? v : null;
   });
+  const [askMic, setAskMic] = useState(false);
+  const [wakeOn, setWakeOn] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("wavechat.mic-consent") === "granted" &&
+      localStorage.getItem("wavechat.wakeword") !== "off"
+    );
+  });
+
 
   const recRef = useRef<any>(null);
   const wakeRecRef = useRef<any>(null);
@@ -662,6 +673,11 @@ export function VoiceAssistant() {
       toast.error("Assistente por voz requer Chrome, Edge ou Android.");
       return;
     }
+    if (localStorage.getItem("wavechat.mic-consent") !== "granted") {
+      setAskMic(true);
+      return;
+    }
+
     // Encerra o listener de palavra-chave para liberar o microfone
     try {
       wakeStoppingRef.current = true;
@@ -739,6 +755,10 @@ export function VoiceAssistant() {
 
 
   const toggleWake = useCallback(() => {
+    if (localStorage.getItem("wavechat.mic-consent") !== "granted") {
+      setAskMic(true);
+      return;
+    }
     const next = !wakeOnRef.current;
     setWakeOn(next);
     wakeOnRef.current = next;
@@ -756,16 +776,48 @@ export function VoiceAssistant() {
     }
   }, [speak, startWakeListener]);
 
-  // Inicia a escuta passiva após o primeiro gesto do usuário (política do navegador)
+  // Consentimento do microfone: nada é ligado antes de o usuário aceitar.
+  const acceptMic = useCallback(() => {
+    localStorage.setItem("wavechat.mic-consent", "granted");
+    localStorage.setItem("wavechat.wakeword", "on");
+    setMicConsent("granted");
+    setAskMic(false);
+    setWakeOn(true);
+    wakeOnRef.current = true;
+    startWakeListener();
+    speak("Microfone liberado. Diga: iniciar assistente.");
+  }, [speak, startWakeListener]);
+
+  const declineMic = useCallback(() => {
+    localStorage.setItem("wavechat.mic-consent", "denied");
+    localStorage.setItem("wavechat.wakeword", "off");
+    setMicConsent("denied");
+    setAskMic(false);
+    setWakeOn(false);
+    wakeOnRef.current = false;
+    try {
+      wakeStoppingRef.current = true;
+      wakeRecRef.current?.stop?.();
+      wakeRecRef.current = null;
+    } catch {}
+  }, []);
+
+  // Pergunta uma única vez, sem abrir o microfone.
   useEffect(() => {
-    if (!srSupported) return;
+    if (!srSupported || micConsent !== null) return;
+    const t = setTimeout(() => setAskMic(true), 4000);
+    return () => clearTimeout(t);
+  }, [srSupported, micConsent]);
+
+  // Escuta passiva só depois do consentimento explícito
+  useEffect(() => {
+    if (!srSupported || micConsent !== "granted") return;
     let started = false;
     const boot = () => {
       if (started || activeRef.current || !wakeOnRef.current) return;
       started = true;
       startWakeListener();
     };
-    // Tenta iniciar já (funciona em Android/Chrome se o mic estiver permitido)
     const t = setTimeout(boot, 800);
     const onGesture = () => boot();
     window.addEventListener("pointerdown", onGesture, { once: true });
@@ -777,7 +829,8 @@ export function VoiceAssistant() {
       window.removeEventListener("keydown", onGesture);
       window.removeEventListener("touchstart", onGesture);
     };
-  }, [srSupported, startWakeListener]);
+  }, [srSupported, micConsent, startWakeListener]);
+
 
   // Atalho global: Alt+A
   useEffect(() => {
@@ -804,7 +857,39 @@ export function VoiceAssistant() {
 
   return (
     <>
+      {/* Pedido de permissão do microfone (nada é ligado antes disso) */}
+      {askMic && !active && (
+        <div
+          role="dialog"
+          aria-modal="false"
+          aria-label="Permissão do microfone"
+          className="fixed z-[71] bottom-24 right-4 left-4 md:left-auto md:bottom-6 md:right-24 max-w-[min(92vw,340px)] rounded-2xl bg-card border border-border shadow-2xl p-4 text-sm"
+        >
+          <p className="font-semibold mb-1">Quer abrir o microfone?</p>
+          <p className="text-muted-foreground mb-3">
+            A assistente de voz da WaveChat só escuta se você permitir. Você pode desativar quando quiser.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={acceptMic}
+              className="flex-1 rounded-full bg-primary text-primary-foreground py-2 font-medium hover:opacity-90"
+            >
+              Sim, abrir
+            </button>
+            <button
+              type="button"
+              onClick={declineMic}
+              className="flex-1 rounded-full border border-border py-2 font-medium hover:bg-muted"
+            >
+              Agora não
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Botão flutuante */}
+
       <button
         type="button"
         onClick={() => (active ? deactivate() : activate())}
