@@ -857,7 +857,39 @@ export function VoiceAssistant() {
 
   return (
     <>
+      {/* Pedido de permissão do microfone (nada é ligado antes disso) */}
+      {askMic && !active && (
+        <div
+          role="dialog"
+          aria-modal="false"
+          aria-label="Permissão do microfone"
+          className="fixed z-[71] bottom-24 right-4 left-4 md:left-auto md:bottom-6 md:right-24 max-w-[min(92vw,340px)] rounded-2xl bg-card border border-border shadow-2xl p-4 text-sm"
+        >
+          <p className="font-semibold mb-1">Quer abrir o microfone?</p>
+          <p className="text-muted-foreground mb-3">
+            A assistente de voz da WaveChat só escuta se você permitir. Você pode desativar quando quiser.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={acceptMic}
+              className="flex-1 rounded-full bg-primary text-primary-foreground py-2 font-medium hover:opacity-90"
+            >
+              Sim, abrir
+            </button>
+            <button
+              type="button"
+              onClick={declineMic}
+              className="flex-1 rounded-full border border-border py-2 font-medium hover:bg-muted"
+            >
+              Agora não
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Botão flutuante */}
+
       <button
         type="button"
         onClick={() => (active ? deactivate() : activate())}
