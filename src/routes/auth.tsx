@@ -275,6 +275,7 @@ function AuthPage() {
           password: parsed.data.password,
         });
         if (error) throw error;
+        logAppEvent("login_success", { method: "email" });
         toast.success(t("auth.toast.welcome"));
       } else {
         const email = form.email.trim();
