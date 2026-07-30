@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  ClientOnly,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
@@ -277,8 +278,10 @@ function RootComponent() {
           <NewsletterWidget />
           <Toaster richColors position="top-right" />
           <SignLanguageProvider />
-          <VoiceAssistant />
-          <GestureCommandCenter />
+          <ClientOnly fallback={null}>
+            <VoiceAssistant />
+            <GestureCommandCenter />
+          </ClientOnly>
 
         </EcosystemProvider>
       </AuthProvider>

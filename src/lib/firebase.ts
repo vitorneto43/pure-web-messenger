@@ -18,8 +18,8 @@ const firebaseConfig = {
   storageBucket:
     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? "wavechat-fe92e.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_SENDER_ID ?? "209558207951",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? "",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? "",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? "1:209558207951:web:cbce670d8b97f8f6f2a6ba",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? "G-4MD3Q2SLZW",
 };
 
 export function isFirebaseAnalyticsConfigured(): boolean {
