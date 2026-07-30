@@ -673,6 +673,11 @@ export function VoiceAssistant() {
       toast.error("Assistente por voz requer Chrome, Edge ou Android.");
       return;
     }
+    if (localStorage.getItem("wavechat.mic-consent") !== "granted") {
+      setAskMic(true);
+      return;
+    }
+
     // Encerra o listener de palavra-chave para liberar o microfone
     try {
       wakeStoppingRef.current = true;
