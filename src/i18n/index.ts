@@ -21,11 +21,13 @@ if (!i18n.isInitialized) {
       nonExplicitSupportedLngs: true,
       interpolation: { escapeValue: false },
       detection: {
-        // Respect saved choice first, then browser/OS language, then HTML tag.
-        order: ["localStorage", "navigator", "htmlTag"],
+        // Only a saved choice is honored here; otherwise we start in English and
+        // LocaleBootstrap switches to Portuguese for Brazil (geo/browser based).
+        order: ["localStorage"],
         caches: ["localStorage"],
         lookupLocalStorage: I18N_STORAGE_KEY,
       },
+
       react: { useSuspense: false },
       initAsync: false,
     } as Parameters<typeof i18n.init>[0]);
