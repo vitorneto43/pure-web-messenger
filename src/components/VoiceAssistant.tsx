@@ -53,19 +53,18 @@ export function VoiceAssistant() {
   const [heard, setHeard] = useState("");
   const [voicePostOpen, setVoicePostOpen] = useState(false);
   // Microfone só liga após consentimento explícito do usuário.
-  const [micConsent, setMicConsent] = useState<"granted" | "denied" | null>(() => {
-    if (typeof window === "undefined") return null;
-    const v = localStorage.getItem("wavechat.mic-consent");
-    return v === "granted" || v === "denied" ? v : null;
-  });
+  const [micConsent, setMicConsent] = useState<"granted" | "denied" | null>(null);
   const [askMic, setAskMic] = useState(false);
-  const [wakeOn, setWakeOn] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      localStorage.getItem("wavechat.mic-consent") === "granted" &&
-      localStorage.getItem("wavechat.wakeword") !== "off"
+  const [wakeOn, setWakeOn] = useState(false);
+
+  // Restore persisted consent/wake settings after hydration (avoids SSR mismatch).
+  useEffect(() => {
+    const v = localStorage.getItem("wavechat.mic-consent");
+    setMicConsent(v === "granted" || v === "denied" ? v : null);
+    setWakeOn(
+      v === "granted" && localStorage.getItem("wavechat.wakeword") !== "off",
     );
-  });
+  }, []);
 
 
   const recRef = useRef<any>(null);
