@@ -281,8 +281,10 @@ function RootComponent() {
           <Toaster richColors position="top-right" />
           <SignLanguageProvider />
           <ClientOnly fallback={null}>
-            <VoiceAssistant />
-            <GestureCommandCenter />
+            <>
+              <VoiceAssistant />
+              <GestureCommandCenter />
+            </>
           </ClientOnly>
 
         </EcosystemProvider>

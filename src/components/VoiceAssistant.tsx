@@ -102,10 +102,14 @@ export function VoiceAssistant() {
   useEffect(() => { activeRef.current = active; }, [active]);
   useEffect(() => { wakeOnRef.current = wakeOn; }, [wakeOn]);
 
-  const srSupported =
-    typeof window !== "undefined" &&
-    !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
-  const ttsSupported = typeof window !== "undefined" && !!window.speechSynthesis;
+  const [srSupported, setSrSupported] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
+  useEffect(() => {
+    setSrSupported(
+      !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition),
+    );
+    setTtsSupported(!!window.speechSynthesis);
+  }, []);
 
   // ---------- TTS helpers ----------
   const speak = useCallback((text: string, opts?: { onEnd?: () => void }) => {
