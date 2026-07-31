@@ -240,22 +240,24 @@ function LocaleBootstrap() {
       return;
     }
 
-    // 3) Auto-detect from IP, fallback to browser language.
+    // 3) Auto: Brazil opens in Portuguese, every other country in English.
+    //    Users can still switch to any of the 10 supported languages, and the
+    //    choice is stored and applied across the whole app.
+    const navFallback = () => {
+      const nav = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
+      setLocale(nav.startsWith("pt") ? "pt" : "en");
+    };
+
     void detectLocaleFromIp()
       .then((res) => {
-        if (res?.locale && (SUPPORTED_LOCALES as string[]).includes(res.locale)) {
-          setLocale(res.locale);
-          return;
-        }
-        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").split("-")[0];
-        if ((SUPPORTED_LOCALES as string[]).includes(nav)) setLocale(nav as Locale);
+        const country = res?.country?.toUpperCase() ?? null;
+        if (country) setLocale(country === "BR" ? "pt" : "en");
+        else navFallback();
       })
-      .catch(() => {
-        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").split("-")[0];
-        if ((SUPPORTED_LOCALES as string[]).includes(nav)) setLocale(nav as Locale);
-      });
+      .catch(navFallback);
 
     applyHtmlLang(currentLocale());
+
   }, []);
   return null;
 }
