@@ -72,29 +72,31 @@ export const getMyProfileTraffic = createServerFn({ method: "GET" })
   });
 
 /**
- * Métricas públicas de tráfego de um perfil (por username).
- * Visível a qualquer usuário autenticado.
+ * Métricas de tráfego de um perfil (por username).
+ * SEGURANÇA: só o próprio dono do perfil pode ler estes dados.
  */
 export const getProfileTrafficByUsername = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { username: string }) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const empty = {
+      profile_views_total: 0,
+      profile_views_unique: 0,
+      profile_page_views: 0,
+      social_link_clicks_total: 0,
+    };
 
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select("id, username")
       .eq("username", data.username)
       .maybeSingle();
-    if (!prof) {
-      return {
-        profile_views_total: 0,
-        profile_views_unique: 0,
-        profile_page_views: 0,
-        social_link_clicks_total: 0,
-      };
+    if (!prof || prof.id !== context.userId) {
+      return empty;
     }
+
 
     const { data: views } = await supabaseAdmin
       .from("profile_views")
