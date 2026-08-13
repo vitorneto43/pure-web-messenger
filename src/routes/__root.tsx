@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         httpEquiv: "Content-Security-Policy",
         content: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://js.stripe.com https://plugin.handtalk.me https://handtalk.me",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com https://bat.bing.net https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://js.stripe.com https://plugin.handtalk.me https://handtalk.me",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://plugin.handtalk.me",
           "font-src 'self' data: https://fonts.gstatic.com https://vlibras.gov.br https://www.vlibras.gov.br https://cdn.jsdelivr.net https://plugin.handtalk.me",
           "img-src 'self' data: blob: https:",
@@ -137,6 +137,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "alternate",
         hrefLang: "x-default",
         href: "https://webconnectchat.com/",
+      },
+    ],
+    scripts: [
+      {
+        children:
+          '(function(w,d,t,u,o){w[u]=w[u]||[],o.ts=(new Date).getTime();var n=d.createElement(t);n.src="https://bat.bing.net/bat.js?ti="+o.ti+("uetq"!=u?"&q="+u:""),n.async=1,n.onload=n.onreadystatechange=function(){var s=this.readyState;s&&"loaded"!==s&&"complete"!==s||(o.q=w[u],w[u]=new UET(o),w[u].push("pageLoad"),n.onload=n.onreadystatechange=null)};var i=d.getElementsByTagName(t)[0];i.parentNode.insertBefore(n,i)})(window,document,"script","uetq",{ti:"97253031",enableAutoSpaTracking:true});',
       },
     ],
   }),
