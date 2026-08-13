@@ -26,7 +26,7 @@ const normalizeUsername = (value: string) => value.trim().replace(/\s+/g, "_").r
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string; invite?: string; mode?: Mode } => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
     invite: typeof search.invite === "string" ? search.invite : undefined,
     mode:
