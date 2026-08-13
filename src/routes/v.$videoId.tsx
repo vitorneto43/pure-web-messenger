@@ -214,7 +214,7 @@ function VideoPage() {
 
           <div className="mt-3 flex items-center gap-3 flex-wrap">
             <Link
-              to="/profile/$username"
+              to="/u/$username"
               params={{ username: owner?.username ?? "" }}
               className="flex items-center gap-2 min-w-0"
             >

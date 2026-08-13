@@ -19,7 +19,7 @@ import { useEcosystems } from "@/hooks/use-ecosystem";
 
 export const Route = createFileRoute("/_authenticated/wavetube/upload")({
   component: UploadPage,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { short?: 1 } => ({
     short: s.short === "1" || s.short === 1 || s.short === true ? 1 : undefined,
   }),
   head: () => ({
